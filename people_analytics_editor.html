@@ -97,7 +97,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 .cp{background:rgba(167,139,250,.15);color:var(--purple);}
 .cc{background:rgba(79,156,249,.15);color:var(--accent);}
 .cs{background:rgba(56,217,169,.15);color:var(--accent2);}
-.ce{background:rgba(251,146,60,.15);color:var(--coral);}
+.ce{background:rgba(251,146,60,.15);color:var(--coral);}.ca{background:rgba(20,184,166,.15);color:#14b8a6;}
 .cok{background:rgba(56,217,169,.1);color:var(--accent2);}
 .cw{background:rgba(245,158,11,.15);color:var(--warn);}
 .cd{background:rgba(248,113,113,.15);color:var(--danger);}
@@ -255,7 +255,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
           <circle id="dPJ" cx="45" cy="45" r="32" fill="none" stroke="#9b66f4" stroke-width="14" stroke-dasharray="0 201" stroke-dashoffset="0" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .7s"/>
           <circle id="dCLT" cx="45" cy="45" r="32" fill="none" stroke="#ffd000" stroke-width="14" stroke-dasharray="0 201" stroke-dashoffset="0" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .7s"/>
           <circle id="dSOC" cx="45" cy="45" r="32" fill="none" stroke="#b98af7" stroke-width="14" stroke-dasharray="0 201" stroke-dashoffset="0" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .7s"/>
-          <circle id="dEST" cx="45" cy="45" r="32" fill="none" stroke="#fb923c" stroke-width="14" stroke-dasharray="0 201" stroke-dashoffset="0" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .7s"/>
+          <circle id="dEST" cx="45" cy="45" r="32" fill="none" stroke="#fb923c" stroke-width="14" stroke-dasharray="0 201" stroke-dashoffset="0" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .7s"/><circle id="dASSOC" cx="45" cy="45" r="32" fill="none" stroke="#14b8a6" stroke-width="14" stroke-dasharray="0 201" stroke-dashoffset="0" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .7s"/>
           <text id="dNum" x="45" y="41" text-anchor="middle" fill="#e8eaf0" font-size="18" font-family="DM Sans" font-weight="300">—</text>
           <text x="45" y="53" text-anchor="middle" fill="#7a7f94" font-size="8" font-family="DM Sans">ativos</text>
         </svg>
@@ -436,7 +436,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
         <div class="fgrp s2"><div class="flbl">Nome completo</div><input class="fi" id="eNome"></div>
         <div class="fgrp"><div class="flbl">Data de nascimento</div><input class="fi" id="eNasc" type="date"></div>
         <div class="fgrp"><div class="flbl">Tipo de vínculo</div>
-          <select class="fsel" id="eVinculo"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option></select>
+          <select class="fsel" id="eVinculo"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option><option value="ASSOCIADO">Associado</option></select>
         </div>
         <div class="fgrp"><div class="flbl">Data de admissão</div><input class="fi" id="eAdmissao" type="date"></div>
         <div class="fgrp"><div class="flbl">Cargo</div><input class="fi" id="eCargo"></div>
@@ -479,7 +479,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
       <div class="fg">
         <div class="fgrp s2"><div class="flbl">Nome completo <span class="rq">*</span></div><input class="fi" id="nNome" placeholder="Nome completo"></div>
         <div class="fgrp"><div class="flbl">Vínculo <span class="rq">*</span></div>
-          <select class="fsel" id="nVinc"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option></select>
+          <select class="fsel" id="nVinc"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option><option value="ASSOCIADO">Associado</option></select>
         </div>
         <div class="fgrp"><div class="flbl">Admissão <span class="rq">*</span></div><input class="fi" id="nAdm" type="date"></div>
         <div class="fgrp"><div class="flbl">Nascimento</div><input class="fi" id="nNasc" type="date"></div>
@@ -590,8 +590,8 @@ const validDate=d=>{const x=parseDate(d);if(!x)return false;const y=x.getFullYea
 const fmt=d=>{const x=parseDate(d);if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'—';try{return x.toLocaleDateString('pt-BR',{month:'2-digit',year:'numeric'})}catch{return'—'}};
 const fmtD=d=>{const x=parseDate(d);if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'—';try{return x.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}catch{return'—'}};
 const iso=d=>{const x=parseDate(d);if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'';try{return x.toISOString().split('T')[0]}catch{return''}};
-const chipV=v=>({PJ:'cp',CLT:'cc',SOCIO:'cs',ESTAGIARIO:'ce'})[String(v||'').toUpperCase()]||'cp';
-const lblV=v=>({PJ:'PJ',CLT:'CLT',SOCIO:'Sócio',ESTAGIARIO:'Estag.'})[String(v||'').toUpperCase()]||v;
+const chipV=v=>({PJ:'cp',CLT:'cc',SOCIO:'cs',ESTAGIARIO:'ce',ASSOCIADO:'ca'})[String(v||'').toUpperCase()]||'cp';
+const lblV=v=>({PJ:'PJ',CLT:'CLT',SOCIO:'Sócio',ESTAGIARIO:'Estag.',ASSOCIADO:'Assoc.'})[String(v||'').toUpperCase()]||v;
 const setS=(id,val)=>{const e=$(id);if(!e)return;for(const o of e.options){if(o.value===val||o.text===val){e.value=o.value;return;}}};
 
 
@@ -707,7 +707,7 @@ function render(){
 
   const ativos=cad.filter(r=>String(r.STATUS||'').trim().toUpperCase()==='ATIVO');
   const desl=cad.filter(r=>String(r.STATUS||'').trim().toUpperCase()==='DESLIGADO');
-  const vin={PJ:0,CLT:0,SOCIO:0,ESTAGIARIO:0};
+  const vin={PJ:0,CLT:0,SOCIO:0,ESTAGIARIO:0,ASSOCIADO:0};
   ativos.forEach(r=>{const v=String(r.TIPO_VINCULO||'').toUpperCase().trim();if(vin[v]!==undefined)vin[v]++;});
   const empM={};ativos.forEach(r=>{const e=r.EMPRESA||'N/D';empM[e]=(empM[e]||0)+1;});
   const tFx={'<1':0,'1-3':0,'3-5':0,'>5':0};let sA=0,cA=0,mxA=0,mxAN='';
@@ -812,11 +812,11 @@ function render(){
 
   // Donut
   const C=200.96;let off=0;
-  [{id:'dPJ',k:'PJ'},{id:'dCLT',k:'CLT'},{id:'dSOC',k:'SOCIO'},{id:'dEST',k:'ESTAGIARIO'}].forEach(({id,k})=>{
+  [{id:'dPJ',k:'PJ'},{id:'dCLT',k:'CLT'},{id:'dSOC',k:'SOCIO'},{id:'dEST',k:'ESTAGIARIO'},{id:'dASSOC',k:'ASSOCIADO'}].forEach(({id,k})=>{
     const arc=(vin[k]/tot)*C;$(id).setAttribute('stroke-dasharray',`${arc} ${C-arc}`);$(id).setAttribute('stroke-dashoffset',-off);off+=arc;
   });
   $('dNum').textContent=ativos.length;$('vinSpan').textContent=`${ativos.length} ativos`;
-  $('vinLeg').innerHTML=[{c:'#9b66f4',l:'PJ',v:vin.PJ},{c:'#ffd000',l:'CLT',v:vin.CLT},{c:'#b98af7',l:'Sócio',v:vin.SOCIO},{c:'#fb923c',l:'Estag.',v:vin.ESTAGIARIO}].map(x=>`<div class="li"><div class="ld" style="background:${x.c}"></div><div class="ll">${x.l}</div><div class="lv">${x.v}</div></div>`).join('');
+  $('vinLeg').innerHTML=[{c:'#9b66f4',l:'PJ',v:vin.PJ},{c:'#ffd000',l:'CLT',v:vin.CLT},{c:'#b98af7',l:'Sócio',v:vin.SOCIO},{c:'#fb923c',l:'Estag.',v:vin.ESTAGIARIO},{c:'#14b8a6',l:'Assoc.',v:vin.ASSOCIADO}].map(x=>`<div class="li"><div class="ld" style="background:${x.c}"></div><div class="ll">${x.l}</div><div class="lv">${x.v}</div></div>`).join('');
 
   // Mov
   const yrs=[...new Set([...Object.keys(admY),...Object.keys(desY)])].sort();
