@@ -359,7 +359,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 
 <!-- FÉRIAS -->
 <div class="sec" id="fer">
-  <div class="sttl"><div class="sttl-l"><div class="sdot" style="background:var(--warn)"></div>Férias CLT</div></div>
+  <div class="sttl"><div class="sttl-l"><div class="sdot" style="background:var(--warn)"></div>Férias CLT</div>
+    <button class="btn btn-g" onclick="openModal('mFeriasColetivas')">🏖 Lançar Férias Coletivas</button>
+  </div>
   <div class="kg">
     <div class="kpi"><div class="kl">Não programadas</div><div class="kv" style="color:var(--warn)" id="fNp">—</div><div class="ks">ação necessária</div><div class="kbar" style="background:var(--warn)"></div></div>
     <div class="kpi"><div class="kl">N/A (não CLT)</div><div class="kv" style="color:var(--muted)" id="fNa">—</div><div class="ks">PJ/Sócio/Estag.</div><div class="kbar" style="background:var(--muted)"></div></div>
@@ -576,6 +578,66 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 </div>
 
 <!-- TOAST -->
+
+<!-- Férias Coletivas -->
+<div class="ov" id="mFeriasColetivas">
+  <div class="modal" style="max-width:680px;">
+    <div class="mh">
+      <div><div class="mt">🏖 Férias Coletivas</div><div class="ms">CLT · mínimo 10 dias · Art. 139 CLT</div></div>
+      <button class="mc" onclick="closeModal('mFeriasColetivas')">×</button>
+    </div>
+    <div class="mb">
+
+      <!-- Período -->
+      <div class="fg" style="margin-bottom:14px;">
+        <div class="fsec" style="grid-column:1/-1;">Período das férias coletivas</div>
+        <div class="fgrp"><div class="flbl">Início <span class="rq">*</span></div><input class="fi" id="fcIni" type="date" onchange="fcCalcDias()"></div>
+        <div class="fgrp"><div class="flbl">Término <span class="rq">*</span></div><input class="fi" id="fcFim" type="date" onchange="fcCalcDias()"></div>
+        <div class="fgrp s2">
+          <div id="fcDiasMsg" style="font-size:13px;color:var(--muted);padding:8px 0;"></div>
+        </div>
+      </div>
+
+      <!-- Modo de lançamento -->
+      <div style="margin-bottom:14px;">
+        <div class="flbl" style="margin-bottom:8px;">Dias por colaborador</div>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+            <input type="radio" name="fcModo" value="igual" checked onchange="fcToggleModo(this.value)"> Igual para todos
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+            <input type="radio" name="fcModo" value="individual" onchange="fcToggleModo(this.value)"> Individual por colaborador
+          </label>
+        </div>
+      </div>
+
+      <!-- Seleção de colaboradores -->
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div class="flbl">Colaboradores CLT</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn" style="padding:4px 10px;font-size:12px;" onclick="fcSelectAll(true)">Todos</button>
+            <button class="btn" style="padding:4px 10px;font-size:12px;" onclick="fcSelectAll(false)">Nenhum</button>
+          </div>
+        </div>
+        <div id="fcColabList" style="background:var(--bg3);border-radius:8px;padding:10px;max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+
+      <!-- Observação -->
+      <div class="fgrp">
+        <div class="flbl">Observação / Comunicado</div>
+        <textarea class="fi" id="fcObs" rows="2" placeholder="Ex: Recesso de fim de ano 2026..."></textarea>
+      </div>
+
+      <div id="fcErro" style="font-size:12px;color:var(--danger);margin-top:6px;display:none;"></div>
+    </div>
+    <div class="mf">
+      <button class="btn" onclick="closeModal('mFeriasColetivas')">Cancelar</button>
+      <button class="btn btn-g" onclick="saveFeriasColetivas()">🏖 Lançar férias coletivas</button>
+    </div>
+  </div>
+</div>
+
 <div class="tc" id="tc"></div>
 
 <script>
@@ -1105,6 +1167,127 @@ function loadDemo(){
 }
 
 function fakeS(sheet,row,data){const l=D[sheet]||[];const i=l.find(r=>r._row===row);if(i)Object.assign(i,data);render();toast('Atualizado (demo — não salvo no Excel)','success');}
+
+
+// ══════════════════════════════
+// FÉRIAS COLETIVAS
+// ══════════════════════════════
+function fcCalcDias(){
+  const ini=$('fcIni').value, fim=$('fcFim').value;
+  const msg=$('fcDiasMsg'), erro=$('fcErro');
+  if(!ini||!fim){msg.textContent='';return;}
+  const dc=Math.round((new Date(fim+'T12:00:00')-new Date(ini+'T12:00:00'))/864e5)+1;
+  if(dc<10){
+    msg.innerHTML=`<span style="color:var(--danger)">⚠ ${dc} dias — mínimo exigido: 10 dias (Art. 139 CLT)</span>`;
+    erro.style.display='block'; erro.textContent='Período inválido: férias coletivas exigem mínimo de 10 dias corridos.';
+  } else {
+    msg.innerHTML=`<span style="color:var(--ok)">✓ ${dc} dias corridos</span>`;
+    erro.style.display='none';
+  }
+  fcRenderColabs();
+}
+
+function fcToggleModo(modo){
+  fcRenderColabs();
+}
+
+function fcGetModo(){
+  const r=document.querySelector('input[name="fcModo"]:checked');
+  return r?r.value:'igual';
+}
+
+function fcRenderColabs(){
+  const cad=D.CADASTRO_COLABORADORES||[];
+  const clts=cad.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVO'&&String(r.TIPO_VINCULO||'').toUpperCase()==='CLT');
+  const ini=$('fcIni').value, fim=$('fcFim').value;
+  const dc=ini&&fim?Math.round((new Date(fim+'T12:00:00')-new Date(ini+'T12:00:00'))/864e5)+1:0;
+  const modo=fcGetModo();
+  const list=$('fcColabList');
+  if(!clts.length){list.innerHTML='<div style="font-size:13px;color:var(--muted);text-align:center;padding:12px;">Nenhum colaborador CLT ativo encontrado.</div>';return;}
+  list.innerHTML=clts.map(r=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 8px;background:var(--bg2);border-radius:6px;">
+      <input type="checkbox" id="fc_${r.ID_COLABORADOR}" value="${r.ID_COLABORADOR}" checked style="width:14px;height:14px;accent-color:var(--accent);">
+      <label for="fc_${r.ID_COLABORADOR}" style="flex:1;font-size:13px;cursor:pointer;">${r.NOME||'—'}</label>
+      ${modo==='individual'?`
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span style="font-size:11px;color:var(--muted);">Dias:</span>
+          <input type="number" id="fcd_${r.ID_COLABORADOR}" value="${dc||30}" min="10" max="30"
+            style="width:60px;padding:4px 6px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-size:12px;text-align:center;">
+        </div>`:''}
+    </div>`).join('');
+}
+
+function fcSelectAll(val){
+  document.querySelectorAll('#fcColabList input[type=checkbox]').forEach(cb=>cb.checked=val);
+}
+
+async function saveFeriasColetivas(){
+  const ini=$('fcIni').value, fim=$('fcFim').value;
+  const obs=$('fcObs').value.trim();
+  const erro=$('fcErro');
+  if(!ini||!fim){erro.style.display='block';erro.textContent='Informe o período completo.';return;}
+  const dc=Math.round((new Date(fim+'T12:00:00')-new Date(ini+'T12:00:00'))/864e5)+1;
+  if(dc<10){erro.style.display='block';erro.textContent='Período inválido: mínimo de 10 dias (Art. 139 CLT).';return;}
+  const selecionados=[...document.querySelectorAll('#fcColabList input[type=checkbox]:checked')].map(cb=>cb.value);
+  if(!selecionados.length){erro.style.display='block';erro.textContent='Selecione ao menos um colaborador.';return;}
+  const modo=fcGetModo();
+
+  closeModal('mFeriasColetivas');
+  toast(`Lançando férias coletivas para ${selecionados.length} colaboradores...`,'info');
+
+  const ferias=D.FERIAS_CLT||[];
+  let ok=0,erros=0;
+
+  for(const id of selecionados){
+    const diasInd=modo==='individual'?parseInt(document.getElementById('fcd_'+id)?.value||dc):dc;
+    // Calcular data fim individual
+    const fimInd=new Date(new Date(ini+'T12:00:00').getTime()+(diasInd-1)*864e5).toISOString().split('T')[0];
+    const reg=ferias.find(r=>r.ID_COLABORADOR===id);
+    if(!reg){erros++;continue;}
+    try{
+      if(!DEMO){
+        // Col 7=FP_INI, 8=FP_FIM, 9=FG_INI, 10=FG_FIM, 11=STATUS_FERIAS
+        await patchRow('FERIAS_CLT',reg._row,{
+          7:'FERIAS_PROGRAMADAS_INICIO',8:'FERIAS_PROGRAMADAS_FIM',
+          9:'FERIAS_GOZADAS_INICIO',10:'FERIAS_GOZADAS_FIM',
+          11:'STATUS_FERIAS'
+        },{
+          FERIAS_PROGRAMADAS_INICIO:ini,FERIAS_PROGRAMADAS_FIM:fimInd,
+          FERIAS_GOZADAS_INICIO:ini,FERIAS_GOZADAS_FIM:fimInd,
+          STATUS_FERIAS:'PROGRAMADA'
+        });
+      } else {
+        Object.assign(reg,{FERIAS_PROGRAMADAS_INICIO:ini,FERIAS_PROGRAMADAS_FIM:fimInd,
+          FERIAS_GOZADAS_INICIO:ini,FERIAS_GOZADAS_FIM:fimInd,STATUS_FERIAS:'PROGRAMADA'});
+      }
+      ok++;
+    }catch(e){erros++;}
+  }
+
+  // Notificar via webhook se configurado
+  const wh=CFG?.webhook||'';
+  if(wh&&ok>0){
+    try{
+      await fetch(wh,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        protocolo:'COLETIVAS-'+Date.now(),
+        colaborador:`${ok} colaboradores CLT`,
+        empresa:'Luma Plataforma / Luisa Moraes Advogados',
+        inicio:new Date(ini+'T12:00:00').toLocaleDateString('pt-BR'),
+        termino:new Date(fim+'T12:00:00').toLocaleDateString('pt-BR'),
+        dias_corridos:dc,
+        dias_uteis:0,
+        observacao:obs||'Férias coletivas — Art. 139 CLT',
+        solicitado_em:new Date().toLocaleString('pt-BR'),
+        link_aprovar:'',link_rejeitar:'',
+        gestor_email:'anderson.assis@lumaplataforma.com.br'
+      })});
+    }catch(e){}
+  }
+
+  if(!DEMO) await loadAll();
+  else render();
+  toast(`✓ Férias coletivas lançadas: ${ok} colaboradores${erros>0?' · '+erros+' erros':''}`,'success');
+}
 
 // ══════════════════════════════
 // UI
