@@ -453,11 +453,34 @@ function setStep(i){
 function goStep2(){
   if(!rS||!rE){toast('Selecione o período completo','error');return;}
   const dc=diasCorr(rS,rE);
+  const hoje=new Date().toISOString().split('T')[0];
+
+  // ── Regra 1: Aviso prévio mínimo de 30 dias ──
+  const diffInicio=Math.round((new Date(rS+'T12:00:00')-new Date(hoje+'T12:00:00'))/864e5);
+  if(diffInicio<30){toast('Aviso prévio mínimo de 30 dias antes do início. Selecione uma data a partir de '+fD(new Date(new Date().getTime()+30*864e5).toISOString().split('T')[0]),'error');return;}
+
+  // ── Regra 2: Saldo disponível ──
   const usados=_sols.filter(s=>s.email===UCOLAB.email&&s.status!=='REJEITADO').reduce((a,s)=>a+s.dc,0);
-  if(dc>Math.max(0,30-usados)){toast(`Saldo insuficiente. Disponível: ${Math.max(0,30-usados)} dias`,'error');return;}
+  const saldo=Math.max(0,30-usados);
+  if(dc>saldo){toast(`Saldo insuficiente. Disponível: ${saldo} dias`,'error');return;}
+
+  // ── Regra 3: Mínimo de 14 dias no primeiro período ──
+  const solsAprov=_sols.filter(s=>s.email===UCOLAB.email&&s.status!=='REJEITADO');
+  if(solsAprov.length===0&&dc<14){toast('O primeiro período deve ter no mínimo 14 dias corridos.','error');return;}
+
+  // ── Regra 4: Máximo de 3 fracionamentos ──
+  if(solsAprov.length>=3){toast('Limite de 3 períodos de férias atingido.','error');return;}
+
+  // ── Regra 5: Período mínimo de 5 dias ──
+  if(dc<5){toast('O período mínimo é de 5 dias corridos.','error');return;}
   setStep(1);
   $('confirm-body').innerHTML=blocoKPIs(fD(rS),fD(rE),diasCorr(rS,rE),diasUteis(rS,rE))+
-    `<div style="font-size:13px;color:var(--muted);margin-top:12px;">Ao confirmar, <strong style="color:var(--text);">Anderson de Assis de Souza</strong> receberá notificação no Teams e e-mail para aprovar ou rejeitar.</div>`;
+    `<div style="font-size:13px;color:var(--muted);margin-top:12px;">Ao confirmar, <strong style="color:var(--text);">Anderson de Assis de Souza</strong> receberá notificação no Teams e e-mail para aprovar ou rejeitar.</div>
+    <div style="margin-top:10px;background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:8px;padding:10px;font-size:12px;color:var(--muted);line-height:1.7;">
+      ⏰ Aviso prévio mínimo: <strong style="color:var(--text);">30 dias</strong><br>
+      ✂️ Máximo de <strong style="color:var(--text);">3 períodos</strong> · mínimo de <strong style="color:var(--text);">14 dias</strong> no 1º período<br>
+      💰 Pagamento <strong style="color:var(--text);">2 dias úteis antes</strong> do início
+    </div>`;
 }
 
 async function enviarSolicitar(){
