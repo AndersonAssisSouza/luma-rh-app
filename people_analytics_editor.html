@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>People Analytics · RH</title>
+<script src="msal-browser.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ── Paleta Luma Plataforma ── */
+  --luma-purple:#9b66f4;
+  --luma-purple-dark:#7a45d4;
+  --luma-purple-light:#b98af7;
+  --luma-gold:#ffd000;
+  --luma-gold-dark:#c9a200;
+  --luma-black:#000000;
+  --luma-white:#ffffff;
+
+  /* ── Backgrounds escuros com tom roxo ── */
+  --bg:#2a2535;--bg2:#322d42;--bg3:#3c3650;
+  --border:rgba(155,102,244,0.15);--border2:rgba(155,102,244,0.28);
+
+  /* ── Texto ── */
+  --text:#f0ecff;--muted:#8a7faa;
+
+  /* ── Cores funcionais mapeadas na paleta Luma ── */
+  --accent:#9b66f4;       /* roxo principal */
+  --accent2:#ffd000;      /* dourado */
+  --warn:#ffd000;         /* dourado como alerta */
+  --danger:#f87171;       /* vermelho mantido para erros críticos */
+  --purple:#b98af7;       /* roxo claro */
+  --coral:#fb923c;        /* coral mantido */
+
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{width:100%;font-size:17px;zoom:1;-ms-zoom:1;-webkit-text-size-adjust:100%;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:17px;min-height:100vh;width:100vw;max-width:100%;overflow-x:hidden;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:1px solid rgba(155,102,244,0.3);background:#2a2535;position:sticky;top:0;z-index:100;gap:10px;flex-wrap:wrap;width:100%;}
+.nbrand{display:flex;align-items:center;gap:9px;}
+.nlogo{width:30px;height:30px;background:none;border-radius:0;display:flex;align-items:center;justify-content:center;}
+.ntitle{font-weight:600;font-size:17px;}.nsub{color:var(--muted);font-size:17px;}
+.ntabs{display:flex;gap:2px;flex-wrap:wrap;}
+.tab{padding:7px 16px;border-radius:6px;cursor:pointer;font-size:17px;color:var(--muted);transition:all .15s;border:none;background:none;font-family:var(--font);}
+.tab:hover{color:var(--text);background:var(--bg3);}
+.tab.active{color:#ffd000;background:rgba(155,102,244,.18);}
+.nright{display:flex;align-items:center;gap:7px;}
+.ndot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
+.ndot.live{background:var(--accent2);box-shadow:0 0 5px rgba(56,217,169,.5);}
+.ndate{font-family:var(--mono);font-size:17px;color:var(--muted);}
+.btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border2);background:none;color:var(--text);font-family:var(--font);font-size:17px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.btn:hover{background:var(--bg3);}
+.btn-a{border-color:var(--accent);color:var(--accent);}.btn-a:hover{background:rgba(79,156,249,.1);}
+.btn-g{border-color:var(--accent2);color:var(--accent2);}.btn-g:hover{background:rgba(56,217,169,.08);}
+.btn-d{border-color:var(--danger);color:var(--danger);}.btn-d:hover{background:rgba(248,113,113,.08);}
+.btn:disabled{opacity:.35;pointer-events:none;}
+.main{padding:22px 32px;width:100%;}
+.sec{display:none;}.sec.active{display:block;animation:fi .22s ease;min-height:calc(100vh - 60px);}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;position:relative;overflow:hidden;}
+.kl{font-size:17px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.kv{font-size:52px;font-weight:300;line-height:1;margin-bottom:6px;}
+.ks{font-size:17px;color:var(--muted);}
+.kbadge{position:absolute;top:11px;right:11px;padding:3px 8px;border-radius:20px;font-size:17px;font-weight:500;}
+.bb{background:rgba(79,156,249,.15);color:var(--accent);}
+.bg{background:rgba(56,217,169,.15);color:var(--accent2);}
+.bw{background:rgba(245,158,11,.15);color:var(--warn);}
+.bd{background:rgba(248,113,113,.15);color:var(--danger);}
+.kbar{position:absolute;bottom:0;left:0;right:0;height:2px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;align-items:stretch;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px;align-items:stretch;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:14px;height:100%;}
+.ct{font-size:17px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.ct span{font-size:17px;font-weight:400;text-transform:none;letter-spacing:0;}
+.br{display:flex;align-items:center;gap:7px;margin-bottom:14px;}
+.bl{width:110px;font-size:17px;color:var(--muted);text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bt{flex:1;height:7px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.bf{height:100%;border-radius:3px;}
+.bc{width:22px;font-size:17px;color:var(--text);font-family:var(--mono);text-align:right;flex-shrink:0;}
+.dw{display:flex;align-items:center;gap:13px;}
+.li{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.ld{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.ll{font-size:17px;color:var(--muted);flex:1;}
+.lv{font-size:17px;font-family:var(--mono);color:var(--text);}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:17px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 7px 10px;text-align:left;font-weight:500;cursor:pointer;user-select:none;white-space:nowrap;}.tbl th:hover{color:var(--text);}.tbl th.asc::after{content:" ↑";color:var(--accent2);}.tbl th.desc::after{content:" ↓";color:var(--accent2);}
+.tbl td{padding:10px 8px;border-top:1px solid var(--border);font-size:17px;vertical-align:middle;}
+.tbl tr:hover td{background:rgba(255,255,255,.012);}
+.acts{display:flex;gap:3px;opacity:0;transition:opacity .15s;}
+.tbl tr:hover .acts{opacity:1;}
+.ab{padding:3px 9px;border-radius:5px;border:1px solid var(--border2);background:none;color:var(--muted);font-size:17px;cursor:pointer;font-family:var(--font);transition:all .15s;}
+.ab:hover{color:var(--accent);border-color:var(--accent);background:rgba(79,156,249,.07);}
+.ab.d:hover{color:var(--danger);border-color:var(--danger);background:rgba(248,113,113,.07);}
+.chip{display:inline-block;padding:3px 9px;border-radius:20px;font-size:17px;font-weight:500;}
+.cp{background:rgba(167,139,250,.15);color:var(--purple);}
+.cc{background:rgba(79,156,249,.15);color:var(--accent);}
+.cs{background:rgba(56,217,169,.15);color:var(--accent2);}
+.ce{background:rgba(251,146,60,.15);color:var(--coral);}
+.cok{background:rgba(56,217,169,.1);color:var(--accent2);}
+.cw{background:rgba(245,158,11,.15);color:var(--warn);}
+.cd{background:rgba(248,113,113,.15);color:var(--danger);}
+.sy{overflow-y:auto;max-height:calc(100vh - 340px);min-height:200px;}
+.sy::-webkit-scrollbar{width:3px;}
+.sy::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.ai{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--border);}
+.ai:first-child{border-top:none;padding-top:0;}
+.aico{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;}
+.ainf{flex:1;}.an{font-size:17px;font-weight:500;margin-bottom:2px;}.ad{font-size:17px;color:var(--muted);}
+.ei{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);}
+.ei:last-child{border-bottom:none;}
+.ed{width:38px;height:38px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.edn{font-size:17px;font-weight:600;line-height:1;}
+.edl{font-size:17px;text-transform:uppercase;letter-spacing:.04em;opacity:.8;}
+.en{font-size:17px;font-weight:500;margin-bottom:2px;}.et{font-size:17px;color:var(--muted);}
+.sttl{font-size:24px;font-weight:500;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
+.sttl-l{display:flex;align-items:center;gap:7px;}
+.sdot{width:5px;height:5px;border-radius:50%;}
+.empty{text-align:center;padding:32px;color:var(--muted);font-size:17px;}
+
+/* ── MODAL ── */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.5);animation:mi .18s ease;}
+@keyframes mi{from{opacity:0;transform:scale(.96) translateY(7px)}to{opacity:1;transform:none}}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border);}
+.mt{font-size:17px;font-weight:500;}.ms{font-size:17px;color:var(--muted);margin-top:1px;}
+.mc{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.mc:hover{color:var(--text);border-color:var(--border2);}
+.mb{padding:18px;}
+.mf{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:7px;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fg.one{grid-template-columns:1fr;}
+.fgrp{display:flex;flex-direction:column;gap:4px;}
+.fgrp.s2{grid-column:1/-1;}
+.flbl{font-size:17px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:500;}
+.flbl .rq{color:var(--danger);}
+.fi,.fsel,.fta{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;color:var(--text);font-family:var(--font);font-size:17px;width:100%;transition:border-color .15s;}
+.fi:focus,.fsel:focus,.fta:focus{outline:none;border-color:var(--accent);}
+.fsel option{background:var(--bg3);}
+.fta{resize:vertical;min-height:60px;}
+.fdiv{grid-column:1/-1;height:1px;background:var(--border);margin:2px 0;}
+.fsec{grid-column:1/-1;font-size:17px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-weight:500;}
+
+/* ── CONFIG ── */
+.cscr{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:900;padding:16px;}
+.cscr.hidden{display:none;}
+.cbox{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:26px;max-width:400px;width:100%;}
+.ctitle{font-size:17px;font-weight:500;margin-bottom:3px;}.csub{font-size:17px;color:var(--muted);margin-bottom:18px;line-height:1.6;}
+.chint{font-size:17px;color:var(--muted);margin-top:4px;line-height:1.5;}
+.csep{height:1px;background:var(--border);margin:14px 0;}
+
+/* ── LOADING ── */
+.lscr{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:800;}
+.lscr.hidden{display:none;}
+.spin{width:30px;height:30px;border:2px solid var(--border2);border-top-color:#9b66f4;border-radius:50%;animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lmsg{font-size:17px;color:var(--muted);}
+
+/* ── TOAST ── */
+.tc{position:fixed;bottom:20px;right:20px;z-index:1000;display:flex;flex-direction:column;gap:6px;}
+.toast{background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:9px 14px;font-size:17px;min-width:220px;display:flex;align-items:center;gap:7px;animation:ti .18s ease;box-shadow:0 6px 20px rgba(0,0,0,.4);}
+@keyframes ti{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+.toast.success{border-color:rgba(56,217,169,.3);}
+.toast.error{border-color:rgba(248,113,113,.3);}
+.toast.info{border-color:rgba(79,156,249,.3);}
+.tdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- CONFIG -->
+<div class="cscr" id="sConfig">
+  <div class="cbox">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
+      <div class="nlogo" style="width:42px;height:42px;background:none;padding:0;"><svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" rx="12" fill="#9b66f4"/>
+            <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
+            <polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/>
+          </svg></div>
+      <div><div class="ctitle">People Analytics</div><div style="font-size:17px;color:var(--muted)">Configuração Microsoft 365</div></div>
+    </div>
+    <div class="csub">Informe as credenciais do Azure AD. O app precisa de permissão <strong>Files.ReadWrite</strong> para leitura e gravação no Excel.</div>
+    <div class="fgrp" style="margin-bottom:9px;"><div class="flbl">Client ID <span class="rq">*</span></div><input class="fi" id="cClientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:var(--mono);font-size:17px;"></div>
+    <div class="fgrp" style="margin-bottom:9px;"><div class="flbl">Tenant ID <span class="rq">*</span></div><input class="fi" id="cTenantId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:var(--mono);font-size:17px;"></div>
+    <div class="fgrp" style="margin-bottom:9px;"><div class="flbl">Drive ID (opcional — deixar vazio usa /me/drive)</div><input class="fi" id="cDriveId" placeholder="b!xxxxxx..." style="font-family:var(--mono);font-size:17px;"></div>
+    <div class="fgrp" style="margin-bottom:4px;"><div class="flbl">Item ID do arquivo Excel <span class="rq">*</span></div><input class="fi" id="cItemId" placeholder="01XXXXXXXXXXXXXXXX" style="font-family:var(--mono);font-size:17px;"></div>
+    <div class="chint">💡 Para obter o Item ID: abra o Excel no OneDrive → "..." → Detalhes → copie o ID da URL. Ou use graph.microsoft.com → /me/drive/root/children</div>
+    <div class="csep"></div>
+    <button class="btn btn-g" style="width:100%;justify-content:center;padding:9px;" onclick="saveConf()">Conectar ao Microsoft 365</button>
+    <div style="margin-top:9px;text-align:center;"><span style="font-size:17px;color:var(--muted);cursor:pointer;text-decoration:underline;" onclick="demoMode()">Usar modo demonstração (sem Excel)</span></div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="lscr hidden" id="sLoad">
+  <div class="spin"></div>
+  <div class="lmsg" id="lMsg">Conectando...</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+<nav>
+  <div class="nbrand">
+    <div class="nlogo" style="width:42px;height:42px;background:none;padding:0;"><svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" rx="12" fill="#9b66f4"/><polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/><polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/></svg></div>
+    <div><div class="ntitle" style="color:#f0ecff;">People Analytics</div><div class="nsub" style="color:#9b66f4;font-weight:500;">Luma Plataforma · RH</div></div>
+  </div>
+  <div class="ntabs">
+    <button class="tab active" onclick="showTab('vg',this)">Visão Geral</button>
+    <button class="tab" onclick="showTab('ps',this)">Pessoal</button>
+    <button class="tab" onclick="showTab('aniv',this)">Aniversários</button>
+    <button class="tab" onclick="showTab('fer',this)">Férias</button>
+    <button class="tab" onclick="showTab('ex',this)">Exames</button>
+    <button class="tab" onclick="showTab('aus',this)">Ausências</button>
+    <button class="tab" onclick="showTab('alert',this)">Alertas</button>
+  </div>
+  <div class="nright">
+    <div id="ndot" class="ndot" title="Offline"></div>
+    <div class="ndate" id="ndate"></div>
+    <button class="btn btn-a" onclick="loadAll()">↻ Atualizar</button>
+  </div>
+</nav>
+
+<div class="main">
+
+<!-- VISÃO GERAL -->
+<div class="sec active" id="vg">
+
+  <!-- LINHA 1: 4 KPIs principais -->
+  <div class="kg">
+    <div class="kpi"><div class="kl">Colaboradores ativos</div><div class="kv" style="color:var(--accent)" id="kAtivos">—</div><div class="ks" id="kAtivosSub">—</div><span class="kbadge bb" id="kAdm">—</span><div class="kbar" style="background:linear-gradient(90deg,#9b66f4,#ffd000)"></div></div>
+    <div class="kpi"><div class="kl">Alertas críticos</div><div class="kv" style="color:var(--danger)" id="kAlert">—</div><div class="ks">contratos + exames + férias</div><span class="kbadge bd">Atenção</span><div class="kbar" style="background:var(--danger)"></div></div>
+    <div class="kpi"><div class="kl">Próx. aniversário</div><div class="kv" style="color:var(--accent2)" id="kProx">—</div><div class="ks" id="kProxSub">—</div><span class="kbadge bg" id="kProxBadge">—</span><div class="kbar" style="background:var(--accent2)"></div></div>
+    <div class="kpi"><div class="kl">Automação Teams</div><div class="kv" style="color:var(--accent2)">ON</div><div class="ks">Power Automate ativo</div><span class="kbadge bg">Operando</span><div class="kbar" style="background:var(--accent2)"></div></div>
+  </div>
+
+  <!-- LINHA 2: 6 KPIs secundários -->
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px;">
+    <div class="kpi" style="padding:16px;"><div class="kl" style="font-size:17px;">Idade média</div><div class="kv" style="font-size:38px;color:var(--purple)" id="kIdade">—</div><div class="ks">anos</div><div class="kbar" style="background:var(--purple)"></div></div>
+    <div class="kpi" style="padding:16px;"><div class="kl" style="font-size:17px;">Senioridade média</div><div class="kv" style="font-size:38px;color:var(--accent2)" id="kSenior">—</div><div class="ks">anos na empresa</div><div class="kbar" style="background:var(--accent2)"></div></div>
+    <div class="kpi" style="padding:16px;"><div class="kl" style="font-size:17px;">Histórico total</div><div class="kv" style="font-size:38px;color:var(--muted)" id="kHistorico">—</div><div class="ks">colaboradores</div><div class="kbar" style="background:var(--muted)"></div></div>
+    <div class="kpi" style="padding:16px;"><div class="kl" style="font-size:17px;">Ausências</div><div class="kv" style="font-size:38px;color:var(--coral)" id="kAusencias">—</div><div class="ks">atestados + faltas</div><div class="kbar" style="background:var(--coral)"></div></div>
+    <div class="kpi" style="padding:16px;"><div class="kl" style="font-size:17px;">Exames vencidos</div><div class="kv" style="font-size:38px;color:var(--warn)" id="kExVenc">—</div><div class="ks">colaboradores ativos</div><div class="kbar" style="background:var(--warn)"></div></div>
+    <div class="kpi" style="padding:16px;"><div class="kl" style="font-size:17px;">Turnover</div><div class="kv" style="font-size:38px;color:var(--danger)" id="kTurnover">—</div><div class="ks" id="kTurnoverSub">—</div><div class="kbar" style="background:var(--danger)"></div></div>
+  </div>
+
+  <!-- LINHA 3: Composição + Movimentações + Saúde operacional -->
+  <div style="display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:14px;margin-bottom:14px;">
+    <div class="card" style="margin-bottom:0;">
+      <div class="ct">Composição por vínculo <span id="vinSpan">—</span></div>
+      <div class="dw" style="flex-direction:column;align-items:center;gap:16px;height:100%;justify-content:center;">
+        <svg width="180" height="180" viewBox="0 0 90 90" style="width:180px;height:180px">
+          <circle cx="45" cy="45" r="32" fill="none" stroke="#1a1e28" stroke-width="14"/>
+          <circle id="dPJ" cx="45" cy="45" r="32" fill="none" stroke="#9b66f4" stroke-width="14" stroke-dasharray="0 201" stroke-dashoffset="0" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .7s"/>
+          <circle id="dCLT" cx="45" cy="45" r="32" fill="none" stroke="#ffd000" stroke-width="14" stroke-dasharray="0 201" stroke-dashoffset="0" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .7s"/>
+          <circle id="dSOC" cx="45" cy="45" r="32" fill="none" stroke="#b98af7" stroke-width="14" stroke-dasharray="0 201" stroke-dashoffset="0" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .7s"/>
+          <circle id="dEST" cx="45" cy="45" r="32" fill="none" stroke="#fb923c" stroke-width="14" stroke-dasharray="0 201" stroke-dashoffset="0" transform="rotate(-90 45 45)" style="transition:stroke-dasharray .7s"/>
+          <text id="dNum" x="45" y="41" text-anchor="middle" fill="#e8eaf0" font-size="18" font-family="DM Sans" font-weight="300">—</text>
+          <text x="45" y="53" text-anchor="middle" fill="#7a7f94" font-size="8" font-family="DM Sans">ativos</text>
+        </svg>
+        <div id="vinLeg" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;width:100%;"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;">
+      <div class="ct">Movimentações por ano</div>
+      <div style="display:flex;gap:12px;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:5px;font-size:17px;color:var(--muted)"><div style="width:9px;height:9px;border-radius:2px;background:var(--accent2)"></div>Admissões</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:17px;color:var(--muted)"><div style="width:9px;height:9px;border-radius:2px;background:var(--danger)"></div>Desligamentos</div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:5px;flex:1;min-height:0;" id="movChart"></div>
+      <div style="display:flex;gap:5px;margin-top:6px;" id="movLbls"></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ct">Saúde operacional</div>
+      <div id="saudeOp" style="display:flex;flex-direction:column;gap:10px;"></div>
+    </div>
+  </div>
+
+  <!-- LINHA 4: Distribuição por área + Por empresa + Faixa etária + Tempo empresa -->
+  <div style="display:grid;grid-template-columns:1.4fr 0.8fr 0.8fr 0.8fr;gap:14px;margin-bottom:14px;">
+    <div class="card" style="margin-bottom:0;">
+      <div class="ct">Distribuição por área</div>
+      <div id="areaChart"></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ct">Por empresa</div>
+      <div id="empB"></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ct">Faixa etária</div>
+      <div id="etarB"></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ct">Tempo de empresa</div>
+      <div id="tempoB"></div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:17px;color:var(--muted)">Média</span><span style="font-size:17px;font-family:var(--mono);color:var(--accent)" id="tMedia">—</span></div>
+    </div>
+  </div>
+
+  <!-- LINHA 5: Equipe por gestor + Top senioridade + Próx aniversários 30 dias -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+    <div class="card" style="margin-bottom:0;">
+      <div class="ct">Equipe por gestor</div>
+      <div id="gestorChart"></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ct">Top senioridade</div>
+      <div id="topSenior"></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ct">Próximos aniversários <span>30 dias</span></div>
+      <div id="proxAniv30"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- PESSOAL -->
+<div class="sec" id="ps">
+  <div class="sttl">
+    <div class="sttl-l"><div class="sdot" style="background:var(--accent)"></div>Gestão de Pessoal</div>
+    <button class="btn btn-g" onclick="openModal('mNewColab')">+ Novo colaborador</button>
+  </div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Total ativos</div><div class="kv" style="color:var(--accent)" id="pAtivos">—</div><div class="ks" id="pEmpr">—</div><div class="kbar" style="background:var(--accent)"></div></div>
+    <div class="kpi"><div class="kl">Desligados</div><div class="kv" style="color:var(--muted)" id="pDesl">—</div><div class="ks">histórico</div><div class="kbar" style="background:var(--muted)"></div></div>
+    <div class="kpi"><div class="kl">Turnover</div><div class="kv" style="color:var(--warn)" id="pTurn">—</div><div class="ks" id="pTurnS">—</div><div class="kbar" style="background:var(--warn)"></div></div>
+    <div class="kpi"><div class="kl">Maior senioridade</div><div class="kv" style="color:var(--accent2)" id="pSen">—</div><div class="ks" id="pSenN">—</div><div class="kbar" style="background:var(--accent2)"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Colaboradores ativos <span id="qCount">—</span></div>
+    <div class="sy"><table class="tbl"><thead><tr><th onclick="sortTable('qBody',0,this)">Nome</th><th onclick="sortTable('qBody',1,this)">Vínculo</th><th onclick="sortTable('qBody',2,this)">Cargo</th><th onclick="sortTable('qBody',3,this)">Área</th><th onclick="sortTable('qBody',4,this)">Empresa</th><th onclick="sortTable('qBody',5,this)">Admissão</th><th onclick="sortTable('qBody',6,this)">Tempo</th><th></th></tr></thead><tbody id="qBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ANIVERSÁRIOS -->
+<div class="sec" id="aniv">
+  <div class="sttl"><div class="sttl-l"><div class="sdot" style="background:var(--accent2)"></div>Aniversários</div></div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Eventos mapeados</div><div class="kv" style="color:var(--accent2)" id="aTotal">—</div><div class="ks">pessoal + empresa</div><div class="kbar" style="background:var(--accent2)"></div></div>
+    <div class="kpi"><div class="kl">Próximo evento</div><div class="kv" style="color:var(--accent)" id="aProx">—</div><div class="ks" id="aProxS">—</div><div class="kbar" style="background:var(--accent)"></div></div>
+    <div class="kpi"><div class="kl">Automação Teams</div><div class="kv" style="color:var(--accent2)">ON</div><div class="ks">D-1 · Comunicados</div><div class="kbar" style="background:var(--accent2)"></div></div>
+    <div class="kpi"><div class="kl">Mensagens</div><div class="kv" style="color:var(--purple)" id="aMsgs">—</div><div class="ks">modelos ativos</div><div class="kbar" style="background:var(--purple)"></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">Próximos 60 dias</div><div id="proxEvts"><div class="empty">Carregando...</div></div></div>
+    <div class="card">
+      <div class="ct">Automação Teams</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:17px;color:var(--muted)">Power Automate</span><span class="chip cok">Ativo</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:17px;color:var(--muted)">Canal</span><span style="font-size:17px;">Comunicados</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:17px;color:var(--muted)">Antecedência</span><span style="font-size:17px;font-family:var(--mono);color:var(--accent)">D-1</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px;"><span style="font-size:17px;color:var(--muted)">Sexta verifica</span><span style="font-size:17px;">Sáb+Dom+Seg</span></div>
+      <div style="font-size:17px;color:var(--muted);line-height:1.7;background:var(--bg3);padding:9px;border-radius:6px;font-style:italic;">"Hoje celebramos o aniversário de [Nome]. Desejamos um novo ciclo cheio de saúde, conquistas e muitas alegrias."</div>
+    </div>
+  </div>
+  <div class="card"><div class="ct">Log de comunicações</div><table class="tbl"><thead><tr><th>Data</th><th>Colaborador</th><th>Evento</th><th>Empresa</th><th>Status</th></tr></thead><tbody id="logBody"></tbody></table></div>
+</div>
+
+<!-- FÉRIAS -->
+<div class="sec" id="fer">
+  <div class="sttl"><div class="sttl-l"><div class="sdot" style="background:var(--warn)"></div>Férias CLT</div></div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Não programadas</div><div class="kv" style="color:var(--warn)" id="fNp">—</div><div class="ks">ação necessária</div><div class="kbar" style="background:var(--warn)"></div></div>
+    <div class="kpi"><div class="kl">N/A (não CLT)</div><div class="kv" style="color:var(--muted)" id="fNa">—</div><div class="ks">PJ/Sócio/Estag.</div><div class="kbar" style="background:var(--muted)"></div></div>
+    <div class="kpi"><div class="kl">Inativos</div><div class="kv" style="color:var(--muted)" id="fIn">—</div><div class="ks">desligados</div><div class="kbar" style="background:var(--muted)"></div></div>
+    <div class="kpi"><div class="kl">CLT ativos</div><div class="kv" style="color:var(--accent)" id="fClt">—</div><div class="ks">com direito</div><div class="kbar" style="background:var(--accent)"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Controle de férias <span id="fCount">—</span></div>
+    <div class="sy"><table class="tbl"><thead><tr><th onclick="sortTable('fBody',0,this)">Colaborador</th><th onclick="sortTable('fBody',1,this)">Admissão</th><th onclick="sortTable('fBody',2,this)">Status</th><th>Período aquisitivo</th><th>Programadas</th><th>Gozadas</th><th></th></tr></thead><tbody id="fBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- EXAMES -->
+<div class="sec" id="ex">
+  <div class="sttl"><div class="sttl-l"><div class="sdot" style="background:var(--purple)"></div>Exames Ocupacionais</div></div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Vencidos (ativos)</div><div class="kv" style="color:var(--danger)" id="exV">—</div><div class="ks">ação imediata</div><span class="kbadge bd">Urgente</span><div class="kbar" style="background:var(--danger)"></div></div>
+    <div class="kpi"><div class="kl">Total registros</div><div class="kv" style="color:var(--muted)" id="exT">—</div><div class="ks">incl. inativos</div><div class="kbar" style="background:var(--muted)"></div></div>
+    <div class="kpi"><div class="kl">Ativos com exame</div><div class="kv" style="color:var(--accent)" id="exA">—</div><div class="ks">registros válidos</div><div class="kbar" style="background:var(--accent)"></div></div>
+    <div class="kpi"><div class="kl">Sem registro</div><div class="kv" style="color:var(--warn)" id="exS">—</div><div class="ks">colaboradores ativos</div><div class="kbar" style="background:var(--warn)"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Controle de exames <span id="exCount">—</span></div>
+    <div class="sy"><table class="tbl"><thead><tr><th onclick="sortTable('exBody',0,this)">Colaborador</th><th onclick="sortTable('exBody',1,this)">Status colab.</th><th onclick="sortTable('exBody',2,this)">Último exame</th><th onclick="sortTable('exBody',3,this)">Próximo exame</th><th onclick="sortTable('exBody',4,this)">Situação</th><th></th></tr></thead><tbody id="exBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- AUSÊNCIAS -->
+<div class="sec" id="aus">
+  <div class="sttl">
+    <div class="sttl-l"><div class="sdot" style="background:var(--coral)"></div>Ausências &amp; Ocorrências</div>
+    <button class="btn btn-g" onclick="openModal('mNewAus')">+ Registrar ausência</button>
+  </div>
+  <div class="card">
+    <div class="ct">Registros <span id="ausCount">—</span></div>
+    <div class="sy"><table class="tbl"><thead><tr><th>Tipo</th><th>Colaborador</th><th>Data</th><th>Detalhe / CID</th><th></th></tr></thead><tbody id="ausBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- ALERTAS -->
+<div class="sec" id="alert">
+  <div class="sttl"><div class="sttl-l"><div class="sdot" style="background:var(--danger)"></div>Alertas &amp; Pendências</div></div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Contratos s/ data fim</div><div class="kv" style="color:var(--danger)" id="alC">—</div><div class="ks">PJ/CLT sem vencimento</div><span class="kbadge bd">Crítico</span><div class="kbar" style="background:var(--danger)"></div></div>
+    <div class="kpi"><div class="kl">Exames vencidos</div><div class="kv" style="color:var(--warn)" id="alE">—</div><div class="ks">colaboradores ativos</div><span class="kbadge bw">Urgente</span><div class="kbar" style="background:var(--warn)"></div></div>
+    <div class="kpi"><div class="kl">Férias pendentes</div><div class="kv" style="color:var(--warn)" id="alF">—</div><div class="ks">CLT sem programação</div><span class="kbadge bw">Atenção</span><div class="kbar" style="background:var(--warn)"></div></div>
+    <div class="kpi"><div class="kl">Total alertas</div><div class="kv" style="color:var(--danger)" id="alT">—</div><div class="ks">requerem ação</div><div class="kbar" style="background:var(--danger)"></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ct">Contratos sem data <span id="alCT" style="color:var(--danger)">—</span></div><div class="sy" id="alContList"></div></div>
+    <div class="card">
+      <div class="ct">Exames vencidos</div>
+      <div id="alExamList"></div>
+      <div style="margin-top:14px;padding-top:11px;border-top:1px solid var(--border);">
+        <div class="ct" style="margin-bottom:7px;">Resumo</div>
+        <div id="alResume" style="display:flex;flex-direction:column;gap:5px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════════ MODAIS ══════════════ -->
+
+<!-- Editar colaborador -->
+<div class="ov" id="mEditColab">
+  <div class="modal" style="max-width:620px;">
+    <div class="mh"><div><div class="mt">Editar colaborador</div><div class="ms" id="mEditColabSub">—</div></div><button class="mc" onclick="closeModal('mEditColab')">×</button></div>
+    <div class="mb">
+      <input type="hidden" id="eColabId"><input type="hidden" id="eColabRow">
+      <div class="fg">
+        <div class="fgrp s2"><div class="flbl">Nome completo</div><input class="fi" id="eNome"></div>
+        <div class="fgrp"><div class="flbl">Data de nascimento</div><input class="fi" id="eNasc" type="date"></div>
+        <div class="fgrp"><div class="flbl">Tipo de vínculo</div>
+          <select class="fsel" id="eVinculo"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option></select>
+        </div>
+        <div class="fgrp"><div class="flbl">Data de admissão</div><input class="fi" id="eAdmissao" type="date"></div>
+        <div class="fgrp"><div class="flbl">Cargo</div><input class="fi" id="eCargo"></div>
+        <div class="fgrp"><div class="flbl">Setor</div><input class="fi" id="eSetor"></div>
+        <div class="fgrp"><div class="flbl">Área</div>
+          <select class="fsel" id="eArea"><option>Jurídico</option><option>Tecnologia</option><option>Operacional</option><option>Controladoria</option><option>Administrativo</option><option>Atendimento</option><option>Vendas</option><option>Financeiro</option><option>Marketing</option><option>Recursos Humanos</option><option>Sucesso do Cliente</option><option>Contas a Pagar</option><option>Contas a Receber</option><option>Diretor</option></select>
+        </div>
+        <div class="fgrp"><div class="flbl">Gestor</div>
+          <select class="fsel" id="eGestor"><option>Luisa Moraes</option><option>Anderson de Assis de Souza</option><option>Matheus Rocha</option><option>Amanda Mapa</option></select>
+        </div>
+        <div class="fgrp"><div class="flbl">Empresa</div>
+          <select class="fsel" id="eEmpresa"><option>Luma Plataforma</option><option>Luisa Moraes Advogados</option></select>
+        </div>
+        <div class="fdiv"></div>
+        <div class="fsec">Remuneração</div>
+        <div class="fgrp"><div class="flbl">Salário / Honorário (R$)</div><input class="fi" id="eSalario" type="number" step="0.01" placeholder="0,00"></div>
+        <div class="fgrp"><div class="flbl">Vale Refeição (R$/mês)</div><input class="fi" id="eVR" type="number" step="0.01" placeholder="0,00"></div>
+        <div class="fgrp"><div class="flbl">Vale Transporte (R$/mês)</div><input class="fi" id="eVT" type="number" step="0.01" placeholder="0,00"></div>
+        <div class="fgrp"><div class="flbl">Plano de Saúde</div>
+          <select class="fsel" id="ePlanoSaude"><option value="">Sem plano</option><option value="SIM">Sim</option><option value="NAO">Não</option></select>
+        </div>
+        <div class="fgrp s2"><div class="flbl">Outros benefícios</div><input class="fi" id="eBeneficios" placeholder="Ex: Gympass, seguro vida..."></div>
+        <div class="fdiv"></div>
+        <div class="fsec">Desligamento</div>
+        <div class="fgrp"><div class="flbl">Status</div>
+          <select class="fsel" id="eStatus"><option value="ATIVO">Ativo</option><option value="DESLIGADO">Desligado</option><option value="AFASTADO">Afastado</option></select>
+        </div>
+        <div class="fgrp"><div class="flbl">Data de desligamento</div><input class="fi" id="eDesl" type="date"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn" onclick="closeModal('mEditColab')">Cancelar</button><button class="btn btn-g" onclick="saveEditColab()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- Novo colaborador -->
+<div class="ov" id="mNewColab">
+  <div class="modal">
+    <div class="mh"><div><div class="mt">Novo colaborador</div><div class="ms">Registrar admissão</div></div><button class="mc" onclick="closeModal('mNewColab')">×</button></div>
+    <div class="mb">
+      <div class="fg">
+        <div class="fgrp s2"><div class="flbl">Nome completo <span class="rq">*</span></div><input class="fi" id="nNome" placeholder="Nome completo"></div>
+        <div class="fgrp"><div class="flbl">Vínculo <span class="rq">*</span></div>
+          <select class="fsel" id="nVinc"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option></select>
+        </div>
+        <div class="fgrp"><div class="flbl">Admissão <span class="rq">*</span></div><input class="fi" id="nAdm" type="date"></div>
+        <div class="fgrp"><div class="flbl">Nascimento</div><input class="fi" id="nNasc" type="date"></div>
+        <div class="fgrp"><div class="flbl">Cargo</div><input class="fi" id="nCargo" placeholder="Ex: Analista Jurídico"></div>
+        <div class="fgrp"><div class="flbl">Área</div>
+          <select class="fsel" id="nArea"><option>Jurídico</option><option>Tecnologia</option><option>Operacional</option><option>Controladoria</option><option>Administrativo</option><option>Atendimento</option><option>Vendas</option><option>Financeiro</option><option>Marketing</option><option>Recursos Humanos</option><option>Sucesso do Cliente</option><option>Contas a Pagar</option><option>Contas a Receber</option><option>Diretor</option></select>
+        </div>
+        <div class="fgrp"><div class="flbl">Gestor</div>
+          <select class="fsel" id="nGestor"><option>Luisa Moraes</option><option>Anderson de Assis de Souza</option><option>Matheus Rocha</option><option>Amanda Mapa</option></select>
+        </div>
+        <div class="fgrp"><div class="flbl">Empresa <span class="rq">*</span></div>
+          <select class="fsel" id="nEmpresa"><option>Luma Plataforma</option><option>Luisa Moraes Advogados</option></select>
+        </div>
+        <div class="fgrp"><div class="flbl">Setor</div><input class="fi" id="nSetor" placeholder="Ex: Diretoria"></div>
+        <div class="fdiv"></div>
+        <div class="fsec">Remuneração</div>
+        <div class="fgrp"><div class="flbl">Salário / Honorário (R$)</div><input class="fi" id="nSalario" type="number" step="0.01" placeholder="0,00"></div>
+        <div class="fgrp"><div class="flbl">Vale Refeição (R$/mês)</div><input class="fi" id="nVR" type="number" step="0.01" placeholder="0,00"></div>
+        <div class="fgrp"><div class="flbl">Vale Transporte (R$/mês)</div><input class="fi" id="nVT" type="number" step="0.01" placeholder="0,00"></div>
+        <div class="fgrp"><div class="flbl">Plano de Saúde</div>
+          <select class="fsel" id="nPlanoSaude"><option value="">Sem plano</option><option value="SIM">Sim</option><option value="NAO">Não</option></select>
+        </div>
+        <div class="fgrp s2"><div class="flbl">Outros benefícios</div><input class="fi" id="nBeneficios" placeholder="Ex: Gympass, seguro vida..."></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn" onclick="closeModal('mNewColab')">Cancelar</button><button class="btn btn-g" onclick="saveNewColab()">Registrar admissão</button></div>
+  </div>
+</div>
+
+<!-- Editar férias -->
+<div class="ov" id="mEditFer">
+  <div class="modal">
+    <div class="mh"><div><div class="mt">Editar férias</div><div class="ms" id="mEditFerSub">—</div></div><button class="mc" onclick="closeModal('mEditFer')">×</button></div>
+    <div class="mb">
+      <input type="hidden" id="eFerId"><input type="hidden" id="eFerRow">
+      <div class="fg">
+        <div class="fsec">Período aquisitivo</div>
+        <div class="fgrp"><div class="flbl">Início</div><input class="fi" id="fAqI" type="date"></div>
+        <div class="fgrp"><div class="flbl">Fim</div><input class="fi" id="fAqF" type="date"></div>
+        <div class="fgrp s2"><div class="flbl">Fim período concessivo</div><input class="fi" id="fConc" type="date"></div>
+        <div class="fdiv"></div>
+        <div class="fsec">Férias programadas</div>
+        <div class="fgrp"><div class="flbl">Início</div><input class="fi" id="fPI" type="date"></div>
+        <div class="fgrp"><div class="flbl">Fim</div><input class="fi" id="fPF" type="date"></div>
+        <div class="fdiv"></div>
+        <div class="fsec">Férias gozadas</div>
+        <div class="fgrp"><div class="flbl">Início</div><input class="fi" id="fGI" type="date"></div>
+        <div class="fgrp"><div class="flbl">Fim</div><input class="fi" id="fGF" type="date"></div>
+        <div class="fgrp s2"><div class="flbl">Status férias</div>
+          <select class="fsel" id="fSt"><option value="NAO_PROGRAMADA">Não programada</option><option value="PROGRAMADA">Programada</option><option value="GOZADA">Gozada</option><option value="NAO_APLICAVEL">Não aplicável</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn" onclick="closeModal('mEditFer')">Cancelar</button><button class="btn btn-g" onclick="saveEditFer()">Salvar férias</button></div>
+  </div>
+</div>
+
+<!-- Editar exame -->
+<div class="ov" id="mEditEx">
+  <div class="modal">
+    <div class="mh"><div><div class="mt">Editar exame ocupacional</div><div class="ms" id="mEditExSub">—</div></div><button class="mc" onclick="closeModal('mEditEx')">×</button></div>
+    <div class="mb">
+      <input type="hidden" id="eExId"><input type="hidden" id="eExRow">
+      <div class="fg">
+        <div class="fgrp"><div class="flbl">Último exame <span class="rq">*</span></div><input class="fi" id="exUlt" type="date"></div>
+        <div class="fgrp"><div class="flbl">Próximo exame</div><input class="fi" id="exProx" type="date"></div>
+        <div class="fgrp"><div class="flbl">Situação</div>
+          <select class="fsel" id="exSt"><option value="EM_DIA">Em dia</option><option value="VENCIDO">Vencido</option><option value="INATIVO">Inativo</option></select>
+        </div>
+        <div class="fgrp"><div class="flbl">Fonte / tipo</div><input class="fi" id="exFonte" placeholder="Ex: Exame Periódico"></div>
+        <div class="fgrp s2"><div class="flbl">Observação</div><textarea class="fta" id="exObs"></textarea></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn" onclick="closeModal('mEditEx')">Cancelar</button><button class="btn btn-g" onclick="saveEditEx()">Salvar exame</button></div>
+  </div>
+</div>
+
+<!-- Nova ausência -->
+<div class="ov" id="mNewAus">
+  <div class="modal">
+    <div class="mh"><div><div class="mt">Registrar ausência</div><div class="ms">Atestado, falta ou ocorrência</div></div><button class="mc" onclick="closeModal('mNewAus')">×</button></div>
+    <div class="mb">
+      <div class="fg">
+        <div class="fgrp"><div class="flbl">Tipo <span class="rq">*</span></div>
+          <select class="fsel" id="ausTipo"><option value="ATESTADO">Atestado médico</option><option value="FALTA">Falta</option><option value="AFASTAMENTO">Afastamento</option><option value="LICENCA">Licença</option></select>
+        </div>
+        <div class="fgrp"><div class="flbl">Colaborador <span class="rq">*</span></div><select class="fsel" id="ausColab" style="font-size:17px;"></select></div>
+        <div class="fgrp"><div class="flbl">Data <span class="rq">*</span></div><input class="fi" id="ausData" type="date"></div>
+        <div class="fgrp"><div class="flbl">Detalhe / CID</div><input class="fi" id="ausDetail" placeholder="Ex: K01, J00"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn" onclick="closeModal('mNewAus')">Cancelar</button><button class="btn btn-g" onclick="saveNewAus()">Registrar</button></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="tc" id="tc"></div>
+
+<script>
+// ══════════════════════════════
+// CORE
+// ══════════════════════════════
+const CK='pa_v3_cfg';
+let msalApp=null,tok=null,CFG=null,D={},DEMO=false;
+const $=id=>document.getElementById(id);
+const parseDate=d=>{if(!d)return null;if(typeof d==='number'||(/^\d+$/.test(String(d).trim()))){const n=Number(d);if(n>59)return new Date((n-25569)*86400*1000);if(n>0)return new Date((n-25568)*86400*1000);}const x=new Date(d);return isNaN(x)?null:x;};
+const validDate=d=>{const x=parseDate(d);if(!x)return false;const y=x.getFullYear();return y>=1970&&y<=2100;};
+const fmt=d=>{const x=parseDate(d);if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'—';try{return x.toLocaleDateString('pt-BR',{month:'2-digit',year:'numeric'})}catch{return'—'}};
+const fmtD=d=>{const x=parseDate(d);if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'—';try{return x.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}catch{return'—'}};
+const iso=d=>{const x=parseDate(d);if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'';try{return x.toISOString().split('T')[0]}catch{return''}};
+const chipV=v=>({PJ:'cp',CLT:'cc',SOCIO:'cs',ESTAGIARIO:'ce'})[String(v||'').toUpperCase()]||'cp';
+const lblV=v=>({PJ:'PJ',CLT:'CLT',SOCIO:'Sócio',ESTAGIARIO:'Estag.'})[String(v||'').toUpperCase()]||v;
+const setS=(id,val)=>{const e=$(id);if(!e)return;for(const o of e.options){if(o.value===val||o.text===val){e.value=o.value;return;}}};
+
+
+function demoMode(){DEMO=true;$('sConfig').classList.add('hidden');loadDemo();}
+
+async function initApp(c){
+  CFG=c;$('sConfig').classList.add('hidden');$('sLoad').classList.remove('hidden');setL('Inicializando autenticação...');
+  try{
+    const msalConfig={
+      auth:{
+        clientId:c.clientId,
+        authority:`https://login.microsoftonline.com/${c.tenantId}`,
+        redirectUri:'https://luisamoraesadvogados.sharepoint.com/sites/GestaodeClienteseProcessos/Aniversrios/Aplicativo/people_analytics_editor.html'
+      },
+      cache:{cacheLocation:'localStorage',storeAuthStateInCookie:true}
+    };
+    msalApp=await msal.createStandardPublicClientApplication(msalConfig);
+    await msalApp.initialize();
+    // Processa retorno do redirect
+    const r=await msalApp.handleRedirectPromise();
+    if(r){tok=r.accessToken;loadAll();return;}
+    // Tenta token silencioso
+    const accounts=msalApp.getAllAccounts();
+    if(accounts.length>0){
+      try{
+        const silent=await msalApp.acquireTokenSilent({
+          scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],
+          account:accounts[0]
+        });
+        tok=silent.accessToken;loadAll();return;
+      }catch(e){/* token expirado, faz redirect */}
+    }
+    // Login via redirect — funciona em qualquer contexto
+    await msalApp.loginRedirect({
+      scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All']
+    });
+  }catch(e){
+    $('sLoad').classList.add('hidden');
+    $('sConfig').classList.remove('hidden');
+    toast('Erro: '+e.message,'error');
+  }
+}
+async function doLogin(){
+  try{
+    await msalApp.loginRedirect({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All']});
+  }catch(e){toast('Erro no login: '+e.message,'error');}
+}
+async function getT(){
+  if(tok)return tok;
+  const a=msalApp.getAllAccounts();
+  if(!a.length){await doLogin();throw new Error('Redirecionando para login...');}
+  try{
+    const r=await msalApp.acquireTokenSilent({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],account:a[0]});
+    return tok=r.accessToken;
+  }catch(e){
+    await msalApp.acquireTokenRedirect({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],account:a[0]});
+    throw new Error('Renovando token...');
+  }
+}
+function driveB(){return CFG.driveId?`/drives/${CFG.driveId}/items/${CFG.itemId}`:`/me/drive/items/${CFG.itemId}`;}
+async function gGet(url){const t=await getT();const r=await fetch('https://graph.microsoft.com/v1.0'+url,{headers:{Authorization:'Bearer '+t}});if(!r.ok)throw new Error(`Graph ${r.status}`);return r.json();}
+async function gPatch(url,body){const t=await getT();const r=await fetch('https://graph.microsoft.com/v1.0'+url,{method:'PATCH',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok){const e=await r.text();throw new Error(`PATCH ${r.status}: ${e}`);}return r.json();}
+async function rSheet(sh){
+  const d=await gGet(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/usedRange`);
+  const rows=d.values||[];if(rows.length<2)return[];
+  const hdr=rows[0];return rows.slice(1).map((row,i)=>{const o={_row:i+2};hdr.forEach((h,j)=>o[h]=row[j]??null);return o;});
+}
+function col2L(n){let s='';n++;while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s;}
+async function patchRow(sh,row,colMap,data){
+  for(const[ci,field]of Object.entries(colMap)){
+    const v=data[field]??null;
+    await gPatch(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/range(address='${col2L(parseInt(ci))}${row}')`,{values:[[v]]});
+  }
+}
+async function appendR(sh,headers,rowData){
+  const d=await gGet(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/usedRange`);
+  const nr=(d.rowCount||1)+1;
+  const vals=[headers.map(h=>rowData[h]??null)];
+  const eC=col2L(headers.length-1);
+  await gPatch(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/range(address='A${nr}:${eC}${nr}')`,{values:vals});
+}
+function setL(m){$('lMsg').textContent=m;}
+
+async function loadAll(){
+  if(DEMO){loadDemo();return;}
+  $('sLoad').classList.remove('hidden');$('app').style.display='none';
+  const sheets=['CADASTRO_COLABORADORES','FERIAS_CLT','CONTRATOS_PJ','EVENTOS_RH','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH','AUSENCIAS_OCORRENCIAS','MOVIMENTACOES','BIBLIOTECA_MENSAGENS_ANIV'];
+  try{
+    for(const s of sheets){setL(`Lendo ${s}...`);D[s]=await rSheet(s);}
+    render();$('sLoad').classList.add('hidden');$('app').style.display='block';
+    const dot=$('ndot');dot.classList.add('live');dot.title='Ao vivo · '+new Date().toLocaleTimeString('pt-BR');
+    toast('Dados atualizados','success');
+  }catch(e){
+    $('sLoad').classList.add('hidden');$('app').style.display='block';
+    if(e.message&&e.message.includes('login')){}
+    else{toast('Erro: '+e.message,'error');loadDemo();}
+  }
+}
+
+// ══════════════════════════════
+// RENDER
+// ══════════════════════════════
+function render(){
+  const cad=D.CADASTRO_COLABORADORES||[];
+  const ferias=D.FERIAS_CLT||[];
+  const cont=D.CONTRATOS_PJ||[];
+  const evts=D.EVENTOS_RH||[];
+  const exames=D.EXAMES_OCUPACIONAIS||[];
+  const log=D.CONTROLE_COMUNICACAO_RH||[];
+  const aus=D.AUSENCIAS_OCORRENCIAS||[];
+  const mov=D.MOVIMENTACOES||[];
+  const msgs=D.BIBLIOTECA_MENSAGENS_ANIV||[];
+
+  const ativos=cad.filter(r=>String(r.STATUS||'').trim().toUpperCase()==='ATIVO');
+  const desl=cad.filter(r=>String(r.STATUS||'').trim().toUpperCase()==='DESLIGADO');
+  const vin={PJ:0,CLT:0,SOCIO:0,ESTAGIARIO:0};
+  ativos.forEach(r=>{const v=String(r.TIPO_VINCULO||'').toUpperCase().trim();if(vin[v]!==undefined)vin[v]++;});
+  const empM={};ativos.forEach(r=>{const e=r.EMPRESA||'N/D';empM[e]=(empM[e]||0)+1;});
+  const tFx={'<1':0,'1-3':0,'3-5':0,'>5':0};let sA=0,cA=0,mxA=0,mxAN='';
+  ativos.forEach(r=>{const a=parseFloat(r.ANOS_EMPRESA)||0;sA+=a;cA++;if(a>mxA){mxA=a;mxAN=r.NOME||'';}
+    if(a<1)tFx['<1']++;else if(a<3)tFx['1-3']++;else if(a<5)tFx['3-5']++;else tFx['>5']++;});
+  const et={'Até 25':0,'25-34':0,'35-44':0,'45-54':0,'55+':0};
+  ativos.forEach(r=>{const a=parseFloat(r.IDADE)||0;if(a<25)et['Até 25']++;else if(a<35)et['25-34']++;else if(a<45)et['35-44']++;else if(a<55)et['45-54']++;else et['55+']++;});
+  const admY={},desY={};
+  mov.forEach(r=>{const tp=String(r.TIPO_MOVIMENTACAO||'').trim();const d=r.DATA_MOVIMENTACAO;if(!d)return;const dt=parseDate(d);if(!dt)return;const y=dt.getFullYear();if(y<2000||y>2100)return;if(tp==='ADMISSAO')admY[y]=(admY[y]||0)+1;if(tp==='DESLIGAMENTO')desY[y]=(desY[y]||0)+1;});
+  const evA=evts.filter(r=>String(r.STATUS_COLABORADOR||'').toUpperCase()==='ATIVO'&&parseFloat(r.DIAS_PARA_EVENTO)>=0).sort((a,b)=>parseFloat(a.DIAS_PARA_EVENTO)-parseFloat(b.DIAS_PARA_EVENTO));
+  const prD=evA.length>0?Math.round(parseFloat(evA[0].DIAS_PARA_EVENTO)):null;
+  const cSem=cont.filter(r=>String(r.ALERTA||'').trim()==='SEM_DATA_FIM'&&String(r.STATUS_COLABORADOR||'').toUpperCase()==='ATIVO');
+  const exV=exames.filter(r=>String(r.STATUS_EXAME||'').toUpperCase()==='VENCIDO'&&String(r.STATUS||'').toUpperCase()==='ATIVO');
+  const fNP=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_PROGRAMADA');
+  const tAl=cSem.length+exV.length+fNP.length;
+  const admEY=admY[new Date().getFullYear()]||0;
+  const tot=ativos.length||1;const med=cA>0?(sA/cA).toFixed(1):0;
+
+  // LINHA 1: KPIs principais
+  $('kAtivos').textContent=ativos.length;
+  $('kAtivosSub').textContent=`de ${cad.length} cadastrados`;
+  $('kAdm').textContent=admEY>0?`+${admEY} em ${new Date().getFullYear()}`:'sem novas admissões';
+  $('kAlert').textContent=tAl;
+  if(prD!==null){$('kProx').textContent=prD;$('kProxSub').textContent='dias · '+fmtD(evA[0].DATA_EVENTO);$('kProxBadge').textContent=fmtD(evA[0].DATA_EVENTO);}
+
+  // LINHA 2: KPIs secundários
+  const idadeMed=ativos.length>0?(ativos.reduce((s,r)=>s+(parseFloat(r.IDADE)||0),0)/ativos.length).toFixed(1):0;
+  $('kIdade').textContent=idadeMed;
+  $('kSenior').textContent=med;
+  $('kHistorico').textContent=cad.length;
+  const ausReal=(aus||[]).filter(r=>r.ID_COLABORADOR&&r.NOME!=='Colaborador (a)');
+  $('kAusencias').textContent=ausReal.length;
+  $('kExVenc').textContent=exV.length;
+  const turnPct=cad.length>0?Math.round((desl.length/cad.length)*100):0;
+  $('kTurnover').textContent=turnPct+'%';
+  $('kTurnoverSub').textContent=`${desl.length} de ${cad.length} desligados`;
+
+  // LINHA 3: Saúde operacional
+  const exAtvConf=exames.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVO');
+  const exOkCount=exAtvConf.length-exV.length;
+  const ferCltAtv=ferias.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVO'&&r.STATUS_FERIAS!=='NAO_APLICAVEL'&&r.STATUS_FERIAS!=='INATIVO');
+  const ferProgCount=ferCltAtv.filter(r=>['PROGRAMADA','GOZADA'].includes(r.STATUS_FERIAS||'')).length;
+  const pjAtvCont=cont.filter(r=>String(r.STATUS_COLABORADOR||'').toUpperCase()==='ATIVO');
+  const pjOkCount=pjAtvCont.filter(r=>r.ALERTA!=='SEM_DATA_FIM').length;
+  const saudeItems=[
+    {l:'Exames ocupacionais',v:exOkCount,t:Math.max(exAtvConf.length,1),sub:`${exOkCount} em dia · ${exV.length} vencido${exV.length!==1?'s':''}`},
+    {l:'Férias CLT programadas',v:ferProgCount,t:Math.max(ferCltAtv.length,1),sub:`${ferProgCount} programadas · ${fNP.length} pendente${fNP.length!==1?'s':''}`},
+    {l:'Contratos PJ c/ data',v:pjOkCount,t:Math.max(pjAtvCont.length,1),sub:`${pjOkCount} com data · ${cSem.length} sem data`},
+    {l:'Automação Teams',v:1,t:1,sub:'Power Automate · D-1 · Comunicados',override:'ON'},
+  ];
+  $('saudeOp').innerHTML=saudeItems.map(s=>{
+    const pct=Math.round((s.v/s.t)*100);
+    const cor=s.override?'var(--accent2)':pct>=80?'var(--accent2)':pct>=50?'var(--warn)':'var(--danger)';
+    const label=s.override||pct+'%';
+    const status=s.override?'✓ Ativo':pct>=80?'✓ OK':pct>=50?'⚠ Atenção':'✗ Crítico';
+    return`<div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:17px;">${s.l}</span>
+        <span style="font-size:17px;font-family:var(--mono);color:${cor}">${label} <span style="font-size:17px;opacity:.7;">${status}</span></span>
+      </div>
+      <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin-bottom:3px;">
+        <div style="width:${s.override?100:pct}%;height:100%;background:${cor};border-radius:3px;transition:width .8s;"></div>
+      </div>
+      <div style="font-size:17px;color:var(--muted);">${s.sub}</div>
+    </div>`;}).join('');
+
+  // Próximos aniversários 30 dias
+  const prox30=evA.filter(r=>parseFloat(r.DIAS_PARA_EVENTO)<=30);
+  $('proxAniv30').innerHTML=prox30.length===0
+    ?'<div style="text-align:center;padding:20px;color:var(--muted);font-size:17px;">Nenhum nos próximos 30 dias</div>'
+    :prox30.map(r=>{const d=Math.round(parseFloat(r.DIAS_PARA_EVENTO));const emp=String(r.TIPO_EVENTO||'').includes('EMPRESA');const cor=emp?'var(--accent2)':'var(--accent)';
+      return`<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div style="width:36px;height:36px;border-radius:8px;background:${emp?'rgba(56,217,169,.1)':'rgba(79,156,249,.12)'};display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">
+          <div style="font-size:17px;font-weight:600;color:${cor};line-height:1;">${d}</div>
+          <div style="font-size:17px;color:${cor};opacity:.8;">dias</div>
+        </div>
+        <div><div style="font-size:17px;font-weight:500;">${r.NOME?.split(' ')[0]||'—'}</div>
+        <div style="font-size:17px;color:var(--muted);">${emp?'🏢':'🎂'} ${fmtD(r.DATA_EVENTO)}</div></div>
+      </div>`}).join('');
+
+    // ── ÁREA CHART ──
+  const areaMap={};ativos.forEach(r=>{const a=r.AREA||'N/D';areaMap[a]=(areaMap[a]||0)+1;});
+  const areaE=Object.entries(areaMap).sort((a,b)=>b[1]-a[1]);const mxArea=Math.max(...areaE.map(e=>e[1]),1);
+  const aC=['#ffd000','#b98af7','#9b66f4','#fb923c','#f59e0b','#f87171','#34d399','#60a5fa','#c084fc','#fb7185','#a3e635'];
+  $('areaChart').innerHTML=areaE.map((e,i)=>`<div class="br"><div class="bl" title="${e[0]}" style="font-size:17px;">${e[0].length>13?e[0].slice(0,13)+'…':e[0]}</div><div class="bt" style="height:6px;"><div class="bf" style="width:${(e[1]/mxArea)*100}%;background:${aC[i%aC.length]}"></div></div><div class="bc" style="font-size:17px;">${e[1]}</div></div>`).join('');
+
+  // ── GESTOR CHART ──
+  const gestMap={};ativos.forEach(r=>{const g=r.GESTOR||'N/D';gestMap[g]=(gestMap[g]||0)+1;});
+  const gestE=Object.entries(gestMap).sort((a,b)=>b[1]-a[1]);const mxGest=Math.max(...gestE.map(e=>e[1]),1);
+  $('gestorChart').innerHTML=gestE.map((e,i)=>{const pct=Math.round((e[1]/ativos.length)*100);
+    return`<div style="margin-bottom:11px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:17px;">${e[0].split(' ')[0]}</span><span style="font-size:17px;font-family:var(--mono);color:var(--accent)">${e[1]} · ${pct}%</span></div>
+      <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;"><div style="width:${(e[1]/mxGest)*100}%;height:100%;background:${aC[i%aC.length]};border-radius:3px;"></div></div></div>`;}).join('');
+
+  // ── TOP SENIORIDADE ──
+  const sorted=[...ativos].sort((a,b)=>(parseFloat(b.ANOS_EMPRESA)||0)-(parseFloat(a.ANOS_EMPRESA)||0)).slice(0,5);
+  $('topSenior').innerHTML=sorted.map((r,i)=>{const anos=(parseFloat(r.ANOS_EMPRESA)||0).toFixed(1);const medals=['🥇','🥈','🥉','4°','5°'];
+    return`<div style="display:flex;align-items:center;gap:9px;padding:7px 0;${i>0?'border-top:1px solid var(--border)':''}">
+      <div style="font-size:17px;width:26px;text-align:center;">${medals[i]}</div>
+      <div style="flex:1;"><div style="font-size:17px;font-weight:500;">${r.NOME?.split(' ').slice(0,2).join(' ')||'—'}</div><div style="font-size:17px;color:var(--muted);">${r.EMPRESA||''}</div></div>
+      <div style="font-family:var(--mono);font-size:17px;color:var(--accent2);">${anos}a</div>
+    </div>`;}).join('');
+
+  // Donut
+  const C=200.96;let off=0;
+  [{id:'dPJ',k:'PJ'},{id:'dCLT',k:'CLT'},{id:'dSOC',k:'SOCIO'},{id:'dEST',k:'ESTAGIARIO'}].forEach(({id,k})=>{
+    const arc=(vin[k]/tot)*C;$(id).setAttribute('stroke-dasharray',`${arc} ${C-arc}`);$(id).setAttribute('stroke-dashoffset',-off);off+=arc;
+  });
+  $('dNum').textContent=ativos.length;$('vinSpan').textContent=`${ativos.length} ativos`;
+  $('vinLeg').innerHTML=[{c:'#9b66f4',l:'PJ',v:vin.PJ},{c:'#ffd000',l:'CLT',v:vin.CLT},{c:'#b98af7',l:'Sócio',v:vin.SOCIO},{c:'#fb923c',l:'Estag.',v:vin.ESTAGIARIO}].map(x=>`<div class="li"><div class="ld" style="background:${x.c}"></div><div class="ll">${x.l}</div><div class="lv">${x.v}</div></div>`).join('');
+
+  // Mov
+  const yrs=[...new Set([...Object.keys(admY),...Object.keys(desY)])].sort();
+  const mxV=Math.max(...yrs.map(y=>Math.max(admY[y]||0,desY[y]||0)),1);
+  $('movChart').innerHTML='';$('movLbls').innerHTML='';
+  yrs.forEach(y=>{const a=admY[y]||0,d=desY[y]||0;
+    $('movChart').innerHTML+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;"><div style="display:flex;gap:2px;align-items:flex-end;width:100%;justify-content:center;">${a>0?`<div style="width:46%;background:#38d9a9;border-radius:2px 2px 0 0;height:${(a/mxV)*58}px;min-height:2px;"></div>`:''}${d>0?`<div style="width:46%;background:#f87171;border-radius:2px 2px 0 0;height:${(d/mxV)*58}px;min-height:2px;"></div>`:''}</div></div>`;
+    $('movLbls').innerHTML+=`<div style="flex:1;text-align:center;font-size:17px;color:#7a7f94;font-family:DM Mono,monospace;">${y}</div>`;
+  });
+
+  // Bars
+  const eE=Object.entries(empM).sort((a,b)=>b[1]-a[1]);const mE=Math.max(...eE.map(e=>e[1]),1);const cols=['#b98af7','#ffd000','#9b66f4','#fb923c'];
+  $('empB').innerHTML=eE.map((e,i)=>`<div class="br"><div class="bl" title="${e[0]}">${e[0].length>13?e[0].slice(0,13)+'…':e[0]}</div><div class="bt"><div class="bf" style="width:${(e[1]/mE)*100}%;background:${cols[i%4]}"></div></div><div class="bc">${e[1]}</div></div>`).join('');
+  const tI=[{l:'< 1 ano',v:tFx['<1'],c:'var(--coral)'},{l:'1–3 anos',v:tFx['1-3'],c:'var(--warn)'},{l:'3–5 anos',v:tFx['3-5'],c:'var(--accent2)'},{l:'> 5 anos',v:tFx['>5'],c:'var(--purple)'}];const mT=Math.max(...tI.map(t=>t.v),1);
+  $('tempoB').innerHTML=tI.map(t=>`<div class="br"><div class="bl">${t.l}</div><div class="bt"><div class="bf" style="width:${(t.v/mT)*100}%;background:${t.c}"></div></div><div class="bc">${t.v}</div></div>`).join('');$('tMedia').textContent=med+' anos';
+  const eI=[{l:'35–44',v:et['35-44'],c:'var(--accent)'},{l:'25–34',v:et['25-34'],c:'var(--accent2)'},{l:'45–54',v:et['45-54'],c:'var(--purple)'},{l:'Até 25',v:et['Até 25'],c:'var(--warn)'},{l:'55+',v:et['55+'],c:'var(--coral)'}];const mEt=Math.max(...eI.map(e=>e.v),1);
+  $('etarB').innerHTML=eI.map(t=>`<div class="br"><div class="bl">${t.l}</div><div class="bt"><div class="bf" style="width:${(t.v/mEt)*100}%;background:${t.c}"></div></div><div class="bc">${t.v}</div></div>`).join('');
+
+
+
+
+
+
+
+  // Pessoal
+  $('pAtivos').textContent=ativos.length;$('pEmpr').textContent=Object.keys(empM).length+' empresas';$('pDesl').textContent=desl.length;
+  const turn=cad.length>0?Math.round((desl.length/cad.length)*100):0;$('pTurn').textContent=turn+'%';$('pTurnS').textContent=`${desl.length} de ${cad.length}`;
+  $('pSen').textContent=Math.round(mxA);$('pSenN').textContent='anos · '+mxAN.split(' ')[0];$('qCount').textContent=ativos.length+' registros';
+  $('qBody').innerHTML=ativos.map(r=>`<tr>
+    <td>${r.NOME||'—'}</td><td><span class="chip ${chipV(r.TIPO_VINCULO)}">${lblV(r.TIPO_VINCULO)}</span></td>
+    <td>${r.CARGO||'—'}</td><td>${r.AREA||'—'}</td><td>${r.EMPRESA||'—'}</td>
+    <td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
+    <td style="font-family:var(--mono);font-size:17px;color:var(--accent)">${(parseFloat(r.ANOS_EMPRESA)||0).toFixed(1)}a</td>
+    <td><div class="acts">
+      <button class="ab" onclick='openEditColab(${JSON.stringify(r)})'>Editar</button>
+      <button class="ab d" onclick='confirmDesl(${JSON.stringify(r)})'>Desligar</button>
+    </div></td></tr>`).join('');
+
+  // Aniversários
+  $('aTotal').textContent=evts.length;if(prD!==null){$('aProx').textContent=prD;$('aProxS').textContent='dias · '+fmtD(evA[0].DATA_EVENTO);}
+  $('aMsgs').textContent=msgs.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVA').length;
+  const p60=evA.filter(r=>parseFloat(r.DIAS_PARA_EVENTO)<=60);
+  $('proxEvts').innerHTML=p60.length===0?'<div class="empty">Nenhum evento nos próximos 60 dias.</div>':
+    p60.map(r=>{const d=Math.round(parseFloat(r.DIAS_PARA_EVENTO));const emp=String(r.TIPO_EVENTO||'').includes('EMPRESA');const cor=emp?'var(--accent2)':'var(--accent)';const bg=emp?'rgba(56,217,169,.1)':'rgba(79,156,249,.12)';
+    return`<div class="ei"><div class="ed" style="background:${bg}"><div class="edn" style="color:${cor}">${d}</div><div class="edl" style="color:${cor}">dias</div></div><div><div class="en">${r.NOME||'—'}</div><div class="et">${emp?'🏢':'🎂'} ${emp?'Aniversário empresa':'Aniversário pessoal'} · ${fmtD(r.DATA_EVENTO)}</div></div></div>`;}).join('');
+  $('logBody').innerHTML=log.slice(-8).reverse().map(r=>`<tr><td>${r.DATA_EVENTO||'—'}</td><td>${r.NOME_EXIBICAO||r.NOME||'—'}</td><td>${r.TIPO_EVENTO||'—'}</td><td>${r.EMPRESA||'—'}</td><td><span class="chip ${r.STATUS_APROVACAO==='APROVADO'?'cok':'cw'}">${r.STATUS_APROVACAO||'Pendente'}</span></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sem registros</td></tr>';
+
+  // Férias
+  const fNa=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_APLICAVEL');
+  const fIn=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='INATIVO');
+  const fClt=ativos.filter(r=>String(r.TIPO_VINCULO||'').toUpperCase().trim()==='CLT');
+  $('fNp').textContent=fNP.length;$('fNa').textContent=fNa.length;$('fIn').textContent=fIn.length;$('fClt').textContent=fClt.length;
+  const fAtv=ferias.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVO');$('fCount').textContent=fAtv.length+' registros';
+  $('fBody').innerHTML=fAtv.map(r=>`<tr>
+    <td>${r.NOME||'—'}</td><td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
+    <td><span class="chip ${r.STATUS_FERIAS==='NAO_PROGRAMADA'?'cw':r.STATUS_FERIAS==='GOZADA'?'cok':r.STATUS_FERIAS==='PROGRAMADA'?'cc':'cd'}">${(r.STATUS_FERIAS||'—').replace('_',' ')}</span></td>
+    <td style="font-size:17px;color:var(--muted)">${fmtD(r.INICIO_PERIODO_AQUISITIVO)||'—'} → ${fmtD(r.FIM_PERIODO_AQUISITIVO)||'—'}</td>
+    <td style="font-size:17px;color:var(--muted)">${fmtD(r.FERIAS_PROGRAMADAS_INICIO)||'—'} → ${fmtD(r.FERIAS_PROGRAMADAS_FIM)||'—'}</td>
+    <td style="font-size:17px;color:var(--muted)">${fmtD(r.FERIAS_GOZADAS_INICIO)||'—'} → ${fmtD(r.FERIAS_GOZADAS_FIM)||'—'}</td>
+    <td><div class="acts"><button class="ab" onclick='openEditFer(${JSON.stringify(r)})'>Editar</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum</td></tr>';
+
+  // Exames
+  const exAtvList=exames.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVO');
+  const exSem=ativos.filter(a=>!exames.find(e=>e.ID_COLABORADOR===a.ID_COLABORADOR));
+  $('exV').textContent=exV.length;$('exT').textContent=exames.length;$('exA').textContent=exAtvList.length;$('exS').textContent=exSem.length;$('exCount').textContent=exames.length+' registros';
+  $('exBody').innerHTML=exames.map(r=>`<tr>
+    <td>${r.NOME||'—'}</td>
+    <td><span class="chip ${String(r.STATUS||'').toUpperCase()==='ATIVO'?'cok':'cd'}">${r.STATUS||'—'}</span></td>
+    <td style="font-family:var(--mono);font-size:17px">${fmtD(r.ULTIMO_EXAME)}</td>
+    <td style="font-family:var(--mono);font-size:17px">${fmtD(r.PROXIMO_EXAME)}</td>
+    <td><span class="chip ${r.STATUS_EXAME==='EM_DIA'?'cok':r.STATUS_EXAME==='VENCIDO'?'cd':'cw'}">${r.STATUS_EXAME||'—'}</span></td>
+    <td><div class="acts"><button class="ab" onclick='openEditEx(${JSON.stringify(r)})'>Editar</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Nenhum</td></tr>';
+
+  // Ausências
+  const ausR=(aus||[]).filter(r=>r.ID_COLABORADOR&&r.NOME!=='Colaborador (a)');
+  $('ausCount').textContent=ausR.length+' registros';
+  $('ausBody').innerHTML=ausR.map(r=>`<tr><td><span class="chip ce">${r.TIPO||'—'}</span></td><td>${r.NOME||'—'}</td><td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA)}</td><td>${r.DETALHE||'—'}</td><td></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhum registro</td></tr>';
+  $('ausColab').innerHTML=ativos.map(a=>`<option value="${a.ID_COLABORADOR}">${a.NOME}</option>`).join('');
+
+  // Alertas
+  $('alC').textContent=cSem.length;$('alE').textContent=exV.length;$('alF').textContent=fNP.length;$('alT').textContent=tAl;$('alCT').textContent=cSem.length;
+  $('alContList').innerHTML=cSem.map(r=>`<div class="ai"><div class="aico" style="background:rgba(248,113,113,.08)">⚠️</div><div class="ainf"><div class="an">${r.NOME||'—'}</div><div class="ad">${r.TIPO_VINCULO||'—'} · desde ${fmt(r.DATA_INICIO_CONTRATO)} · sem data fim</div></div><span class="chip cd">Sem data</span></div>`).join('')||'<div class="empty">Nenhum</div>';
+  $('alExamList').innerHTML=exV.map(r=>`<div class="ai"><div class="aico" style="background:rgba(245,158,11,.1)">🩺</div><div class="ainf"><div class="an">${r.NOME||'—'}</div><div class="ad">Último: ${fmtD(r.ULTIMO_EXAME)} · Venceu: ${fmtD(r.PROXIMO_EXAME)}</div></div><span class="chip cd">Vencido</span></div>`).join('')||'<div class="empty">Nenhum vencido</div>';
+  $('alResume').innerHTML=[{l:'Contratos sem data fim',v:cSem.length,c:'danger'},{l:'Exames vencidos (ativos)',v:exV.length,c:'warn'},{l:'Férias não programadas',v:fNP.length,c:'warn'},{l:'Automação Teams',v:'OK',c:'ok'}].map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 9px;background:${x.c==='ok'?'rgba(56,217,169,.05)':x.c==='danger'?'rgba(248,113,113,.07)':'rgba(245,158,11,.07)'};border-radius:6px;border:1px solid ${x.c==='ok'?'rgba(56,217,169,.15)':x.c==='danger'?'rgba(248,113,113,.2)':'rgba(245,158,11,.2)'};">
+    <span style="font-size:17px;">${x.l}</span><span style="font-size:17px;font-family:var(--mono);color:var(--${x.c==='ok'?'accent2':x.c==='danger'?'danger':'warn'})">${x.v}</span></div>`).join('');
+}
+
+// ══════════════════════════════
+// MODALS
+// ══════════════════════════════
+function openModal(id){$(id).classList.add('open');}
+function closeModal(id){$(id).classList.remove('open');}
+document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+// EDITAR COLABORADOR
+function openEditColab(r){
+  $('eColabId').value=r.ID_COLABORADOR||'';$('eColabRow').value=r._row||'';
+  $('mEditColabSub').textContent=(r.NOME||'—')+' · '+(r.ID_COLABORADOR||'—');
+  $('eNome').value=r.NOME||'';
+  $('eNasc').value=iso(r.DATA_NASCIMENTO)||'';
+  $('eAdmissao').value=iso(r.DATA_ADMISSAO)||'';
+  $('eCargo').value=r.CARGO||'';
+  $('eSetor').value=r.SETOR||'';
+  setS('eVinculo',r.TIPO_VINCULO||'CLT');
+  setS('eArea',r.AREA);setS('eGestor',r.GESTOR);setS('eEmpresa',r.EMPRESA);setS('eStatus',r.STATUS||'ATIVO');
+  $('eDesl').value=iso(r.DATA_DESLIGAMENTO)||'';
+  $('eSalario').value=r.SALARIO||'';
+  $('eVR').value=r.VALE_REFEICAO||'';
+  $('eVT').value=r.VALE_TRANSPORTE||'';
+  setS('ePlanoSaude',r.PLANO_SAUDE||'');
+  $('eBeneficios').value=r.OUTROS_BENEFICIOS||'';
+  openModal('mEditColab');
+}
+async function saveEditColab(){
+  const row=parseInt($('eColabRow').value);if(!row){toast('Linha não identificada','error');return;}
+  const nasc=$('eNasc').value;
+  const data={
+    NOME:$('eNome').value,
+    TIPO_VINCULO:$('eVinculo').value,
+    STATUS:$('eStatus').value,
+    DATA_NASCIMENTO:nasc||null,
+    DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',
+    DATA_ADMISSAO:$('eAdmissao').value||null,
+    DATA_DESLIGAMENTO:$('eDesl').value||null,
+    CARGO:$('eCargo').value,
+    AREA:$('eArea').value,
+    SETOR:$('eSetor').value,
+    GESTOR:$('eGestor').value,
+    EMPRESA:$('eEmpresa').value,
+    SALARIO:$('eSalario').value||null,
+    VALE_REFEICAO:$('eVR').value||null,
+    VALE_TRANSPORTE:$('eVT').value||null,
+    PLANO_SAUDE:$('ePlanoSaude').value||null,
+    OUTROS_BENEFICIOS:$('eBeneficios').value||null
+  };
+  closeModal('mEditColab');toast('Salvando...','info');
+  try{
+    if(DEMO){fakeS('CADASTRO_COLABORADORES',row,data);return;}
+    // CADASTRO cols: 0=ID,1=NOME,2=TIPO_VINCULO,3=STATUS,4=DATA_NASC,5=NASC_FMT,6=DATA_ADM,7=DATA_DESL,8=CARGO,9=AREA,10=SETOR,11=GESTOR,12=EMPRESA
+    // Cols 13-16: IDADE, ANOS_EMPRESA, RAW_VINCULO, RAW_STATUS (fórmulas — não editar)
+    // Cols 17+: novos campos adicionados pelo dashboard
+    await patchRow('CADASTRO_COLABORADORES',row,{
+      1:'NOME',2:'TIPO_VINCULO',3:'STATUS',
+      4:'DATA_NASCIMENTO',5:'DATA_NASCIMENTO_FORMATADO',
+      6:'DATA_ADMISSAO',7:'DATA_DESLIGAMENTO',
+      8:'CARGO',9:'AREA',10:'SETOR',11:'GESTOR',12:'EMPRESA'
+    },data);
+    // Salário e benefícios — gravar nas colunas 17-21 (criadas dinamicamente)
+    await patchRow('CADASTRO_COLABORADORES',row,{
+      17:'SALARIO',18:'VALE_REFEICAO',19:'VALE_TRANSPORTE',20:'PLANO_SAUDE',21:'OUTROS_BENEFICIOS'
+    },data);
+    toast('Colaborador atualizado','success');await loadAll();
+  }catch(e){toast('Erro ao salvar: '+e.message,'error');}
+}
+function confirmDesl(r){if(confirm(`Confirmar desligamento de "${r.NOME}"?`)){openEditColab({...r});setS('eStatus','DESLIGADO');$('eDesl').value=new Date().toISOString().split('T')[0];}}
+
+// NOVO COLABORADOR
+async function saveNewColab(){
+  const nome=$('nNome').value.trim();const adm=$('nAdm').value;
+  if(!nome||!adm){toast('Nome e admissão obrigatórios','error');return;}
+  closeModal('mNewColab');toast('Registrando admissão...','info');
+  try{
+    const cad=D.CADASTRO_COLABORADORES||[];
+    const lastId=cad.map(r=>parseInt((r.ID_COLABORADOR||'COL-000').replace('COL-',''))||0).reduce((a,b)=>Math.max(a,b),0);
+    const newId='COL-'+String(lastId+1).padStart(3,'0');
+    const nasc=$('nNasc').value;const hoje=new Date();
+    const anos=((hoje-new Date(adm))/(1000*60*60*24*365.25)).toFixed(1);
+    const idade=nasc?((hoje-new Date(nasc))/(1000*60*60*24*365.25)).toFixed(0):null;
+    const row={ID_COLABORADOR:newId,NOME:nome,TIPO_VINCULO:$('nVinc').value,STATUS:'ATIVO',DATA_NASCIMENTO:nasc||null,DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',DATA_ADMISSAO:adm,DATA_DESLIGAMENTO:null,CARGO:$('nCargo').value,AREA:$('nArea').value,SETOR:$('nSetor').value||$('nArea').value,GESTOR:$('nGestor').value,EMPRESA:$('nEmpresa').value,IDADE:idade,ANOS_EMPRESA:anos,RAW_VINCULO:$('nVinc').value,RAW_STATUS:'Ativo',SALARIO:$('nSalario').value||null,VALE_REFEICAO:$('nVR').value||null,VALE_TRANSPORTE:$('nVT').value||null,PLANO_SAUDE:$('nPlanoSaude').value||null,OUTROS_BENEFICIOS:$('nBeneficios').value||null};
+    if(DEMO){D.CADASTRO_COLABORADORES.push({...row,_row:cad.length+2});render();toast(`${nome} admitido! ID: ${newId}`,'success');return;}
+    await appendR('CADASTRO_COLABORADORES',['ID_COLABORADOR','NOME','TIPO_VINCULO','STATUS','DATA_NASCIMENTO','DATA_NASCIMENTO_FORMATADO','DATA_ADMISSAO','DATA_DESLIGAMENTO','CARGO','AREA','SETOR','GESTOR','EMPRESA','IDADE','ANOS_EMPRESA','RAW_VINCULO','RAW_STATUS','SALARIO','VALE_REFEICAO','VALE_TRANSPORTE','PLANO_SAUDE','OUTROS_BENEFICIOS'],row);
+    toast(`${nome} admitido! ID: ${newId}`,'success');await loadAll();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+// EDITAR FÉRIAS
+function openEditFer(r){
+  $('eFerId').value=r.ID_COLABORADOR||'';$('eFerRow').value=r._row||'';
+  $('mEditFerSub').textContent=(r.NOME||'—')+' · '+(r.ID_COLABORADOR||'—');
+  $('fAqI').value=iso(r.INICIO_PERIODO_AQUISITIVO)||'';$('fAqF').value=iso(r.FIM_PERIODO_AQUISITIVO)||'';
+  $('fConc').value=iso(r.FIM_PERIODO_CONCESSIVO)||'';$('fPI').value=iso(r.FERIAS_PROGRAMADAS_INICIO)||'';
+  $('fPF').value=iso(r.FERIAS_PROGRAMADAS_FIM)||'';$('fGI').value=iso(r.FERIAS_GOZADAS_INICIO)||'';
+  $('fGF').value=iso(r.FERIAS_GOZADAS_FIM)||'';setS('fSt',r.STATUS_FERIAS||'NAO_PROGRAMADA');openModal('mEditFer');
+}
+async function saveEditFer(){
+  const row=parseInt($('eFerRow').value);if(!row){toast('Linha não identificada','error');return;}
+  const data={INICIO_PERIODO_AQUISITIVO:$('fAqI').value||null,FIM_PERIODO_AQUISITIVO:$('fAqF').value||null,FIM_PERIODO_CONCESSIVO:$('fConc').value||null,FERIAS_PROGRAMADAS_INICIO:$('fPI').value||null,FERIAS_PROGRAMADAS_FIM:$('fPF').value||null,FERIAS_GOZADAS_INICIO:$('fGI').value||null,FERIAS_GOZADAS_FIM:$('fGF').value||null,STATUS_FERIAS:$('fSt').value};
+  closeModal('mEditFer');toast('Salvando férias...','info');
+  try{
+    if(DEMO){fakeS('FERIAS_CLT',row,data);return;}
+    // FERIAS cols: 4=INICIO_PA,5=FIM_PA,6=FIM_PC,7=FP_INI,8=FP_FIM,9=FG_INI,10=FG_FIM,11=STATUS_FERIAS
+    await patchRow('FERIAS_CLT',row,{4:'INICIO_PERIODO_AQUISITIVO',5:'FIM_PERIODO_AQUISITIVO',6:'FIM_PERIODO_CONCESSIVO',7:'FERIAS_PROGRAMADAS_INICIO',8:'FERIAS_PROGRAMADAS_FIM',9:'FERIAS_GOZADAS_INICIO',10:'FERIAS_GOZADAS_FIM',11:'STATUS_FERIAS'},data);
+    toast('Férias atualizadas','success');await loadAll();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+// EDITAR EXAME
+function openEditEx(r){
+  $('eExId').value=r.ID_COLABORADOR||'';$('eExRow').value=r._row||'';
+  $('mEditExSub').textContent=(r.NOME||'—')+' · '+(r.ID_COLABORADOR||'—');
+  $('exUlt').value=iso(r.ULTIMO_EXAME)||'';$('exProx').value=iso(r.PROXIMO_EXAME)||'';
+  setS('exSt',r.STATUS_EXAME||'EM_DIA');$('exFonte').value=r.FONTE_BASE_ANTIGA||'';$('exObs').value=r.OBSERVACAO||'';
+  openModal('mEditEx');
+}
+async function saveEditEx(){
+  const row=parseInt($('eExRow').value);if(!row){toast('Linha não identificada','error');return;}
+  const data={ULTIMO_EXAME:$('exUlt').value||null,PROXIMO_EXAME:$('exProx').value||null,STATUS_EXAME:$('exSt').value,FONTE_BASE_ANTIGA:$('exFonte').value,OBSERVACAO:$('exObs').value};
+  closeModal('mEditEx');toast('Salvando exame...','info');
+  try{
+    if(DEMO){fakeS('EXAMES_OCUPACIONAIS',row,data);return;}
+    // EXAMES cols: 4=ULTIMO_EXAME,5=PROXIMO_EXAME,6=STATUS_EXAME,7=FONTE,8=OBS
+    await patchRow('EXAMES_OCUPACIONAIS',row,{4:'ULTIMO_EXAME',5:'PROXIMO_EXAME',6:'STATUS_EXAME',7:'FONTE_BASE_ANTIGA',8:'OBSERVACAO'},data);
+    toast('Exame atualizado','success');await loadAll();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+// NOVA AUSÊNCIA
+async function saveNewAus(){
+  const colab=$('ausColab').value;const data=$('ausData').value;
+  if(!colab||!data){toast('Colaborador e data obrigatórios','error');return;}
+  const nome=($('ausColab').selectedOptions[0]||{}).text||'';
+  const row={TIPO:$('ausTipo').value,ID_COLABORADOR:colab,NOME:nome,DATA:data,DETALHE:$('ausDetail').value||''};
+  closeModal('mNewAus');toast('Registrando ausência...','info');
+  try{
+    if(DEMO){D.AUSENCIAS_OCORRENCIAS.push({...row,_row:(D.AUSENCIAS_OCORRENCIAS.length||0)+2});render();toast('Ausência registrada','success');return;}
+    await appendR('AUSENCIAS_OCORRENCIAS',['TIPO','ID_COLABORADOR','NOME','DATA','DETALHE'],row);
+    toast('Ausência registrada','success');await loadAll();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+// ══════════════════════════════
+// DEMO DATA
+// ══════════════════════════════
+function loadDemo(){
+  $('sLoad').classList.add('hidden');
+  D={
+    CADASTRO_COLABORADORES:[
+      {_row:2,ID_COLABORADOR:'COL-001',NOME:'Agda Andrade',TIPO_VINCULO:'SOCIO',STATUS:'ATIVO',CARGO:'Controller Jurídico',AREA:'Jurídico',EMPRESA:'Luma Plataforma',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-12-01',ANOS_EMPRESA:0.3,IDADE:33},
+      {_row:3,ID_COLABORADOR:'COL-002',NOME:'Anderson de Assis de Souza',TIPO_VINCULO:'SOCIO',STATUS:'ATIVO',CARGO:'Coordenador Operacional',AREA:'Operacional',EMPRESA:'Luma Plataforma',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2021-02-01',ANOS_EMPRESA:5,IDADE:48},
+      {_row:4,ID_COLABORADOR:'COL-003',NOME:'Berenice',TIPO_VINCULO:'PJ',STATUS:'ATIVO',CARGO:'Desenvolvedor Jr',AREA:'Tecnologia',EMPRESA:'Luma Plataforma',GESTOR:'Matheus Rocha',DATA_ADMISSAO:'2025-09-10',ANOS_EMPRESA:0.5,IDADE:43},
+      {_row:5,ID_COLABORADOR:'COL-005',NOME:'Cristhiane Nery de Jesus',TIPO_VINCULO:'PJ',STATUS:'ATIVO',CARGO:'Advogada',AREA:'Jurídico',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2023-10-23',ANOS_EMPRESA:1.4,IDADE:35},
+      {_row:6,ID_COLABORADOR:'COL-007',NOME:'Julimaira Mariano Catarino de Lima',TIPO_VINCULO:'CLT',STATUS:'ATIVO',CARGO:'Assistente Jurídico',AREA:'Jurídico',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-05-06',ANOS_EMPRESA:0.9,IDADE:29},
+      {_row:7,ID_COLABORADOR:'COL-015',NOME:'Luisa Moraes',TIPO_VINCULO:'SOCIO',STATUS:'ATIVO',CARGO:'Diretora',AREA:'Diretor',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2008-02-01',ANOS_EMPRESA:17,IDADE:45},
+      {_row:8,ID_COLABORADOR:'COL-058',NOME:'Varley Gomes de Padua',TIPO_VINCULO:'CLT',STATUS:'ATIVO',CARGO:'Administrativo',AREA:'Administrativo',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-07-15',ANOS_EMPRESA:0.7,IDADE:38},
+      {_row:9,ID_COLABORADOR:'COL-059',NOME:'Victor Machado Costa',TIPO_VINCULO:'CLT',STATUS:'ATIVO',CARGO:'Estagiário Jurídico',AREA:'Jurídico',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-05-20',ANOS_EMPRESA:0.8,IDADE:23},
+    ],
+    FERIAS_CLT:[
+      {_row:2,ID_COLABORADOR:'COL-007',NOME:'Julimaira Mariano Catarino de Lima',STATUS:'ATIVO',DATA_ADMISSAO:'2025-05-06',STATUS_FERIAS:'NAO_PROGRAMADA',INICIO_PERIODO_AQUISITIVO:null,FIM_PERIODO_AQUISITIVO:null,FIM_PERIODO_CONCESSIVO:null,FERIAS_PROGRAMADAS_INICIO:null,FERIAS_PROGRAMADAS_FIM:null,FERIAS_GOZADAS_INICIO:null,FERIAS_GOZADAS_FIM:null},
+      {_row:3,ID_COLABORADOR:'COL-058',NOME:'Varley Gomes de Padua',STATUS:'ATIVO',DATA_ADMISSAO:'2025-07-15',STATUS_FERIAS:'NAO_PROGRAMADA',INICIO_PERIODO_AQUISITIVO:null,FIM_PERIODO_AQUISITIVO:null,FIM_PERIODO_CONCESSIVO:null,FERIAS_PROGRAMADAS_INICIO:null,FERIAS_PROGRAMADAS_FIM:null,FERIAS_GOZADAS_INICIO:null,FERIAS_GOZADAS_FIM:null},
+      {_row:4,ID_COLABORADOR:'COL-059',NOME:'Victor Machado Costa',STATUS:'ATIVO',DATA_ADMISSAO:'2025-05-20',STATUS_FERIAS:'NAO_PROGRAMADA',INICIO_PERIODO_AQUISITIVO:null,FIM_PERIODO_AQUISITIVO:null,FIM_PERIODO_CONCESSIVO:null,FERIAS_PROGRAMADAS_INICIO:null,FERIAS_PROGRAMADAS_FIM:null,FERIAS_GOZADAS_INICIO:null,FERIAS_GOZADAS_FIM:null},
+    ],
+    CONTRATOS_PJ:[
+      {_row:2,ID_COLABORADOR:'COL-005',NOME:'Cristhiane Nery de Jesus',TIPO_VINCULO:'PJ',DATA_INICIO_CONTRATO:'2023-10-23',DATA_FIM_CONTRATO:null,STATUS_COLABORADOR:'ATIVO',ALERTA:'SEM_DATA_FIM'},
+      {_row:3,ID_COLABORADOR:'COL-003',NOME:'Berenice',TIPO_VINCULO:'PJ',DATA_INICIO_CONTRATO:'2025-09-10',DATA_FIM_CONTRATO:null,STATUS_COLABORADOR:'ATIVO',ALERTA:'SEM_DATA_FIM'},
+    ],
+    EVENTOS_RH:[
+      {_row:2,ID_COLABORADOR:'COL-007',NOME:'Julimaira Mariano Catarino de Lima',TIPO_EVENTO:'ANIVERSARIO',DATA_EVENTO:'2026-04-28',DIAS_PARA_EVENTO:36,STATUS_COLABORADOR:'ATIVO'},
+      {_row:3,ID_COLABORADOR:'COL-058',NOME:'Varley Gomes de Padua',TIPO_EVENTO:'ANIVERSARIO',DATA_EVENTO:'2026-04-28',DIAS_PARA_EVENTO:36,STATUS_COLABORADOR:'ATIVO'},
+      {_row:4,ID_COLABORADOR:'COL-007',NOME:'Julimaira Mariano Catarino de Lima',TIPO_EVENTO:'ANIVERSARIO_EMPRESA',DATA_EVENTO:'2026-05-06',DIAS_PARA_EVENTO:44,STATUS_COLABORADOR:'ATIVO'},
+      {_row:5,ID_COLABORADOR:'COL-059',NOME:'Victor Machado Costa',TIPO_EVENTO:'ANIVERSARIO',DATA_EVENTO:'2026-05-20',DIAS_PARA_EVENTO:58,STATUS_COLABORADOR:'ATIVO'},
+    ],
+    EXAMES_OCUPACIONAIS:[
+      {_row:2,ID_COLABORADOR:'COL-014',NOME:'Laissa Garcia da Silva',STATUS:'ATIVO',ULTIMO_EXAME:'2024-05-08',PROXIMO_EXAME:'2025-05-08',STATUS_EXAME:'VENCIDO',FONTE_BASE_ANTIGA:'EXAME PERIÓDICO',OBSERVACAO:null},
+      {_row:3,ID_COLABORADOR:'COL-015',NOME:'Luisa Moraes',STATUS:'ATIVO',ULTIMO_EXAME:'2024-07-05',PROXIMO_EXAME:'2025-07-05',STATUS_EXAME:'VENCIDO',FONTE_BASE_ANTIGA:'EXAME PERIÓDICO',OBSERVACAO:null},
+    ],
+    CONTROLE_COMUNICACAO_RH:[
+      {_row:2,ID_COLABORADOR:'COL-002',NOME_EXIBICAO:'Anderson de Assis de Souza',TIPO_EVENTO:'ANIVERSARIO',EMPRESA:'Luma Plataforma',STATUS_APROVACAO:'APROVADO',DATA_EVENTO:'23/03'},
+      {_row:3,ID_COLABORADOR:'COL-015',NOME_EXIBICAO:'Luisa Moraes',TIPO_EVENTO:'ANIVERSARIO',EMPRESA:'Luisa Moraes Adv.',STATUS_APROVACAO:'PENDENTE',DATA_EVENTO:'23/03'},
+    ],
+    AUSENCIAS_OCORRENCIAS:[
+      {_row:2,TIPO:'ATESTADO',ID_COLABORADOR:'COL-015',NOME:'Luisa Moraes',DATA:'2024-09-19',DETALHE:'K01'},
+    ],
+    MOVIMENTACOES:[
+      ...[2021,2021,2021,2021,2022,2022,2022,2022,2022,2022,2023,2023,2023,2024,2024,2025,2025,2025,2026,2026,2026].map((y,i)=>({_row:i+2,TIPO_MOVIMENTACAO:'ADMISSAO',DATA_MOVIMENTACAO:`${y}-01-01`})),
+      ...[2022,2022,2022,2023,2023,2023,2024,2024,2024,2025,2025].map((y,i)=>({_row:i+30,TIPO_MOVIMENTACAO:'DESLIGAMENTO',DATA_MOVIMENTACAO:`${y}-06-01`})),
+    ],
+    BIBLIOTECA_MENSAGENS_ANIV:[
+      {ID_MENSAGEM:'ANIV_001',STATUS:'ATIVA'},{ID_MENSAGEM:'ANIV_002',STATUS:'ATIVA'},{ID_MENSAGEM:'ANIV_003',STATUS:'ATIVA'},
+      {ID_MENSAGEM:'ANIV_004',STATUS:'ATIVA'},{ID_MENSAGEM:'ANIV_005',STATUS:'ATIVA'},{ID_MENSAGEM:'ANIV_006',STATUS:'ATIVA'},
+      {ID_MENSAGEM:'ANIV_007',STATUS:'ATIVA'},{ID_MENSAGEM:'ANIV_008',STATUS:'ATIVA'},{ID_MENSAGEM:'ANIV_009',STATUS:'ATIVA'},
+      {ID_MENSAGEM:'NIVER_EMP_001',STATUS:'ATIVA'},
+    ],
+  };
+  $('app').style.display='block';$('ndot').title='Modo demonstração';
+  render();toast('Modo demo ativo — edições não salvam no Excel','info');
+}
+
+function fakeS(sheet,row,data){const l=D[sheet]||[];const i=l.find(r=>r._row===row);if(i)Object.assign(i,data);render();toast('Atualizado (demo — não salvo no Excel)','success');}
+
+// ══════════════════════════════
+// UI
+// ══════════════════════════════
+function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');el.classList.add('active');}
+function toast(msg,type='success'){const tc=$('tc');const t=document.createElement('div');t.className=`toast ${type}`;const c=type==='success'?'#b98af7':type==='error'?'#f87171':'#ffd000';t.innerHTML=`<div class="tdot" style="background:${c}"></div><span>${msg}</span>`;tc.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .25s';setTimeout(()=>t.remove(),250);},3000);}
+
+// Init
+$('ndate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+// Persistência multi-camada: localStorage + sessionStorage + cookie
+function cfgSave(c){
+  const s=JSON.stringify(c);
+  try{localStorage.setItem(CK,s);}catch(e){}
+  try{sessionStorage.setItem(CK,s);}catch(e){}
+  // Cookie com validade de 1 ano
+  const exp=new Date();exp.setFullYear(exp.getFullYear()+1);
+  document.cookie=`${CK}=${encodeURIComponent(s)};expires=${exp.toUTCString()};path=/;SameSite=None;Secure`;
+}
+function cfgLoad(){
+  // Tenta localStorage
+  try{const v=localStorage.getItem(CK);if(v)return JSON.parse(v);}catch(e){}
+  // Tenta sessionStorage
+  try{const v=sessionStorage.getItem(CK);if(v)return JSON.parse(v);}catch(e){}
+  // Tenta cookie
+  try{
+    const match=document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(CK+'='));
+    if(match){const v=decodeURIComponent(match.split('=').slice(1).join('='));return JSON.parse(v);}
+  }catch(e){}
+  return null;
+}
+function saveConf(){
+  const c={clientId:$('cClientId').value.trim(),tenantId:$('cTenantId').value.trim(),driveId:$('cDriveId').value.trim(),itemId:$('cItemId').value.trim()};
+  if(!c.clientId||!c.tenantId||!c.itemId){toast('Client ID, Tenant ID e Item ID são obrigatórios','error');return;}
+  cfgSave(c);initApp(c);
+}
+const stored=cfgLoad();
+if(stored){try{$('cClientId').value=stored.clientId||'';$('cTenantId').value=stored.tenantId||'';$('cDriveId').value=stored.driveId||'';$('cItemId').value=stored.itemId||'';initApp(stored);}catch{$('sConfig').classList.remove('hidden');}}
+else{$('sConfig').classList.remove('hidden');}
+</script>
+
+<script>
+// Force 100% zoom and full width on load
+(function(){
+  document.documentElement.style.zoom = '1';
+  document.documentElement.style.width = '100%';
+  document.body.style.width = '100%';
+  // Remove any transform scaling
+  document.body.style.transform = 'none';
+  document.body.style.transformOrigin = '0 0';
+})();
+
+// ── SORT TABLES ──
+const _sortState={};
+function sortTable(tbodyId,colIdx,th){
+  const tbody=document.getElementById(tbodyId);
+  if(!tbody)return;
+  const rows=Array.from(tbody.querySelectorAll('tr'));
+  const key=tbodyId+'_'+colIdx;
+  const asc=_sortState[key]!==true;
+  _sortState[key]=asc;
+  // Update header indicators
+  const tbl=th.closest('table');
+  tbl.querySelectorAll('th').forEach(h=>{h.classList.remove('asc','desc');});
+  th.classList.add(asc?'asc':'desc');
+  rows.sort((a,b)=>{
+    const va=(a.cells[colIdx]?.textContent||'').trim().toLowerCase();
+    const vb=(b.cells[colIdx]?.textContent||'').trim().toLowerCase();
+    // Try numeric
+    const na=parseFloat(va.replace(/[^0-9.,]/g,'').replace(',','.'));
+    const nb=parseFloat(vb.replace(/[^0-9.,]/g,'').replace(',','.'));
+    if(!isNaN(na)&&!isNaN(nb)) return asc?na-nb:nb-na;
+    return asc?va.localeCompare(vb,'pt-BR'):vb.localeCompare(va,'pt-BR');
+  });
+  rows.forEach(r=>tbody.appendChild(r));
+}
+</script>
+</body>
+</html>
