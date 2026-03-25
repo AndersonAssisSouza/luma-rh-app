@@ -539,9 +539,17 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
             <input type="checkbox" id="eIndet" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
             <div>
               <div style="font-size:13px;font-weight:500;color:var(--text);">Contrato por tempo indeterminado</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px;">Válido para PJ / MEI / Associado — remove o alerta de "sem data fim"</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">CLT padrão · PJ / MEI / Associado sem data fim — remove alerta</div>
             </div>
           </label>
+        </div>
+        <div class="fgrp" id="eDataFimGrp" style="display:none;">
+          <div class="flbl">Data final do contrato</div>
+          <input class="fi" id="eDataFim" type="date">
+        </div>
+        <div class="fgrp" id="eExpGrp" style="display:none;">
+          <div class="flbl">Período de experiência (dias) <span style="color:var(--muted);font-size:11px;">máx. 90 · art. 445 CLT</span></div>
+          <input class="fi" id="eExperiencia" type="number" min="1" max="90" placeholder="Ex: 45 ou 90">
         </div>
         <div class="fgrp"><div class="flbl">Data de admissão</div><input class="fi" id="eAdmissao" type="date"></div>
         <div class="fgrp"><div class="flbl">Cargo</div><input class="fi" id="eCargo"></div>
@@ -585,7 +593,24 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
         <div class="fgrp s2"><div class="flbl">Nome completo <span class="rq">*</span></div><input class="fi" id="nNome" placeholder="Nome completo"></div>
         <div class="fgrp s2"><div class="flbl">E-mail corporativo</div><input class="fi" id="nEmail" type="email" placeholder="nome@lumaplataforma.com.br"></div>
         <div class="fgrp"><div class="flbl">Vínculo <span class="rq">*</span></div>
-          <select class="fsel" id="nVinc"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option><option value="ASSOCIADO">Associado</option></select>
+          <select class="fsel" id="nVinc" onchange="toggleNIndetGrp()"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="MEI">MEI</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option><option value="ASSOCIADO">Associado</option></select>
+        </div>
+        <div class="fgrp s2" id="nIndetGrp" style="display:none;">
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px 14px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.25);border-radius:8px;margin-top:4px;">
+            <input type="checkbox" id="nIndet" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;" onchange="toggleNIndetGrp()">
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--text);">Contrato por tempo indeterminado</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">CLT padrão · PJ / MEI / Associado sem data fim — remove alerta</div>
+            </div>
+          </label>
+        </div>
+        <div class="fgrp" id="nDataFimGrp" style="display:none;">
+          <div class="flbl">Data final do contrato</div>
+          <input class="fi" id="nDataFim" type="date">
+        </div>
+        <div class="fgrp" id="nExpGrp" style="display:none;">
+          <div class="flbl">Período de experiência (dias) <span style="color:var(--muted);font-size:11px;">máx. 90 · art. 445 CLT</span></div>
+          <input class="fi" id="nExperiencia" type="number" min="1" max="90" placeholder="Ex: 45 ou 90">
         </div>
         <div class="fgrp"><div class="flbl">Admissão <span class="rq">*</span></div><input class="fi" id="nAdm" type="date"></div>
         <div class="fgrp"><div class="flbl">Nascimento</div><input class="fi" id="nNasc" type="date"></div>
@@ -937,8 +962,20 @@ function render(){
   const cSem=cont.filter(r=>String(r.ALERTA||'').trim()==='SEM_DATA_FIM'&&String(r.STATUS_COLABORADOR||'').toUpperCase()==='ATIVO'&&!_indetSet.has(String(r.ID_COLABORADOR||'')));
   const exV=exames.filter(r=>String(r.STATUS_EXAME||'').toUpperCase()==='VENCIDO'&&String(r.STATUS||'').toUpperCase()==='ATIVO');
   const fNP=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_PROGRAMADA');
-  _alertasCont=cSem;_alertasEx=exV;_alertasFer=fNP;
-  const tAl=cSem.length+exV.length+fNP.length;
+  // Alerta experiência CLT: período vencendo em ≤15 dias ou já vencido, sem flag indeterminado
+  const hojeMs=new Date().getTime();
+  const expAlerts=ativos.filter(r=>{
+    if(String(r.TIPO_VINCULO||'').toUpperCase()!=='CLT')return false;
+    if(_indetSet.has(String(r.ID_COLABORADOR||'')))return false;
+    const dias=parseInt(r.TEMPO_EXPERIENCIA)||0;
+    if(!dias||!r.DATA_ADMISSAO)return false;
+    const admD=new Date(String(r.DATA_ADMISSAO)+'T12:00:00');
+    if(isNaN(admD))return false;
+    const fimExp=new Date(admD.getTime()+dias*864e5);
+    return(fimExp.getTime()-hojeMs)/(864e5)<=15;
+  });
+  _alertasCont=cSem;_alertasEx=exV;_alertasFer=fNP;_alertasExp=expAlerts;
+  const tAl=cSem.length+exV.length+fNP.length+expAlerts.length;
   const admEY=admY[new Date().getFullYear()]||0;
   const tot=ativos.length||1;const med=cA>0?(sA/cA).toFixed(1):0;
 
@@ -1149,15 +1186,35 @@ function openEditColab(r){
   $('eVT').value=r.VALE_TRANSPORTE||'';
   setS('ePlanoSaude',r.PLANO_SAUDE||'');
   $('eBeneficios').value=r.OUTROS_BENEFICIOS||'';
+  // Campos contrato
+  $('eDataFim').value=iso(r.DATA_FIM_CONTRATO)||'';
+  $('eExperiencia').value=r.TEMPO_EXPERIENCIA||'';
   // Flag indeterminado
   const _vIndet=String(r.TIPO_VINCULO||'').toUpperCase();
-  $('eIndetGrp').style.display=['PJ','MEI','ASSOCIADO'].includes(_vIndet)?'':'none';
-  $('eIndet').checked=_indetSet.has(String(r.ID_COLABORADOR||''));
+  const _isIndet=_indetSet.has(String(r.ID_COLABORADOR||''));
+  $('eIndetGrp').style.display=['CLT','PJ','MEI','ASSOCIADO'].includes(_vIndet)?'':'none';
+  $('eIndet').checked=_isIndet;
+  $('eDataFimGrp').style.display=(['CLT','PJ','MEI','ASSOCIADO'].includes(_vIndet)&&!_isIndet)?'':'none';
+  $('eExpGrp').style.display=(_vIndet==='CLT'&&!_isIndet)?'':'none';
   openModal('mEditColab');
 }
 function toggleIndetGrp(){
   const v=$('eVinculo').value.toUpperCase();
-  $('eIndetGrp').style.display=['PJ','MEI','ASSOCIADO'].includes(v)?'':'none';
+  const showIndet=['CLT','PJ','MEI','ASSOCIADO'].includes(v);
+  $('eIndetGrp').style.display=showIndet?'':'none';
+  const indet=$('eIndet').checked;
+  // Sem indeterminado → mostra data fim
+  $('eDataFimGrp').style.display=(showIndet&&!indet)?'':'none';
+  // CLT sem indeterminado → mostra também experiência
+  $('eExpGrp').style.display=(v==='CLT'&&!indet)?'':'none';
+}
+function toggleNIndetGrp(){
+  const v=$('nVinc').value.toUpperCase();
+  const showIndet=['CLT','PJ','MEI','ASSOCIADO'].includes(v);
+  $('nIndetGrp').style.display=showIndet?'':'none';
+  const indet=$('nIndet').checked;
+  $('nDataFimGrp').style.display=(showIndet&&!indet)?'':'none';
+  $('nExpGrp').style.display=(v==='CLT'&&!indet)?'':'none';
 }
 async function saveEditColab(){
   const row=parseInt($('eColabRow').value);if(!row){toast('Linha não identificada','error');return;}
@@ -1166,6 +1223,8 @@ async function saveEditColab(){
     NOME:$('eNome').value,
     EMAIL_CORPORATIVO:$('eEmail').value.trim()||null,
     TIPO_VINCULO:$('eVinculo').value,
+    DATA_FIM_CONTRATO:$('eDataFim').value||null,
+    TEMPO_EXPERIENCIA:$('eExperiencia').value||null,
     STATUS:$('eStatus').value,
     DATA_NASCIMENTO:nasc||null,
     DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',
@@ -1185,7 +1244,7 @@ async function saveEditColab(){
   // Salvar flag indeterminado antes de fechar
   const _idColab=$('eColabId').value;
   const _vColab=$('eVinculo').value.toUpperCase();
-  if(['PJ','MEI','ASSOCIADO'].includes(_vColab)){
+  if(['CLT','PJ','MEI','ASSOCIADO'].includes(_vColab)){
     if($('eIndet').checked)_indetSet.add(_idColab);else _indetSet.delete(_idColab);
     saveIndet();
   }
@@ -1201,9 +1260,9 @@ async function saveEditColab(){
       6:'DATA_ADMISSAO',7:'DATA_DESLIGAMENTO',
       8:'CARGO',9:'AREA',10:'SETOR',11:'GESTOR',12:'EMPRESA'
     },data);
-    // Salário, benefícios e e-mail — colunas 17-22
+    // Salário, benefícios, e-mail e contrato — colunas 17-24
     await patchRow('CADASTRO_COLABORADORES',row,{
-      17:'SALARIO',18:'VALE_REFEICAO',19:'VALE_TRANSPORTE',20:'PLANO_SAUDE',21:'OUTROS_BENEFICIOS',22:'EMAIL_CORPORATIVO'
+      17:'SALARIO',18:'VALE_REFEICAO',19:'VALE_TRANSPORTE',20:'PLANO_SAUDE',21:'OUTROS_BENEFICIOS',22:'EMAIL_CORPORATIVO',23:'DATA_FIM_CONTRATO',24:'TEMPO_EXPERIENCIA'
     },data);
     toast('Colaborador atualizado','success');await loadAll();
   }catch(e){toast('Erro ao salvar: '+e.message,'error');}
@@ -1222,9 +1281,11 @@ async function saveNewColab(){
     const nasc=$('nNasc').value;const hoje=new Date();
     const anos=((hoje-new Date(adm))/(1000*60*60*24*365.25)).toFixed(1);
     const idade=nasc?((hoje-new Date(nasc))/(1000*60*60*24*365.25)).toFixed(0):null;
-    const row={ID_COLABORADOR:newId,NOME:nome,TIPO_VINCULO:$('nVinc').value,STATUS:'ATIVO',DATA_NASCIMENTO:nasc||null,DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',DATA_ADMISSAO:adm,DATA_DESLIGAMENTO:null,CARGO:$('nCargo').value,AREA:$('nArea').value,SETOR:$('nSetor').value||$('nArea').value,GESTOR:$('nGestor').value,EMPRESA:$('nEmpresa').value,IDADE:idade,ANOS_EMPRESA:anos,RAW_VINCULO:$('nVinc').value,RAW_STATUS:'Ativo',SALARIO:$('nSalario').value||null,VALE_REFEICAO:$('nVR').value||null,VALE_TRANSPORTE:$('nVT').value||null,PLANO_SAUDE:$('nPlanoSaude').value||null,OUTROS_BENEFICIOS:$('nBeneficios').value||null,EMAIL_CORPORATIVO:$('nEmail').value.trim()||null};
+    const _nVinc=$('nVinc').value;const _nIndet=$('nIndet').checked;
+    if(['CLT','PJ','MEI','ASSOCIADO'].includes(_nVinc.toUpperCase())){if(_nIndet)_indetSet.add(newId);else _indetSet.delete(newId);saveIndet();}
+    const row={ID_COLABORADOR:newId,NOME:nome,TIPO_VINCULO:_nVinc,STATUS:'ATIVO',DATA_NASCIMENTO:nasc||null,DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',DATA_ADMISSAO:adm,DATA_DESLIGAMENTO:null,CARGO:$('nCargo').value,AREA:$('nArea').value,SETOR:$('nSetor').value||$('nArea').value,GESTOR:$('nGestor').value,EMPRESA:$('nEmpresa').value,IDADE:idade,ANOS_EMPRESA:anos,RAW_VINCULO:_nVinc,RAW_STATUS:'Ativo',SALARIO:$('nSalario').value||null,VALE_REFEICAO:$('nVR').value||null,VALE_TRANSPORTE:$('nVT').value||null,PLANO_SAUDE:$('nPlanoSaude').value||null,OUTROS_BENEFICIOS:$('nBeneficios').value||null,EMAIL_CORPORATIVO:$('nEmail').value.trim()||null,DATA_FIM_CONTRATO:$('nDataFim').value||null,TEMPO_EXPERIENCIA:$('nExperiencia').value||null};
     if(DEMO){D.CADASTRO_COLABORADORES.push({...row,_row:cad.length+2});render();toast(`${nome} admitido! ID: ${newId}`,'success');return;}
-    await appendR('CADASTRO_COLABORADORES',['ID_COLABORADOR','NOME','TIPO_VINCULO','STATUS','DATA_NASCIMENTO','DATA_NASCIMENTO_FORMATADO','DATA_ADMISSAO','DATA_DESLIGAMENTO','CARGO','AREA','SETOR','GESTOR','EMPRESA','IDADE','ANOS_EMPRESA','RAW_VINCULO','RAW_STATUS','SALARIO','VALE_REFEICAO','VALE_TRANSPORTE','PLANO_SAUDE','OUTROS_BENEFICIOS','EMAIL_CORPORATIVO'],row);
+    await appendR('CADASTRO_COLABORADORES',['ID_COLABORADOR','NOME','TIPO_VINCULO','STATUS','DATA_NASCIMENTO','DATA_NASCIMENTO_FORMATADO','DATA_ADMISSAO','DATA_DESLIGAMENTO','CARGO','AREA','SETOR','GESTOR','EMPRESA','IDADE','ANOS_EMPRESA','RAW_VINCULO','RAW_STATUS','SALARIO','VALE_REFEICAO','VALE_TRANSPORTE','PLANO_SAUDE','OUTROS_BENEFICIOS','EMAIL_CORPORATIVO','DATA_FIM_CONTRATO','TEMPO_EXPERIENCIA'],row);
     toast(`${nome} admitido! ID: ${newId}`,'success');await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
 }
@@ -1534,7 +1595,7 @@ const saveAcoes=()=>localStorage.setItem(ACOES_KEY,JSON.stringify(_acoes));
 const INDET_KEY='luma_indet_v1';
 let _indetSet=new Set(JSON.parse(localStorage.getItem(INDET_KEY)||'[]'));
 const saveIndet=()=>localStorage.setItem(INDET_KEY,JSON.stringify([..._indetSet]));
-let _alertasCont=[],_alertasEx=[],_alertasFer=[];
+let _alertasCont=[],_alertasEx=[],_alertasFer=[],_alertasExp=[];
 
 function toggleComentario(){
   const s=$('acStatus').value;
@@ -1656,6 +1717,26 @@ function gerarAcoesSugeridas(){
       alerta:al,
       atividade:`Programar e comunicar período de férias de ${r.NOME||'—'} (admissão: ${r.DATA_ADMISSAO||'—'}).\n\n⚖️ Base legal: art. 130 CLT — direito a 30 dias corridos após 12 meses de período aquisitivo. Art. 134 CLT — férias devem ser concedidas nos 12 meses seguintes (período concessivo). Art. 137 CLT — se não concedidas no prazo, pagamento em dobro + possibilidade de ação por dano moral.`,
       venc:addDias(hoje,30),status:'EM_ANDAMENTO',comentario:'',dataConcl:'',
+      criadoEm:hoje,atualizadoEm:hoje,origem:'SISTEMA'
+    });
+    novos++;
+  });
+
+  // ── Experiência CLT vencendo/vencida ──
+  // Base: art. 445 CLT — máx. 90 dias; continuidade → indeterminado automático
+  _alertasExp.forEach(r=>{
+    const dias=parseInt(r.TEMPO_EXPERIENCIA)||0;
+    const admD=new Date(String(r.DATA_ADMISSAO)+'T12:00:00');
+    const fimExp=new Date(admD.getTime()+dias*864e5);
+    const restantes=Math.round((fimExp.getTime()-new Date().getTime())/864e5);
+    const al=`Período de experiência CLT — ${r.NOME||'—'}`;
+    if(jaExiste(al))return;
+    const situacao=restantes<0?`vencido há ${Math.abs(restantes)} dias`:`vence em ${restantes} dia${restantes!==1?'s':''}`;
+    _acoes.push({
+      id:'AC-'+Date.now()+'-'+Math.floor(Math.random()*9999),
+      alerta:al,
+      atividade:`Período de experiência de ${r.NOME||'—'} (${dias} dias) ${situacao}.\n\nDecisão necessária:\n• Efetivação → marcar "Contrato por tempo indeterminado" no cadastro.\n• Prorrogação → permitida apenas 1x, sem ultrapassar 90 dias no total.\n• Desligamento → sem multa de 40% FGTS e sem aviso prévio se rescisão no prazo (art. 445 CLT).\n\n⚠️ Se o funcionário continuar trabalhando após o prazo sem ação, o contrato torna-se automaticamente indeterminado (art. 451 CLT).`,
+      venc:addDias(hoje,restantes>0?restantes:0),status:'EM_ANDAMENTO',comentario:'',dataConcl:'',
       criadoEm:hoje,atualizadoEm:hoje,origem:'SISTEMA'
     });
     novos++;
