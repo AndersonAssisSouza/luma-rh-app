@@ -543,10 +543,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
             </div>
           </label>
         </div>
-        <div class="fgrp" id="eDataFimGrp" style="display:none;">
-          <div class="flbl">Data final do contrato</div>
-          <input class="fi" id="eDataFim" type="date">
-        </div>
+        <!-- DATA_FIM_CONTRATO removida na v4 da planilha -->
         <div class="fgrp" id="eExpGrp" style="display:none;">
           <div class="flbl">Período de experiência (dias) <span style="color:var(--muted);font-size:11px;">máx. 90 · art. 445 CLT</span></div>
           <input class="fi" id="eExperiencia" type="number" min="1" max="90" placeholder="Ex: 45 ou 90">
@@ -604,10 +601,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
             </div>
           </label>
         </div>
-        <div class="fgrp" id="nDataFimGrp" style="display:none;">
-          <div class="flbl">Data final do contrato</div>
-          <input class="fi" id="nDataFim" type="date">
-        </div>
+        <!-- DATA_FIM_CONTRATO removida na v4 da planilha -->
         <div class="fgrp" id="nExpGrp" style="display:none;">
           <div class="flbl">Período de experiência (dias) <span style="color:var(--muted);font-size:11px;">máx. 90 · art. 445 CLT</span></div>
           <input class="fi" id="nExperiencia" type="number" min="1" max="90" placeholder="Ex: 45 ou 90">
@@ -917,7 +911,7 @@ function setL(m){$('lMsg').textContent=m;}
 async function loadAll(){
   if(DEMO){loadDemo();return;}
   $('sLoad').classList.remove('hidden');$('app').style.display='none';
-  const sheets=['CADASTRO_COLABORADORES','FERIAS_CLT','CONTRATOS_PJ','EVENTOS_RH','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH','AUSENCIAS_OCORRENCIAS','MOVIMENTACOES','BIBLIOTECA_MENSAGENS_ANIV'];
+  const sheets=['CADASTRO_COLABORADORES','FERIAS_CLT','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH','AUSENCIAS_OCORRENCIAS','LOG_AUTOMACAO_RH','PARAM_AUTOMACAO_RH','BIBLIOTECA_MENSAGENS_ANIV'];
   try{
     for(const s of sheets){setL(`Lendo ${s}...`);D[s]=await rSheet(s);}
     detectRole();
@@ -937,12 +931,9 @@ async function loadAll(){
 function render(){
   const cad=D.CADASTRO_COLABORADORES||[];
   const ferias=D.FERIAS_CLT||[];
-  const cont=D.CONTRATOS_PJ||[];
-  const evts=D.EVENTOS_RH||[];
   const exames=D.EXAMES_OCUPACIONAIS||[];
   const log=D.CONTROLE_COMUNICACAO_RH||[];
   const aus=D.AUSENCIAS_OCORRENCIAS||[];
-  const mov=D.MOVIMENTACOES||[];
   const msgs=D.BIBLIOTECA_MENSAGENS_ANIV||[];
 
   const ativos=cad.filter(r=>String(r.STATUS||'').trim().toUpperCase()==='ATIVO');
@@ -955,18 +946,30 @@ function render(){
     if(a<1)tFx['<1']++;else if(a<3)tFx['1-3']++;else if(a<5)tFx['3-5']++;else tFx['>5']++;});
   const et={'Até 25':0,'25-34':0,'35-44':0,'45-54':0,'55+':0};
   ativos.forEach(r=>{const a=parseFloat(r.IDADE)||0;if(a<25)et['Até 25']++;else if(a<35)et['25-34']++;else if(a<45)et['35-44']++;else if(a<55)et['45-54']++;else et['55+']++;});
+  // admY/desY derivados do próprio CADASTRO_COLABORADORES
   const admY={},desY={};
-  mov.forEach(r=>{const tp=String(r.TIPO_MOVIMENTACAO||'').trim();const d=r.DATA_MOVIMENTACAO;if(!d)return;const dt=parseDate(d);if(!dt)return;const y=dt.getFullYear();if(y<2000||y>2100)return;if(tp==='ADMISSAO')admY[y]=(admY[y]||0)+1;if(tp==='DESLIGAMENTO')desY[y]=(desY[y]||0)+1;});
-  const evA=evts.filter(r=>String(r.STATUS_COLABORADOR||'').toUpperCase()==='ATIVO'&&parseFloat(r.DIAS_PARA_EVENTO)>=0).sort((a,b)=>parseFloat(a.DIAS_PARA_EVENTO)-parseFloat(b.DIAS_PARA_EVENTO));
-  const prD=evA.length>0?Math.round(parseFloat(evA[0].DIAS_PARA_EVENTO)):null;
-  const cSem=cont.filter(r=>String(r.ALERTA||'').trim()==='SEM_DATA_FIM'&&String(r.STATUS_COLABORADOR||'').toUpperCase()==='ATIVO'&&!_indetSet.has(String(r.ID_COLABORADOR||'')));
+  cad.forEach(r=>{
+    if(r.DATA_ADMISSAO){const dt=parseDate(r.DATA_ADMISSAO);if(dt){const y=dt.getFullYear();if(y>=2000&&y<=2100)admY[y]=(admY[y]||0)+1;}}
+    if(r.DATA_DESLIGAMENTO){const dt=parseDate(r.DATA_DESLIGAMENTO);if(dt){const y=dt.getFullYear();if(y>=2000&&y<=2100)desY[y]=(desY[y]||0)+1;}}
+  });
+  // Eventos (aniversários) calculados do CADASTRO_COLABORADORES
+  const hojeEvt=new Date();hojeEvt.setHours(0,0,0,0);
+  const evA=[];
+  ativos.forEach(r=>{
+    if(r.DATA_NASCIMENTO){const nasc=parseDate(r.DATA_NASCIMENTO);if(nasc){let prox=new Date(hojeEvt.getFullYear(),nasc.getMonth(),nasc.getDate());if(prox<hojeEvt)prox.setFullYear(hojeEvt.getFullYear()+1);const dias=Math.round((prox-hojeEvt)/864e5);evA.push({ID_COLABORADOR:r.ID_COLABORADOR,NOME:r.NOME,TIPO_EVENTO:'ANIVERSARIO',DATA_EVENTO:prox.toISOString().split('T')[0],DIAS_PARA_EVENTO:dias});}}
+    if(r.DATA_ADMISSAO){const adm=parseDate(r.DATA_ADMISSAO);if(adm){let prox=new Date(hojeEvt.getFullYear(),adm.getMonth(),adm.getDate());if(prox<hojeEvt)prox.setFullYear(hojeEvt.getFullYear()+1);const dias=Math.round((prox-hojeEvt)/864e5);evA.push({ID_COLABORADOR:r.ID_COLABORADOR,NOME:r.NOME,TIPO_EVENTO:'ANIVERSARIO_EMPRESA',DATA_EVENTO:prox.toISOString().split('T')[0],DIAS_PARA_EVENTO:dias});}}
+  });
+  evA.sort((a,b)=>a.DIAS_PARA_EVENTO-b.DIAS_PARA_EVENTO);
+  const prD=evA.length>0?evA[0].DIAS_PARA_EVENTO:null;
+  // cSem: PJ/MEI/Associado sem flag CONTRATO_INDETERMINADO='SIM'
+  const cSem=ativos.filter(r=>{const v=String(r.TIPO_VINCULO||'').toUpperCase();return['PJ','MEI','ASSOCIADO'].includes(v)&&String(r.CONTRATO_INDETERMINADO||'').toUpperCase()!=='SIM';});
   const exV=exames.filter(r=>String(r.STATUS_EXAME||'').toUpperCase()==='VENCIDO'&&String(r.STATUS||'').toUpperCase()==='ATIVO');
   const fNP=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_PROGRAMADA');
   // Alerta experiência CLT: período vencendo em ≤15 dias ou já vencido, sem flag indeterminado
   const hojeMs=new Date().getTime();
   const expAlerts=ativos.filter(r=>{
     if(String(r.TIPO_VINCULO||'').toUpperCase()!=='CLT')return false;
-    if(_indetSet.has(String(r.ID_COLABORADOR||'')))return false;
+    if(String(r.CONTRATO_INDETERMINADO||'').toUpperCase()==='SIM')return false;
     const dias=parseInt(r.TEMPO_EXPERIENCIA)||0;
     if(!dias||!r.DATA_ADMISSAO)return false;
     const admD=new Date(String(r.DATA_ADMISSAO)+'T12:00:00');
@@ -1003,8 +1006,8 @@ function render(){
   const exOkCount=exAtvConf.length-exV.length;
   const ferCltAtv=ferias.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVO'&&r.STATUS_FERIAS!=='NAO_APLICAVEL'&&r.STATUS_FERIAS!=='INATIVO');
   const ferProgCount=ferCltAtv.filter(r=>['PROGRAMADA','GOZADA'].includes(r.STATUS_FERIAS||'')).length;
-  const pjAtvCont=cont.filter(r=>String(r.STATUS_COLABORADOR||'').toUpperCase()==='ATIVO');
-  const pjOkCount=pjAtvCont.filter(r=>r.ALERTA!=='SEM_DATA_FIM').length;
+  const pjAtvCont=ativos.filter(r=>['PJ','MEI','ASSOCIADO'].includes(String(r.TIPO_VINCULO||'').toUpperCase()));
+  const pjOkCount=pjAtvCont.filter(r=>String(r.CONTRATO_INDETERMINADO||'').toUpperCase()==='SIM').length;
   const saudeItems=[
     {l:'Exames ocupacionais',v:exOkCount,t:Math.max(exAtvConf.length,1),sub:`${exOkCount} em dia · ${exV.length} vencido${exV.length!==1?'s':''}`},
     {l:'Férias CLT programadas',v:ferProgCount,t:Math.max(ferCltAtv.length,1),sub:`${ferProgCount} programadas · ${fNP.length} pendente${fNP.length!==1?'s':''}`},
@@ -1181,17 +1184,16 @@ function openEditColab(r){
   setS('eVinculo',r.TIPO_VINCULO||'CLT');
   setS('eArea',r.AREA);setS('eGestor',r.GESTOR);setS('eEmpresa',r.EMPRESA);setS('eStatus',r.STATUS||'ATIVO');
   $('eDesl').value=iso(r.DATA_DESLIGAMENTO)||'';
-  $('eSalario').value=r.SALARIO||'';
+  $('eSalario').value=r.SALARIO_HONORARIO||'';
   $('eVR').value=r.VALE_REFEICAO||'';
   $('eVT').value=r.VALE_TRANSPORTE||'';
   setS('ePlanoSaude',r.PLANO_SAUDE||'');
   $('eBeneficios').value=r.OUTROS_BENEFICIOS||'';
-  // Campos contrato
-  $('eDataFim').value=iso(r.DATA_FIM_CONTRATO)||'';
+  // Campo experiência CLT
   $('eExperiencia').value=r.TEMPO_EXPERIENCIA||'';
   // Flag indeterminado
   const _vIndet=String(r.TIPO_VINCULO||'').toUpperCase();
-  const _isIndet=_indetSet.has(String(r.ID_COLABORADOR||''));
+  const _isIndet=String(r.CONTRATO_INDETERMINADO||'').toUpperCase()==='SIM';
   $('eIndetGrp').style.display=['CLT','PJ','MEI','ASSOCIADO'].includes(_vIndet)?'':'none';
   $('eIndet').checked=_isIndet;
   $('eDataFimGrp').style.display=(['CLT','PJ','MEI','ASSOCIADO'].includes(_vIndet)&&!_isIndet)?'':'none';
@@ -1203,9 +1205,7 @@ function toggleIndetGrp(){
   const showIndet=['CLT','PJ','MEI','ASSOCIADO'].includes(v);
   $('eIndetGrp').style.display=showIndet?'':'none';
   const indet=$('eIndet').checked;
-  // Sem indeterminado → mostra data fim
-  $('eDataFimGrp').style.display=(showIndet&&!indet)?'':'none';
-  // CLT sem indeterminado → mostra também experiência
+  // CLT sem indeterminado → mostra campo de experiência
   $('eExpGrp').style.display=(v==='CLT'&&!indet)?'':'none';
 }
 function toggleNIndetGrp(){
@@ -1213,7 +1213,6 @@ function toggleNIndetGrp(){
   const showIndet=['CLT','PJ','MEI','ASSOCIADO'].includes(v);
   $('nIndetGrp').style.display=showIndet?'':'none';
   const indet=$('nIndet').checked;
-  $('nDataFimGrp').style.display=(showIndet&&!indet)?'':'none';
   $('nExpGrp').style.display=(v==='CLT'&&!indet)?'':'none';
 }
 async function saveEditColab(){
@@ -1223,7 +1222,7 @@ async function saveEditColab(){
     NOME:$('eNome').value,
     EMAIL_CORPORATIVO:$('eEmail').value.trim()||null,
     TIPO_VINCULO:$('eVinculo').value,
-    DATA_FIM_CONTRATO:$('eDataFim').value||null,
+    CONTRATO_INDETERMINADO:$('eIndet').checked?'SIM':'',
     TEMPO_EXPERIENCIA:$('eExperiencia').value||null,
     STATUS:$('eStatus').value,
     DATA_NASCIMENTO:nasc||null,
@@ -1235,7 +1234,7 @@ async function saveEditColab(){
     SETOR:$('eSetor').value,
     GESTOR:$('eGestor').value,
     EMPRESA:$('eEmpresa').value,
-    SALARIO:$('eSalario').value||null,
+    SALARIO_HONORARIO:$('eSalario').value||null,
     VALE_REFEICAO:$('eVR').value||null,
     VALE_TRANSPORTE:$('eVT').value||null,
     PLANO_SAUDE:$('ePlanoSaude').value||null,
@@ -1244,25 +1243,23 @@ async function saveEditColab(){
   // Salvar flag indeterminado antes de fechar
   const _idColab=$('eColabId').value;
   const _vColab=$('eVinculo').value.toUpperCase();
-  if(['CLT','PJ','MEI','ASSOCIADO'].includes(_vColab)){
-    if($('eIndet').checked)_indetSet.add(_idColab);else _indetSet.delete(_idColab);
-    saveIndet();
-  }
+  // CONTRATO_INDETERMINADO gravado direto na planilha via patchRow acima
   closeModal('mEditColab');toast('Salvando...','info');
   try{
     if(DEMO){fakeS('CADASTRO_COLABORADORES',row,data);return;}
     // CADASTRO cols: 0=ID,1=NOME,2=TIPO_VINCULO,3=STATUS,4=DATA_NASC,5=NASC_FMT,6=DATA_ADM,7=DATA_DESL,8=CARGO,9=AREA,10=SETOR,11=GESTOR,12=EMPRESA
     // Cols 13-16: IDADE, ANOS_EMPRESA, RAW_VINCULO, RAW_STATUS (fórmulas — não editar)
     // Cols 17+: novos campos adicionados pelo dashboard
+    // Nova estrutura v4: A=ID(skip) B=NOME C=EMAIL D=VINCULO E=STATUS F=NASC G=NASC_FMT H=ADM I=DESL J=CARGO K=AREA L=SETOR M=GESTOR N=EMPRESA O-R=fórmulas S=INDET T=EXP U=SAL V=VR W=VT X=PS Y=OUTROS
     await patchRow('CADASTRO_COLABORADORES',row,{
-      1:'NOME',2:'TIPO_VINCULO',3:'STATUS',
-      4:'DATA_NASCIMENTO',5:'DATA_NASCIMENTO_FORMATADO',
-      6:'DATA_ADMISSAO',7:'DATA_DESLIGAMENTO',
-      8:'CARGO',9:'AREA',10:'SETOR',11:'GESTOR',12:'EMPRESA'
+      1:'NOME',2:'EMAIL_CORPORATIVO',3:'TIPO_VINCULO',4:'STATUS',
+      5:'DATA_NASCIMENTO',6:'DATA_NASCIMENTO_FORMATADO',
+      7:'DATA_ADMISSAO',8:'DATA_DESLIGAMENTO',
+      9:'CARGO',10:'AREA',11:'SETOR',12:'GESTOR',13:'EMPRESA'
     },data);
-    // Salário, benefícios, e-mail e contrato — colunas 17-24
     await patchRow('CADASTRO_COLABORADORES',row,{
-      17:'SALARIO',18:'VALE_REFEICAO',19:'VALE_TRANSPORTE',20:'PLANO_SAUDE',21:'OUTROS_BENEFICIOS',22:'EMAIL_CORPORATIVO',23:'DATA_FIM_CONTRATO',24:'TEMPO_EXPERIENCIA'
+      18:'CONTRATO_INDETERMINADO',19:'TEMPO_EXPERIENCIA',
+      20:'SALARIO_HONORARIO',21:'VALE_REFEICAO',22:'VALE_TRANSPORTE',23:'PLANO_SAUDE',24:'OUTROS_BENEFICIOS'
     },data);
     toast('Colaborador atualizado','success');await loadAll();
   }catch(e){toast('Erro ao salvar: '+e.message,'error');}
@@ -1282,10 +1279,9 @@ async function saveNewColab(){
     const anos=((hoje-new Date(adm))/(1000*60*60*24*365.25)).toFixed(1);
     const idade=nasc?((hoje-new Date(nasc))/(1000*60*60*24*365.25)).toFixed(0):null;
     const _nVinc=$('nVinc').value;const _nIndet=$('nIndet').checked;
-    if(['CLT','PJ','MEI','ASSOCIADO'].includes(_nVinc.toUpperCase())){if(_nIndet)_indetSet.add(newId);else _indetSet.delete(newId);saveIndet();}
-    const row={ID_COLABORADOR:newId,NOME:nome,TIPO_VINCULO:_nVinc,STATUS:'ATIVO',DATA_NASCIMENTO:nasc||null,DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',DATA_ADMISSAO:adm,DATA_DESLIGAMENTO:null,CARGO:$('nCargo').value,AREA:$('nArea').value,SETOR:$('nSetor').value||$('nArea').value,GESTOR:$('nGestor').value,EMPRESA:$('nEmpresa').value,IDADE:idade,ANOS_EMPRESA:anos,RAW_VINCULO:_nVinc,RAW_STATUS:'Ativo',SALARIO:$('nSalario').value||null,VALE_REFEICAO:$('nVR').value||null,VALE_TRANSPORTE:$('nVT').value||null,PLANO_SAUDE:$('nPlanoSaude').value||null,OUTROS_BENEFICIOS:$('nBeneficios').value||null,EMAIL_CORPORATIVO:$('nEmail').value.trim()||null,DATA_FIM_CONTRATO:$('nDataFim').value||null,TEMPO_EXPERIENCIA:$('nExperiencia').value||null};
+    const row={ID_COLABORADOR:newId,NOME:nome,EMAIL_CORPORATIVO:$('nEmail').value.trim()||null,TIPO_VINCULO:_nVinc,STATUS:'ATIVO',DATA_NASCIMENTO:nasc||null,DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',DATA_ADMISSAO:adm,DATA_DESLIGAMENTO:null,CARGO:$('nCargo').value,AREA:$('nArea').value,SETOR:$('nSetor').value||$('nArea').value,GESTOR:$('nGestor').value,EMPRESA:$('nEmpresa').value,IDADE:idade,ANOS_EMPRESA:anos,RAW_VINCULO:_nVinc,RAW_STATUS:'Ativo',CONTRATO_INDETERMINADO:_nIndet?'SIM':'',TEMPO_EXPERIENCIA:$('nExperiencia').value||null,SALARIO_HONORARIO:$('nSalario').value||null,VALE_REFEICAO:$('nVR').value||null,VALE_TRANSPORTE:$('nVT').value||null,PLANO_SAUDE:$('nPlanoSaude').value||null,OUTROS_BENEFICIOS:$('nBeneficios').value||null};
     if(DEMO){D.CADASTRO_COLABORADORES.push({...row,_row:cad.length+2});render();toast(`${nome} admitido! ID: ${newId}`,'success');return;}
-    await appendR('CADASTRO_COLABORADORES',['ID_COLABORADOR','NOME','TIPO_VINCULO','STATUS','DATA_NASCIMENTO','DATA_NASCIMENTO_FORMATADO','DATA_ADMISSAO','DATA_DESLIGAMENTO','CARGO','AREA','SETOR','GESTOR','EMPRESA','IDADE','ANOS_EMPRESA','RAW_VINCULO','RAW_STATUS','SALARIO','VALE_REFEICAO','VALE_TRANSPORTE','PLANO_SAUDE','OUTROS_BENEFICIOS','EMAIL_CORPORATIVO','DATA_FIM_CONTRATO','TEMPO_EXPERIENCIA'],row);
+    await appendR('CADASTRO_COLABORADORES',['ID_COLABORADOR','NOME','EMAIL_CORPORATIVO','TIPO_VINCULO','STATUS','DATA_NASCIMENTO','DATA_NASCIMENTO_FORMATADO','DATA_ADMISSAO','DATA_DESLIGAMENTO','CARGO','AREA','SETOR','GESTOR','EMPRESA','IDADE','ANOS_EMPRESA','RAW_VINCULO','RAW_STATUS','CONTRATO_INDETERMINADO','TEMPO_EXPERIENCIA','SALARIO_HONORARIO','VALE_REFEICAO','VALE_TRANSPORTE','PLANO_SAUDE','OUTROS_BENEFICIOS'],row);
     toast(`${nome} admitido! ID: ${newId}`,'success');await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
 }
@@ -1352,29 +1348,19 @@ function loadDemo(){
   $('sLoad').classList.add('hidden');
   D={
     CADASTRO_COLABORADORES:[
-      {_row:2,ID_COLABORADOR:'COL-001',NOME:'Agda Andrade',TIPO_VINCULO:'SOCIO',STATUS:'ATIVO',CARGO:'Controller Jurídico',AREA:'Jurídico',EMPRESA:'Luma Plataforma',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-12-01',ANOS_EMPRESA:0.3,IDADE:33},
-      {_row:3,ID_COLABORADOR:'COL-002',NOME:'Anderson de Assis de Souza',TIPO_VINCULO:'SOCIO',STATUS:'ATIVO',CARGO:'Coordenador Operacional',AREA:'Operacional',EMPRESA:'Luma Plataforma',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2021-02-01',ANOS_EMPRESA:5,IDADE:48},
-      {_row:4,ID_COLABORADOR:'COL-003',NOME:'Berenice',TIPO_VINCULO:'PJ',STATUS:'ATIVO',CARGO:'Desenvolvedor Jr',AREA:'Tecnologia',EMPRESA:'Luma Plataforma',GESTOR:'Matheus Rocha',DATA_ADMISSAO:'2025-09-10',ANOS_EMPRESA:0.5,IDADE:43},
-      {_row:5,ID_COLABORADOR:'COL-005',NOME:'Cristhiane Nery de Jesus',TIPO_VINCULO:'PJ',STATUS:'ATIVO',CARGO:'Advogada',AREA:'Jurídico',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2023-10-23',ANOS_EMPRESA:1.4,IDADE:35},
-      {_row:6,ID_COLABORADOR:'COL-007',NOME:'Julimaira Mariano Catarino de Lima',TIPO_VINCULO:'CLT',STATUS:'ATIVO',CARGO:'Assistente Jurídico',AREA:'Jurídico',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-05-06',ANOS_EMPRESA:0.9,IDADE:29},
-      {_row:7,ID_COLABORADOR:'COL-015',NOME:'Luisa Moraes',TIPO_VINCULO:'SOCIO',STATUS:'ATIVO',CARGO:'Diretora',AREA:'Diretor',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2008-02-01',ANOS_EMPRESA:17,IDADE:45},
-      {_row:8,ID_COLABORADOR:'COL-058',NOME:'Varley Gomes de Padua',TIPO_VINCULO:'CLT',STATUS:'ATIVO',CARGO:'Administrativo',AREA:'Administrativo',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-07-15',ANOS_EMPRESA:0.7,IDADE:38},
-      {_row:9,ID_COLABORADOR:'COL-059',NOME:'Victor Machado Costa',TIPO_VINCULO:'CLT',STATUS:'ATIVO',CARGO:'Estagiário Jurídico',AREA:'Jurídico',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-05-20',ANOS_EMPRESA:0.8,IDADE:23},
+      {_row:2,ID_COLABORADOR:'COL-001',NOME:'Agda Andrade',EMAIL_CORPORATIVO:'agda@lumaplataforma.com.br',TIPO_VINCULO:'SOCIO',STATUS:'ATIVO',CARGO:'Controller Jurídico',AREA:'Jurídico',EMPRESA:'Luma Plataforma',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-12-01',DATA_NASCIMENTO:'1991-03-15',ANOS_EMPRESA:0.3,IDADE:33,CONTRATO_INDETERMINADO:'SIM'},
+      {_row:3,ID_COLABORADOR:'COL-002',NOME:'Anderson de Assis de Souza',EMAIL_CORPORATIVO:'anderson.assis@lumaplataforma.com.br',TIPO_VINCULO:'SOCIO',STATUS:'ATIVO',CARGO:'Coordenador Operacional',AREA:'Operacional',EMPRESA:'Luma Plataforma',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2021-02-01',DATA_NASCIMENTO:'1976-08-10',ANOS_EMPRESA:5,IDADE:48,CONTRATO_INDETERMINADO:'SIM'},
+      {_row:4,ID_COLABORADOR:'COL-003',NOME:'Berenice',EMAIL_CORPORATIVO:'berenice@lumaplataforma.com.br',TIPO_VINCULO:'PJ',STATUS:'ATIVO',CARGO:'Desenvolvedor Jr',AREA:'Tecnologia',EMPRESA:'Luma Plataforma',GESTOR:'Matheus Rocha',DATA_ADMISSAO:'2025-09-10',DATA_NASCIMENTO:'1981-11-20',ANOS_EMPRESA:0.5,IDADE:43,CONTRATO_INDETERMINADO:''},
+      {_row:5,ID_COLABORADOR:'COL-005',NOME:'Cristhiane Nery de Jesus',EMAIL_CORPORATIVO:'cristhiane@luisamoraes.com.br',TIPO_VINCULO:'PJ',STATUS:'ATIVO',CARGO:'Advogada',AREA:'Jurídico',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2023-10-23',DATA_NASCIMENTO:'1989-05-12',ANOS_EMPRESA:1.4,IDADE:35,CONTRATO_INDETERMINADO:''},
+      {_row:6,ID_COLABORADOR:'COL-007',NOME:'Julimaira Mariano Catarino de Lima',EMAIL_CORPORATIVO:'julimaira@luisamoraes.com.br',TIPO_VINCULO:'CLT',STATUS:'ATIVO',CARGO:'Assistente Jurídico',AREA:'Jurídico',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-05-06',DATA_NASCIMENTO:'1995-04-28',ANOS_EMPRESA:0.9,IDADE:29,CONTRATO_INDETERMINADO:'SIM',TEMPO_EXPERIENCIA:90},
+      {_row:7,ID_COLABORADOR:'COL-015',NOME:'Luisa Moraes',EMAIL_CORPORATIVO:'luisa@luisamoraes.com.br',TIPO_VINCULO:'SOCIO',STATUS:'ATIVO',CARGO:'Diretora',AREA:'Diretor',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2008-02-01',DATA_NASCIMENTO:'1979-07-05',ANOS_EMPRESA:17,IDADE:45,CONTRATO_INDETERMINADO:'SIM'},
+      {_row:8,ID_COLABORADOR:'COL-058',NOME:'Varley Gomes de Padua',EMAIL_CORPORATIVO:'varley@luisamoraes.com.br',TIPO_VINCULO:'CLT',STATUS:'ATIVO',CARGO:'Administrativo',AREA:'Administrativo',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-07-15',DATA_NASCIMENTO:'1986-04-28',ANOS_EMPRESA:0.7,IDADE:38,CONTRATO_INDETERMINADO:'SIM'},
+      {_row:9,ID_COLABORADOR:'COL-059',NOME:'Victor Machado Costa',EMAIL_CORPORATIVO:'victor@luisamoraes.com.br',TIPO_VINCULO:'CLT',STATUS:'ATIVO',CARGO:'Estagiário Jurídico',AREA:'Jurídico',EMPRESA:'Luisa Moraes Advogados',GESTOR:'Luisa Moraes',DATA_ADMISSAO:'2025-05-20',DATA_NASCIMENTO:'2002-05-20',ANOS_EMPRESA:0.8,IDADE:23,CONTRATO_INDETERMINADO:'SIM'},
     ],
     FERIAS_CLT:[
       {_row:2,ID_COLABORADOR:'COL-007',NOME:'Julimaira Mariano Catarino de Lima',STATUS:'ATIVO',DATA_ADMISSAO:'2025-05-06',STATUS_FERIAS:'NAO_PROGRAMADA',INICIO_PERIODO_AQUISITIVO:null,FIM_PERIODO_AQUISITIVO:null,FIM_PERIODO_CONCESSIVO:null,FERIAS_PROGRAMADAS_INICIO:null,FERIAS_PROGRAMADAS_FIM:null,FERIAS_GOZADAS_INICIO:null,FERIAS_GOZADAS_FIM:null},
       {_row:3,ID_COLABORADOR:'COL-058',NOME:'Varley Gomes de Padua',STATUS:'ATIVO',DATA_ADMISSAO:'2025-07-15',STATUS_FERIAS:'NAO_PROGRAMADA',INICIO_PERIODO_AQUISITIVO:null,FIM_PERIODO_AQUISITIVO:null,FIM_PERIODO_CONCESSIVO:null,FERIAS_PROGRAMADAS_INICIO:null,FERIAS_PROGRAMADAS_FIM:null,FERIAS_GOZADAS_INICIO:null,FERIAS_GOZADAS_FIM:null},
       {_row:4,ID_COLABORADOR:'COL-059',NOME:'Victor Machado Costa',STATUS:'ATIVO',DATA_ADMISSAO:'2025-05-20',STATUS_FERIAS:'NAO_PROGRAMADA',INICIO_PERIODO_AQUISITIVO:null,FIM_PERIODO_AQUISITIVO:null,FIM_PERIODO_CONCESSIVO:null,FERIAS_PROGRAMADAS_INICIO:null,FERIAS_PROGRAMADAS_FIM:null,FERIAS_GOZADAS_INICIO:null,FERIAS_GOZADAS_FIM:null},
-    ],
-    CONTRATOS_PJ:[
-      {_row:2,ID_COLABORADOR:'COL-005',NOME:'Cristhiane Nery de Jesus',TIPO_VINCULO:'PJ',DATA_INICIO_CONTRATO:'2023-10-23',DATA_FIM_CONTRATO:null,STATUS_COLABORADOR:'ATIVO',ALERTA:'SEM_DATA_FIM'},
-      {_row:3,ID_COLABORADOR:'COL-003',NOME:'Berenice',TIPO_VINCULO:'PJ',DATA_INICIO_CONTRATO:'2025-09-10',DATA_FIM_CONTRATO:null,STATUS_COLABORADOR:'ATIVO',ALERTA:'SEM_DATA_FIM'},
-    ],
-    EVENTOS_RH:[
-      {_row:2,ID_COLABORADOR:'COL-007',NOME:'Julimaira Mariano Catarino de Lima',TIPO_EVENTO:'ANIVERSARIO',DATA_EVENTO:'2026-04-28',DIAS_PARA_EVENTO:36,STATUS_COLABORADOR:'ATIVO'},
-      {_row:3,ID_COLABORADOR:'COL-058',NOME:'Varley Gomes de Padua',TIPO_EVENTO:'ANIVERSARIO',DATA_EVENTO:'2026-04-28',DIAS_PARA_EVENTO:36,STATUS_COLABORADOR:'ATIVO'},
-      {_row:4,ID_COLABORADOR:'COL-007',NOME:'Julimaira Mariano Catarino de Lima',TIPO_EVENTO:'ANIVERSARIO_EMPRESA',DATA_EVENTO:'2026-05-06',DIAS_PARA_EVENTO:44,STATUS_COLABORADOR:'ATIVO'},
-      {_row:5,ID_COLABORADOR:'COL-059',NOME:'Victor Machado Costa',TIPO_EVENTO:'ANIVERSARIO',DATA_EVENTO:'2026-05-20',DIAS_PARA_EVENTO:58,STATUS_COLABORADOR:'ATIVO'},
     ],
     EXAMES_OCUPACIONAIS:[
       {_row:2,ID_COLABORADOR:'COL-014',NOME:'Laissa Garcia da Silva',STATUS:'ATIVO',ULTIMO_EXAME:'2024-05-08',PROXIMO_EXAME:'2025-05-08',STATUS_EXAME:'VENCIDO',FONTE_BASE_ANTIGA:'EXAME PERIÓDICO',OBSERVACAO:null},
@@ -1387,10 +1373,8 @@ function loadDemo(){
     AUSENCIAS_OCORRENCIAS:[
       {_row:2,TIPO:'ATESTADO',ID_COLABORADOR:'COL-015',NOME:'Luisa Moraes',DATA:'2024-09-19',DETALHE:'K01'},
     ],
-    MOVIMENTACOES:[
-      ...[2021,2021,2021,2021,2022,2022,2022,2022,2022,2022,2023,2023,2023,2024,2024,2025,2025,2025,2026,2026,2026].map((y,i)=>({_row:i+2,TIPO_MOVIMENTACAO:'ADMISSAO',DATA_MOVIMENTACAO:`${y}-01-01`})),
-      ...[2022,2022,2022,2023,2023,2023,2024,2024,2024,2025,2025].map((y,i)=>({_row:i+30,TIPO_MOVIMENTACAO:'DESLIGAMENTO',DATA_MOVIMENTACAO:`${y}-06-01`})),
-    ],
+    LOG_AUTOMACAO_RH:[],
+    PARAM_AUTOMACAO_RH:[],
     BIBLIOTECA_MENSAGENS_ANIV:[
       {ID_MENSAGEM:'ANIV_001',STATUS:'ATIVA'},{ID_MENSAGEM:'ANIV_002',STATUS:'ATIVA'},{ID_MENSAGEM:'ANIV_003',STATUS:'ATIVA'},
       {ID_MENSAGEM:'ANIV_004',STATUS:'ATIVA'},{ID_MENSAGEM:'ANIV_005',STATUS:'ATIVA'},{ID_MENSAGEM:'ANIV_006',STATUS:'ATIVA'},
@@ -1592,9 +1576,7 @@ const ACOES_KEY='luma_acoes_v1';
 let _acoes=JSON.parse(localStorage.getItem(ACOES_KEY)||'[]');
 const saveAcoes=()=>localStorage.setItem(ACOES_KEY,JSON.stringify(_acoes));
 
-const INDET_KEY='luma_indet_v1';
-let _indetSet=new Set(JSON.parse(localStorage.getItem(INDET_KEY)||'[]'));
-const saveIndet=()=>localStorage.setItem(INDET_KEY,JSON.stringify([..._indetSet]));
+// CONTRATO_INDETERMINADO agora é coluna na planilha (v4) — localStorage removido
 let _alertasCont=[],_alertasEx=[],_alertasFer=[],_alertasExp=[];
 
 function toggleComentario(){
@@ -1853,11 +1835,9 @@ function filterDataForCoord(nome){
   const subordinados=(D.CADASTRO_COLABORADORES||[]).filter(r=>String(r.GESTOR||'').toLowerCase()===nomeLow);
   const ids=new Set(subordinados.map(r=>r.ID_COLABORADOR));
   D.CADASTRO_COLABORADORES=subordinados;
-  ['FERIAS_CLT','CONTRATOS_PJ','AUSENCIAS_OCORRENCIAS','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH'].forEach(sh=>{
+  ['FERIAS_CLT','AUSENCIAS_OCORRENCIAS','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH'].forEach(sh=>{
     if(D[sh])D[sh]=D[sh].filter(r=>ids.has(r.ID_COLABORADOR));
   });
-  if(D.EVENTOS_RH)D.EVENTOS_RH=D.EVENTOS_RH.filter(r=>ids.has(r.ID_COLABORADOR)||subordinados.some(s=>s.NOME===r.NOME));
-  if(D.MOVIMENTACOES)D.MOVIMENTACOES=D.MOVIMENTACOES.filter(r=>ids.has(r.ID_COLABORADOR));
 }
 
 function renderAdmin(){
