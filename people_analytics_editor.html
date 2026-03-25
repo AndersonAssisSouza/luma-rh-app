@@ -460,7 +460,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 <div class="sec" id="acoes">
   <div class="sttl">
     <div class="sttl-l"><div class="sdot" style="background:var(--danger)"></div>Ações de Tratativa</div>
-    <button class="btn btn-g" onclick="openModal('mNovaAcao')">+ Nova ação</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" onclick="gerarAcoesSugeridas()" style="background:rgba(155,102,244,.15);border:1px solid rgba(155,102,244,.3);color:var(--accent);font-size:13px;">⚡ Sugerir ações</button>
+      <button class="btn btn-g" onclick="openModal('mNovaAcao')">+ Nova ação</button>
+    </div>
   </div>
   <div class="kg">
     <div class="kpi"><div class="kl">Em andamento</div><div class="kv" style="color:var(--warn)" id="ac_and">—</div><div class="ks">ações abertas</div><div class="kbar" style="background:var(--warn)"></div></div>
@@ -528,7 +531,16 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
         <div class="fgrp s2"><div class="flbl">Nome completo</div><input class="fi" id="eNome"></div>
         <div class="fgrp"><div class="flbl">Data de nascimento</div><input class="fi" id="eNasc" type="date"></div>
         <div class="fgrp"><div class="flbl">Tipo de vínculo</div>
-          <select class="fsel" id="eVinculo"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option><option value="ASSOCIADO">Associado</option></select>
+          <select class="fsel" id="eVinculo" onchange="toggleIndetGrp()"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="MEI">MEI</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option><option value="ASSOCIADO">Associado</option></select>
+        </div>
+        <div class="fgrp s2" id="eIndetGrp" style="display:none;">
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px 14px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.25);border-radius:8px;margin-top:4px;">
+            <input type="checkbox" id="eIndet" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--text);">Contrato por tempo indeterminado</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">Válido para PJ / MEI / Associado — remove o alerta de "sem data fim"</div>
+            </div>
+          </label>
         </div>
         <div class="fgrp"><div class="flbl">Data de admissão</div><input class="fi" id="eAdmissao" type="date"></div>
         <div class="fgrp"><div class="flbl">Cargo</div><input class="fi" id="eCargo"></div>
@@ -920,9 +932,10 @@ function render(){
   mov.forEach(r=>{const tp=String(r.TIPO_MOVIMENTACAO||'').trim();const d=r.DATA_MOVIMENTACAO;if(!d)return;const dt=parseDate(d);if(!dt)return;const y=dt.getFullYear();if(y<2000||y>2100)return;if(tp==='ADMISSAO')admY[y]=(admY[y]||0)+1;if(tp==='DESLIGAMENTO')desY[y]=(desY[y]||0)+1;});
   const evA=evts.filter(r=>String(r.STATUS_COLABORADOR||'').toUpperCase()==='ATIVO'&&parseFloat(r.DIAS_PARA_EVENTO)>=0).sort((a,b)=>parseFloat(a.DIAS_PARA_EVENTO)-parseFloat(b.DIAS_PARA_EVENTO));
   const prD=evA.length>0?Math.round(parseFloat(evA[0].DIAS_PARA_EVENTO)):null;
-  const cSem=cont.filter(r=>String(r.ALERTA||'').trim()==='SEM_DATA_FIM'&&String(r.STATUS_COLABORADOR||'').toUpperCase()==='ATIVO');
+  const cSem=cont.filter(r=>String(r.ALERTA||'').trim()==='SEM_DATA_FIM'&&String(r.STATUS_COLABORADOR||'').toUpperCase()==='ATIVO'&&!_indetSet.has(String(r.ID_COLABORADOR||'')));
   const exV=exames.filter(r=>String(r.STATUS_EXAME||'').toUpperCase()==='VENCIDO'&&String(r.STATUS||'').toUpperCase()==='ATIVO');
   const fNP=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_PROGRAMADA');
+  _alertasCont=cSem;_alertasEx=exV;_alertasFer=fNP;
   const tAl=cSem.length+exV.length+fNP.length;
   const admEY=admY[new Date().getFullYear()]||0;
   const tot=ativos.length||1;const med=cA>0?(sA/cA).toFixed(1):0;
@@ -1133,7 +1146,15 @@ function openEditColab(r){
   $('eVT').value=r.VALE_TRANSPORTE||'';
   setS('ePlanoSaude',r.PLANO_SAUDE||'');
   $('eBeneficios').value=r.OUTROS_BENEFICIOS||'';
+  // Flag indeterminado
+  const _vIndet=String(r.TIPO_VINCULO||'').toUpperCase();
+  $('eIndetGrp').style.display=['PJ','MEI','ASSOCIADO'].includes(_vIndet)?'':'none';
+  $('eIndet').checked=_indetSet.has(String(r.ID_COLABORADOR||''));
   openModal('mEditColab');
+}
+function toggleIndetGrp(){
+  const v=$('eVinculo').value.toUpperCase();
+  $('eIndetGrp').style.display=['PJ','MEI','ASSOCIADO'].includes(v)?'':'none';
 }
 async function saveEditColab(){
   const row=parseInt($('eColabRow').value);if(!row){toast('Linha não identificada','error');return;}
@@ -1157,6 +1178,13 @@ async function saveEditColab(){
     PLANO_SAUDE:$('ePlanoSaude').value||null,
     OUTROS_BENEFICIOS:$('eBeneficios').value||null
   };
+  // Salvar flag indeterminado antes de fechar
+  const _idColab=$('eColabId').value;
+  const _vColab=$('eVinculo').value.toUpperCase();
+  if(['PJ','MEI','ASSOCIADO'].includes(_vColab)){
+    if($('eIndet').checked)_indetSet.add(_idColab);else _indetSet.delete(_idColab);
+    saveIndet();
+  }
   closeModal('mEditColab');toast('Salvando...','info');
   try{
     if(DEMO){fakeS('CADASTRO_COLABORADORES',row,data);return;}
@@ -1499,6 +1527,11 @@ const ACOES_KEY='luma_acoes_v1';
 let _acoes=JSON.parse(localStorage.getItem(ACOES_KEY)||'[]');
 const saveAcoes=()=>localStorage.setItem(ACOES_KEY,JSON.stringify(_acoes));
 
+const INDET_KEY='luma_indet_v1';
+let _indetSet=new Set(JSON.parse(localStorage.getItem(INDET_KEY)||'[]'));
+const saveIndet=()=>localStorage.setItem(INDET_KEY,JSON.stringify([..._indetSet]));
+let _alertasCont=[],_alertasEx=[],_alertasFer=[];
+
 function toggleComentario(){
   const s=$('acStatus').value;
   const need=s==='CONCLUIDO'||s==='CANCELADO';
@@ -1572,6 +1605,63 @@ function deleteAcao(id){
   toast('Ação excluída','success');
 }
 
+function addDias(isoDate,n){const d=new Date(isoDate+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];}
+
+function gerarAcoesSugeridas(){
+  const hoje=new Date().toISOString().split('T')[0];
+  let novos=0;
+  const jaExiste=alerta=>_acoes.some(a=>a.alerta===alerta&&a.status!=='CANCELADO'&&a.status!=='CONCLUIDO');
+
+  // ── Contratos PJ/MEI/Assoc sem data fim (não indeterminado) ──
+  // Base: art. 443 CLT + Súmula 363 TST → risco de reconhecimento de vínculo
+  _alertasCont.forEach(r=>{
+    const al=`Contrato sem data fim — ${r.NOME||'—'}`;
+    if(jaExiste(al))return;
+    _acoes.push({
+      id:'AC-'+Date.now()+'-'+Math.floor(Math.random()*9999),
+      alerta:al,
+      atividade:`Regularizar contrato ${r.TIPO_VINCULO||'PJ'} de ${r.NOME||'—'}: inserir data de encerramento ou marcar como "tempo indeterminado" no cadastro.\n\n⚖️ Base legal: art. 443 CLT e Súmula 363 TST — contrato sem prazo definido com pessoa física pode caracterizar vínculo empregatício, expondo a empresa a reclamatória trabalhista com FGTS + multa 40% + férias + 13º retroativos.`,
+      venc:addDias(hoje,15),status:'EM_ANDAMENTO',comentario:'',dataConcl:'',
+      criadoEm:hoje,atualizadoEm:hoje,origem:'SISTEMA'
+    });
+    novos++;
+  });
+
+  // ── Exames ocupacionais vencidos ──
+  // Base: NR-7 (PCMSO) — periodicidade obrigatória conforme cargo/risco
+  _alertasEx.forEach(r=>{
+    const al=`Exame ocupacional vencido — ${r.NOME||'—'}`;
+    if(jaExiste(al))return;
+    _acoes.push({
+      id:'AC-'+Date.now()+'-'+Math.floor(Math.random()*9999),
+      alerta:al,
+      atividade:`Agendar exame ocupacional periódico de ${r.NOME||'—'}. Último exame registrado: ${r.ULTIMO_EXAME||'—'}. Vencimento: ${r.PROXIMO_EXAME||'—'}.\n\n⚖️ Base legal: NR-7 (Portaria MTE 3.214/78) — PCMSO exige exame periódico conforme risco da função. Ausência pode gerar autuação fiscal e responsabilidade civil em caso de doença ocupacional.`,
+      venc:addDias(hoje,30),status:'EM_ANDAMENTO',comentario:'',dataConcl:'',
+      criadoEm:hoje,atualizadoEm:hoje,origem:'SISTEMA'
+    });
+    novos++;
+  });
+
+  // ── Férias CLT não programadas ──
+  // Base: art. 130, 134 e 137 CLT
+  _alertasFer.forEach(r=>{
+    const al=`Férias não programadas — ${r.NOME||'—'}`;
+    if(jaExiste(al))return;
+    _acoes.push({
+      id:'AC-'+Date.now()+'-'+Math.floor(Math.random()*9999),
+      alerta:al,
+      atividade:`Programar e comunicar período de férias de ${r.NOME||'—'} (admissão: ${r.DATA_ADMISSAO||'—'}).\n\n⚖️ Base legal: art. 130 CLT — direito a 30 dias corridos após 12 meses de período aquisitivo. Art. 134 CLT — férias devem ser concedidas nos 12 meses seguintes (período concessivo). Art. 137 CLT — se não concedidas no prazo, pagamento em dobro + possibilidade de ação por dano moral.`,
+      venc:addDias(hoje,30),status:'EM_ANDAMENTO',comentario:'',dataConcl:'',
+      criadoEm:hoje,atualizadoEm:hoje,origem:'SISTEMA'
+    });
+    novos++;
+  });
+
+  if(novos===0){toast('Todos os alertas já possuem ações ativas — nada novo gerado.','info');return;}
+  saveAcoes();renderAcoes();
+  toast(`⚡ ${novos} ação${novos>1?'ções':''} sugerida${novos>1?'s':''} com base nos alertas e legislação trabalhista.`,'success');
+}
+
 function renderAcoes(){
   const hoje=new Date().toISOString().split('T')[0];
   // Auto-atualizar status para ATRASADO se vencido e ainda em andamento
@@ -1610,8 +1700,8 @@ function renderAcoes(){
     return`<div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid ${a.status==='ATRASADO'?'var(--danger)':a.status==='CONCLUIDO'?'var(--ok)':a.status==='CANCELADO'?'var(--muted)':'var(--warn)'};">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
         <div style="flex:1;">
-          <div style="font-size:14px;font-weight:500;margin-bottom:4px;">${flag} ${a.alerta}</div>
-          <div style="font-size:13px;color:var(--muted);">${a.atividade}</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:4px;">${flag} ${a.alerta}${a.origem==='SISTEMA'?'<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:rgba(155,102,244,.15);color:var(--accent);margin-left:7px;letter-spacing:.4px;">⚡ SISTEMA</span>':''}</div>
+          <div style="font-size:13px;color:var(--muted);white-space:pre-line;">${a.atividade}</div>
         </div>
         <span class="chip ${sc}" style="margin-left:10px;flex-shrink:0;">${slabel}</span>
       </div>
