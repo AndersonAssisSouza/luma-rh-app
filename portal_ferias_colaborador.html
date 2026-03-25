@@ -106,7 +106,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
 <body>
 
 <!-- CONFIG -->
-<div class="cscr" id="sConfig">
+<div class="cscr hidden" id="sConfig">
   <div class="cbox">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
       <svg width="40" height="40" viewBox="0 0 100 100" fill="none">
@@ -625,16 +625,15 @@ document.addEventListener('DOMContentLoaded',function(){
 });
 
 // ── INIT ──
+const _CFG_FIXED={
+  clientId:'6d43cab3-e4b8-471e-ab64-8eec4d3bd538',
+  tenantId:'aadb5cad-6c69-4d6d-a942-e027203a4675',
+  driveId:'b!SYzrfr_-hkupnbeS1zKsZmB6CS4c97VMpJmz3oLVkalAzuB5sMOLR7djv69Vlty9',
+  itemId:'01O2PYW3EQZTMNB4MN4BB363SUCCHGX7HV',
+  webhook:cfgLoad()?.webhook||''
+};
 if(!checkGestorUrl()){
-  const stored=cfgLoad();
-  if(stored&&stored.clientId){
-    if($('cClientId'))$('cClientId').value=stored.clientId||'';
-    if($('cTenantId'))$('cTenantId').value=stored.tenantId||'';
-    if($('cDriveId'))$('cDriveId').value=stored.driveId||'';
-    if($('cItemId'))$('cItemId').value=stored.itemId||'';
-    if($('cWebhook'))$('cWebhook').value=stored.webhook||'';
-    initApp(stored);
-  }else{$('sConfig').classList.remove('hidden');}
+  initApp(_CFG_FIXED);
 }
 </script>
 </body>

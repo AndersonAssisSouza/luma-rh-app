@@ -171,7 +171,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 <body>
 
 <!-- CONFIG -->
-<div class="cscr" id="sConfig">
+<div class="cscr hidden" id="sConfig">
   <div class="cbox">
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
       <div class="nlogo" style="width:42px;height:42px;background:none;padding:0;"><svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -216,6 +216,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
     <button class="tab" onclick="showTab('alert',this)">Alertas</button>
     <button class="tab" onclick="showTab('desl',this)">Desligados</button>
     <button class="tab" onclick="showTab('acoes',this)">Ações</button>
+    <button class="tab" id="tab-admin" onclick="showTab('admin',this)" style="display:none;color:var(--gold);">⚙ Administração</button>
   </div>
   <div class="nright">
     <div id="ndot" class="ndot" title="Offline"></div>
@@ -482,8 +483,38 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
     <div class="sy" id="ac_list"><div class="empty">Nenhuma ação registrada.</div></div>
   </div>
 </div>
+<!-- ADMINISTRAÇÃO -->
+<div class="sec" id="admin">
+  <div class="card">
+    <div class="ct">Coordenadores cadastrados</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7;">Coordenadores aqui acessam o painel com visão restrita — verão apenas colaboradores onde o campo <strong style="color:var(--text);">GESTOR</strong> corresponde ao nome deles no cadastro.</p>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:flex-end;">
+      <div style="flex:1;min-width:220px;">
+        <div class="flbl">E-mail Microsoft *</div>
+        <input class="fi" id="coord-email" placeholder="nome@lumaplataforma.com.br" style="font-size:13px;">
+      </div>
+      <div style="flex:1;min-width:180px;">
+        <div class="flbl">Nome completo (se não estiver no cadastro)</div>
+        <input class="fi" id="coord-nome" placeholder="Ex: Matheus Rocha" style="font-size:13px;">
+      </div>
+      <button class="btn btn-a" onclick="addCoord()" style="flex-shrink:0;">+ Adicionar coordenador</button>
+    </div>
+    <div id="admin-list"></div>
+  </div>
+</div>
+
 </div><!-- /main -->
 </div><!-- /app -->
+
+<!-- ACESSO NEGADO -->
+<div id="screen-denied" style="display:none;position:fixed;inset:0;background:var(--bg);align-items:center;justify-content:center;z-index:800;flex-direction:column;gap:10px;">
+  <div style="text-align:center;max-width:380px;padding:32px;background:var(--bg2);border:1px solid var(--border2);border-radius:16px;">
+    <div style="font-size:48px;margin-bottom:14px;">🔒</div>
+    <div style="font-size:18px;font-weight:500;margin-bottom:8px;">Acesso não autorizado</div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;">Sua conta não tem permissão para acessar este painel. Entre em contato com o administrador.</div>
+    <button class="btn" onclick="msalApp&&msalApp.logoutRedirect()" style="font-size:13px;">Sair</button>
+  </div>
+</div>
 
 <!-- ══════════════ MODAIS ══════════════ -->
 
@@ -749,7 +780,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 // CORE
 // ══════════════════════════════
 const CK='pa_v3_cfg';
+const ADMIN_EMAIL='anderson.assis@lumaplataforma.com.br';
+const CK_COORD='luma_coordenadores_v1';
 let msalApp=null,tok=null,CFG=null,D={},DEMO=false;
+let USER_EMAIL='',USER_ROLE='none',USER_NOME='';
 const $=id=>document.getElementById(id);
 const parseDate=d=>{if(!d)return null;if(typeof d==='number'||(/^\d+$/.test(String(d).trim()))){const n=Number(d);if(n>59)return new Date((n-25569)*86400*1000);if(n>0)return new Date((n-25568)*86400*1000);}const x=new Date(d);return isNaN(x)?null:x;};
 const validDate=d=>{const x=parseDate(d);if(!x)return false;const y=x.getFullYear();return y>=1970&&y<=2100;};
@@ -847,6 +881,7 @@ async function loadAll(){
   const sheets=['CADASTRO_COLABORADORES','FERIAS_CLT','CONTRATOS_PJ','EVENTOS_RH','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH','AUSENCIAS_OCORRENCIAS','MOVIMENTACOES','BIBLIOTECA_MENSAGENS_ANIV'];
   try{
     for(const s of sheets){setL(`Lendo ${s}...`);D[s]=await rSheet(s);}
+    detectRole();
     render();$('sLoad').classList.add('hidden');$('app').style.display='block';
     const dot=$('ndot');dot.classList.add('live');dot.title='Ao vivo · '+new Date().toLocaleTimeString('pt-BR');
     toast('Dados atualizados','success');
@@ -1594,7 +1629,96 @@ function renderAcoes(){
   }).join('');
 }
 
-function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');el.classList.add('active');if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();}
+function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');el.classList.add('active');if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();if(id==='admin')renderAdmin();}
+
+// ── CONTROLE DE ACESSO ──
+function loadCoords(){try{return JSON.parse(localStorage.getItem(CK_COORD)||'[]');}catch{return[];}}
+function saveCoords(arr){localStorage.setItem(CK_COORD,JSON.stringify(arr));}
+
+function detectRole(){
+  const accounts=msalApp?msalApp.getAllAccounts():[];
+  const msalEmail=accounts.length>0?accounts[0].username:'';
+  const msalNome=accounts.length>0?(accounts[0].name||msalEmail):'';
+
+  // Igual ao portal de férias: busca por EMAIL_CORPORATIVO ou primeiro nome
+  const cad=D.CADASTRO_COLABORADORES||[];
+  const meuCad=cad.find(r=>
+    String(r.EMAIL_CORPORATIVO||'').toLowerCase()===msalEmail.toLowerCase()||
+    String(r.NOME||'').toLowerCase().includes(msalNome.split(' ')[0].toLowerCase())
+  );
+
+  // E-mail autoritativo: usa o do cadastro se encontrado, senão usa o do MSAL
+  USER_EMAIL=(meuCad&&meuCad.EMAIL_CORPORATIVO?String(meuCad.EMAIL_CORPORATIVO):msalEmail).toLowerCase();
+  USER_NOME=meuCad?String(meuCad.NOME||msalNome):msalNome;
+
+  if(USER_EMAIL===ADMIN_EMAIL.toLowerCase()||msalEmail.toLowerCase()===ADMIN_EMAIL.toLowerCase()){
+    USER_ROLE='admin';
+    const t=$('tab-admin');if(t)t.style.display='';
+    return;
+  }
+  const coords=loadCoords();
+  const myCoord=coords.find(c=>
+    c.email.toLowerCase()===USER_EMAIL||
+    c.email.toLowerCase()===msalEmail.toLowerCase()
+  );
+  if(myCoord){
+    USER_ROLE='coord';
+    filterDataForCoord(myCoord.nome);
+    return;
+  }
+  USER_ROLE='none';
+  $('app').style.display='none';
+  const sd=$('screen-denied');if(sd)sd.style.display='flex';
+}
+
+function filterDataForCoord(nome){
+  const nomeLow=nome.toLowerCase();
+  const subordinados=(D.CADASTRO_COLABORADORES||[]).filter(r=>String(r.GESTOR||'').toLowerCase()===nomeLow);
+  const ids=new Set(subordinados.map(r=>r.ID_COLABORADOR));
+  D.CADASTRO_COLABORADORES=subordinados;
+  ['FERIAS_CLT','CONTRATOS_PJ','AUSENCIAS_OCORRENCIAS','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH'].forEach(sh=>{
+    if(D[sh])D[sh]=D[sh].filter(r=>ids.has(r.ID_COLABORADOR));
+  });
+  if(D.EVENTOS_RH)D.EVENTOS_RH=D.EVENTOS_RH.filter(r=>ids.has(r.ID_COLABORADOR)||subordinados.some(s=>s.NOME===r.NOME));
+  if(D.MOVIMENTACOES)D.MOVIMENTACOES=D.MOVIMENTACOES.filter(r=>ids.has(r.ID_COLABORADOR));
+}
+
+function renderAdmin(){
+  const coords=loadCoords();
+  $('admin-list').innerHTML=coords.length===0
+    ?'<div style="color:var(--muted);font-size:13px;padding:16px 0;text-align:center;">Nenhum coordenador cadastrado.</div>'
+    :coords.map(c=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:14px;font-weight:500;">${c.nome}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${c.email}</div>
+        </div>
+        <button class="btn" style="font-size:12px;padding:4px 12px;color:var(--danger);border-color:var(--danger);" onclick="removeCoord('${c.email}')">Remover</button>
+      </div>`).join('');
+}
+
+function addCoord(){
+  const email=$('coord-email').value.trim().toLowerCase();
+  if(!email){toast('Informe o e-mail do coordenador','error');return;}
+  const found=(D.CADASTRO_COLABORADORES||[]).find(r=>String(r.EMAIL_CORPORATIVO||'').toLowerCase()===email);
+  const nomeInput=$('coord-nome').value.trim();
+  const nome=found?found.NOME:nomeInput;
+  if(!nome){toast('Nome não encontrado no cadastro — preencha o campo Nome','error');return;}
+  const coords=loadCoords();
+  if(coords.find(c=>c.email===email)){toast('Este e-mail já está cadastrado','error');return;}
+  coords.push({email,nome});
+  saveCoords(coords);
+  $('coord-email').value='';$('coord-nome').value='';
+  renderAdmin();
+  toast(`${nome} adicionado como coordenador`,'success');
+}
+
+function removeCoord(email){
+  const coords=loadCoords().filter(c=>c.email!==email);
+  saveCoords(coords);
+  renderAdmin();
+  toast('Coordenador removido','error');
+}
 function toast(msg,type='success'){const tc=$('tc');const t=document.createElement('div');t.className=`toast ${type}`;const c=type==='success'?'#b98af7':type==='error'?'#f87171':'#ffd000';t.innerHTML=`<div class="tdot" style="background:${c}"></div><span>${msg}</span>`;tc.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .25s';setTimeout(()=>t.remove(),250);},3000);}
 
 // Init
@@ -1625,9 +1749,13 @@ function saveConf(){
   if(!c.clientId||!c.tenantId||!c.itemId){toast('Client ID, Tenant ID e Item ID são obrigatórios','error');return;}
   cfgSave(c);initApp(c);
 }
-const stored=cfgLoad();
-if(stored){try{$('cClientId').value=stored.clientId||'';$('cTenantId').value=stored.tenantId||'';$('cDriveId').value=stored.driveId||'';$('cItemId').value=stored.itemId||'';initApp(stored);}catch{$('sConfig').classList.remove('hidden');}}
-else{$('sConfig').classList.remove('hidden');}
+const _CFG_FIXED={
+  clientId:'6d43cab3-e4b8-471e-ab64-8eec4d3bd538',
+  tenantId:'aadb5cad-6c69-4d6d-a942-e027203a4675',
+  driveId:'b!SYzrfr_-hkupnbeS1zKsZmB6CS4c97VMpJmz3oLVkalAzuB5sMOLR7djv69Vlty9',
+  itemId:'01O2PYW3EQZTMNB4MN4BB363SUCCHGX7HV'
+};
+initApp(_CFG_FIXED);
 </script>
 
 <script>
