@@ -230,12 +230,11 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
   </div>
 
   <div class="info-box">
-    <strong>Política de Férias CLT</strong><br>
-    📅 <strong>30 dias corridos</strong> após cada 12 meses de trabalho (período aquisitivo).<br>
-    ✂️ Pode ser fracionada em até <strong>3 períodos</strong> — mínimo de 14 dias em um deles.<br>
-    ⏰ Aviso prévio mínimo de <strong>30 dias</strong> antes do início.<br>
-    💰 Pagamento <strong>2 dias úteis antes</strong> do início — inclui 1/3 constitucional.<br>
-    ✅ Sujeito à aprovação do gestor mediante análise da escala e demanda.
+    <strong>Política de Férias / Recesso</strong><br>
+    <span style="color:var(--accent);font-weight:500;">CLT:</span> 📅 <strong>30 dias corridos</strong> após 12 meses · aviso prévio <strong>30 dias</strong> · mín. <strong>14 dias</strong> no 1º período · pagamento 2 dias úteis antes.<br>
+    <span style="color:var(--accent);font-weight:500;">Associado OAB:</span> 📅 <strong>30 dias de recesso anual remunerado</strong> conforme Estatuto OAB (Lei 8.906/94) e contrato de associação.<br>
+    <span style="color:var(--danger);font-weight:500;">PJ / MEI:</span> ⚠ Não há férias CLT. Recesso conforme contrato de prestação de serviços.<br>
+    ✅ Todas as solicitações sujeitas à aprovação do gestor.
   </div>
 </div>
 </div><!-- /app -->
@@ -372,14 +371,16 @@ async function loadPortal(){
 }
 
 function renderPortal(){
-  const isCLT=UCOLAB.vinculo==='CLT';
+  const isCLT=UCOLAB.vinculo==='CLT'||UCOLAB.vinculo==='ASSOCIADO';
+  const isAssociado=UCOLAB.vinculo==='ASSOCIADO';
+  const isPJ=UCOLAB.vinculo==='PJ'||UCOLAB.vinculo==='MEI';
   const fer=UCOLAB.fer;
   const usados=_sols.filter(s=>s.email===UCOLAB.email&&s.status!=='REJEITADO').reduce((a,s)=>a+s.dc,0);
   const saldo=isCLT?Math.max(0,30-usados):0;
 
-  $('k-saldo').textContent=isCLT?saldo:'N/A';
-  $('k-saldo-sub').textContent=isCLT?'de 30 dias de direito':'Não aplicável — '+UCOLAB.vinculo;
-  $('k-usados').textContent=isCLT?usados:'—';
+  $('k-saldo').textContent=(isCLT||isPJ)?saldo:'N/A';
+  $('k-saldo-sub').textContent=isAssociado?'de 30 dias de recesso OAB':isCLT?'de 30 dias de direito CLT':isPJ?'recesso contratual':'Não aplicável — '+UCOLAB.vinculo;
+  $('k-usados').textContent=(isCLT||isPJ)?usados:'—';
   $('k-prazo').textContent=fer&&fer.FIM_PERIODO_CONCESSIVO?fD(fer.FIM_PERIODO_CONCESSIVO):'N/A';
 
   // Último período gozado
@@ -396,8 +397,26 @@ function renderPortal(){
     $('ultimo-conteudo').innerHTML=blocoKPIs(fD(u.ini),fD(u.fim),u.dc,u.du);
   }
 
-  if(!isCLT){
-    $('step-cal').innerHTML=`<div class="empty">Solicitação de férias disponível apenas para colaboradores CLT.<br><span style="font-size:12px;">Seu vínculo: <strong>${UCOLAB.vinculo}</strong></span></div>`;
+  // Aviso PJ/MEI
+  if(isPJ){
+    const avisoDiv=document.createElement('div');
+    avisoDiv.style.cssText='background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:9px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7;';
+    avisoDiv.innerHTML=`<strong style="color:var(--danger);">⚠ Atenção — Vínculo ${UCOLAB.vinculo}</strong><br>
+      Colaboradores PJ/MEI não possuem direito a férias pela CLT. A solicitação será registrada como <strong>recesso contratual</strong> e estará sujeita à aprovação do gestor conforme contrato de prestação de serviços.`;
+    $('step-cal').insertBefore(avisoDiv,$('step-cal').firstChild);
+  }
+
+  // Aviso Associado
+  if(isAssociado){
+    const avisoDiv=document.createElement('div');
+    avisoDiv.style.cssText='background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:9px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7;';
+    avisoDiv.innerHTML=`<strong style="color:var(--accent);">ℹ Advogado Associado</strong><br>
+      Seu recesso anual de 30 dias é garantido pelo Estatuto da OAB (Lei 8.906/94) e pelo seu contrato de associação. A solicitação será tratada como <strong>recesso contratual remunerado</strong>.`;
+    $('step-cal').insertBefore(avisoDiv,$('step-cal').firstChild);
+  }
+
+  if(!isCLT&&!isPJ){
+    $('step-cal').innerHTML=`<div class="empty">Solicitação não disponível para vínculo <strong>${UCOLAB.vinculo}</strong>.</div>`;
   }else{renderCal();}
   renderHist();setStep(0);
 }
