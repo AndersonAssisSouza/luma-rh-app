@@ -529,6 +529,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
       <input type="hidden" id="eColabId"><input type="hidden" id="eColabRow">
       <div class="fg">
         <div class="fgrp s2"><div class="flbl">Nome completo</div><input class="fi" id="eNome"></div>
+        <div class="fgrp s2"><div class="flbl">E-mail corporativo</div><input class="fi" id="eEmail" type="email" placeholder="nome@lumaplataforma.com.br"></div>
         <div class="fgrp"><div class="flbl">Data de nascimento</div><input class="fi" id="eNasc" type="date"></div>
         <div class="fgrp"><div class="flbl">Tipo de vínculo</div>
           <select class="fsel" id="eVinculo" onchange="toggleIndetGrp()"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="MEI">MEI</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option><option value="ASSOCIADO">Associado</option></select>
@@ -582,6 +583,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
     <div class="mb">
       <div class="fg">
         <div class="fgrp s2"><div class="flbl">Nome completo <span class="rq">*</span></div><input class="fi" id="nNome" placeholder="Nome completo"></div>
+        <div class="fgrp s2"><div class="flbl">E-mail corporativo</div><input class="fi" id="nEmail" type="email" placeholder="nome@lumaplataforma.com.br"></div>
         <div class="fgrp"><div class="flbl">Vínculo <span class="rq">*</span></div>
           <select class="fsel" id="nVinc"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option><option value="ASSOCIADO">Associado</option></select>
         </div>
@@ -1134,6 +1136,7 @@ function openEditColab(r){
   $('eColabId').value=r.ID_COLABORADOR||'';$('eColabRow').value=r._row||'';
   $('mEditColabSub').textContent=(r.NOME||'—')+' · '+(r.ID_COLABORADOR||'—');
   $('eNome').value=r.NOME||'';
+  $('eEmail').value=r.EMAIL_CORPORATIVO||'';
   $('eNasc').value=iso(r.DATA_NASCIMENTO)||'';
   $('eAdmissao').value=iso(r.DATA_ADMISSAO)||'';
   $('eCargo').value=r.CARGO||'';
@@ -1161,6 +1164,7 @@ async function saveEditColab(){
   const nasc=$('eNasc').value;
   const data={
     NOME:$('eNome').value,
+    EMAIL_CORPORATIVO:$('eEmail').value.trim()||null,
     TIPO_VINCULO:$('eVinculo').value,
     STATUS:$('eStatus').value,
     DATA_NASCIMENTO:nasc||null,
@@ -1197,9 +1201,9 @@ async function saveEditColab(){
       6:'DATA_ADMISSAO',7:'DATA_DESLIGAMENTO',
       8:'CARGO',9:'AREA',10:'SETOR',11:'GESTOR',12:'EMPRESA'
     },data);
-    // Salário e benefícios — gravar nas colunas 17-21 (criadas dinamicamente)
+    // Salário, benefícios e e-mail — colunas 17-22
     await patchRow('CADASTRO_COLABORADORES',row,{
-      17:'SALARIO',18:'VALE_REFEICAO',19:'VALE_TRANSPORTE',20:'PLANO_SAUDE',21:'OUTROS_BENEFICIOS'
+      17:'SALARIO',18:'VALE_REFEICAO',19:'VALE_TRANSPORTE',20:'PLANO_SAUDE',21:'OUTROS_BENEFICIOS',22:'EMAIL_CORPORATIVO'
     },data);
     toast('Colaborador atualizado','success');await loadAll();
   }catch(e){toast('Erro ao salvar: '+e.message,'error');}
@@ -1218,9 +1222,9 @@ async function saveNewColab(){
     const nasc=$('nNasc').value;const hoje=new Date();
     const anos=((hoje-new Date(adm))/(1000*60*60*24*365.25)).toFixed(1);
     const idade=nasc?((hoje-new Date(nasc))/(1000*60*60*24*365.25)).toFixed(0):null;
-    const row={ID_COLABORADOR:newId,NOME:nome,TIPO_VINCULO:$('nVinc').value,STATUS:'ATIVO',DATA_NASCIMENTO:nasc||null,DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',DATA_ADMISSAO:adm,DATA_DESLIGAMENTO:null,CARGO:$('nCargo').value,AREA:$('nArea').value,SETOR:$('nSetor').value||$('nArea').value,GESTOR:$('nGestor').value,EMPRESA:$('nEmpresa').value,IDADE:idade,ANOS_EMPRESA:anos,RAW_VINCULO:$('nVinc').value,RAW_STATUS:'Ativo',SALARIO:$('nSalario').value||null,VALE_REFEICAO:$('nVR').value||null,VALE_TRANSPORTE:$('nVT').value||null,PLANO_SAUDE:$('nPlanoSaude').value||null,OUTROS_BENEFICIOS:$('nBeneficios').value||null};
+    const row={ID_COLABORADOR:newId,NOME:nome,TIPO_VINCULO:$('nVinc').value,STATUS:'ATIVO',DATA_NASCIMENTO:nasc||null,DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',DATA_ADMISSAO:adm,DATA_DESLIGAMENTO:null,CARGO:$('nCargo').value,AREA:$('nArea').value,SETOR:$('nSetor').value||$('nArea').value,GESTOR:$('nGestor').value,EMPRESA:$('nEmpresa').value,IDADE:idade,ANOS_EMPRESA:anos,RAW_VINCULO:$('nVinc').value,RAW_STATUS:'Ativo',SALARIO:$('nSalario').value||null,VALE_REFEICAO:$('nVR').value||null,VALE_TRANSPORTE:$('nVT').value||null,PLANO_SAUDE:$('nPlanoSaude').value||null,OUTROS_BENEFICIOS:$('nBeneficios').value||null,EMAIL_CORPORATIVO:$('nEmail').value.trim()||null};
     if(DEMO){D.CADASTRO_COLABORADORES.push({...row,_row:cad.length+2});render();toast(`${nome} admitido! ID: ${newId}`,'success');return;}
-    await appendR('CADASTRO_COLABORADORES',['ID_COLABORADOR','NOME','TIPO_VINCULO','STATUS','DATA_NASCIMENTO','DATA_NASCIMENTO_FORMATADO','DATA_ADMISSAO','DATA_DESLIGAMENTO','CARGO','AREA','SETOR','GESTOR','EMPRESA','IDADE','ANOS_EMPRESA','RAW_VINCULO','RAW_STATUS','SALARIO','VALE_REFEICAO','VALE_TRANSPORTE','PLANO_SAUDE','OUTROS_BENEFICIOS'],row);
+    await appendR('CADASTRO_COLABORADORES',['ID_COLABORADOR','NOME','TIPO_VINCULO','STATUS','DATA_NASCIMENTO','DATA_NASCIMENTO_FORMATADO','DATA_ADMISSAO','DATA_DESLIGAMENTO','CARGO','AREA','SETOR','GESTOR','EMPRESA','IDADE','ANOS_EMPRESA','RAW_VINCULO','RAW_STATUS','SALARIO','VALE_REFEICAO','VALE_TRANSPORTE','PLANO_SAUDE','OUTROS_BENEFICIOS','EMAIL_CORPORATIVO'],row);
     toast(`${nome} admitido! ID: ${newId}`,'success');await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
 }
