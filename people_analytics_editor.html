@@ -1734,22 +1734,24 @@ function detectRole(){
   const msalEmail=accounts.length>0?accounts[0].username:'';
   const msalNome=accounts.length>0?(accounts[0].name||msalEmail):'';
 
-  // Igual ao portal de férias: busca por EMAIL_CORPORATIVO ou primeiro nome
+  // Admin tem acesso total sempre — verificado imediatamente pelo e-mail MSAL
+  if(msalEmail.toLowerCase()===ADMIN_EMAIL.toLowerCase()){
+    USER_EMAIL=msalEmail.toLowerCase();
+    USER_NOME=msalNome;
+    USER_ROLE='admin';
+    const t=$('tab-admin');if(t)t.style.display='';
+    return;
+  }
+
+  // Para demais usuários: busca no cadastro por EMAIL_CORPORATIVO ou primeiro nome
   const cad=D.CADASTRO_COLABORADORES||[];
   const meuCad=cad.find(r=>
     String(r.EMAIL_CORPORATIVO||'').toLowerCase()===msalEmail.toLowerCase()||
     String(r.NOME||'').toLowerCase().includes(msalNome.split(' ')[0].toLowerCase())
   );
 
-  // E-mail autoritativo: usa o do cadastro se encontrado, senão usa o do MSAL
   USER_EMAIL=(meuCad&&meuCad.EMAIL_CORPORATIVO?String(meuCad.EMAIL_CORPORATIVO):msalEmail).toLowerCase();
   USER_NOME=meuCad?String(meuCad.NOME||msalNome):msalNome;
-
-  if(USER_EMAIL===ADMIN_EMAIL.toLowerCase()||msalEmail.toLowerCase()===ADMIN_EMAIL.toLowerCase()){
-    USER_ROLE='admin';
-    const t=$('tab-admin');if(t)t.style.display='';
-    return;
-  }
   const coords=loadCoords();
   const myCoord=coords.find(c=>
     c.email.toLowerCase()===USER_EMAIL||
