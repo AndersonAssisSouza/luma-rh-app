@@ -1020,7 +1020,7 @@ function render(){
   $('kIdade').textContent=idadeMed;
   $('kSenior').textContent=med;
   $('kHistorico').textContent=cad.length;
-  const ausReal=(aus||[]).filter(r=>r.ID_COLABORADOR&&r.NOME!=='Colaborador (a)');
+  const ausReal=(aus||[]).filter(r=>{const n=String(r.NOME||'').trim();const d=String(r.DATA||'').trim();return n&&n!=='Colaborador (a)'&&n!=='Colaborador'&&d&&d!=='Data';});
   $('kAusencias').textContent=ausReal.length;
   $('kExVenc').textContent=exV.length;
   const turnPct=cad.length>0?Math.round((desl.length/cad.length)*100):0;
@@ -1139,7 +1139,7 @@ function render(){
     </div></td></tr>`).join('');
 
   // Aniversários
-  $('aTotal').textContent=evts.length;if(prD!==null){$('aProx').textContent=prD;$('aProxS').textContent='dias · '+fmtD(evA[0].DATA_EVENTO);}
+  $('aTotal').textContent=evA.length;if(prD!==null){$('aProx').textContent=prD;$('aProxS').textContent='dias · '+fmtD(evA[0].DATA_EVENTO);}
   $('aMsgs').textContent=msgs.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVA').length;
   const p60=evA.filter(r=>parseFloat(r.DIAS_PARA_EVENTO)<=60);
   $('proxEvts').innerHTML=p60.length===0?'<div class="empty">Nenhum evento nos próximos 60 dias.</div>':
@@ -1154,7 +1154,7 @@ function render(){
   $('fNp').textContent=fNP.length;$('fNa').textContent=fNa.length;$('fIn').textContent=fIn.length;$('fClt').textContent=fClt.length;
   const fAtv=ferias.filter(r=>normStatus(r)==='ATIVO'||!r.STATUS);$('fCount').textContent=fAtv.length+' registros';
   if(ferias.length===0){$('fBody').innerHTML='<tr><td colspan="7" class="empty" style="padding:20px;color:var(--warn);">⚠️ Aba FERIAS_CLT sem dados — preencha a planilha base para visualizar os registros.</td></tr>';}
-  $('fBody').innerHTML=fAtv.map(r=>`<tr>
+  else $('fBody').innerHTML=fAtv.map(r=>`<tr>
     <td>${r.NOME||'—'}</td><td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
     <td><span class="chip ${r.STATUS_FERIAS==='NAO_PROGRAMADA'?'cw':r.STATUS_FERIAS==='GOZADA'?'cok':r.STATUS_FERIAS==='PROGRAMADA'?'cc':'cd'}">${(r.STATUS_FERIAS||'—').replace('_',' ')}</span></td>
     <td style="font-size:17px;color:var(--muted)">${fmtD(r.INICIO_PERIODO_AQUISITIVO)||'—'} → ${fmtD(r.FIM_PERIODO_AQUISITIVO)||'—'}</td>
@@ -1162,8 +1162,8 @@ function render(){
     <td style="font-size:17px;color:var(--muted)">${fmtD(r.FERIAS_GOZADAS_INICIO)||'—'} → ${fmtD(r.FERIAS_GOZADAS_FIM)||'—'}</td>
     <td><div class="acts"><button class="ab" onclick='openEditFer(${JSON.stringify(r)})'>Editar</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum</td></tr>';
 
-  // Exames — STATUS nulo tratado como ativo
-  const exAtvList=exames.filter(r=>{const s=String(r.STATUS||'').toUpperCase();return!s||s==='ATIVO';});
+  // Exames — exibir todos os registros (ATIVO primeiro); STATUS_EXAME='INATIVO' = desligado
+  const exAtvList=[...exames].sort((a,b)=>{const sa=normStatus(a)==='ATIVO'?0:1,sb=normStatus(b)==='ATIVO'?0:1;return sa-sb;});
   const exSem=ativos.filter(a=>!socioIds.has(a.ID_COLABORADOR)&&!exames.find(e=>e.ID_COLABORADOR===a.ID_COLABORADOR));
   $('exV').textContent=exV.length;$('exT').textContent=exames.length;$('exA').textContent=exAtvList.length;$('exS').textContent=exSem.length;$('exCount').textContent=exAtvList.length+' registros';
   const _nr7tip='NR-7: Exame clínico isento na demissão se ≤135 dias. Audiométrico isento se ≤120 dias (risco I e II).';
