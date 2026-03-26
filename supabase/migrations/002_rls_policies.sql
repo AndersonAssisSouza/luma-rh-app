@@ -5,7 +5,6 @@
 
 -- ============================================================
 -- FUNÇÃO AUXILIAR: retorna tenant_id do usuário logado
--- Cacheada por transação para performance
 -- ============================================================
 CREATE OR REPLACE FUNCTION _my_tenant_id()
 RETURNS uuid
@@ -35,95 +34,98 @@ AS $$
 $$;
 
 -- ============================================================
+-- NOTA SOBRE manager_global:
+-- manager_global tem tenant_id = NULL no profiles.
+-- SQL: NULL = qualquer_valor é sempre FALSE.
+-- Por isso todas as políticas verificam _my_role() = 'manager_global'
+-- PRIMEIRO, como condição de saída rápida (OR de curto-circuito).
+-- ============================================================
+
+-- ============================================================
 -- HABILITAR RLS EM TODAS AS TABELAS
 -- ============================================================
-ALTER TABLE tenants                ENABLE ROW LEVEL SECURITY;
-ALTER TABLE profiles               ENABLE ROW LEVEL SECURITY;
-ALTER TABLE colaboradores          ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ferias_saldo           ENABLE ROW LEVEL SECURITY;
-ALTER TABLE solicitacoes_ferias    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE exames_ocupacionais    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ausencias_ocorrencias  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tenants                 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE profiles                ENABLE ROW LEVEL SECURITY;
+ALTER TABLE colaboradores           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ferias_saldo            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE solicitacoes_ferias     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE exames_ocupacionais     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ausencias_ocorrencias   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE desligamentos_agendados ENABLE ROW LEVEL SECURITY;
-ALTER TABLE log_eventos            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE log_eventos             ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
 -- TABELA: tenants
--- Apenas manager_global pode ver e gerenciar empresas
+-- Apenas manager_global pode gerenciar empresas
 -- ============================================================
-CREATE POLICY "tenants_manager_global_all" ON tenants
+CREATE POLICY "tenants_manager_global" ON tenants
   FOR ALL USING (_my_role() = 'manager_global');
 
 -- ============================================================
 -- TABELA: profiles
 -- ============================================================
--- Usuário vê apenas profiles do seu tenant (+ o próprio)
-CREATE POLICY "profiles_own_tenant" ON profiles
+CREATE POLICY "profiles_select" ON profiles
   FOR SELECT USING (
-    tenant_id = _my_tenant_id()
+    _my_role() = 'manager_global'
     OR id = auth.uid()
-    OR _my_role() = 'manager_global'
+    OR tenant_id = _my_tenant_id()
   );
 
--- Apenas master, rh e manager_global podem inserir/editar profiles
-CREATE POLICY "profiles_write_authorized" ON profiles
+CREATE POLICY "profiles_insert" ON profiles
   FOR INSERT WITH CHECK (
-    tenant_id = _my_tenant_id()
-    AND _my_role() IN ('master', 'manager_global')
+    _my_role() = 'manager_global'
+    OR (
+      tenant_id = _my_tenant_id()
+      AND _my_role() = 'master'
+    )
   );
 
-CREATE POLICY "profiles_update_authorized" ON profiles
+CREATE POLICY "profiles_update" ON profiles
   FOR UPDATE USING (
-    (tenant_id = _my_tenant_id() AND _my_role() IN ('master', 'manager_global'))
-    OR id = auth.uid()  -- usuário pode atualizar o próprio profile
+    _my_role() = 'manager_global'
+    OR id = auth.uid()
+    OR (tenant_id = _my_tenant_id() AND _my_role() = 'master')
   );
 
-CREATE POLICY "profiles_delete_authorized" ON profiles
+CREATE POLICY "profiles_delete" ON profiles
   FOR DELETE USING (
-    tenant_id = _my_tenant_id()
-    AND _my_role() IN ('master', 'manager_global')
-    AND id != auth.uid()  -- não pode deletar a si mesmo
+    (_my_role() = 'manager_global' OR (tenant_id = _my_tenant_id() AND _my_role() = 'master'))
+    AND id != auth.uid()
   );
 
 -- ============================================================
 -- TABELA: colaboradores
 -- ============================================================
--- SELECT: master/rh/manager_global veem todos do tenant
---         gestor vê apenas seus subordinados (gestor_email = meu email)
---         colaborador vê apenas ele mesmo
 CREATE POLICY "colaboradores_select" ON colaboradores
   FOR SELECT USING (
-    tenant_id = _my_tenant_id()
-    AND (
-      _my_role() IN ('master', 'rh', 'manager_global')
-      OR gestor_email = _my_email()
-      OR email_corporativo = _my_email()
+    _my_role() = 'manager_global'
+    OR (
+      tenant_id = _my_tenant_id()
+      AND (
+        _my_role() IN ('master', 'rh')
+        OR gestor_email = _my_email()
+        OR email_corporativo = _my_email()
+      )
     )
-    OR _my_role() = 'manager_global'
   );
 
--- INSERT: apenas master e manager_global
 CREATE POLICY "colaboradores_insert" ON colaboradores
   FOR INSERT WITH CHECK (
-    tenant_id = _my_tenant_id()
-    AND _my_role() IN ('master', 'manager_global')
+    _my_role() = 'manager_global'
+    OR (tenant_id = _my_tenant_id() AND _my_role() IN ('master', 'rh'))
   );
 
--- UPDATE: master pode tudo; gestor pode atualizar seus subordinados
 CREATE POLICY "colaboradores_update" ON colaboradores
   FOR UPDATE USING (
-    tenant_id = _my_tenant_id()
-    AND (
-      _my_role() IN ('master', 'manager_global')
-      OR (gestor_email = _my_email() AND _my_role() = 'gestor')
-    )
+    _my_role() = 'manager_global'
+    OR (tenant_id = _my_tenant_id() AND _my_role() IN ('master', 'rh'))
+    OR (tenant_id = _my_tenant_id() AND gestor_email = _my_email() AND _my_role() = 'gestor')
   );
 
--- DELETE: apenas master e manager_global
 CREATE POLICY "colaboradores_delete" ON colaboradores
   FOR DELETE USING (
-    tenant_id = _my_tenant_id()
-    AND _my_role() IN ('master', 'manager_global')
+    _my_role() = 'manager_global'
+    OR (tenant_id = _my_tenant_id() AND _my_role() = 'master')
   );
 
 -- ============================================================
@@ -131,113 +133,121 @@ CREATE POLICY "colaboradores_delete" ON colaboradores
 -- ============================================================
 CREATE POLICY "ferias_saldo_select" ON ferias_saldo
   FOR SELECT USING (
-    tenant_id = _my_tenant_id()
-    AND (
-      _my_role() IN ('master', 'rh', 'gestor', 'manager_global')
-      OR colaborador_id IN (
-        SELECT id FROM colaboradores WHERE email_corporativo = _my_email()
+    _my_role() = 'manager_global'
+    OR (
+      tenant_id = _my_tenant_id()
+      AND (
+        _my_role() IN ('master', 'rh', 'gestor')
+        OR colaborador_id IN (
+          SELECT id FROM colaboradores WHERE email_corporativo = _my_email()
+        )
       )
     )
   );
 
 CREATE POLICY "ferias_saldo_write" ON ferias_saldo
   FOR ALL USING (
-    tenant_id = _my_tenant_id()
-    AND _my_role() IN ('master', 'rh', 'manager_global')
+    _my_role() = 'manager_global'
+    OR (tenant_id = _my_tenant_id() AND _my_role() IN ('master', 'rh'))
   );
 
 -- ============================================================
 -- TABELA: solicitacoes_ferias
 -- ============================================================
--- Colaborador vê e cria apenas suas próprias solicitações
 CREATE POLICY "sol_ferias_select" ON solicitacoes_ferias
   FOR SELECT USING (
-    tenant_id = _my_tenant_id()
-    AND (
-      _my_role() IN ('master', 'rh', 'gestor', 'manager_global')
-      OR colaborador_id IN (
-        SELECT id FROM colaboradores WHERE email_corporativo = _my_email()
+    _my_role() = 'manager_global'
+    OR (
+      tenant_id = _my_tenant_id()
+      AND (
+        _my_role() IN ('master', 'rh', 'gestor')
+        OR colaborador_id IN (
+          SELECT id FROM colaboradores WHERE email_corporativo = _my_email()
+        )
       )
     )
   );
 
-CREATE POLICY "sol_ferias_insert_colab" ON solicitacoes_ferias
+CREATE POLICY "sol_ferias_insert" ON solicitacoes_ferias
   FOR INSERT WITH CHECK (
-    tenant_id = _my_tenant_id()
-    AND (
-      _my_role() IN ('master', 'rh', 'manager_global')
-      OR colaborador_id IN (
-        SELECT id FROM colaboradores WHERE email_corporativo = _my_email()
+    _my_role() = 'manager_global'
+    OR (
+      tenant_id = _my_tenant_id()
+      AND (
+        _my_role() IN ('master', 'rh')
+        OR colaborador_id IN (
+          SELECT id FROM colaboradores WHERE email_corporativo = _my_email()
+        )
       )
     )
   );
 
--- Aprovação/rejeição apenas por gestor, master, rh
-CREATE POLICY "sol_ferias_update_gestor" ON solicitacoes_ferias
+CREATE POLICY "sol_ferias_update" ON solicitacoes_ferias
   FOR UPDATE USING (
-    tenant_id = _my_tenant_id()
-    AND _my_role() IN ('master', 'rh', 'gestor', 'manager_global')
+    _my_role() = 'manager_global'
+    OR (tenant_id = _my_tenant_id() AND _my_role() IN ('master', 'rh', 'gestor'))
   );
 
 -- ============================================================
 -- TABELA: exames_ocupacionais
 -- ============================================================
-CREATE POLICY "exames_tenant" ON exames_ocupacionais
+CREATE POLICY "exames_all" ON exames_ocupacionais
   FOR ALL USING (
-    tenant_id = _my_tenant_id()
-    AND _my_role() IN ('master', 'rh', 'gestor', 'manager_global')
+    _my_role() = 'manager_global'
+    OR (tenant_id = _my_tenant_id() AND _my_role() IN ('master', 'rh', 'gestor'))
   );
 
 -- ============================================================
 -- TABELA: ausencias_ocorrencias
 -- ============================================================
-CREATE POLICY "ausencias_tenant" ON ausencias_ocorrencias
+CREATE POLICY "ausencias_all" ON ausencias_ocorrencias
   FOR ALL USING (
-    tenant_id = _my_tenant_id()
-    AND _my_role() IN ('master', 'rh', 'gestor', 'manager_global')
+    _my_role() = 'manager_global'
+    OR (tenant_id = _my_tenant_id() AND _my_role() IN ('master', 'rh', 'gestor'))
   );
 
 -- ============================================================
 -- TABELA: desligamentos_agendados
 -- ============================================================
-CREATE POLICY "desl_agendados_tenant" ON desligamentos_agendados
+CREATE POLICY "desl_agendados_all" ON desligamentos_agendados
   FOR ALL USING (
-    tenant_id = _my_tenant_id()
-    AND _my_role() IN ('master', 'rh', 'manager_global')
+    _my_role() = 'manager_global'
+    OR (tenant_id = _my_tenant_id() AND _my_role() IN ('master', 'rh'))
   );
 
 -- ============================================================
 -- TABELA: log_eventos
 -- ============================================================
--- Leitura: master, rh, manager_global
 CREATE POLICY "log_select" ON log_eventos
   FOR SELECT USING (
-    tenant_id = _my_tenant_id()
-    OR _my_role() = 'manager_global'
+    _my_role() = 'manager_global'
+    OR tenant_id = _my_tenant_id()
   );
 
--- Insert: qualquer usuário autenticado do tenant (para auditoria)
 CREATE POLICY "log_insert" ON log_eventos
   FOR INSERT WITH CHECK (
-    tenant_id = _my_tenant_id()
-    OR tenant_id IS NULL  -- eventos globais (ex: login)
+    _my_role() = 'manager_global'
+    OR tenant_id = _my_tenant_id()
+    OR tenant_id IS NULL
   );
 
 -- ============================================================
--- PROTEÇÃO EXTRA: dados financeiros (salário)
--- Gestor e colaborador NÃO veem salário — via VIEW segura
+-- VIEWS SEGURAS (dados financeiros)
+-- gestor e colaborador NÃO veem salário, VR, VT
 -- ============================================================
-CREATE OR REPLACE VIEW colaboradores_sem_financeiro AS
+CREATE OR REPLACE VIEW v_colaboradores_sem_financeiro
+WITH (security_invoker = true) AS
 SELECT
   id, tenant_id, id_colaborador, nome, email_corporativo,
   tipo_vinculo, status, data_nascimento, data_admissao, data_desligamento,
   cargo, area, setor, gestor, gestor_email, empresa,
   contrato_indeterminado, tempo_experiencia,
   plano_saude, outros_beneficios, criado_em, atualizado_em
-  -- salario_honorario, vale_refeicao, vale_transporte OMITIDOS
 FROM colaboradores;
+-- salario_honorario, vale_refeicao, vale_transporte omitidos
 
--- Apenas master, rh e manager_global têm acesso à view com dados financeiros completos
-CREATE OR REPLACE VIEW colaboradores_completo AS
+-- View completa apenas para master, rh, manager_global
+CREATE OR REPLACE VIEW v_colaboradores_financeiro
+WITH (security_invoker = true) AS
 SELECT * FROM colaboradores
 WHERE _my_role() IN ('master', 'rh', 'manager_global');

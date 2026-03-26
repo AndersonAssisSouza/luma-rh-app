@@ -1,0 +1,21 @@
+# Credenciais — NUNCA commitar
+.env
+.env.local
+.env*.local
+scripts/.env
+
+# Node
+node_modules/
+scripts/node_modules/
+package-lock.json
+scripts/package-lock.json
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+*.swp
+*.swo

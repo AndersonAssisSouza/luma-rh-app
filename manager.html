@@ -248,10 +248,10 @@ tr:hover td{background:var(--bg3);}
           <option value="colaborador">Colaborador</option>
         </select>
       </div>
-      <div class="fgrp"><div class="flbl">Senha inicial *</div><input class="fi" id="uSenha" type="password" placeholder="Mínimo 8 caracteres"></div>
+      <div class="fgrp"><div class="flbl">Senha temporária *</div><input class="fi" id="uSenha" type="password" placeholder="Mínimo 8 caracteres"></div>
     </div>
     <div style="background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:8px;padding:12px;font-size:12px;color:var(--muted);margin-top:4px;">
-      💡 O usuário receberá as credenciais e poderá alterar a senha no primeiro acesso via <em>Esqueci minha senha</em>.
+      💡 O usuário receberá um e-mail de confirmação. Após confirmar, pode alterar a senha em <em>Esqueci minha senha</em> na tela de login.
     </div>
     <div class="mf">
       <button class="btn" onclick="closeModal('mUser')">Cancelar</button>
@@ -476,16 +476,29 @@ window.saveUser = async function() {
   if (senha.length < 8) { toast('Senha deve ter mínimo 8 caracteres','error'); return }
 
   try {
-    // Criar usuário via Supabase Admin API
-    const { data, error } = await sb.auth.admin.createUser({
-      email, password: senha,
-      user_metadata: { nome, tenant_id: tenantId, role },
-      email_confirm: true
+    // signUp com anon key — seguro no browser.
+    // O trigger handle_new_user() cria o profile automaticamente com os metadados.
+    // O usuário recebe e-mail de confirmação (configurável em Auth → Settings no Supabase).
+    const { data, error } = await sb.auth.signUp({
+      email,
+      password: senha,
+      options: {
+        data: { nome, tenant_id: tenantId, role },
+        emailRedirectTo: window.location.origin + '/login.html'
+      }
     })
     if (error) throw error
 
-    // Profile será criado automaticamente pelo trigger handle_new_user()
-    toast(`Usuário ${nome} criado com sucesso`, 'success')
+    // Se confirmação de e-mail estiver DESABILITADA no Supabase, o usuário já está ativo.
+    // Se estiver HABILITADA, o perfil será criado após confirmação via trigger.
+    // Criar profile manualmente para garantir (caso trigger ainda não disparou):
+    if (data.user) {
+      await sb.from('profiles').upsert({
+        id: data.user.id, tenant_id: tenantId, nome, email, role, status: 'ATIVO'
+      }, { onConflict: 'id' })
+    }
+
+    toast(`Usuário ${nome} criado. E-mail de confirmação enviado para ${email}.`, 'success')
     closeModal('mUser')
     await loadAll(); renderUsers()
   } catch (e) {
