@@ -1302,7 +1302,7 @@ function openEditColab(r){
   const _isIndet=String(r.CONTRATO_INDETERMINADO||'').toUpperCase()==='SIM';
   $('eIndetGrp').style.display=['CLT','PJ','MEI','ASSOCIADO'].includes(_vIndet)?'':'none';
   $('eIndet').checked=_isIndet;
-  $('eDataFimGrp').style.display=(['CLT','PJ','MEI','ASSOCIADO'].includes(_vIndet)&&!_isIndet)?'':'none';
+  const _eDFG=$('eDataFimGrp');if(_eDFG)_eDFG.style.display=(['CLT','PJ','MEI','ASSOCIADO'].includes(_vIndet)&&!_isIndet)?'':'none';
   $('eExpGrp').style.display=(_vIndet==='CLT'&&!_isIndet)?'':'none';
   openModal('mEditColab');
 }
