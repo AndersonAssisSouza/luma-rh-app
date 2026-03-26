@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>LUMA RH — Migração de Dados Excel → Supabase</title>
+<script src="msal-browser.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#1a1626;color:#f0ecff;font-family:'Segoe UI',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 16px;}
+.card{background:#2a2535;border:1px solid rgba(155,102,244,.3);border-radius:14px;padding:32px;width:100%;max-width:680px;margin-bottom:20px;}
+h1{font-size:22px;font-weight:600;margin-bottom:6px;color:#f0ecff;}
+.sub{font-size:13px;color:#8a7faa;margin-bottom:24px;}
+.step{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(155,102,244,.12);}
+.step:last-child{border-bottom:none;}
+.step-num{width:28px;height:28px;border-radius:50%;background:rgba(155,102,244,.2);color:#9b66f4;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.step-num.done{background:rgba(56,217,169,.2);color:#38d9a9;}
+.step-num.err{background:rgba(248,113,113,.2);color:#f87171;}
+.step-num.run{background:rgba(255,208,0,.2);color:#ffd000;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.step-info{flex:1;}
+.step-title{font-size:14px;font-weight:500;margin-bottom:3px;}
+.step-desc{font-size:12px;color:#8a7faa;line-height:1.6;}
+.step-log{font-size:11px;font-family:monospace;margin-top:6px;color:#38d9a9;white-space:pre-wrap;max-height:120px;overflow-y:auto;}
+.step-log.err{color:#f87171;}
+.btn{padding:10px 24px;border-radius:8px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:8px;}
+.btn-start{background:#9b66f4;color:#fff;width:100%;justify-content:center;padding:14px;margin-top:8px;font-size:15px;}
+.btn-start:hover{background:#7a45d4;}
+.btn-start:disabled{opacity:.4;pointer-events:none;}
+.warn-box{background:rgba(255,208,0,.08);border:1px solid rgba(255,208,0,.3);border-radius:8px;padding:12px 16px;font-size:12px;color:#ffd000;line-height:1.7;margin-bottom:16px;}
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
+.sum-item{background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.15);border-radius:8px;padding:12px;text-align:center;}
+.sum-num{font-size:28px;font-weight:300;color:#9b66f4;}
+.sum-label{font-size:11px;color:#8a7faa;margin-top:2px;}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>🚀 Migração Excel → Supabase</h1>
+  <p class="sub">LUMA RH · Luisa Moraes Advogados · Migração única de dados</p>
+
+  <div class="warn-box">
+    ⚠️ <strong>Use este arquivo apenas uma vez.</strong> Após a migração concluída, exclua-o.
+    Ele contém a chave de serviço do Supabase incorporada.
+  </div>
+
+  <div id="steps">
+    <div class="step" id="s1">
+      <div class="step-num" id="n1">1</div>
+      <div class="step-info">
+        <div class="step-title">Login Microsoft 365</div>
+        <div class="step-desc">Autenticar com sua conta para acessar o arquivo Excel no OneDrive.</div>
+        <div class="step-log" id="l1"></div>
+      </div>
+    </div>
+    <div class="step" id="s2">
+      <div class="step-num" id="n2">2</div>
+      <div class="step-info">
+        <div class="step-title">Leitura do Excel</div>
+        <div class="step-desc">Lendo abas: CADASTRO_COLABORADORES, FERIAS_CLT, EXAMES_OCUPACIONAIS, AUSENCIAS_OCORRENCIAS</div>
+        <div class="step-log" id="l2"></div>
+      </div>
+    </div>
+    <div class="step" id="s3">
+      <div class="step-num" id="n3">3</div>
+      <div class="step-info">
+        <div class="step-title">Criar empresa (tenant)</div>
+        <div class="step-desc">Registrar Luisa Moraes Advogados no banco de dados.</div>
+        <div class="step-log" id="l3"></div>
+      </div>
+    </div>
+    <div class="step" id="s4">
+      <div class="step-num" id="n4">4</div>
+      <div class="step-info">
+        <div class="step-title">Migrar colaboradores</div>
+        <div class="step-desc">Inserir todos os colaboradores no Supabase.</div>
+        <div class="step-log" id="l4"></div>
+      </div>
+    </div>
+    <div class="step" id="s5">
+      <div class="step-num" id="n5">5</div>
+      <div class="step-info">
+        <div class="step-title">Migrar férias, exames e ausências</div>
+        <div class="step-desc">Inserir saldos de férias, exames ocupacionais e registros de ausência.</div>
+        <div class="step-log" id="l5"></div>
+      </div>
+    </div>
+    <div class="step" id="s6">
+      <div class="step-num" id="n6">6</div>
+      <div class="step-info">
+        <div class="step-title">Criar usuário master</div>
+        <div class="step-desc">Criar conta de acesso: anderson.assis@lumaplataforma.com.br · Senha inicial: LumaRH@2025!</div>
+        <div class="step-log" id="l6"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-start" id="btnStart" onclick="iniciarMigracao()">▶ Iniciar migração</button>
+  <div id="resultado" style="display:none;margin-top:20px;">
+    <div style="font-size:16px;font-weight:600;color:#38d9a9;margin-bottom:12px;">✅ Migração concluída!</div>
+    <div class="summary" id="summaryGrid"></div>
+    <div style="margin-top:14px;font-size:12px;color:#8a7faa;line-height:1.8;">
+      Próximo passo: acesse o <strong style="color:#f0ecff;">people_analytics_editor.html</strong> e faça login com<br>
+      <strong style="color:#9b66f4;">anderson.assis@lumaplataforma.com.br</strong> · senha: <strong style="color:#9b66f4;">LumaRH@2025!</strong>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ── CONFIG ──────────────────────────────────────────────────
+const SB_URL        = 'https://ttclcdppifmmdjztfunl.supabase.co'
+const SB_SERVICE    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0Y2xjZHBwaWZtbWRqenRmdW5sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUzNjg4OCwiZXhwIjoyMDkwMTEyODg4fQ.OGYi5aNnXIyZdQbK3I7e-_GICcClzHd9G2hZZS0dx1g'
+const DRIVE_ID      = 'b!SYzrfr_-hkupnbeS1zKsZmB6CS4c97VMpJmz3oLVkalAzuB5sMOLR7djv69Vlty9'
+const ITEM_ID       = '01O2PYW3EQZTMNB4MN4BB363SUCCHGX7HV'
+const TENANT_NOME   = 'Luisa Moraes Advogados'
+const TENANT_SLUG   = 'luisa-moraes-advogados'
+const ADMIN_EMAIL   = 'anderson.assis@lumaplataforma.com.br'
+const MSAL_CLIENT   = '6d43cab3-e4b8-471e-ab64-8eec4d3bd538'
+const MSAL_TENANT   = 'consumers'
+
+// ── SUPABASE HELPER (REST direto, sem SDK) ───────────────────
+const sbH = {'apikey':SB_SERVICE,'Authorization':'Bearer '+SB_SERVICE,'Content-Type':'application/json','Prefer':'return=representation'}
+
+async function sbQ(path, method='GET', body=null){
+  const r = await fetch(SB_URL+'/rest/v1/'+path, {method, headers:sbH, body:body?JSON.stringify(body):null})
+  const text = await r.text()
+  let data; try{data=JSON.parse(text)}catch{data=text}
+  if(!r.ok) throw new Error(JSON.stringify(data))
+  return data
+}
+
+async function sbUpsert(table, row, conflict){
+  return sbQ(table+'?on_conflict='+conflict, 'POST', row)
+}
+
+// Supabase Admin Auth via REST
+async function sbCreateUser(email, password, meta){
+  const r = await fetch(SB_URL+'/auth/v1/admin/users', {
+    method:'POST',
+    headers:{'apikey':SB_SERVICE,'Authorization':'Bearer '+SB_SERVICE,'Content-Type':'application/json'},
+    body:JSON.stringify({email, password, user_metadata:meta, email_confirm:true})
+  })
+  const d = await r.json()
+  if(!r.ok && !d.msg?.includes('already registered') && !d.error?.includes('already')) throw new Error(JSON.stringify(d))
+  return d
+}
+
+// ── UI HELPERS ───────────────────────────────────────────────
+function setStep(n, state, msg=''){
+  const el = document.getElementById('n'+n)
+  el.className = 'step-num ' + state
+  el.textContent = state==='done'?'✓' : state==='err'?'✗' : state==='run'?'…' : n
+  if(msg){
+    const log = document.getElementById('l'+n)
+    log.textContent += msg+'\n'
+    log.className = 'step-log' + (state==='err'?' err':'')
+  }
+}
+
+// ── MSAL ─────────────────────────────────────────────────────
+const msalApp = new msal.PublicClientApplication({
+  auth:{clientId:MSAL_CLIENT,authority:'https://login.microsoftonline.com/'+MSAL_TENANT},
+  cache:{cacheLocation:'sessionStorage'}
+})
+
+async function getGraphToken(){
+  await msalApp.initialize()
+  let account = msalApp.getAllAccounts()[0]
+  if(!account){
+    const res = await msalApp.loginPopup({scopes:['Files.ReadWrite','User.Read']})
+    account = res.account
+  }
+  const res = await msalApp.acquireTokenSilent({scopes:['Files.ReadWrite'],account})
+  return res.accessToken
+}
+
+async function readSheet(tok, sheetName){
+  const url = `https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/items/${ITEM_ID}/workbook/worksheets/${encodeURIComponent(sheetName)}/usedRange`
+  const r = await fetch(url,{headers:{Authorization:'Bearer '+tok}})
+  if(!r.ok) return []
+  const d = await r.json()
+  const rows = d.values||[]
+  if(rows.length<2) return []
+  const hdr = rows[0]
+  return rows.slice(1).map((row,i)=>{
+    const o={_row:i+2}
+    hdr.forEach((h,j)=>{if(h)o[h]=row[j]??null})
+    return o
+  }).filter(r=>r.NOME||r.ID_COLABORADOR)
+}
+
+function parseDate(v){
+  if(!v) return null
+  if(typeof v==='number'){
+    // Excel serial date
+    const d = new Date(Math.round((v-25569)*86400*1000))
+    return d.toISOString().split('T')[0]
+  }
+  const s = String(v).trim()
+  if(!s||s==='null') return null
+  // dd/mm/yyyy
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`
+  // yyyy-mm-dd
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.split('T')[0]
+  return null
+}
+
+function parseNum(v){
+  if(!v&&v!==0) return null
+  const n = parseFloat(String(v).replace(',','.').replace(/[^\d.]/g,''))
+  return isNaN(n)?null:n
+}
+
+// ── MIGRAÇÃO PRINCIPAL ───────────────────────────────────────
+window.iniciarMigracao = async function(){
+  const btn = document.getElementById('btnStart')
+  btn.disabled = true
+
+  const stats = {colab:0,ferias:0,exames:0,ausencias:0}
+
+  try{
+    // ── STEP 1: LOGIN ────────────────────────────────────────
+    setStep(1,'run','Abrindo janela de login...')
+    let tok
+    try{
+      tok = await getGraphToken()
+      setStep(1,'done','Login realizado com sucesso.')
+    }catch(e){
+      setStep(1,'err','Erro no login: '+e.message)
+      btn.disabled=false; return
+    }
+
+    // ── STEP 2: LER EXCEL ────────────────────────────────────
+    setStep(2,'run','Lendo abas do Excel...')
+    let colaboradores=[], ferias=[], exames=[], ausencias=[]
+    try{
+      [colaboradores,ferias,exames,ausencias] = await Promise.all([
+        readSheet(tok,'CADASTRO_COLABORADORES'),
+        readSheet(tok,'FERIAS_CLT').catch(()=>[]),
+        readSheet(tok,'EXAMES_OCUPACIONAIS').catch(()=>[]),
+        readSheet(tok,'AUSENCIAS_OCORRENCIAS').catch(()=>[])
+      ])
+      setStep(2,'done',
+        `Colaboradores: ${colaboradores.length} | Férias: ${ferias.length} | Exames: ${exames.length} | Ausências: ${ausencias.length}`)
+    }catch(e){
+      setStep(2,'err','Erro ao ler Excel: '+e.message)
+      btn.disabled=false; return
+    }
+
+    // ── STEP 3: TENANT ───────────────────────────────────────
+    setStep(3,'run','Criando tenant...')
+    let tenantId
+    try{
+      // verificar se já existe
+      const exist = await sbQ('tenants?slug=eq.'+TENANT_SLUG+'&select=id&limit=1')
+      if(exist && exist.length>0){
+        tenantId = exist[0].id
+        setStep(3,'done','Tenant já existe: '+tenantId)
+      }else{
+        const created = await sbQ('tenants','POST',{
+          nome:TENANT_NOME, slug:TENANT_SLUG, email_admin:ADMIN_EMAIL,
+          plano:'PRO', status:'ATIVO', max_usuarios:50
+        })
+        tenantId = Array.isArray(created)?created[0].id:created.id
+        setStep(3,'done','Tenant criado: '+tenantId)
+      }
+    }catch(e){
+      setStep(3,'err','Erro ao criar tenant: '+e.message)
+      btn.disabled=false; return
+    }
+
+    // ── STEP 4: COLABORADORES ────────────────────────────────
+    setStep(4,'run','Migrando colaboradores...')
+    const colabMap = {}
+    let erros4=0
+    try{
+      for(const r of colaboradores){
+        if(!r.NOME) continue
+        const idColab = r.ID_COLABORADOR ? String(r.ID_COLABORADOR) : ('COL-'+String(colaboradores.indexOf(r)+1).padStart(3,'0'))
+        const row = {
+          tenant_id: tenantId,
+          id_colaborador: idColab,
+          nome: r.NOME,
+          email_corporativo: r.EMAIL_CORPORATIVO||null,
+          tipo_vinculo: r.TIPO_VINCULO||r.RAW_VINCULO||null,
+          status: r.STATUS==='DESLIGADO'?'DESLIGADO':(r.STATUS||'ATIVO'),
+          data_nascimento: parseDate(r.DATA_NASCIMENTO),
+          data_admissao: parseDate(r.DATA_ADMISSAO),
+          data_desligamento: parseDate(r.DATA_DESLIGAMENTO),
+          cargo: r.CARGO||null,
+          area: r.AREA||null,
+          setor: r.SETOR||null,
+          gestor: r.GESTOR||null,
+          gestor_email: r.GESTOR_EMAIL||null,
+          empresa: r.EMPRESA||null,
+          contrato_indeterminado: r.CONTRATO_INDETERMINADO==='SIM',
+          tempo_experiencia: r.TEMPO_EXPERIENCIA?parseInt(r.TEMPO_EXPERIENCIA):null,
+          salario_honorario: parseNum(r.SALARIO_HONORARIO),
+          vale_refeicao: parseNum(r.VALE_REFEICAO),
+          vale_transporte: parseNum(r.VALE_TRANSPORTE),
+          plano_saude: r.PLANO_SAUDE||null,
+          outros_beneficios: r.OUTROS_BENEFICIOS||null
+        }
+        try{
+          // upsert via POST com header Prefer
+          const res = await fetch(SB_URL+'/rest/v1/colaboradores?on_conflict=tenant_id,id_colaborador',{
+            method:'POST',
+            headers:{...sbH,'Prefer':'resolution=merge-duplicates,return=representation'},
+            body:JSON.stringify(row)
+          })
+          const data = await res.json()
+          const saved = Array.isArray(data)?data[0]:data
+          if(saved?.id){
+            colabMap[idColab] = saved.id
+            stats.colab++
+          }else{ erros4++ }
+        }catch{ erros4++ }
+      }
+      setStep(4,'done',`Migrados: ${stats.colab} | Erros: ${erros4}`)
+    }catch(e){
+      setStep(4,'err','Erro: '+e.message)
+    }
+
+    // ── STEP 5: FÉRIAS + EXAMES + AUSÊNCIAS ─────────────────
+    setStep(5,'run','Migrando férias, exames e ausências...')
+    try{
+      // Férias
+      for(const r of ferias){
+        const cid = colabMap[r.ID_COLABORADOR]
+        if(!cid) continue
+        try{
+          await fetch(SB_URL+'/rest/v1/ferias_saldo?on_conflict=tenant_id,colaborador_id',{
+            method:'POST',
+            headers:{...sbH,'Prefer':'resolution=merge-duplicates,return=minimal'},
+            body:JSON.stringify({
+              tenant_id:tenantId, colaborador_id:cid,
+              inicio_periodo_aquisitivo: parseDate(r.INICIO_PERIODO_AQUISITIVO),
+              fim_periodo_aquisitivo:    parseDate(r.FIM_PERIODO_AQUISITIVO),
+              fim_periodo_concessivo:    parseDate(r.FIM_PERIODO_CONCESSIVO),
+              ferias_programadas_inicio: parseDate(r.FERIAS_PROGRAMADAS_INICIO),
+              ferias_programadas_fim:    parseDate(r.FERIAS_PROGRAMADAS_FIM),
+              ferias_gozadas_inicio:     parseDate(r.FERIAS_GOZADAS_INICIO),
+              ferias_gozadas_fim:        parseDate(r.FERIAS_GOZADAS_FIM),
+              status_ferias:             r.STATUS_FERIAS||'NAO_PROGRAMADA'
+            })
+          })
+          stats.ferias++
+        }catch{}
+      }
+      // Exames
+      for(const r of exames){
+        const cid = colabMap[r.ID_COLABORADOR]
+        if(!cid) continue
+        try{
+          await fetch(SB_URL+'/rest/v1/exames_ocupacionais?on_conflict=colaborador_id',{
+            method:'POST',
+            headers:{...sbH,'Prefer':'resolution=merge-duplicates,return=minimal'},
+            body:JSON.stringify({
+              tenant_id:tenantId, colaborador_id:cid,
+              tipo_exame:    r.TIPO_EXAME||null,
+              ultimo_exame:  parseDate(r.ULTIMO_EXAME),
+              proximo_exame: parseDate(r.PROXIMO_EXAME),
+              status_exame:  r.STATUS_EXAME||null,
+              observacao:    r.OBSERVACAO||null
+            })
+          })
+          stats.exames++
+        }catch{}
+      }
+      // Ausências
+      for(const r of ausencias){
+        const cid = colabMap[r.ID_COLABORADOR]
+        if(!cid||!r.DATA) continue
+        try{
+          await fetch(SB_URL+'/rest/v1/ausencias_ocorrencias',{
+            method:'POST',
+            headers:{...sbH,'Prefer':'return=minimal'},
+            body:JSON.stringify({
+              tenant_id:tenantId, colaborador_id:cid,
+              tipo:r.TIPO||null, data:parseDate(r.DATA), detalhe:r.DETALHE||null
+            })
+          })
+          stats.ausencias++
+        }catch{}
+      }
+      setStep(5,'done',`Férias: ${stats.ferias} | Exames: ${stats.exames} | Ausências: ${stats.ausencias}`)
+    }catch(e){
+      setStep(5,'err','Erro: '+e.message)
+    }
+
+    // ── STEP 6: USUÁRIO MASTER ───────────────────────────────
+    setStep(6,'run','Criando usuário master...')
+    try{
+      await sbCreateUser(ADMIN_EMAIL, 'LumaRH@2025!', {
+        nome:'Anderson Assis', tenant_id:tenantId, role:'master'
+      })
+      setStep(6,'done','Usuário criado: '+ADMIN_EMAIL+' | Senha: LumaRH@2025!')
+    }catch(e){
+      const msg = String(e.message)
+      if(msg.includes('already')||msg.includes('registered')){
+        setStep(6,'done','Usuário já existe — nenhuma alteração necessária.')
+      }else{
+        setStep(6,'err','Erro: '+msg)
+      }
+    }
+
+    // ── RESULTADO ────────────────────────────────────────────
+    document.getElementById('resultado').style.display='block'
+    document.getElementById('summaryGrid').innerHTML = `
+      <div class="sum-item"><div class="sum-num">${stats.colab}</div><div class="sum-label">Colaboradores</div></div>
+      <div class="sum-item"><div class="sum-num">${stats.ferias}</div><div class="sum-label">Registros de férias</div></div>
+      <div class="sum-item"><div class="sum-num">${stats.exames}</div><div class="sum-label">Exames ocupacionais</div></div>
+      <div class="sum-item"><div class="sum-num">${stats.ausencias}</div><div class="sum-label">Ausências</div></div>
+    `
+
+  }catch(e){
+    console.error(e)
+    btn.disabled=false
+    alert('Erro inesperado: '+e.message)
+  }
+}
+</script>
+</body>
+</html>

@@ -9,8 +9,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // ⚠️ PREENCHER com as credenciais do seu projeto Supabase
 // Project Settings → API → Project URL e anon/public key
-export const SUPABASE_URL  = 'COLE_AQUI_A_URL_DO_PROJETO'       // ex: https://abcdefgh.supabase.co
-export const SUPABASE_KEY  = 'COLE_AQUI_A_CHAVE_ANON_PUBLICA'   // chave anon (pública — segura no frontend)
+export const SUPABASE_URL  = 'https://ttclcdppifmmdjztfunl.supabase.co'
+export const SUPABASE_KEY  = 'sb_publishable_BBLkzcH2J9Rjxz5ENu1xYg_70Sm_obs'
 
 export const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
