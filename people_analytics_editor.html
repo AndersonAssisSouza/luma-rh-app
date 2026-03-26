@@ -944,7 +944,7 @@ async function initApp(c){
       auth:{
         clientId:c.clientId,
         authority:`https://login.microsoftonline.com/${c.tenantId}`,
-        redirectUri:'https://ashy-plant-05558780f.2.azurestaticapps.net/people_analytics_editor.html'
+        redirectUri:window.location.origin+window.location.pathname
       },
       cache:{cacheLocation:'localStorage',storeAuthStateInCookie:true}
     };
