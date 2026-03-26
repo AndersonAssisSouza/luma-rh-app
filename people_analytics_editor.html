@@ -517,6 +517,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
           <select class="fsel" id="coord-role" style="font-size:13px;">
             <option value="master">Master</option>
             <option value="gestor">Gestor</option>
+            <option value="rh">RH</option>
           </select>
         </div>
         <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#fff;flex-shrink:0;" onclick="addCoord()">+ Adicionar</button>
@@ -529,11 +530,18 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
         <div id="admin-list-master"></div>
       </div>
       <!-- Gestores -->
-      <div>
+      <div style="margin-bottom:14px;">
         <div style="font-size:12px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
           👥 Gestores — Acesso restrito (subordinados)
         </div>
         <div id="admin-list-gestor"></div>
+      </div>
+      <!-- RH -->
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#2563eb;text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
+          🏥 RH — Acesso completo + cópias de e-mails
+        </div>
+        <div id="admin-list-rh"></div>
       </div>
     </div>
     <div class="mf"><button class="btn btn-g" onclick="closeModal('mAdmin')">Fechar</button></div>
@@ -670,9 +678,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
         </div>
         <div class="fdiv"></div>
         <div class="fsec">Remuneração</div>
-        <div class="fgrp"><div class="flbl">Salário / Honorário (R$)</div><input class="fi" id="eSalario" type="number" step="0.01" placeholder="0,00"></div>
-        <div class="fgrp"><div class="flbl">Vale Refeição (R$/mês)</div><input class="fi" id="eVR" type="number" step="0.01" placeholder="0,00"></div>
-        <div class="fgrp"><div class="flbl">Vale Transporte (R$/mês)</div><input class="fi" id="eVT" type="number" step="0.01" placeholder="0,00"></div>
+        <div class="fgrp"><div class="flbl">Salário / Honorário (R$)</div><input class="fi cur-input" id="eSalario" type="text" placeholder="R$ 0,00"></div>
+        <div class="fgrp"><div class="flbl">Vale Refeição (R$/mês)</div><input class="fi cur-input" id="eVR" type="text" placeholder="R$ 0,00"></div>
+        <div class="fgrp"><div class="flbl">Vale Transporte (R$/mês)</div><input class="fi cur-input" id="eVT" type="text" placeholder="R$ 0,00"></div>
         <div class="fgrp"><div class="flbl">Plano de Saúde</div>
           <select class="fsel" id="ePlanoSaude"><option value="">Sem plano</option><option value="SIM">Sim</option><option value="NAO">Não</option></select>
         </div>
@@ -729,9 +737,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
         <div class="fgrp"><div class="flbl">Setor</div><input class="fi" id="nSetor" placeholder="Ex: Diretoria"></div>
         <div class="fdiv"></div>
         <div class="fsec">Remuneração</div>
-        <div class="fgrp"><div class="flbl">Salário / Honorário (R$)</div><input class="fi" id="nSalario" type="number" step="0.01" placeholder="0,00"></div>
-        <div class="fgrp"><div class="flbl">Vale Refeição (R$/mês)</div><input class="fi" id="nVR" type="number" step="0.01" placeholder="0,00"></div>
-        <div class="fgrp"><div class="flbl">Vale Transporte (R$/mês)</div><input class="fi" id="nVT" type="number" step="0.01" placeholder="0,00"></div>
+        <div class="fgrp"><div class="flbl">Salário / Honorário (R$)</div><input class="fi cur-input" id="nSalario" type="text" placeholder="R$ 0,00"></div>
+        <div class="fgrp"><div class="flbl">Vale Refeição (R$/mês)</div><input class="fi cur-input" id="nVR" type="text" placeholder="R$ 0,00"></div>
+        <div class="fgrp"><div class="flbl">Vale Transporte (R$/mês)</div><input class="fi cur-input" id="nVT" type="text" placeholder="R$ 0,00"></div>
         <div class="fgrp"><div class="flbl">Plano de Saúde</div>
           <select class="fsel" id="nPlanoSaude"><option value="">Sem plano</option><option value="SIM">Sim</option><option value="NAO">Não</option></select>
         </div>
@@ -1041,6 +1049,8 @@ async function loadAll(){
     const dot=$('ndot');dot.classList.add('live');dot.title='Ao vivo · '+new Date().toLocaleTimeString('pt-BR');
     if(erros.length>0)toast(`Aviso: aba(s) ${erros.join(', ')} não carregada(s)`,'info');
     else toast('Dados atualizados','success');
+    // Verificar e enviar e-mails de aniversário/tempo de casa (silencioso)
+    setTimeout(()=>enviarEmailsAniversario().catch(()=>{}),3000);
   }catch(e){
     // Só chega aqui se falha fora do loop (ex: token/auth)
     $('sLoad').classList.add('hidden');$('app').style.display='block';
@@ -1333,9 +1343,9 @@ function openEditColab(r){
   setS('eVinculo',r.TIPO_VINCULO||'CLT');
   setS('eArea',r.AREA);setS('eGestor',r.GESTOR);setS('eEmpresa',r.EMPRESA);setS('eStatus',r.STATUS||'ATIVO');
   $('eDesl').value=iso(r.DATA_DESLIGAMENTO)||'';
-  $('eSalario').value=r.SALARIO_HONORARIO||'';
-  $('eVR').value=r.VALE_REFEICAO||'';
-  $('eVT').value=r.VALE_TRANSPORTE||'';
+  $('eSalario').value=_fmtBRL(r.SALARIO_HONORARIO)||'';
+  $('eVR').value=_fmtBRL(r.VALE_REFEICAO)||'';
+  $('eVT').value=_fmtBRL(r.VALE_TRANSPORTE)||'';
   setS('ePlanoSaude',r.PLANO_SAUDE||'');
   $('eBeneficios').value=r.OUTROS_BENEFICIOS||'';
   // Campo experiência CLT
@@ -1383,9 +1393,9 @@ async function saveEditColab(){
     SETOR:$('eSetor').value,
     GESTOR:$('eGestor').value,
     EMPRESA:$('eEmpresa').value,
-    SALARIO_HONORARIO:$('eSalario').value||null,
-    VALE_REFEICAO:$('eVR').value||null,
-    VALE_TRANSPORTE:$('eVT').value||null,
+    SALARIO_HONORARIO:_parseBRL($('eSalario').value),
+    VALE_REFEICAO:_parseBRL($('eVR').value),
+    VALE_TRANSPORTE:_parseBRL($('eVT').value),
     PLANO_SAUDE:$('ePlanoSaude').value||null,
     OUTROS_BENEFICIOS:$('eBeneficios').value||null
   };
@@ -1571,29 +1581,38 @@ function confirmDesl(r){
   openModal('mConfDesl');
 }
 
-function programarDesl(){
+async function programarDesl(){
   const r=_deslPending;if(!r)return;
   const data=$('deslDataProg').value;
   if(!data){toast('Informe a data de programação','error');return;}
+  const gestorEmail=_getGestorEmail(r.GESTOR);
+  const agendado={id:r.ID_COLABORADOR,nome:r.NOME,gestor:r.GESTOR||'',gestorEmail:gestorEmail||'',data,cargo:r.CARGO||'',vinculo:r.TIPO_VINCULO||'',ts:Date.now()};
   const agendados=JSON.parse(localStorage.getItem('_deslAgendados')||'[]');
-  agendados.push({id:r.ID_COLABORADOR,nome:r.NOME,gestor:r.GESTOR||'',data,cargo:r.CARGO||'',vinculo:r.TIPO_VINCULO||'',ts:Date.now()});
+  agendados.push(agendado);
   localStorage.setItem('_deslAgendados',JSON.stringify(agendados));
   const notifData=new Date(new Date(data+'T12:00:00').getTime()-864e5).toISOString().split('T')[0];
   $('deslProgInfo').style.display='';
   const infoTxt=$('deslProgInfoTxt');
   if(infoTxt)infoTxt.textContent=`Data: ${fmtD(data)} · Notificação ao gestor ${r.GESTOR||'—'} em: ${fmtD(notifData)}`;
-  toast(`Desligamento de ${r.NOME} programado para ${fmtD(data)}. Gestor será notificado em ${fmtD(notifData)}.`,'success');
+  toast(`Desligamento de ${r.NOME} programado para ${fmtD(data)}. Enviando e-mail de confirmação...`,'success');
+  await _enviarEmailDesl(agendado,'confirmacao');
 }
 
-function checkDesligamentosAgendados(){
+async function checkDesligamentosAgendados(){
   const agendados=JSON.parse(localStorage.getItem('_deslAgendados')||'[]');
   if(!agendados.length)return;
   const hoje=new Date();hoje.setHours(0,0,0,0);
   const amanha=new Date(hoje.getTime()+864e5);const amanhaStr=amanha.toISOString().split('T')[0];
-  const notif=agendados.filter(a=>a.data===amanhaStr);
+  const ckDesl='_deslEmailEnviado_'+amanhaStr;
+  const jaNotif=JSON.parse(localStorage.getItem(ckDesl)||'[]');
+  const notif=agendados.filter(a=>a.data===amanhaStr&&!jaNotif.includes(a.id||a.nome));
   notif.forEach(a=>{
-    setTimeout(()=>toast(`⚠️ Lembrete: desligamento de ${a.nome} (${a.vinculo}) programado para AMANHÃ (${fmtD(a.data)}). Notifique o gestor ${a.gestor||'—'}.`,'warn',8000),1500);
+    setTimeout(()=>toast(`⚠️ Lembrete: desligamento de ${a.nome} (${a.vinculo}) programado para AMANHÃ (${fmtD(a.data)}).`,'warn',8000),1500);
   });
+  for(const a of notif){
+    const ok=await _enviarEmailDesl(a,'lembrete');
+    if(ok){jaNotif.push(a.id||a.nome);localStorage.setItem(ckDesl,JSON.stringify(jaNotif));}
+  }
 }
 
 function executarDesl(){
@@ -1618,7 +1637,7 @@ async function saveNewColab(){
     const anos=((hoje-new Date(adm))/(1000*60*60*24*365.25)).toFixed(1);
     const idade=nasc?((hoje-new Date(nasc))/(1000*60*60*24*365.25)).toFixed(0):null;
     const _nVinc=$('nVinc').value;const _nIndet=$('nIndet').checked;
-    const row={ID_COLABORADOR:newId,NOME:nome,EMAIL_CORPORATIVO:$('nEmail').value.trim()||null,TIPO_VINCULO:_nVinc,STATUS:'ATIVO',DATA_NASCIMENTO:nasc||null,DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',DATA_ADMISSAO:adm,DATA_DESLIGAMENTO:null,CARGO:$('nCargo').value,AREA:$('nArea').value,SETOR:$('nSetor').value||$('nArea').value,GESTOR:$('nGestor').value,EMPRESA:$('nEmpresa').value,IDADE:idade,ANOS_EMPRESA:anos,RAW_VINCULO:_nVinc,RAW_STATUS:'Ativo',CONTRATO_INDETERMINADO:_nIndet?'SIM':'',TEMPO_EXPERIENCIA:$('nExperiencia').value||null,SALARIO_HONORARIO:$('nSalario').value||null,VALE_REFEICAO:$('nVR').value||null,VALE_TRANSPORTE:$('nVT').value||null,PLANO_SAUDE:$('nPlanoSaude').value||null,OUTROS_BENEFICIOS:$('nBeneficios').value||null};
+    const row={ID_COLABORADOR:newId,NOME:nome,EMAIL_CORPORATIVO:$('nEmail').value.trim()||null,TIPO_VINCULO:_nVinc,STATUS:'ATIVO',DATA_NASCIMENTO:nasc||null,DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',DATA_ADMISSAO:adm,DATA_DESLIGAMENTO:null,CARGO:$('nCargo').value,AREA:$('nArea').value,SETOR:$('nSetor').value||$('nArea').value,GESTOR:$('nGestor').value,EMPRESA:$('nEmpresa').value,IDADE:idade,ANOS_EMPRESA:anos,RAW_VINCULO:_nVinc,RAW_STATUS:'Ativo',CONTRATO_INDETERMINADO:_nIndet?'SIM':'',TEMPO_EXPERIENCIA:$('nExperiencia').value||null,SALARIO_HONORARIO:_parseBRL($('nSalario').value),VALE_REFEICAO:_parseBRL($('nVR').value),VALE_TRANSPORTE:_parseBRL($('nVT').value),PLANO_SAUDE:$('nPlanoSaude').value||null,OUTROS_BENEFICIOS:$('nBeneficios').value||null};
     if(DEMO){D.CADASTRO_COLABORADORES.push({...row,_row:cad.length+2});render();toast(`${nome} admitido! ID: ${newId}`,'success');return;}
     await appendR('CADASTRO_COLABORADORES',['ID_COLABORADOR','NOME','EMAIL_CORPORATIVO','TIPO_VINCULO','STATUS','DATA_NASCIMENTO','DATA_NASCIMENTO_FORMATADO','DATA_ADMISSAO','DATA_DESLIGAMENTO','CARGO','AREA','SETOR','GESTOR','EMPRESA','IDADE','ANOS_EMPRESA','RAW_VINCULO','RAW_STATUS','CONTRATO_INDETERMINADO','TEMPO_EXPERIENCIA','SALARIO_HONORARIO','VALE_REFEICAO','VALE_TRANSPORTE','PLANO_SAUDE','OUTROS_BENEFICIOS'],row);
     toast(`${nome} admitido! ID: ${newId}`,'success');await loadAll();
@@ -2201,23 +2220,29 @@ function renderAdmin(){
   const coords=loadCoords();
   const masters=coords.filter(c=>c.role==='master');
   const gestores=coords.filter(c=>c.role==='gestor');
-  const renderList=(list,cor)=>list.length===0
+  const rhs=coords.filter(c=>c.role==='rh');
+  const roleIcon=r=>r==='master'?'⭐':r==='rh'?'🏥':'👤';
+  const roleLabel=r=>r==='master'?'Master':r==='rh'?'RH':'Gestor';
+  const roleColor=r=>r==='master'?'rgba(155,102,244,.15)':r==='rh'?'rgba(37,99,235,.12)':'rgba(255,208,0,.12)';
+  const roleText=r=>r==='master'?'var(--accent)':r==='rh'?'#2563eb':'var(--accent2)';
+  const renderList=list=>list.length===0
     ?`<div style="color:var(--muted);font-size:12px;padding:12px 0;text-align:center;">Nenhum cadastrado.</div>`
     :list.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:34px;height:34px;border-radius:8px;background:rgba(155,102,244,.12);display:flex;align-items:center;justify-content:center;font-size:16px;">${c.role==='master'?'⭐':'👤'}</div>
+          <div style="width:34px;height:34px;border-radius:8px;background:rgba(155,102,244,.12);display:flex;align-items:center;justify-content:center;font-size:16px;">${roleIcon(c.role)}</div>
           <div>
             <div style="font-size:13px;font-weight:500;">${c.nome}</div>
             <div style="font-size:11px;color:var(--muted);margin-top:1px;">${c.email}</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <span class="chip" style="font-size:11px;background:${c.role==='master'?'rgba(155,102,244,.15)':'rgba(255,208,0,.12)'};color:${c.role==='master'?'var(--accent)':'var(--accent2)'};">${c.role==='master'?'Master':'Gestor'}</span>
+          <span class="chip" style="font-size:11px;background:${roleColor(c.role)};color:${roleText(c.role)};">${roleLabel(c.role)}</span>
           <button class="btn" style="font-size:11px;padding:3px 10px;color:var(--danger);border-color:var(--danger);" onclick="removeCoord('${c.email}')">Remover</button>
         </div>
       </div>`).join('');
-  $('admin-list-master').innerHTML=renderList(masters,'var(--accent)');
-  $('admin-list-gestor').innerHTML=renderList(gestores,'var(--accent2)');
+  $('admin-list-master').innerHTML=renderList(masters);
+  $('admin-list-gestor').innerHTML=renderList(gestores);
+  $('admin-list-rh').innerHTML=renderList(rhs);
 }
 
 function addCoord(){
@@ -2234,7 +2259,8 @@ function addCoord(){
   saveCoords(coords);
   $('coord-email').value='';$('coord-nome').value='';
   renderAdmin();
-  toast(`${nome} adicionado como ${role==='master'?'Master':'Gestor'}`,'success');
+  const roleLabel=role==='master'?'Master':role==='rh'?'RH':'Gestor';
+  toast(`${nome} adicionado como ${roleLabel}`,'success');
 }
 
 function removeCoord(email){
@@ -2243,10 +2269,166 @@ function removeCoord(email){
   renderAdmin();
   toast('Coordenador removido','error');
 }
+// --- Formatação de moeda (R$) ---
+function _parseBRL(s){if(!s&&s!==0)return null;const n=parseFloat(String(s).replace(/[R$\s.]/g,'').replace(',','.'));return isNaN(n)?null:n;}
+function _fmtBRL(v){if(v===null||v===undefined||v==='')return '';const n=parseFloat(v);if(isNaN(n))return '';return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function _setupCurInput(el){
+  el.addEventListener('focus',function(){const raw=_parseBRL(this.value);if(raw!==null)this.value=String(raw).replace('.',',');else this.value='';});
+  el.addEventListener('blur',function(){const raw=_parseBRL(this.value);this.value=raw!==null?_fmtBRL(raw):'';});
+  el.addEventListener('input',function(){this.value=this.value.replace(/[^0-9,]/g,'');});
+}
+function setupCurrencyInputs(){document.querySelectorAll('.cur-input').forEach(_setupCurInput);}
+
+// --- E-mail via Graph API (LUMA RH) ---
+async function _getMailToken(){
+  const a=msalApp?msalApp.getAllAccounts():[];
+  if(!a.length)throw new Error('Nenhuma conta autenticada');
+  const r=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:a[0]});
+  return r.accessToken;
+}
+function _getRHEmails(){return loadCoords().filter(c=>c.role==='rh').map(c=>c.email);}
+function _getGestorEmail(gestorNome){
+  if(!gestorNome)return null;
+  const cad=D&&D.CADASTRO_COLABORADORES||[];
+  const g=cad.find(r=>String(r.NOME||'').trim().toLowerCase()===String(gestorNome).trim().toLowerCase());
+  return g?g.EMAIL_CORPORATIVO:null;
+}
+async function _emailLumaRH(subject,htmlBody,toEmail,ccEmails){
+  try{
+    const mt=await _getMailToken();
+    const cc=(ccEmails||[]).filter(Boolean).map(e=>({emailAddress:{address:e}}));
+    const payload={message:{subject,from:{emailAddress:{name:'LUMA RH',address:'lumarh@lumaplataforma.com.br'}},toRecipients:[{emailAddress:{address:toEmail}}],ccRecipients:cc,body:{contentType:'HTML',content:htmlBody}},saveToSentItems:false};
+    const res=await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',headers:{Authorization:'Bearer '+mt,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!res.ok&&res.status!==202){const e=await res.text();throw new Error(`Graph ${res.status}: ${e}`);}
+    return true;
+  }catch(e){console.warn('_emailLumaRH error:',e);return false;}
+}
+
+// --- E-mail de desligamento programado ---
+function _buildDeslEmailHTML(a,tipo){
+  const isReminder=tipo==='lembrete';
+  const corHeader=isReminder?'#b45309':'#7c3aed';
+  const titulo=isReminder?`⚠️ Lembrete: Desligamento AMANHÃ`:`📋 Desligamento Programado`;
+  const subtitulo=isReminder?`O desligamento de <strong>${a.nome}</strong> está programado para <strong>AMANHÃ</strong>.`:`O desligamento de <strong>${a.nome}</strong> foi programado com sucesso.`;
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f5f3ff;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff;padding:24px 0;"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;">
+<tr><td style="background:${corHeader};padding:28px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><div style="width:40px;height:40px;background:rgba(255,255,255,0.2);text-align:center;line-height:40px;font-size:22px;font-weight:bold;color:#fff;display:inline-block;">L</div></td>
+    <td style="padding-left:12px;vertical-align:middle;"><div style="color:#fff;font-size:18px;font-weight:bold;">${titulo}</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px;">LUMA RH · Sistema de Gestão de Pessoas</div></td>
+  </tr></table>
+</td></tr>
+<tr><td style="padding:28px 32px;">
+  <p style="font-size:15px;color:#334155;margin:0 0 20px 0;">${subtitulo}</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;">
+    <tr style="background:#f8fafc;"><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;width:40%;">Colaborador</td><td style="padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600;">${a.nome}</td></tr>
+    <tr><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Cargo</td><td style="padding:10px 16px;font-size:14px;color:#1e293b;border-top:1px solid #e2e8f0;">${a.cargo||'—'}</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Vínculo</td><td style="padding:10px 16px;font-size:14px;color:#1e293b;border-top:1px solid #e2e8f0;">${a.vinculo||'—'}</td></tr>
+    <tr><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Gestor</td><td style="padding:10px 16px;font-size:14px;color:#1e293b;border-top:1px solid #e2e8f0;">${a.gestor||'—'}</td></tr>
+    <tr style="background:#fff8e1;"><td style="padding:12px 16px;font-size:12px;font-weight:600;color:#92400e;text-transform:uppercase;border-top:1px solid #e2e8f0;">Data de Desligamento</td><td style="padding:12px 16px;font-size:15px;color:#92400e;font-weight:700;border-top:1px solid #e2e8f0;">${fmtD(a.data)}</td></tr>
+  </table>
+  ${isReminder?`<p style="margin:20px 0 0;font-size:13px;color:#64748b;">Por favor, certifique-se de que todos os procedimentos de desligamento estão em ordem.</p>`:''}
+</td></tr>
+<tr><td style="background:#f1f5f9;padding:16px 32px;text-align:center;border-top:1px solid #e2e8f0;">
+  <p style="font-size:11px;color:#94a3b8;margin:0;">Este e-mail foi gerado automaticamente pelo sistema LUMA RH.</p>
+</td></tr>
+</table>
+</td></tr></table></body></html>`;
+}
+
+async function _enviarEmailDesl(a,tipo){
+  const gestorEmail=a.gestorEmail||_getGestorEmail(a.gestor);
+  if(!gestorEmail){console.warn('Gestor email não encontrado para',a.gestor);return;}
+  const rhEmails=_getRHEmails();
+  const subject=tipo==='lembrete'?`[LUMA RH] Lembrete — Desligamento de ${a.nome} AMANHÃ (${fmtD(a.data)})`:`[LUMA RH] Desligamento Programado — ${a.nome} em ${fmtD(a.data)}`;
+  const html=_buildDeslEmailHTML(a,tipo);
+  const ok=await _emailLumaRH(subject,html,gestorEmail,rhEmails);
+  if(ok)toast(`E-mail de ${tipo==='lembrete'?'lembrete':'confirmação'} enviado ao gestor`,'success');
+}
+
+// --- E-mail de aniversário e tempo de casa ---
+async function enviarEmailsAniversario(){
+  try{
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    const dd=String(hoje.getDate()).padStart(2,'0');
+    const mm=String(hoje.getMonth()+1).padStart(2,'0');
+    const yyyymmdd=hoje.toISOString().split('T')[0];
+    const ckAniv='_anivEmail_'+yyyymmdd;
+    const jaEnviados=JSON.parse(localStorage.getItem(ckAniv)||'[]');
+    const cad=D&&D.CADASTRO_COLABORADORES||[];
+    const rhEmails=_getRHEmails();
+    for(const r of cad){
+      if(r.STATUS==='DESLIGADO')continue;
+      const ckId=r.ID_COLABORADOR||r._row;
+      // Aniversário de nascimento
+      if(r.DATA_NASCIMENTO){
+        const [,m,d]=r.DATA_NASCIMENTO.split('-');
+        if(d===dd&&m===mm&&!jaEnviados.includes('nasc_'+ckId)){
+          const gestorEmail=_getGestorEmail(r.GESTOR);
+          if(gestorEmail){
+            const idade=hoje.getFullYear()-parseInt(r.DATA_NASCIMENTO.split('-')[0]);
+            const html=_buildAnivEmail(r,'nasc',idade);
+            const ok=await _emailLumaRH(`[LUMA RH] 🎂 Aniversário de ${r.NOME} hoje!`,html,gestorEmail,rhEmails);
+            if(ok)jaEnviados.push('nasc_'+ckId);
+          }
+        }
+      }
+      // Aniversário de tempo de casa
+      if(r.DATA_ADMISSAO){
+        const [,am,ad]=r.DATA_ADMISSAO.split('-');
+        if(ad===dd&&am===mm&&!jaEnviados.includes('casa_'+ckId)){
+          const gestorEmail=_getGestorEmail(r.GESTOR);
+          if(gestorEmail){
+            const anos=hoje.getFullYear()-parseInt(r.DATA_ADMISSAO.split('-')[0]);
+            if(anos>0){
+              const html=_buildAnivEmail(r,'casa',anos);
+              const ok=await _emailLumaRH(`[LUMA RH] 🏆 ${anos} ano${anos>1?'s':''} de casa — ${r.NOME}`,html,gestorEmail,rhEmails);
+              if(ok)jaEnviados.push('casa_'+ckId);
+            }
+          }
+        }
+      }
+    }
+    if(jaEnviados.length)localStorage.setItem(ckAniv,JSON.stringify(jaEnviados));
+  }catch(e){console.warn('enviarEmailsAniversario:',e);}
+}
+function _buildAnivEmail(r,tipo,numero){
+  const isNasc=tipo==='nasc';
+  const corHeader=isNasc?'#be185d':'#0369a1';
+  const titulo=isNasc?`🎂 Aniversário de ${r.NOME}`:`🏆 Aniversário de Tempo de Casa`;
+  const subtitulo=isNasc?`Hoje, <strong>${r.NOME}</strong> está completando <strong>${numero} anos</strong>! Um ótimo dia para parabenizá-lo(a).`:`Hoje, <strong>${r.NOME}</strong> completa <strong>${numero} ano${numero>1?'s':''}</strong> na empresa. Uma data especial para reconhecer essa trajetória!`;
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f5f3ff;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff;padding:24px 0;"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;">
+<tr><td style="background:${corHeader};padding:28px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><div style="width:40px;height:40px;background:rgba(255,255,255,0.2);text-align:center;line-height:40px;font-size:22px;font-weight:bold;color:#fff;display:inline-block;">L</div></td>
+    <td style="padding-left:12px;vertical-align:middle;"><div style="color:#fff;font-size:18px;font-weight:bold;">${titulo}</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px;">LUMA RH · Sistema de Gestão de Pessoas</div></td>
+  </tr></table>
+</td></tr>
+<tr><td style="padding:28px 32px;">
+  <p style="font-size:15px;color:#334155;margin:0 0 20px 0;">${subtitulo}</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;">
+    <tr style="background:#f8fafc;"><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;width:40%;">Colaborador</td><td style="padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600;">${r.NOME}</td></tr>
+    <tr><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Cargo</td><td style="padding:10px 16px;font-size:14px;color:#1e293b;border-top:1px solid #e2e8f0;">${r.CARGO||'—'}</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Área</td><td style="padding:10px 16px;font-size:14px;color:#1e293b;border-top:1px solid #e2e8f0;">${r.AREA||'—'}</td></tr>
+    <tr><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Gestor</td><td style="padding:10px 16px;font-size:14px;color:#1e293b;border-top:1px solid #e2e8f0;">${r.GESTOR||'—'}</td></tr>
+    <tr style="background:${isNasc?'#fdf2f8':'#eff6ff'};"><td style="padding:12px 16px;font-size:12px;font-weight:600;color:${isNasc?'#9d174d':'#1e40af'};text-transform:uppercase;border-top:1px solid #e2e8f0;">${isNasc?'Completa':'Anos de casa'}</td><td style="padding:12px 16px;font-size:15px;color:${isNasc?'#9d174d':'#1e40af'};font-weight:700;border-top:1px solid #e2e8f0;">${numero} ano${numero>1?'s':''}</td></tr>
+  </table>
+</td></tr>
+<tr><td style="background:#f1f5f9;padding:16px 32px;text-align:center;border-top:1px solid #e2e8f0;">
+  <p style="font-size:11px;color:#94a3b8;margin:0;">Este e-mail foi gerado automaticamente pelo sistema LUMA RH.</p>
+</td></tr>
+</table>
+</td></tr></table></body></html>`;
+}
+
 function toast(msg,type='success',dur){const tc=$('tc');const t=document.createElement('div');t.className=`toast ${type}`;const c=type==='success'?'#b98af7':type==='error'?'#f87171':'#ffd000';t.innerHTML=`<div class="tdot" style="background:${c}"></div><span>${msg}</span>`;tc.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .25s';setTimeout(()=>t.remove(),250);},dur||3500);}
 
 // Init
 $('ndate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+setupCurrencyInputs();
 // Persistência multi-camada: localStorage + sessionStorage + cookie
 function cfgSave(c){
   const s=JSON.stringify(c);
