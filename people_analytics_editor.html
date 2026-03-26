@@ -7,28 +7,62 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3C/svg%3E">
 <script>if(location.hostname==='lumaplataforma.com.br'){var _b=document.createElement('base');_b.href='/gestaorh/';document.head.insertBefore(_b,document.head.firstChild);}</script>
 <script src="msal-browser.min.js"></script>
-<!-- Supabase Auth Guard — verifica sessão antes de qualquer renderização -->
+<!-- Supabase Auth Guard + Data Layer -->
 <script type="module">
-import { sb, requireAuth, logout, getProfileCached } from './supabase_client.js'
+import {
+  sb, requireAuth, logout,
+  getColaboradores, getAllFeriasSaldo, getExames, getAusencias,
+  getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
+  getDesligamentosAgendados, agendarDesligamento, marcarLembreteEnviado,
+  updateColaborador, upsertColaborador, gerarIdColaborador,
+  updateFeriasSaldo, updateExame, inserirAusencia,
+  getProfiles, updateProfile, logEvento
+} from './supabase_client.js'
+
 window._sbLogout = () => logout()
+window._sb = sb
+
 ;(async () => {
   const profile = await requireAuth(['master','gestor','rh','manager_global'])
-  if (!profile) return  // requireAuth já redirecionou para login.html
-  // Propaga identidade para o sistema legado (Excel/MSAL)
+  if (!profile) return
+
   window._sbProfile = profile
-  window.USER_EMAIL = profile.email
-  window.USER_NOME  = profile.nome
-  // role mapping: manager_global→master para compatibilidade com detectRole()
-  window._sbRole = profile.role === 'manager_global' ? 'master' : profile.role
-  // Esconde tela de config — carregar direto
+  window.USER_EMAIL  = profile.email
+  window.USER_NOME   = profile.nome
+  window._sbRole     = profile.role === 'manager_global' ? 'master' : profile.role
+  window._sbTenantId = profile.tenant_id
+
+  // Expõe funções Supabase para o script legado
+  window._sbFns = {
+    getColaboradores, getAllFeriasSaldo, getExames, getAusencias,
+    getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
+    getDesligamentosAgendados, agendarDesligamento, marcarLembreteEnviado,
+    updateColaborador, upsertColaborador, gerarIdColaborador,
+    updateFeriasSaldo, updateExame, inserirAusencia,
+    getProfiles, updateProfile, logEvento
+  }
+
+  // Oculta tela de config — não é mais necessária
   const sc = document.getElementById('sConfig')
   if (sc) sc.classList.add('hidden')
-  // Aguarda DOM + initApp legacy
+
+  // Atualiza botão Sair para usar Supabase logout
   document.addEventListener('DOMContentLoaded', () => {
-    // Exibe botão de logout do Supabase na navbar
-    const sairBtn = document.querySelector('[onclick*="msalApp&&msalApp.logout"], [onclick*="logoutRedirect"]')
-    if (sairBtn) sairBtn.setAttribute('onclick', '_sbLogout()')
+    document.querySelectorAll('[onclick*="msalApp"], [onclick*="logoutRedirect"]').forEach(b => {
+      b.setAttribute('onclick', '_sbLogout()')
+    })
   })
+
+  // Auto-inicia carregamento de dados (sem precisar de MSAL/Excel)
+  const doStart = () => {
+    if (typeof loadAll === 'function') { loadAll(); return }
+    setTimeout(doStart, 50)
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(doStart, 0))
+  } else {
+    setTimeout(doStart, 0)
+  }
 })()
 </script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -970,6 +1004,79 @@ const setS=(id,val)=>{const e=$(id);if(!e)return;for(const o of e.options){if(o.
 
 function demoMode(){DEMO=true;$('sConfig').classList.add('hidden');loadDemo();}
 
+// ── Mapeamento Supabase ↔ formato Excel (compatibilidade com render() existente) ──
+function _sbToExcel(r){
+  const hoje=new Date();
+  return {
+    _row:r.id, _id:r.id, _tenant_id:r.tenant_id, _sbRaw:r,
+    ID_COLABORADOR:r.id_colaborador, NOME:r.nome,
+    EMAIL_CORPORATIVO:r.email_corporativo, TIPO_VINCULO:r.tipo_vinculo,
+    STATUS:r.status,
+    DATA_NASCIMENTO:r.data_nascimento,
+    DATA_NASCIMENTO_FORMATADO:r.data_nascimento?new Date(r.data_nascimento+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',
+    DATA_ADMISSAO:r.data_admissao, DATA_DESLIGAMENTO:r.data_desligamento,
+    CARGO:r.cargo, AREA:r.area, SETOR:r.setor, GESTOR:r.gestor,
+    GESTOR_EMAIL:r.gestor_email, EMPRESA:r.empresa,
+    CONTRATO_INDETERMINADO:r.contrato_indeterminado?'SIM':'',
+    TEMPO_EXPERIENCIA:r.tempo_experiencia,
+    SALARIO_HONORARIO:r.salario_honorario, VALE_REFEICAO:r.vale_refeicao,
+    VALE_TRANSPORTE:r.vale_transporte, PLANO_SAUDE:r.plano_saude,
+    OUTROS_BENEFICIOS:r.outros_beneficios,
+    ANOS_EMPRESA:r.data_admissao?parseFloat(((hoje-new Date(r.data_admissao))/(1000*60*60*24*365.25)).toFixed(1)):null,
+    IDADE:r.data_nascimento?parseInt(((hoje-new Date(r.data_nascimento))/(1000*60*60*24*365.25)).toFixed(0)):null,
+  };
+}
+function _sbFerToExcel(f){
+  const c=f.colaboradores||{};
+  return {
+    _row:f.id, _id:f.id,
+    ID_COLABORADOR:c.id_colaborador||'', NOME:c.nome||'',
+    EMAIL_CORPORATIVO:c.email_corporativo||'', TIPO_VINCULO:c.tipo_vinculo||'',
+    INICIO_PERIODO_AQUISITIVO:f.inicio_periodo_aquisitivo,
+    FIM_PERIODO_AQUISITIVO:f.fim_periodo_aquisitivo,
+    FIM_PERIODO_CONCESSIVO:f.fim_periodo_concessivo,
+    FERIAS_PROGRAMADAS_INICIO:f.ferias_programadas_inicio,
+    FERIAS_PROGRAMADAS_FIM:f.ferias_programadas_fim,
+    FERIAS_GOZADAS_INICIO:f.ferias_gozadas_inicio,
+    FERIAS_GOZADAS_FIM:f.ferias_gozadas_fim,
+    STATUS_FERIAS:f.status_ferias||'NAO_PROGRAMADA',
+  };
+}
+function _sbExToExcel(e){
+  const c=e.colaboradores||{};
+  return {
+    _row:e.id, _id:e.id,
+    ID_COLABORADOR:c.id_colaborador||'', NOME:c.nome||'',
+    EMAIL_CORPORATIVO:c.email_corporativo||'',
+    TIPO_EXAME:e.tipo_exame, ULTIMO_EXAME:e.ultimo_exame,
+    PROXIMO_EXAME:e.proximo_exame, STATUS_EXAME:e.status_exame,
+    FONTE_BASE_ANTIGA:e.fonte_base_antiga||'', OBSERVACAO:e.observacao||'',
+  };
+}
+function _sbAusToExcel(a){
+  const c=a.colaboradores||{};
+  return {
+    _row:a.id, _id:a.id,
+    ID_COLABORADOR:c.id_colaborador||'', NOME:c.nome||'',
+    TIPO:a.tipo, DATA:a.data, DETALHE:a.detalhe||'',
+  };
+}
+function _excelToSb(r){
+  return {
+    nome:r.NOME, email_corporativo:r.EMAIL_CORPORATIVO||null,
+    tipo_vinculo:r.TIPO_VINCULO, status:r.STATUS,
+    data_nascimento:r.DATA_NASCIMENTO||null, data_admissao:r.DATA_ADMISSAO||null,
+    data_desligamento:r.DATA_DESLIGAMENTO||null,
+    cargo:r.CARGO, area:r.AREA, setor:r.SETOR||r.AREA,
+    gestor:r.GESTOR, gestor_email:r.GESTOR_EMAIL||null, empresa:r.EMPRESA,
+    contrato_indeterminado:r.CONTRATO_INDETERMINADO==='SIM',
+    tempo_experiencia:r.TEMPO_EXPERIENCIA?parseInt(r.TEMPO_EXPERIENCIA):null,
+    salario_honorario:r.SALARIO_HONORARIO||null,
+    vale_refeicao:r.VALE_REFEICAO||null, vale_transporte:r.VALE_TRANSPORTE||null,
+    plano_saude:r.PLANO_SAUDE||null, outros_beneficios:r.OUTROS_BENEFICIOS||null,
+  };
+}
+
 async function initApp(c){
   CFG=c;$('sConfig').classList.add('hidden');$('sLoad').classList.remove('hidden');setL('Inicializando autenticação...');
   try{
@@ -1050,28 +1157,38 @@ function setL(m){$('lMsg').textContent=m;}
 
 async function loadAll(){
   if(DEMO){loadDemo();return;}
+  if(!window._sbFns){toast('Aguardando autenticação...','info');setTimeout(loadAll,500);return;}
   checkDesligamentosAgendados();
   $('sLoad').classList.remove('hidden');$('app').style.display='none';
-  const allSheets=['CADASTRO_COLABORADORES','FERIAS_CLT','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH','AUSENCIAS_OCORRENCIAS','BIBLIOTECA_MENSAGENS_ANIV','LOG_AUTOMACAO_RH','PARAM_AUTOMACAO_RH'];
   const erros=[];
   try{
-    // Cada aba carregada individualmente — falha isolada não derruba as demais
-    for(const s of allSheets){
-      setL(`Lendo ${s}...`);
-      try{D[s]=await rSheet(s);}
-      catch(e){
-        D[s]=[];
-        if(!['LOG_AUTOMACAO_RH','PARAM_AUTOMACAO_RH'].includes(s)){
-          erros.push(s);console.warn(`Aba ${s} falhou:`,e.message);
-        }
-      }
-    }
-    // Sempre renderiza com o que foi carregado
+    setL('Carregando colaboradores...');
+    try{const cols=await window._sbFns.getColaboradores();D.CADASTRO_COLABORADORES=cols.map(_sbToExcel);}
+    catch(e){D.CADASTRO_COLABORADORES=[];erros.push('Colaboradores');console.warn(e);}
+
+    setL('Carregando férias...');
+    try{const fers=await window._sbFns.getAllFeriasSaldo();D.FERIAS_CLT=fers.map(_sbFerToExcel);}
+    catch(e){D.FERIAS_CLT=[];erros.push('Férias');console.warn(e);}
+
+    setL('Carregando exames...');
+    try{const exs=await window._sbFns.getExames();D.EXAMES_OCUPACIONAIS=exs.map(_sbExToExcel);}
+    catch(e){D.EXAMES_OCUPACIONAIS=[];erros.push('Exames');console.warn(e);}
+
+    setL('Carregando ausências...');
+    try{const aus=await window._sbFns.getAusencias();D.AUSENCIAS_OCORRENCIAS=aus.map(_sbAusToExcel);}
+    catch(e){D.AUSENCIAS_OCORRENCIAS=[];erros.push('Ausências');console.warn(e);}
+
+    // Tabelas sem equivalente Supabase — mantém compatibilidade
+    D.CONTROLE_COMUNICACAO_RH=D.CONTROLE_COMUNICACAO_RH||[];
+    D.BIBLIOTECA_MENSAGENS_ANIV=D.BIBLIOTECA_MENSAGENS_ANIV||[];
+    D.LOG_AUTOMACAO_RH=D.LOG_AUTOMACAO_RH||[];
+    D.PARAM_AUTOMACAO_RH=D.PARAM_AUTOMACAO_RH||[];
+
     detectRole();
     render();
     $('sLoad').classList.add('hidden');$('app').style.display='block';
     const dot=$('ndot');dot.classList.add('live');dot.title='Ao vivo · '+new Date().toLocaleTimeString('pt-BR');
-    if(erros.length>0)toast(`Aviso: aba(s) ${erros.join(', ')} não carregada(s)`,'info');
+    if(erros.length>0)toast(`Aviso: ${erros.join(', ')} não carregado(s)`,'info');
     else toast('Dados atualizados','success');
     // Verificar e enviar e-mails de aniversário/tempo de casa (silencioso)
     setTimeout(()=>enviarEmailsAniversario().catch(()=>{}),3000);
@@ -1399,9 +1516,10 @@ function toggleNIndetGrp(){
   $('nExpGrp').style.display=(v==='CLT'&&!indet)?'':'none';
 }
 async function saveEditColab(){
-  const row=parseInt($('eColabRow').value);if(!row){toast('Linha não identificada','error');return;}
+  const colabId=$('eColabRow').value;  // agora é UUID
+  if(!colabId){toast('Colaborador não identificado','error');return;}
   const nasc=$('eNasc').value;
-  const data={
+  const campos=_excelToSb({
     NOME:$('eNome').value,
     EMAIL_CORPORATIVO:$('eEmail').value.trim()||null,
     TIPO_VINCULO:$('eVinculo').value,
@@ -1409,41 +1527,24 @@ async function saveEditColab(){
     TEMPO_EXPERIENCIA:$('eExperiencia').value||null,
     STATUS:$('eStatus').value,
     DATA_NASCIMENTO:nasc||null,
-    DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',
     DATA_ADMISSAO:$('eAdmissao').value||null,
     DATA_DESLIGAMENTO:$('eDesl').value||null,
     CARGO:$('eCargo').value,
     AREA:$('eArea').value,
     SETOR:$('eSetor').value,
     GESTOR:$('eGestor').value,
+    GESTOR_EMAIL:null,  // será buscado automaticamente via trigger se necessário
     EMPRESA:$('eEmpresa').value,
     SALARIO_HONORARIO:_parseBRL($('eSalario').value),
     VALE_REFEICAO:_parseBRL($('eVR').value),
     VALE_TRANSPORTE:_parseBRL($('eVT').value),
     PLANO_SAUDE:$('ePlanoSaude').value||null,
     OUTROS_BENEFICIOS:$('eBeneficios').value||null
-  };
-  // Salvar flag indeterminado antes de fechar
-  const _idColab=$('eColabId').value;
-  const _vColab=$('eVinculo').value.toUpperCase();
-  // CONTRATO_INDETERMINADO gravado direto na planilha via patchRow acima
+  });
   closeModal('mEditColab');toast('Salvando...','info');
   try{
-    if(DEMO){fakeS('CADASTRO_COLABORADORES',row,data);return;}
-    // CADASTRO cols: 0=ID,1=NOME,2=TIPO_VINCULO,3=STATUS,4=DATA_NASC,5=NASC_FMT,6=DATA_ADM,7=DATA_DESL,8=CARGO,9=AREA,10=SETOR,11=GESTOR,12=EMPRESA
-    // Cols 13-16: IDADE, ANOS_EMPRESA, RAW_VINCULO, RAW_STATUS (fórmulas — não editar)
-    // Cols 17+: novos campos adicionados pelo dashboard
-    // Nova estrutura v4: A=ID(skip) B=NOME C=EMAIL D=VINCULO E=STATUS F=NASC G=NASC_FMT H=ADM I=DESL J=CARGO K=AREA L=SETOR M=GESTOR N=EMPRESA O-R=fórmulas S=INDET T=EXP U=SAL V=VR W=VT X=PS Y=OUTROS
-    await patchRow('CADASTRO_COLABORADORES',row,{
-      1:'NOME',2:'EMAIL_CORPORATIVO',3:'TIPO_VINCULO',4:'STATUS',
-      5:'DATA_NASCIMENTO',6:'DATA_NASCIMENTO_FORMATADO',
-      7:'DATA_ADMISSAO',8:'DATA_DESLIGAMENTO',
-      9:'CARGO',10:'AREA',11:'SETOR',12:'GESTOR',13:'EMPRESA'
-    },data);
-    await patchRow('CADASTRO_COLABORADORES',row,{
-      18:'CONTRATO_INDETERMINADO',19:'TEMPO_EXPERIENCIA',
-      20:'SALARIO_HONORARIO',21:'VALE_REFEICAO',22:'VALE_TRANSPORTE',23:'PLANO_SAUDE',24:'OUTROS_BENEFICIOS'
-    },data);
+    if(DEMO){fakeS('CADASTRO_COLABORADORES',colabId,campos);return;}
+    await window._sbFns.updateColaborador(colabId,campos);
     toast('Colaborador atualizado','success');await loadAll();
   }catch(e){toast('Erro ao salvar: '+e.message,'error');}
 }
@@ -1609,34 +1710,53 @@ async function programarDesl(){
   const r=_deslPending;if(!r)return;
   const data=$('deslDataProg').value;
   if(!data){toast('Informe a data de programação','error');return;}
-  const gestorEmail=_getGestorEmail(r.GESTOR);
-  const agendado={id:r.ID_COLABORADOR,nome:r.NOME,gestor:r.GESTOR||'',gestorEmail:gestorEmail||'',data,cargo:r.CARGO||'',vinculo:r.TIPO_VINCULO||'',ts:Date.now()};
-  const agendados=JSON.parse(localStorage.getItem('_deslAgendados')||'[]');
-  agendados.push(agendado);
-  localStorage.setItem('_deslAgendados',JSON.stringify(agendados));
+  const gestorEmail=r.GESTOR_EMAIL||_getGestorEmail(r.GESTOR);
+  const agendado={id:r.ID_COLABORADOR,nome:r.NOME,gestor:r.GESTOR||'',gestorEmail:gestorEmail||'',data,cargo:r.CARGO||'',vinculo:r.TIPO_VINCULO||''};
   const notifData=new Date(new Date(data+'T12:00:00').getTime()-864e5).toISOString().split('T')[0];
   $('deslProgInfo').style.display='';
   const infoTxt=$('deslProgInfoTxt');
   if(infoTxt)infoTxt.textContent=`Data: ${fmtD(data)} · Notificação ao gestor ${r.GESTOR||'—'} em: ${fmtD(notifData)}`;
   toast(`Desligamento de ${r.NOME} programado para ${fmtD(data)}. Enviando e-mail de confirmação...`,'success');
+  try{
+    // Salvar no Supabase (tem o colaborador UUID no _deslPending._id)
+    if(window._sbFns&&r._id){
+      await window._sbFns.agendarDesligamento({id:r._id,tenant_id:r._tenant_id},data);
+    } else {
+      // Fallback: localStorage
+      const arr=JSON.parse(localStorage.getItem('_deslAgendados')||'[]');
+      arr.push({...agendado,ts:Date.now()});
+      localStorage.setItem('_deslAgendados',JSON.stringify(arr));
+    }
+  }catch(e){console.warn('programarDesl Supabase:',e);}
   await _enviarEmailDesl(agendado,'confirmacao');
 }
 
 async function checkDesligamentosAgendados(){
-  const agendados=JSON.parse(localStorage.getItem('_deslAgendados')||'[]');
-  if(!agendados.length)return;
-  const hoje=new Date();hoje.setHours(0,0,0,0);
-  const amanha=new Date(hoje.getTime()+864e5);const amanhaStr=amanha.toISOString().split('T')[0];
-  const ckDesl='_deslEmailEnviado_'+amanhaStr;
-  const jaNotif=JSON.parse(localStorage.getItem(ckDesl)||'[]');
-  const notif=agendados.filter(a=>a.data===amanhaStr&&!jaNotif.includes(a.id||a.nome));
-  notif.forEach(a=>{
-    setTimeout(()=>toast(`⚠️ Lembrete: desligamento de ${a.nome} (${a.vinculo}) programado para AMANHÃ (${fmtD(a.data)}).`,'warn',8000),1500);
-  });
-  for(const a of notif){
-    const ok=await _enviarEmailDesl(a,'lembrete');
-    if(ok){jaNotif.push(a.id||a.nome);localStorage.setItem(ckDesl,JSON.stringify(jaNotif));}
-  }
+  try{
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    const amanha=new Date(hoje.getTime()+864e5);const amanhaStr=amanha.toISOString().split('T')[0];
+    let agendados=[];
+    if(window._sbFns){
+      // Usa Supabase
+      const sbDesl=await window._sbFns.getDesligamentosAgendados().catch(()=>[]);
+      agendados=sbDesl.filter(a=>a.data_desligamento===amanhaStr&&!a.lembrete_enviado).map(a=>{
+        const c=a.colaboradores||{};
+        return {_sbId:a.id,id:a.id,nome:c.nome||'',cargo:c.cargo||'',vinculo:c.tipo_vinculo||'',gestor:c.gestor||'',gestorEmail:c.gestor_email||'',data:a.data_desligamento};
+      });
+    } else {
+      // Fallback localStorage
+      const arr=JSON.parse(localStorage.getItem('_deslAgendados')||'[]');
+      agendados=arr.filter(a=>a.data===amanhaStr);
+    }
+    if(!agendados.length)return;
+    agendados.forEach(a=>setTimeout(()=>toast(`⚠️ Desligamento de ${a.nome} AMANHÃ (${fmtD(a.data)}).`,'warn',8000),1500));
+    for(const a of agendados){
+      const ok=await _enviarEmailDesl(a,'lembrete');
+      if(ok&&a._sbId&&window._sbFns){
+        await window._sbFns.marcarLembreteEnviado(a._sbId).catch(()=>{});
+      }
+    }
+  }catch(e){console.warn('checkDesligamentosAgendados:',e);}
 }
 
 function executarDesl(){
@@ -1663,7 +1783,32 @@ async function saveNewColab(){
     const _nVinc=$('nVinc').value;const _nIndet=$('nIndet').checked;
     const row={ID_COLABORADOR:newId,NOME:nome,EMAIL_CORPORATIVO:$('nEmail').value.trim()||null,TIPO_VINCULO:_nVinc,STATUS:'ATIVO',DATA_NASCIMENTO:nasc||null,DATA_NASCIMENTO_FORMATADO:nasc?new Date(nasc).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'',DATA_ADMISSAO:adm,DATA_DESLIGAMENTO:null,CARGO:$('nCargo').value,AREA:$('nArea').value,SETOR:$('nSetor').value||$('nArea').value,GESTOR:$('nGestor').value,EMPRESA:$('nEmpresa').value,IDADE:idade,ANOS_EMPRESA:anos,RAW_VINCULO:_nVinc,RAW_STATUS:'Ativo',CONTRATO_INDETERMINADO:_nIndet?'SIM':'',TEMPO_EXPERIENCIA:$('nExperiencia').value||null,SALARIO_HONORARIO:_parseBRL($('nSalario').value),VALE_REFEICAO:_parseBRL($('nVR').value),VALE_TRANSPORTE:_parseBRL($('nVT').value),PLANO_SAUDE:$('nPlanoSaude').value||null,OUTROS_BENEFICIOS:$('nBeneficios').value||null};
     if(DEMO){D.CADASTRO_COLABORADORES.push({...row,_row:cad.length+2});render();toast(`${nome} admitido! ID: ${newId}`,'success');return;}
-    await appendR('CADASTRO_COLABORADORES',['ID_COLABORADOR','NOME','EMAIL_CORPORATIVO','TIPO_VINCULO','STATUS','DATA_NASCIMENTO','DATA_NASCIMENTO_FORMATADO','DATA_ADMISSAO','DATA_DESLIGAMENTO','CARGO','AREA','SETOR','GESTOR','EMPRESA','IDADE','ANOS_EMPRESA','RAW_VINCULO','RAW_STATUS','CONTRATO_INDETERMINADO','TEMPO_EXPERIENCIA','SALARIO_HONORARIO','VALE_REFEICAO','VALE_TRANSPORTE','PLANO_SAUDE','OUTROS_BENEFICIOS'],row);
+    // Supabase: gerar ID e inserir
+    const tenantId=window._sbTenantId;
+    const sbRow={
+      tenant_id:tenantId,
+      id_colaborador:newId,
+      nome:nome,
+      email_corporativo:$('nEmail').value.trim()||null,
+      tipo_vinculo:$('nVinc').value,
+      status:'ATIVO',
+      data_nascimento:nasc||null,
+      data_admissao:adm,
+      data_desligamento:null,
+      cargo:$('nCargo').value,
+      area:$('nArea').value,
+      setor:$('nSetor').value||$('nArea').value,
+      gestor:$('nGestor').value,
+      empresa:$('nEmpresa').value,
+      contrato_indeterminado:_nIndet,
+      tempo_experiencia:$('nExperiencia').value?parseInt($('nExperiencia').value):null,
+      salario_honorario:_parseBRL($('nSalario').value),
+      vale_refeicao:_parseBRL($('nVR').value),
+      vale_transporte:_parseBRL($('nVT').value),
+      plano_saude:$('nPlanoSaude').value||null,
+      outros_beneficios:$('nBeneficios').value||null
+    };
+    await window._sbFns.upsertColaborador(sbRow);
     toast(`${nome} admitido! ID: ${newId}`,'success');await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
 }
@@ -1678,13 +1823,32 @@ function openEditFer(r){
   $('fGF').value=iso(r.FERIAS_GOZADAS_FIM)||'';setS('fSt',r.STATUS_FERIAS||'NAO_PROGRAMADA');openModal('mEditFer');
 }
 async function saveEditFer(){
-  const row=parseInt($('eFerRow').value);if(!row){toast('Linha não identificada','error');return;}
-  const data={INICIO_PERIODO_AQUISITIVO:$('fAqI').value||null,FIM_PERIODO_AQUISITIVO:$('fAqF').value||null,FIM_PERIODO_CONCESSIVO:$('fConc').value||null,FERIAS_PROGRAMADAS_INICIO:$('fPI').value||null,FERIAS_PROGRAMADAS_FIM:$('fPF').value||null,FERIAS_GOZADAS_INICIO:$('fGI').value||null,FERIAS_GOZADAS_FIM:$('fGF').value||null,STATUS_FERIAS:$('fSt').value};
+  const ferId=$('eFerRow').value;  // UUID do ferias_saldo
+  if(!ferId){toast('Registro não identificado','error');return;}
+  const campos={
+    inicio_periodo_aquisitivo:$('fAqI').value||null,
+    fim_periodo_aquisitivo:$('fAqF').value||null,
+    fim_periodo_concessivo:$('fConc').value||null,
+    ferias_programadas_inicio:$('fPI').value||null,
+    ferias_programadas_fim:$('fPF').value||null,
+    ferias_gozadas_inicio:$('fGI').value||null,
+    ferias_gozadas_fim:$('fGF').value||null,
+    status_ferias:$('fSt').value
+  };
   closeModal('mEditFer');toast('Salvando férias...','info');
   try{
-    if(DEMO){fakeS('FERIAS_CLT',row,data);return;}
-    // FERIAS cols: 4=INICIO_PA,5=FIM_PA,6=FIM_PC,7=FP_INI,8=FP_FIM,9=FG_INI,10=FG_FIM,11=STATUS_FERIAS
-    await patchRow('FERIAS_CLT',row,{4:'INICIO_PERIODO_AQUISITIVO',5:'FIM_PERIODO_AQUISITIVO',6:'FIM_PERIODO_CONCESSIVO',7:'FERIAS_PROGRAMADAS_INICIO',8:'FERIAS_PROGRAMADAS_FIM',9:'FERIAS_GOZADAS_INICIO',10:'FERIAS_GOZADAS_FIM',11:'STATUS_FERIAS'},data);
+    if(DEMO){fakeS('FERIAS_CLT',ferId,campos);return;}
+    // Usa colaborador_id (mantido em eFerId) para upsert via updateFeriasSaldo
+    const colabId=$('eFerId').value;  // ID_COLABORADOR = UUID do colaborador
+    // Busca UUID real do colaborador pelo id_colaborador
+    const colabRec=(D.CADASTRO_COLABORADORES||[]).find(r=>r.ID_COLABORADOR===colabId||r._id===colabId);
+    const colabUUID=colabRec?colabRec._id:null;
+    if(colabUUID){
+      await window._sbFns.updateFeriasSaldo(colabUUID,campos);
+    } else {
+      // ferId é o UUID da ferias_saldo — atualiza diretamente
+      await window._sb.from('ferias_saldo').update(campos).eq('id',ferId);
+    }
     toast('Férias atualizadas','success');await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
 }
@@ -1698,27 +1862,41 @@ function openEditEx(r){
   openModal('mEditEx');
 }
 async function saveEditEx(){
-  const row=parseInt($('eExRow').value);if(!row){toast('Linha não identificada','error');return;}
-  const data={ULTIMO_EXAME:$('exUlt').value||null,PROXIMO_EXAME:$('exProx').value||null,STATUS_EXAME:$('exSt').value,FONTE_BASE_ANTIGA:$('exFonte').value,OBSERVACAO:$('exObs').value};
+  const exId=$('eExRow').value;  // UUID do exame
+  if(!exId){toast('Registro não identificado','error');return;}
+  const campos={
+    ultimo_exame:$('exUlt').value||null,
+    proximo_exame:$('exProx').value||null,
+    status_exame:$('exSt').value,
+    observacao:$('exObs').value||null
+  };
   closeModal('mEditEx');toast('Salvando exame...','info');
   try{
-    if(DEMO){fakeS('EXAMES_OCUPACIONAIS',row,data);return;}
-    // EXAMES cols: 4=ULTIMO_EXAME,5=PROXIMO_EXAME,6=STATUS_EXAME,7=FONTE,8=OBS
-    await patchRow('EXAMES_OCUPACIONAIS',row,{4:'ULTIMO_EXAME',5:'PROXIMO_EXAME',6:'STATUS_EXAME',7:'FONTE_BASE_ANTIGA',8:'OBSERVACAO'},data);
+    if(DEMO){fakeS('EXAMES_OCUPACIONAIS',exId,campos);return;}
+    await window._sbFns.updateExame(exId,campos);
     toast('Exame atualizado','success');await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
 }
 
 // NOVA AUSÊNCIA
 async function saveNewAus(){
-  const colab=$('ausColab').value;const data=$('ausData').value;
-  if(!colab||!data){toast('Colaborador e data obrigatórios','error');return;}
-  const nome=($('ausColab').selectedOptions[0]||{}).text||'';
-  const row={TIPO:$('ausTipo').value,ID_COLABORADOR:colab,NOME:nome,DATA:data,DETALHE:$('ausDetail').value||''};
+  const colabUUID=$('ausColab').value;  // agora é UUID do colaborador
+  const data=$('ausData').value;
+  if(!colabUUID||!data){toast('Colaborador e data obrigatórios','error');return;}
   closeModal('mNewAus');toast('Registrando ausência...','info');
   try{
-    if(DEMO){D.AUSENCIAS_OCORRENCIAS.push({...row,_row:(D.AUSENCIAS_OCORRENCIAS.length||0)+2});render();toast('Ausência registrada','success');return;}
-    await appendR('AUSENCIAS_OCORRENCIAS',['TIPO','ID_COLABORADOR','NOME','DATA','DETALHE'],row);
+    if(DEMO){
+      const nome=($('ausColab').selectedOptions[0]||{}).text||'';
+      D.AUSENCIAS_OCORRENCIAS.push({_row:Date.now(),TIPO:$('ausTipo').value,NOME:nome,DATA:data,DETALHE:$('ausDetail').value||''});
+      render();toast('Ausência registrada','success');return;
+    }
+    await window._sbFns.inserirAusencia({
+      tenant_id:window._sbTenantId,
+      colaborador_id:colabUUID,
+      tipo:$('ausTipo').value,
+      data:data,
+      detalhe:$('ausDetail').value||null
+    });
     toast('Ausência registrada','success');await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
 }
@@ -2186,42 +2364,29 @@ async function repairCaio(){
 }
 
 function detectRole(){
-  const accounts=msalApp?msalApp.getAllAccounts():[];
-  const msalEmail=accounts.length>0?accounts[0].username:'';
-  const msalNome=accounts.length>0?(accounts[0].name||msalEmail):'';
+  // Usa identidade do Supabase (auth guard já verificou)
+  const sbEmail=(window._sbProfile?.email||window.USER_EMAIL||'').toLowerCase();
+  const sbNome=window._sbProfile?.nome||window.USER_NOME||'';
+  const sbRole=window._sbRole||'none';
 
-  // Admin tem acesso total sempre — verificado imediatamente pelo e-mail MSAL
-  if(msalEmail.toLowerCase()===ADMIN_EMAIL.toLowerCase()){
-    USER_EMAIL=msalEmail.toLowerCase();
-    USER_NOME=msalNome;
-    USER_ROLE='admin';
+  USER_EMAIL=sbEmail;
+  USER_NOME=sbNome;
+
+  // master e manager_global têm acesso total
+  if(sbRole==='master'||sbRole==='manager_global'){
+    USER_ROLE='master';
     const t=$('btn-admin');if(t)t.style.display='';
-    // Reparar linha do Caio se STATUS estiver corrompido
-    const cad2=D.CADASTRO_COLABORADORES||[];
-    const caioRow=cad2.find(r=>String(r.NOME||'').toLowerCase().includes('caio'));
-    if(caioRow&&!normStatus(caioRow)){repairCaio().catch(e=>console.warn('repairCaio:',e));}
     return;
   }
-
-  // Para demais usuários: busca no cadastro por EMAIL_CORPORATIVO ou primeiro nome
-  const cad=D.CADASTRO_COLABORADORES||[];
-  const meuCad=cad.find(r=>
-    String(r.EMAIL_CORPORATIVO||'').toLowerCase()===msalEmail.toLowerCase()||
-    String(r.NOME||'').toLowerCase().includes(msalNome.split(' ')[0].toLowerCase())
-  );
-
-  USER_EMAIL=(meuCad&&meuCad.EMAIL_CORPORATIVO?String(meuCad.EMAIL_CORPORATIVO):msalEmail).toLowerCase();
-  USER_NOME=meuCad?String(meuCad.NOME||msalNome):msalNome;
-  const coords=loadCoords();
-  const myCoord=coords.find(c=>
-    c.email.toLowerCase()===USER_EMAIL||
-    c.email.toLowerCase()===msalEmail.toLowerCase()
-  );
-  if(myCoord){
-    const role=myCoord.role||'gestor';
-    USER_ROLE=role;
-    if(role==='gestor'){filterDataForCoord(myCoord.nome);}
-    // master: acesso total sem filtro
+  // RH: acesso total mas sem admin
+  if(sbRole==='rh'){
+    USER_ROLE='rh';
+    return;
+  }
+  // Gestor: filtra por subordinados
+  if(sbRole==='gestor'){
+    USER_ROLE='gestor';
+    filterDataForCoord(sbNome);
     return;
   }
   USER_ROLE='none';

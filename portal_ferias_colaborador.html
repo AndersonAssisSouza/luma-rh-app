@@ -6,15 +6,38 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3C/svg%3E">
 <title>Portal de Férias · Luma Plataforma</title>
 <script src="msal-browser.min.js"></script>
-<!-- Supabase Auth Guard -->
+<!-- Supabase Auth Guard + Data Layer -->
 <script type="module">
-import { sb, requireAuth, logout, getProfileCached } from './supabase_client.js'
+import {
+  sb, requireAuth, logout,
+  getColaboradorByEmail, getFeriasSaldo,
+  getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
+  getSolicitacaoPorProtocolo, getProfiles
+} from './supabase_client.js'
+
 window._sbLogout = () => logout()
+window._sb = sb
+
 ;(async () => {
   const profile = await requireAuth(['colaborador','master','gestor','rh','manager_global'])
   if (!profile) return
   window._sbProfile = profile
   window._sbUserEmail = profile.email
+  window._sbFnsPortal = {
+    getColaboradorByEmail, getFeriasSaldo,
+    getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
+    getSolicitacaoPorProtocolo, getProfiles
+  }
+  // Auto-inicia o portal após DOM pronto
+  const doStart = () => {
+    if (typeof loadPortalSb === 'function') { loadPortalSb(); return }
+    setTimeout(doStart, 50)
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(doStart, 0))
+  } else {
+    setTimeout(doStart, 0)
+  }
 })()
 </script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -270,6 +293,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
 const CK='pa_v3_cfg';
 const CK_FERIAS='luma_ferias_v2';
 let msalApp=null,tok=null,CFG=null,UCOLAB=null;
+let _solsColabId=null;  // UUID do colaborador logado (para queries Supabase)
 const $=id=>document.getElementById(id);
 const fD=d=>{if(!d)return'—';try{const x=new Date(d.toString().length<=5?((Number(d)-25569)*86400*1000):d+'T12:00:00');if(isNaN(x))return'—';return x.toLocaleDateString('pt-BR');}catch{return'—'}};
 const toISO=d=>{if(!d)return'';if(typeof d==='number'||/^\d+$/.test(String(d).trim())){const n=Number(d);const x=new Date((n>59?n-25569:n-25568)*86400*1000);return x.toISOString().split('T')[0];}try{const x=new Date(d+'T12:00:00');return isNaN(x)?'':x.toISOString().split('T')[0];}catch{return''}};
@@ -285,6 +309,21 @@ const diasUteis=(a,b)=>{let n=0,d=new Date(a+'T12:00:00');const f=new Date(b+'T1
 let calY=new Date().getFullYear(),calM=new Date().getMonth(),rS=null,rE=null,picking=false;
 let _sols=JSON.parse(localStorage.getItem(CK_FERIAS)||'[]');
 const saveSols=()=>localStorage.setItem(CK_FERIAS,JSON.stringify(_sols));
+// Recarrega _sols do Supabase e renderiza
+async function _reloadSols(){
+  if(!_solsColabId||!window._sbFnsPortal)return;
+  try{
+    const data=await window._sbFnsPortal.getSolicitacoesFerias(_solsColabId);
+    _sols=(data||[]).map(s=>({
+      _sbId:s.id, prot:s.protocolo, email:UCOLAB?.email||'',
+      nome:UCOLAB?.nome||'', ini:s.data_inicio, fim:s.data_fim,
+      dc:s.dias_corridos, du:s.dias_uteis, obs:s.observacao||'',
+      status:s.status, em:s.solicitado_em, decisaoEm:s.decisao_em,
+      motivoRej:s.motivo_rejeicao||null
+    }));
+  }catch(e){console.warn('_reloadSols:',e);}
+  renderPortal();
+}
 
 function toast(msg,type='success'){
   const t=document.createElement('div');t.className='toast';
@@ -378,6 +417,76 @@ async function loadPortal(){
     $('sLoad').classList.add('hidden');$('app').style.display='block';
     toast('Erro ao carregar: '+e.message,'error');
     UCOLAB={email:'',nome:'Colaborador',vinculo:'N/A',cad:null,fer:null};
+    renderPortal();
+  }
+}
+
+// ── Carregamento via Supabase (substitui MSAL + Excel) ──
+async function loadPortalSb(){
+  $('sLoad').classList.remove('hidden');
+  $('app').style.display='none';
+  setL('Carregando seus dados...');
+  try{
+    const email=window._sbUserEmail||window._sbProfile?.email||'';
+    const nome=window._sbProfile?.nome||email;
+    UCOLAB={email,nome};
+
+    // Busca colaborador pelo e-mail corporativo
+    const cad=await window._sbFnsPortal.getColaboradorByEmail(email).catch(()=>null);
+    if(cad){
+      _solsColabId=cad.id;
+      // Mapeia para o formato que o código existente espera
+      UCOLAB.cad={
+        ...cad,
+        ID_COLABORADOR:cad.id_colaborador,
+        NOME:cad.nome,
+        EMAIL_CORPORATIVO:cad.email_corporativo,
+        TIPO_VINCULO:cad.tipo_vinculo,
+        GESTOR:cad.gestor,
+        GESTOR_EMAIL:cad.gestor_email,
+        CARGO:cad.cargo, AREA:cad.area, EMPRESA:cad.empresa
+      };
+      UCOLAB.vinculo=String(cad.tipo_vinculo||'').toUpperCase().trim();
+
+      // Carrega saldo de férias
+      const fer=await window._sbFnsPortal.getFeriasSaldo(cad.id).catch(()=>null);
+      if(fer){
+        UCOLAB.fer={
+          ...fer,
+          _row:fer.id,
+          INICIO_PERIODO_AQUISITIVO:fer.inicio_periodo_aquisitivo,
+          FIM_PERIODO_AQUISITIVO:fer.fim_periodo_aquisitivo,
+          FIM_PERIODO_CONCESSIVO:fer.fim_periodo_concessivo,
+          FERIAS_PROGRAMADAS_INICIO:fer.ferias_programadas_inicio,
+          FERIAS_PROGRAMADAS_FIM:fer.ferias_programadas_fim,
+          STATUS_FERIAS:fer.status_ferias
+        };
+      }
+
+      // Carrega solicitações de férias do Supabase
+      const sols=await window._sbFnsPortal.getSolicitacoesFerias(cad.id).catch(()=>[]);
+      _sols=(sols||[]).map(s=>({
+        _sbId:s.id, prot:s.protocolo, email,
+        nome, ini:s.data_inicio, fim:s.data_fim,
+        dc:s.dias_corridos, du:s.dias_uteis, obs:s.observacao||'',
+        status:s.status, em:s.solicitado_em, decisaoEm:s.decisao_em,
+        motivoRej:s.motivo_rejeicao||null
+      }));
+      // Salva em localStorage como cache
+      localStorage.setItem(CK_FERIAS,JSON.stringify(_sols));
+    } else {
+      UCOLAB.cad=null; UCOLAB.fer=null; UCOLAB.vinculo='N/A';
+    }
+    $('sLoad').classList.add('hidden');
+    $('app').style.display='block';
+    $('nav-av').textContent=nome[0]?.toUpperCase()||'U';
+    $('nav-nome').textContent=nome.split(' ')[0];
+    $('ndot').classList.add('live');
+    renderPortal();
+  }catch(e){
+    $('sLoad').classList.add('hidden');$('app').style.display='block';
+    toast('Erro ao carregar: '+e.message,'error');
+    UCOLAB={email:window._sbUserEmail||'',nome:'Colaborador',vinculo:'N/A',cad:null,fer:null};
     renderPortal();
   }
 }
@@ -526,6 +635,20 @@ async function enviarSolicitar(){
     status:'PENDENTE',em:new Date().toISOString(),decisaoEm:null,motivoRej:null,
     linkAprovar:`${baseUrl}?acao=APROVAR&prot=${prot}`,
     linkRejeitar:`${baseUrl}?acao=REJEITAR&prot=${prot}`};
+  // Salvar no Supabase
+  if(window._sbFnsPortal && _solsColabId){
+    try{
+      const sbSol=await window._sbFnsPortal.criarSolicitacaoFerias({
+        tenant_id:window._sbProfile?.tenant_id,
+        colaborador_id:_solsColabId,
+        protocolo:prot,
+        data_inicio:rS,data_fim:rE,
+        dias_corridos:dc,dias_uteis:du,
+        observacao:obs||null
+      });
+      sol._sbId=sbSol?.id;
+    }catch(e){console.warn('criarSolicitacaoFerias:',e);}
+  }
   _sols.push(sol);saveSols();
 
   try{
@@ -604,13 +727,36 @@ function renderHist(){
 }
 
 // ── GESTOR ──
-function checkGestorUrl(){
+async function checkGestorUrl(){
   const p=new URLSearchParams(window.location.search);
   const acao=p.get('acao'),prot=p.get('prot');
   if(!acao||!prot)return false;
   $('sConfig').classList.add('hidden');$('sLoad').classList.add('hidden');
   $('app').style.display='none';$('screen-gestor').style.display='block';
-  const sol=_sols.find(s=>s.prot===prot);
+  // Busca local primeiro; se não encontrar, tenta Supabase
+  let sol=_sols.find(s=>s.prot===prot);
+  if(!sol&&window._sbFnsPortal){
+    try{
+      const sbSol=await window._sbFnsPortal.getSolicitacaoPorProtocolo(prot);
+      if(sbSol){
+        const c=sbSol.colaboradores||{};
+        sol={
+          _sbId:sbSol.id,
+          prot:sbSol.protocolo,
+          email:c.email_corporativo||'',
+          nome:c.nome||'',
+          ini:sbSol.data_inicio,fim:sbSol.data_fim,
+          dc:sbSol.dias_corridos,du:sbSol.dias_uteis||0,
+          obs:sbSol.observacao||'',
+          status:sbSol.status,
+          motivoRej:sbSol.motivo_rejeicao||null,
+          decisaoEm:sbSol.decisao_em||null
+        };
+        // Garante que esteja em _sols para que confirmarAp/Rej funcione
+        if(!_sols.find(s=>s.prot===prot)){_sols.push(sol);saveSols();}
+      }
+    }catch(e){console.warn('getSolicitacaoPorProtocolo:',e);}
+  }
   if(!sol){$('gest-title').textContent='Não encontrada';$('gest-body').innerHTML='<div style="color:var(--muted)">Solicitação não encontrada.</div>';return true;}
   if(sol.status!=='PENDENTE'){$('gest-title').textContent=sol.status==='APROVADO'?'✅ Já aprovada':'❌ Já rejeitada';$('gest-body').innerHTML=`<div style="color:var(--muted)">Esta solicitação já foi ${sol.status.toLowerCase()}.</div>`;return true;}
   if(acao==='APROVAR')renderGestorAprovar(sol);else renderGestorRejeitar(sol);
@@ -698,6 +844,9 @@ async function _enviarRetornoEmail(sol,aprovado,motivo){
 async function confirmarAp(prot){
   const sol=_sols.find(s=>s.prot===prot);if(!sol)return;
   sol.status='APROVADO';sol.decisaoEm=new Date().toISOString();saveSols();
+  if(window._sbFnsPortal&&sol._sbId){
+    try{await window._sbFnsPortal.atualizarStatusSolicitacao(sol._sbId,'APROVADO',null);}catch(e){console.warn('atualizarStatus:',e);}
+  }
   $('gest-title').textContent='✅ Férias aprovadas';
   $('gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">✅</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Aprovado!</div><div style="font-size:14px;color:var(--muted);">Férias de <strong style="color:var(--text);">${sol.nome}</strong> aprovadas.<br>${fD(sol.ini)} → ${fD(sol.fim)} · ${sol.dc} dias.</div></div>`;
   toast('Férias aprovadas!','success');
@@ -708,6 +857,9 @@ async function confirmarRej(prot){
   if(!motivo){toast('Informe o motivo','error');return;}
   const sol=_sols.find(s=>s.prot===prot);if(!sol)return;
   sol.status='REJEITADO';sol.motivoRej=motivo;sol.decisaoEm=new Date().toISOString();saveSols();
+  if(window._sbFnsPortal&&sol._sbId){
+    try{await window._sbFnsPortal.atualizarStatusSolicitacao(sol._sbId,'REJEITADO',motivo);}catch(e){console.warn('atualizarStatus:',e);}
+  }
   $('gest-title').textContent='❌ Rejeitada';
   $('gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">❌</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Rejeitada</div><div style="font-size:14px;color:var(--muted);">Motivo: ${motivo}</div></div>`;
   toast('Solicitação rejeitada','error');
@@ -733,9 +885,11 @@ const _CFG_FIXED={
   itemId:'01O2PYW3EQZTMNB4MN4BB363SUCCHGX7HV',
   webhook:cfgLoad()?.webhook||'https://defaultaadb5cad6c694d6da942e027203a46.75.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1c3d4b1363bf424bbf0cbdbf9c301a2c/triggers/manual/paths/invoke?api-version=1'
 };
-if(!checkGestorUrl()){
-  initApp(_CFG_FIXED);
-}
+;(async()=>{
+  if(!(await checkGestorUrl())){
+    initApp(_CFG_FIXED);
+  }
+})()
 </script>
 </body>
 </html>
