@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>People Analytics · RH</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3C/svg%3E">
 <script src="msal-browser.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -216,12 +217,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
     <button class="tab" onclick="showTab('alert',this)">Alertas</button>
     <button class="tab" onclick="showTab('desl',this)">Desligados</button>
     <button class="tab" onclick="showTab('acoes',this)">Ações</button>
-    <button class="tab" id="tab-admin" onclick="showTab('admin',this)" style="display:none;color:var(--gold);">⚙ Administração</button>
   </div>
   <div class="nright">
     <div id="ndot" class="ndot" title="Offline"></div>
     <div class="ndate" id="ndate"></div>
     <button class="btn btn-a" onclick="loadAll()">↻ Atualizar</button>
+    <button id="btn-admin" class="btn" onclick="openAdminModal()" style="display:none;border-color:var(--accent);color:var(--accent);">⚙ Administração</button>
   </div>
 </nav>
 
@@ -486,46 +487,55 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
     <div class="sy" id="ac_list"><div class="empty">Nenhuma ação registrada.</div></div>
   </div>
 </div>
-<!-- ADMINISTRAÇÃO -->
-<div class="sec" id="admin">
-  <div class="card" style="margin-bottom:20px;">
-    <div class="ct">Gerenciar perfis de acesso</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7;">
-      <strong style="color:var(--accent);">Master</strong> — acesso completo a todos os colaboradores (todas as abas).<br>
-      <strong style="color:var(--accent2);">Gestor</strong> — acesso restrito: visualiza apenas colaboradores cujo campo <strong style="color:var(--text);">GESTOR</strong> corresponda ao nome cadastrado.
-    </p>
-    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end;">
-      <div style="flex:1;min-width:220px;">
-        <div class="flbl">E-mail Microsoft *</div>
-        <input class="fi" id="coord-email" placeholder="nome@lumaplataforma.com.br" style="font-size:13px;">
+<!-- MODAL ADMINISTRAÇÃO -->
+<div class="ov" id="mAdmin">
+  <div class="modal" style="max-width:680px;max-height:90vh;overflow-y:auto;">
+    <div class="mh" style="position:sticky;top:0;background:var(--bg2);z-index:1;">
+      <div>
+        <div class="mt">⚙ Administração</div>
+        <div class="ms">Gerenciar perfis de acesso ao People Analytics</div>
       </div>
-      <div style="flex:1;min-width:180px;">
-        <div class="flbl">Nome (se não estiver no cadastro)</div>
-        <input class="fi" id="coord-nome" placeholder="Ex: Matheus Rocha" style="font-size:13px;">
-      </div>
-      <div style="min-width:140px;">
-        <div class="flbl">Perfil *</div>
-        <select class="fsel" id="coord-role" style="font-size:13px;">
-          <option value="master">Master</option>
-          <option value="gestor">Gestor</option>
-        </select>
-      </div>
-      <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#fff;flex-shrink:0;" onclick="addCoord()">+ Adicionar</button>
+      <button class="mc" onclick="closeModal('mAdmin')">×</button>
     </div>
-    <!-- Masters -->
-    <div style="margin-bottom:10px;">
-      <div style="font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
-        ⭐ Masters — Acesso completo
+    <div class="mb">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7;">
+        <strong style="color:var(--accent);">Master</strong> — acesso completo a todos os colaboradores (todas as abas).<br>
+        <strong style="color:var(--accent2);">Gestor</strong> — acesso restrito: visualiza apenas colaboradores cujo campo <strong style="color:var(--text);">GESTOR</strong> corresponda ao nome cadastrado.
+      </p>
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="flex:1;min-width:220px;">
+          <div class="flbl">E-mail Microsoft *</div>
+          <input class="fi" id="coord-email" placeholder="nome@lumaplataforma.com.br" style="font-size:13px;">
+        </div>
+        <div style="flex:1;min-width:180px;">
+          <div class="flbl">Nome (se não estiver no cadastro)</div>
+          <input class="fi" id="coord-nome" placeholder="Ex: Matheus Rocha" style="font-size:13px;">
+        </div>
+        <div style="min-width:140px;">
+          <div class="flbl">Perfil *</div>
+          <select class="fsel" id="coord-role" style="font-size:13px;">
+            <option value="master">Master</option>
+            <option value="gestor">Gestor</option>
+          </select>
+        </div>
+        <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#fff;flex-shrink:0;" onclick="addCoord()">+ Adicionar</button>
       </div>
-      <div id="admin-list-master"></div>
-    </div>
-    <!-- Gestores -->
-    <div>
-      <div style="font-size:12px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
-        👥 Gestores — Acesso restrito (subordinados)
+      <!-- Masters -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
+          ⭐ Masters — Acesso completo
+        </div>
+        <div id="admin-list-master"></div>
       </div>
-      <div id="admin-list-gestor"></div>
+      <!-- Gestores -->
+      <div>
+        <div style="font-size:12px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
+          👥 Gestores — Acesso restrito (subordinados)
+        </div>
+        <div id="admin-list-gestor"></div>
+      </div>
     </div>
+    <div class="mf"><button class="btn btn-g" onclick="closeModal('mAdmin')">Fechar</button></div>
   </div>
 </div>
 
@@ -601,7 +611,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Data programada</div>
             <input type="date" class="fi" id="deslDataProg" style="width:100%;font-size:13px;border-color:rgba(155,102,244,.4);" oninput="atualizarCustoProgramado()">
           </div>
-          <button onclick="programarDesl()" style="padding:9px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,#9b66f4,#7a45d4);color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(155,102,244,.4);transition:all .2s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(155,102,244,.5)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(155,102,244,.4)'">
+          <button onclick="programarDesl()" class="btn" style="background:var(--accent);border-color:var(--accent);color:#fff;font-size:13px;font-weight:600;white-space:nowrap;padding:9px 20px;box-shadow:0 2px 8px rgba(155,102,244,.35);">
             🗓️ Confirmar programação
           </button>
         </div>
@@ -1063,7 +1073,7 @@ function render(){
   // Set de IDs de Sócios — isentos de ASO conforme NR-7
   const socioIds=new Set(ativos.filter(r=>String(r.TIPO_VINCULO||'').toUpperCase()==='SOCIO').map(r=>r.ID_COLABORADOR));
   // Mapa global de colaboradores por ID (evita JSON.stringify em onclick)
-  window._cMap={};cad.forEach(r=>{if(r.ID_COLABORADOR)_cMap[r.ID_COLABORADOR]=r;});
+  window._cMap={};cad.forEach(r=>{if(r.ID_COLABORADOR)_cMap[String(r.ID_COLABORADOR)]=r;if(r._row)_cMap['__r'+r._row]=r;});
   const vin={PJ:0,CLT:0,SOCIO:0,ESTAGIARIO:0,ASSOCIADO:0};
   ativos.forEach(r=>{const v=String(r.TIPO_VINCULO||'').toUpperCase().trim();if(vin[v]!==undefined)vin[v]++;});
   const empM={};ativos.forEach(r=>{const e=r.EMPRESA||'N/D';empM[e]=(empM[e]||0)+1;});
@@ -1234,8 +1244,8 @@ function render(){
     <td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
     <td style="font-family:var(--mono);font-size:17px;color:var(--accent)">${(parseFloat(r.ANOS_EMPRESA)||0).toFixed(1)}a</td>
     <td><div class="acts">
-      <button class="ab" onclick="openEditColabById('${r.ID_COLABORADOR}')">Editar</button>
-      <button class="ab d" onclick="confirmDeslById('${r.ID_COLABORADOR}')">Desligar</button>
+      <button class="ab" onclick="openEditColabById('${r.ID_COLABORADOR||''}','${r._row||''}')">Editar</button>
+      <button class="ab d" onclick="confirmDeslById('${r.ID_COLABORADOR||''}','${r._row||''}')">Desligar</button>
     </div></td></tr>`).join('');
 
   // Aniversários
@@ -1402,8 +1412,8 @@ async function saveEditColab(){
     toast('Colaborador atualizado','success');await loadAll();
   }catch(e){toast('Erro ao salvar: '+e.message,'error');}
 }
-function openEditColabById(id){const r=window._cMap&&_cMap[id];if(r)openEditColab(r);else toast('Colaborador não encontrado','error');}
-function confirmDeslById(id){const r=window._cMap&&_cMap[id];if(r)confirmDesl(r);else toast('Colaborador não encontrado','error');}
+function openEditColabById(id,row){let r=(window._cMap)&&(_cMap[String(id)]||_cMap['__r'+row]);if(!r&&D.CADASTRO_COLABORADORES)r=D.CADASTRO_COLABORADORES.find(x=>String(x._row||'')==String(row)||String(x.ID_COLABORADOR||'')==String(id));if(r)openEditColab(r);else toast('Colaborador não encontrado','error');}
+function confirmDeslById(id,row){let r=(window._cMap)&&(_cMap[String(id)]||_cMap['__r'+row]);if(!r&&D.CADASTRO_COLABORADORES)r=D.CADASTRO_COLABORADORES.find(x=>String(x._row||'')==String(row)||String(x.ID_COLABORADOR||'')==String(id));if(r)confirmDesl(r);else toast('Colaborador não encontrado','error');}
 let _deslPending=null;
 
 // ── Helpers financeiros ──────────────────────────────────────────────
@@ -1463,6 +1473,7 @@ function calcCustoDesl(r,dataDesl){
     return{vin,sal,anos,meses,itens:[{n:'Retirada de cotas (contrato social)',v:0}],total:0,obs:'Sócio: desligamento regido pelo contrato/estatuto social. CLT não se aplica (art. 442 CLT). Consultar advogado societário.'};
   }
   if(vin==='ASSOCIADO'){
+    if(sal===0)return{vin,sal,anos,meses,itens:[{n:'Honorário não cadastrado — verificar contrato',v:0}],total:0,obs:'Cadastre o honorário do colaborador para calcular o impacto financeiro estimado.'};
     const diasNoMes=new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate();
     const diasTrab=dt.getDate();
     const honorariosProp=sal*(diasTrab/diasNoMes);
@@ -1472,8 +1483,8 @@ function calcCustoDesl(r,dataDesl){
       {n:`Honorários proporcionais ao mês (${diasTrab}/${diasNoMes} dias)`,v:honorariosProp},
       {n:'Aviso contratual — 30 dias de honorários',v:avisoCont},
       {n:'Multa rescisória contratual (verificar contrato)',v:0},
-      {n:'FGTS / aviso prévio CLT',v:0},
-    ],total,obs:'Associado: sem vínculo CLT (art. 442, §ú). Aviso de 30 dias estimado por boa prática contratual. Valores finais dependem do contrato de associação vigente. Recomenda-se análise jurídica.'};
+      {n:'FGTS / aviso prévio CLT — não aplicável',v:0},
+    ],total,obs:'Associado: sem vínculo CLT (art. 442, §ú). Aviso de 30 dias estimado por boa prática contratual. Valores dependem do contrato vigente.'};
   }
   return{vin,sal,anos,meses,itens:[{n:'Vínculo não mapeado — verificar manualmente',v:0}],total:0,obs:''};
 }
@@ -1553,8 +1564,8 @@ function confirmDesl(r){
     <span style="font-family:var(--mono);color:${i.v>0?'var(--text)':'var(--muted)'};">${i.v>0?_fmt(i.v):'—'}</span></div>`).join('');
   $('deslFinTotal').textContent=_fmt(custo.total);
   $('deslFinObs').textContent=custo.obs||'';
-  // Ocultar impacto financeiro para Sócio e Associado (sem cálculo aplicável)
-  $('deslFinPanel').style.display=['SOCIO','ASSOCIADO'].includes(vin)&&custo.total===0?'none':'';
+  // Ocultar impacto financeiro apenas para Sócio sem cálculo; Associado sempre exibe
+  $('deslFinPanel').style.display=(vin==='SOCIO'&&custo.total===0)?'none':'';
   $('deslProgInfo').style.display='none';
   openModal('mConfDesl');
 }
@@ -1891,8 +1902,8 @@ function filtrarColab(q){
     <td style="font-family:var(--mono);font-size:13px">${fmt(r.DATA_ADMISSAO)}</td>
     <td style="font-family:var(--mono);font-size:13px;color:var(--accent)">${(parseFloat(r.ANOS_EMPRESA)||0).toFixed(1)}a</td>
     <td><div class="acts">
-      <button class="ab" onclick="openEditColabById('${r.ID_COLABORADOR}')">Editar</button>
-      <button class="ab d" onclick="confirmDeslById('${r.ID_COLABORADOR}')">Desligar</button>
+      <button class="ab" onclick="openEditColabById('${r.ID_COLABORADOR||''}','${r._row||''}')">Editar</button>
+      <button class="ab d" onclick="confirmDeslById('${r.ID_COLABORADOR||''}','${r._row||''}')">Desligar</button>
     </div></td></tr>`).join('')||'<tr><td colspan="8" class="empty">Nenhum resultado.</td></tr>';
 }
 
@@ -2140,7 +2151,7 @@ function detectRole(){
     USER_EMAIL=msalEmail.toLowerCase();
     USER_NOME=msalNome;
     USER_ROLE='admin';
-    const t=$('tab-admin');if(t)t.style.display='';
+    const t=$('btn-admin');if(t)t.style.display='';
     // Reparar linha do Caio se STATUS estiver corrompido
     const cad2=D.CADASTRO_COLABORADORES||[];
     const caioRow=cad2.find(r=>String(r.NOME||'').toLowerCase().includes('caio'));
@@ -2184,6 +2195,7 @@ function filterDataForCoord(nome){
   });
 }
 
+function openAdminModal(){renderAdmin();openModal('mAdmin');}
 function renderAdmin(){
   const coords=loadCoords();
   const masters=coords.filter(c=>c.role==='master');
