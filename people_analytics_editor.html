@@ -488,21 +488,44 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 </div>
 <!-- ADMINISTRAÇÃO -->
 <div class="sec" id="admin">
-  <div class="card">
-    <div class="ct">Coordenadores cadastrados</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7;">Coordenadores aqui acessam o painel com visão restrita — verão apenas colaboradores onde o campo <strong style="color:var(--text);">GESTOR</strong> corresponde ao nome deles no cadastro.</p>
-    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:flex-end;">
+  <div class="card" style="margin-bottom:20px;">
+    <div class="ct">Gerenciar perfis de acesso</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7;">
+      <strong style="color:var(--accent);">Master</strong> — acesso completo a todos os colaboradores (todas as abas).<br>
+      <strong style="color:var(--accent2);">Gestor</strong> — acesso restrito: visualiza apenas colaboradores cujo campo <strong style="color:var(--text);">GESTOR</strong> corresponda ao nome cadastrado.
+    </p>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end;">
       <div style="flex:1;min-width:220px;">
         <div class="flbl">E-mail Microsoft *</div>
         <input class="fi" id="coord-email" placeholder="nome@lumaplataforma.com.br" style="font-size:13px;">
       </div>
       <div style="flex:1;min-width:180px;">
-        <div class="flbl">Nome completo (se não estiver no cadastro)</div>
+        <div class="flbl">Nome (se não estiver no cadastro)</div>
         <input class="fi" id="coord-nome" placeholder="Ex: Matheus Rocha" style="font-size:13px;">
       </div>
-      <button class="btn btn-a" onclick="addCoord()" style="flex-shrink:0;">+ Adicionar coordenador</button>
+      <div style="min-width:140px;">
+        <div class="flbl">Perfil *</div>
+        <select class="fsel" id="coord-role" style="font-size:13px;">
+          <option value="master">Master</option>
+          <option value="gestor">Gestor</option>
+        </select>
+      </div>
+      <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#fff;flex-shrink:0;" onclick="addCoord()">+ Adicionar</button>
     </div>
-    <div id="admin-list"></div>
+    <!-- Masters -->
+    <div style="margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
+        ⭐ Masters — Acesso completo
+      </div>
+      <div id="admin-list-master"></div>
+    </div>
+    <!-- Gestores -->
+    <div>
+      <div style="font-size:12px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
+        👥 Gestores — Acesso restrito (subordinados)
+      </div>
+      <div id="admin-list-gestor"></div>
+    </div>
   </div>
 </div>
 
@@ -565,17 +588,26 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
         <div id="deslFinObs" style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5;"></div>
       </div>
       <!-- Programar desligamento -->
-      <div style="background:var(--bg3);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
-        <div style="font-size:13px;font-weight:600;margin-bottom:10px;">🗓️ Programar desligamento</div>
+      <div style="background:linear-gradient(135deg,rgba(155,102,244,.12),rgba(155,102,244,.06));border:1px solid rgba(155,102,244,.3);border-radius:12px;padding:16px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <div style="width:32px;height:32px;border-radius:8px;background:rgba(155,102,244,.2);display:flex;align-items:center;justify-content:center;font-size:16px;">🗓️</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--accent);">Programar desligamento</div>
+            <div style="font-size:11px;color:var(--muted);">Gestor notificado 1 dia antes automaticamente</div>
+          </div>
+        </div>
         <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
           <div style="flex:1;min-width:160px;">
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Data programada</div>
-            <input type="date" class="fi" id="deslDataProg" style="width:100%;font-size:13px;" oninput="atualizarCustoProgramado()">
+            <input type="date" class="fi" id="deslDataProg" style="width:100%;font-size:13px;border-color:rgba(155,102,244,.4);" oninput="atualizarCustoProgramado()">
           </div>
-          <button class="btn" style="background:var(--accent2);font-size:12px;padding:8px 14px;" onclick="programarDesl()">📅 Programar</button>
+          <button onclick="programarDesl()" style="padding:9px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,#9b66f4,#7a45d4);color:#fff;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(155,102,244,.4);transition:all .2s;" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 12px rgba(155,102,244,.5)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(155,102,244,.4)'">
+            🗓️ Confirmar programação
+          </button>
         </div>
-        <div id="deslProgInfo" style="font-size:11px;color:var(--muted);margin-top:8px;display:none;">
-          ✅ Desligamento programado. O gestor será notificado 1 dia antes.
+        <div id="deslProgInfo" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(155,102,244,.1);border:1px solid rgba(155,102,244,.25);border-radius:8px;">
+          <div style="font-size:12px;font-weight:500;color:var(--accent);">✅ Desligamento programado com sucesso</div>
+          <div id="deslProgInfoTxt" style="font-size:11px;color:var(--muted);margin-top:3px;"></div>
         </div>
       </div>
       <!-- Ações -->
@@ -1376,7 +1408,11 @@ let _deslPending=null;
 
 // ── Helpers financeiros ──────────────────────────────────────────────
 function _mDiff(a,b){return(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())+(b.getDate()<a.getDate()?-1:0);}
-function _fmt(v){return'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function _fmt(v){
+  const n=parseFloat(v)||0;
+  try{return'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  catch(e){return'R$ '+n.toFixed(2).replace('.',',');}
+}
 
 function calcCustoDesl(r,dataDesl){
   const vin=String(r.TIPO_VINCULO||'').toUpperCase();
@@ -1427,7 +1463,17 @@ function calcCustoDesl(r,dataDesl){
     return{vin,sal,anos,meses,itens:[{n:'Retirada de cotas (contrato social)',v:0}],total:0,obs:'Sócio: desligamento regido pelo contrato/estatuto social. CLT não se aplica (art. 442 CLT). Consultar advogado societário.'};
   }
   if(vin==='ASSOCIADO'){
-    return{vin,sal,anos,meses,itens:[{n:'Verificar contrato de associação',v:0}],total:0,obs:'Associado: não há vínculo empregatício (art. 442, par. único CLT). Custo depende do contrato de associação vigente.'};
+    const diasNoMes=new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate();
+    const diasTrab=dt.getDate();
+    const honorariosProp=sal*(diasTrab/diasNoMes);
+    const avisoCont=sal; // aviso contratual 30 dias (padrão)
+    const total=honorariosProp+avisoCont;
+    return{vin,sal,anos,meses,itens:[
+      {n:`Honorários proporcionais ao mês (${diasTrab}/${diasNoMes} dias)`,v:honorariosProp},
+      {n:'Aviso contratual — 30 dias de honorários',v:avisoCont},
+      {n:'Multa rescisória contratual (verificar contrato)',v:0},
+      {n:'FGTS / aviso prévio CLT',v:0},
+    ],total,obs:'Associado: sem vínculo CLT (art. 442, §ú). Aviso de 30 dias estimado por boa prática contratual. Valores finais dependem do contrato de associação vigente. Recomenda-se análise jurídica.'};
   }
   return{vin,sal,anos,meses,itens:[{n:'Vínculo não mapeado — verificar manualmente',v:0}],total:0,obs:''};
 }
@@ -1520,8 +1566,11 @@ function programarDesl(){
   const agendados=JSON.parse(localStorage.getItem('_deslAgendados')||'[]');
   agendados.push({id:r.ID_COLABORADOR,nome:r.NOME,gestor:r.GESTOR||'',data,cargo:r.CARGO||'',vinculo:r.TIPO_VINCULO||'',ts:Date.now()});
   localStorage.setItem('_deslAgendados',JSON.stringify(agendados));
+  const notifData=new Date(new Date(data+'T12:00:00').getTime()-864e5).toISOString().split('T')[0];
   $('deslProgInfo').style.display='';
-  toast(`Desligamento de ${r.NOME} programado para ${fmtD(data)}. Gestor será notificado em ${fmtD(new Date(new Date(data+'T12:00:00').getTime()-864e5).toISOString().split('T')[0])}.`,'success');
+  const infoTxt=$('deslProgInfoTxt');
+  if(infoTxt)infoTxt.textContent=`Data: ${fmtD(data)} · Notificação ao gestor ${r.GESTOR||'—'} em: ${fmtD(notifData)}`;
+  toast(`Desligamento de ${r.NOME} programado para ${fmtD(data)}. Gestor será notificado em ${fmtD(notifData)}.`,'success');
 }
 
 function checkDesligamentosAgendados(){
@@ -2067,7 +2116,7 @@ function renderAcoes(){
 function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');el.classList.add('active');if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();if(id==='admin')renderAdmin();}
 
 // ── CONTROLE DE ACESSO ──
-function loadCoords(){try{return JSON.parse(localStorage.getItem(CK_COORD)||'[]');}catch{return[];}}
+function loadCoords(){try{const arr=JSON.parse(localStorage.getItem(CK_COORD)||'[]');return arr.map(c=>({...c,role:c.role||'gestor'}));}catch{return[];}}
 function saveCoords(arr){localStorage.setItem(CK_COORD,JSON.stringify(arr));}
 
 // Repara linha 54 (Caio) corrompida pelo patchRow com mapeamento antigo
@@ -2114,8 +2163,10 @@ function detectRole(){
     c.email.toLowerCase()===msalEmail.toLowerCase()
   );
   if(myCoord){
-    USER_ROLE='coord';
-    filterDataForCoord(myCoord.nome);
+    const role=myCoord.role||'gestor';
+    USER_ROLE=role;
+    if(role==='gestor'){filterDataForCoord(myCoord.nome);}
+    // master: acesso total sem filtro
     return;
   }
   USER_ROLE='none';
@@ -2135,32 +2186,42 @@ function filterDataForCoord(nome){
 
 function renderAdmin(){
   const coords=loadCoords();
-  $('admin-list').innerHTML=coords.length===0
-    ?'<div style="color:var(--muted);font-size:13px;padding:16px 0;text-align:center;">Nenhum coordenador cadastrado.</div>'
-    :coords.map(c=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
-        <div>
-          <div style="font-size:14px;font-weight:500;">${c.nome}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${c.email}</div>
+  const masters=coords.filter(c=>c.role==='master');
+  const gestores=coords.filter(c=>c.role==='gestor');
+  const renderList=(list,cor)=>list.length===0
+    ?`<div style="color:var(--muted);font-size:12px;padding:12px 0;text-align:center;">Nenhum cadastrado.</div>`
+    :list.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:34px;height:34px;border-radius:8px;background:rgba(155,102,244,.12);display:flex;align-items:center;justify-content:center;font-size:16px;">${c.role==='master'?'⭐':'👤'}</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;">${c.nome}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px;">${c.email}</div>
+          </div>
         </div>
-        <button class="btn" style="font-size:12px;padding:4px 12px;color:var(--danger);border-color:var(--danger);" onclick="removeCoord('${c.email}')">Remover</button>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="chip" style="font-size:11px;background:${c.role==='master'?'rgba(155,102,244,.15)':'rgba(255,208,0,.12)'};color:${c.role==='master'?'var(--accent)':'var(--accent2)'};">${c.role==='master'?'Master':'Gestor'}</span>
+          <button class="btn" style="font-size:11px;padding:3px 10px;color:var(--danger);border-color:var(--danger);" onclick="removeCoord('${c.email}')">Remover</button>
+        </div>
       </div>`).join('');
+  $('admin-list-master').innerHTML=renderList(masters,'var(--accent)');
+  $('admin-list-gestor').innerHTML=renderList(gestores,'var(--accent2)');
 }
 
 function addCoord(){
   const email=$('coord-email').value.trim().toLowerCase();
-  if(!email){toast('Informe o e-mail do coordenador','error');return;}
+  if(!email){toast('Informe o e-mail','error');return;}
   const found=(D.CADASTRO_COLABORADORES||[]).find(r=>String(r.EMAIL_CORPORATIVO||'').toLowerCase()===email);
   const nomeInput=$('coord-nome').value.trim();
   const nome=found?found.NOME:nomeInput;
   if(!nome){toast('Nome não encontrado no cadastro — preencha o campo Nome','error');return;}
+  const role=$('coord-role')?$('coord-role').value:'gestor';
   const coords=loadCoords();
   if(coords.find(c=>c.email===email)){toast('Este e-mail já está cadastrado','error');return;}
-  coords.push({email,nome});
+  coords.push({email,nome,role});
   saveCoords(coords);
   $('coord-email').value='';$('coord-nome').value='';
   renderAdmin();
-  toast(`${nome} adicionado como coordenador`,'success');
+  toast(`${nome} adicionado como ${role==='master'?'Master':'Gestor'}`,'success');
 }
 
 function removeCoord(email){
