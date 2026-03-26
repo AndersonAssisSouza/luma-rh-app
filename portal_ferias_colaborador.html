@@ -519,35 +519,45 @@ async function enviarSolicitar(){
 
   try{
     const mailR=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:msalApp.getAllAccounts()[0]});
-    const btnStyle=(bg,shadow)=>`display:inline-block;background:${bg};color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-family:Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:.3px;box-shadow:0 3px 10px ${shadow};`;
-    const emailBody=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f9fafb;border-radius:12px;overflow:hidden;">
-<div style="background:linear-gradient(135deg,#7c3aed,#9b66f4);padding:28px 32px;">
-<div style="font-size:22px;font-weight:700;color:#fff;">🌴 Solicitação de Férias</div>
-<div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:4px;">Portal RH · Luma Plataforma</div>
-</div>
-<div style="padding:28px 32px;background:#fff;">
-<p style="font-size:15px;color:#374151;margin:0 0 20px;">Olá,<br>Uma nova solicitação de férias foi registrada e aguarda sua análise.</p>
-<table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;background:#f3f4f6;border-radius:8px;overflow:hidden;">
-<tr style="background:#ede9fe;"><td style="padding:10px 16px;color:#6b21a8;font-weight:600;width:40%;">Colaborador</td><td style="padding:10px 16px;font-weight:700;color:#111;">${UCOLAB.nome}</td></tr>
-<tr><td style="padding:10px 16px;color:#6b7280;">Período</td><td style="padding:10px 16px;color:#111;">${fD(rS)} → ${fD(rE)}</td></tr>
-<tr style="background:#f9fafb;"><td style="padding:10px 16px;color:#6b7280;">Dias corridos</td><td style="padding:10px 16px;color:#111;font-weight:600;">${dc} dias</td></tr>
-<tr><td style="padding:10px 16px;color:#6b7280;">Dias úteis</td><td style="padding:10px 16px;color:#111;">${du} dias</td></tr>
-<tr style="background:#f9fafb;"><td style="padding:10px 16px;color:#6b7280;">Observação</td><td style="padding:10px 16px;color:#111;">${obs||'—'}</td></tr>
-<tr><td style="padding:10px 16px;color:#6b7280;">Protocolo</td><td style="padding:10px 16px;font-family:monospace;color:#7c3aed;font-size:12px;">${prot}</td></tr>
+    const emailBody=`<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0f0f0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:24px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e0e0e0;">
+<!-- HEADER -->
+<tr><td style="background:#7c3aed;padding:28px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><span style="font-size:24px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">🌴 Solicitação de Férias</span><br>
+    <span style="font-size:12px;color:#d8b4fe;font-family:Arial,sans-serif;">Portal RH · Luma Plataforma</span></td>
+    <td align="right"><span style="font-size:32px;">🏖️</span></td>
+  </tr></table>
+</td></tr>
+<!-- BODY -->
+<tr><td style="padding:32px;">
+  <p style="font-size:15px;color:#374151;font-family:Arial,sans-serif;margin:0 0 24px;line-height:1.6;">Olá,<br>Uma nova solicitação de férias foi registrada e <strong>aguarda sua análise</strong>.</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;border:1px solid #e5e7eb;">
+    <tr style="background:#ede9fe;"><td style="padding:11px 16px;color:#6b21a8;font-weight:700;border-bottom:1px solid #e5e7eb;width:38%;">Colaborador</td><td style="padding:11px 16px;font-weight:700;color:#111;border-bottom:1px solid #e5e7eb;">${UCOLAB.nome}</td></tr>
+    <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Período</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${fD(rS)} &rarr; ${fD(rE)}</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias corridos</td><td style="padding:11px 16px;color:#111;font-weight:700;border-bottom:1px solid #e5e7eb;">${dc} dias</td></tr>
+    <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias úteis</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${du} dias</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Observação</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${obs||'—'}</td></tr>
+    <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;">Protocolo</td><td style="padding:11px 16px;color:#7c3aed;font-family:monospace;font-size:12px;">${prot}</td></tr>
+  </table>
+  <p style="font-size:13px;color:#6b7280;font-family:Arial,sans-serif;margin:28px 0 14px;">Clique em uma das opções abaixo para registrar sua decisão:</p>
+  <table cellpadding="0" cellspacing="0"><tr>
+    <td style="padding-right:12px;"><a href="${sol.linkAprovar}" style="display:inline-block;background:#16a34a;color:#ffffff;padding:14px 32px;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border:2px solid #15803d;">&#10003; Aprovar</a></td>
+    <td><a href="${sol.linkRejeitar}" style="display:inline-block;background:#dc2626;color:#ffffff;padding:14px 32px;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border:2px solid #b91c1c;">&#10007; Rejeitar</a></td>
+  </tr></table>
+</td></tr>
+<!-- FOOTER -->
+<tr><td style="background:#f3f4f6;padding:14px 32px;border-top:1px solid #e5e7eb;">
+  <span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal de Férias &middot; Luma Plataforma &middot; Mensagem automática</span>
+</td></tr>
 </table>
-<div style="margin-top:28px;padding-top:24px;border-top:1px solid #e5e7eb;">
-<p style="font-size:13px;color:#6b7280;margin:0 0 16px;">Clique em uma das opções abaixo para registrar sua decisão:</p>
-<table cellpadding="0" cellspacing="0"><tr>
-<td style="padding-right:12px;"><a href="${sol.linkAprovar}" style="${btnStyle('#16a34a','rgba(22,163,74,.3)')}">✓ &nbsp;Aprovar</a></td>
-<td><a href="${sol.linkRejeitar}" style="${btnStyle('#dc2626','rgba(220,38,38,.3)')}">✗ &nbsp;Rejeitar</a></td>
-</tr></table>
-</div>
-</div>
-<div style="padding:14px 32px;background:#f3f4f6;font-size:11px;color:#9ca3af;">Portal de Férias · Luma Plataforma · Mensagem automática</div>
-</div>`;
+</td></tr></table>
+</body></html>`;
     const gestorEmail=UCOLAB.cad?.GESTOR_EMAIL||'luisa@luisamoraesadvogados.com.br';
     const emailPayload={message:{
-      subject:`🌴 Férias · ${UCOLAB.nome} · ${fD(rS)} a ${fD(rE)}`,
+      subject:`[Férias] ${UCOLAB.nome} · ${fD(rS)} a ${fD(rE)} · Aguarda aprovação`,
       body:{contentType:'HTML',content:emailBody},
       toRecipients:[{emailAddress:{address:gestorEmail}}]
     },saveToSentItems:true};
@@ -628,31 +638,49 @@ async function _enviarRetornoEmail(sol,aprovado,motivo){
   try{
     const acc=msalApp?.getAllAccounts()[0];if(!acc)return;
     const mailR=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:acc});
-    const cor=aprovado?'#16a34a':'#dc2626';
+    const headerBg=aprovado?'#16a34a':'#dc2626';
+    const headerBorder=aprovado?'#15803d':'#b91c1c';
     const icon=aprovado?'✅':'❌';
-    const titulo=aprovado?'Férias aprovadas!':'Solicitação rejeitada';
-    const corpo=aprovado
-      ?`<p style="font-size:15px;color:#374151;">Suas férias foram <strong style="color:#16a34a;">aprovadas</strong> pelo gestor.</p>`
-      :`<p style="font-size:15px;color:#374151;">Sua solicitação foi <strong style="color:#dc2626;">rejeitada</strong> pelo gestor.<br><strong>Motivo:</strong> ${motivo}</p>`;
-    const emailBody=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f9fafb;border-radius:12px;overflow:hidden;">
-<div style="background:linear-gradient(135deg,${cor},${cor}cc);padding:28px 32px;">
-<div style="font-size:22px;font-weight:700;color:#fff;">${icon} ${titulo}</div>
-<div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:4px;">Portal RH · Luma Plataforma</div>
-</div>
-<div style="padding:28px 32px;background:#fff;">
-${corpo}
-<table style="border-collapse:collapse;width:100%;font-size:14px;background:#f3f4f6;border-radius:8px;overflow:hidden;margin-top:20px;">
-<tr style="background:#ede9fe;"><td style="padding:10px 16px;color:#6b21a8;font-weight:600;width:40%;">Colaborador</td><td style="padding:10px 16px;font-weight:700;color:#111;">${sol.nome}</td></tr>
-<tr><td style="padding:10px 16px;color:#6b7280;">Período</td><td style="padding:10px 16px;color:#111;">${fD(sol.ini)} → ${fD(sol.fim)}</td></tr>
-<tr style="background:#f9fafb;"><td style="padding:10px 16px;color:#6b7280;">Dias corridos</td><td style="padding:10px 16px;font-weight:600;color:#111;">${sol.dc} dias</td></tr>
-<tr><td style="padding:10px 16px;color:#6b7280;">Protocolo</td><td style="padding:10px 16px;font-family:monospace;color:#7c3aed;font-size:12px;">${sol.prot}</td></tr>
+    const titulo=aprovado?'Férias Aprovadas':'Solicitação Rejeitada';
+    const msgPrincipal=aprovado
+      ?`Suas férias foram <strong style="color:#16a34a;">aprovadas</strong> pelo gestor. As datas estão confirmadas conforme abaixo.`
+      :`Sua solicitação de férias foi <strong style="color:#dc2626;">rejeitada</strong> pelo gestor.<br><br><strong>Motivo informado:</strong><br><span style="background:#fef2f2;display:inline-block;padding:8px 12px;border-left:3px solid #dc2626;color:#374151;">${motivo}</span>`;
+    const emailBody=`<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0f0f0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:24px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e0e0e0;">
+<!-- HEADER -->
+<tr><td style="background:${headerBg};padding:28px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><span style="font-size:24px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">${icon} ${titulo}</span><br>
+    <span style="font-size:12px;color:#ffffff;opacity:.8;font-family:Arial,sans-serif;">Portal RH · Luma Plataforma</span></td>
+  </tr></table>
+</td></tr>
+<!-- STATUS BANNER -->
+<tr><td style="background:${aprovado?'#f0fdf4':'#fef2f2'};padding:16px 32px;border-bottom:3px solid ${headerBorder};">
+  <span style="font-size:14px;color:${aprovado?'#166534':'#991b1b'};font-family:Arial,sans-serif;">${msgPrincipal}</span>
+</td></tr>
+<!-- BODY -->
+<tr><td style="padding:32px;">
+  <p style="font-size:15px;color:#374151;font-family:Arial,sans-serif;margin:0 0 20px;">Olá, <strong>${sol.nome}</strong>,<br>Segue o resumo da sua solicitação:</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;border:1px solid #e5e7eb;">
+    <tr style="background:#f3f4f6;"><td style="padding:11px 16px;color:#374151;font-weight:700;border-bottom:1px solid #e5e7eb;width:38%;">Período</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${fD(sol.ini)} &rarr; ${fD(sol.fim)}</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias corridos</td><td style="padding:11px 16px;font-weight:700;color:#111;border-bottom:1px solid #e5e7eb;">${sol.dc} dias</td></tr>
+    <tr style="background:#f3f4f6;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias úteis</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${sol.du} dias</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Status</td><td style="padding:11px 16px;font-weight:700;color:${headerBg};border-bottom:1px solid #e5e7eb;">${aprovado?'APROVADO':'REJEITADO'}</td></tr>
+    <tr style="background:#f3f4f6;"><td style="padding:11px 16px;color:#6b7280;">Protocolo</td><td style="padding:11px 16px;color:#7c3aed;font-family:monospace;font-size:12px;">${sol.prot}</td></tr>
+  </table>
+</td></tr>
+<!-- FOOTER -->
+<tr><td style="background:#f3f4f6;padding:14px 32px;border-top:1px solid #e5e7eb;">
+  <span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal de Férias &middot; Luma Plataforma &middot; Mensagem automática</span>
+</td></tr>
 </table>
-</div>
-<div style="padding:14px 32px;background:#f3f4f6;font-size:11px;color:#9ca3af;">Portal de Férias · Luma Plataforma · Mensagem automática</div>
-</div>`;
+</td></tr></table>
+</body></html>`;
     await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',
       headers:{Authorization:'Bearer '+mailR.accessToken,'Content-Type':'application/json'},
-      body:JSON.stringify({message:{subject:`${icon} ${titulo} · ${sol.prot}`,body:{contentType:'HTML',content:emailBody},toRecipients:[{emailAddress:{address:sol.email}}]},saveToSentItems:true})
+      body:JSON.stringify({message:{subject:`${icon} [Férias ${aprovado?'Aprovadas':'Rejeitadas'}] ${sol.prot} · ${fD(sol.ini)} a ${fD(sol.fim)}`,body:{contentType:'HTML',content:emailBody},toRecipients:[{emailAddress:{address:sol.email}}]},saveToSentItems:true})
     });
   }catch(e){}
 }
