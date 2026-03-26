@@ -372,7 +372,8 @@ async function loadPortal(){
 }
 
 function renderPortal(){
-  const isCLT=UCOLAB.vinculo==='CLT'||UCOLAB.vinculo==='ASSOCIADO';
+  const isSocio=UCOLAB.vinculo==='SOCIO';
+  const isCLT=UCOLAB.vinculo==='CLT'||UCOLAB.vinculo==='ASSOCIADO'||isSocio;
   const isAssociado=UCOLAB.vinculo==='ASSOCIADO';
   const isPJ=UCOLAB.vinculo==='PJ'||UCOLAB.vinculo==='MEI';
   const fer=UCOLAB.fer;
@@ -380,7 +381,7 @@ function renderPortal(){
   const saldo=isCLT?Math.max(0,30-usados):0;
 
   $('k-saldo').textContent=(isCLT||isPJ)?saldo:'N/A';
-  $('k-saldo-sub').textContent=isAssociado?'de 30 dias de recesso OAB':isCLT?'de 30 dias de direito CLT':isPJ?'recesso contratual':'Não aplicável — '+UCOLAB.vinculo;
+  $('k-saldo-sub').textContent=isAssociado?'de 30 dias de recesso OAB':isSocio?'de 30 dias — recesso sócio':isCLT?'de 30 dias de direito CLT':isPJ?'recesso contratual':'Não aplicável — '+UCOLAB.vinculo;
   $('k-usados').textContent=(isCLT||isPJ)?usados:'—';
   $('k-prazo').textContent=fer&&fer.FIM_PERIODO_CONCESSIVO?fD(fer.FIM_PERIODO_CONCESSIVO):'N/A';
 
@@ -480,9 +481,11 @@ function goStep2(){
   if(diffInicio<30){toast('Aviso prévio mínimo de 30 dias antes do início. Selecione uma data a partir de '+fD(new Date(new Date().getTime()+30*864e5).toISOString().split('T')[0]),'error');return;}
 
   // ── Regra 2: Saldo disponível ──
+  const isSocioVal=UCOLAB.vinculo==='SOCIO';
+  const isPJVal=UCOLAB.vinculo==='PJ'||UCOLAB.vinculo==='MEI';
   const usados=_sols.filter(s=>s.email===UCOLAB.email&&s.status!=='REJEITADO').reduce((a,s)=>a+s.dc,0);
-  const saldo=Math.max(0,30-usados);
-  if(dc>saldo){toast(`Saldo insuficiente. Disponível: ${saldo} dias`,'error');return;}
+  const saldo=isPJVal?999:Math.max(0,30-usados);
+  if(!isPJVal&&dc>saldo){toast(`Saldo insuficiente. Disponível: ${saldo} dias`,'error');return;}
 
   // ── Regra 3: Mínimo de 14 dias no primeiro período ──
   const solsAprov=_sols.filter(s=>s.email===UCOLAB.email&&s.status!=='REJEITADO');
@@ -514,19 +517,43 @@ async function enviarSolicitar(){
     linkRejeitar:`${baseUrl}?acao=REJEITAR&prot=${prot}`};
   _sols.push(sol);saveSols();
 
-  const wh=CFG.webhook||'';
-  if(wh){
-    try{
-      await fetch(wh,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-        protocolo:prot,colaborador:UCOLAB.nome,
-        inicio:fD(rS),termino:fD(rE),dias_corridos:dc,dias_uteis:du,
-        observacao:obs||'Sem observações',solicitado_em:new Date().toLocaleString('pt-BR'),
-        link_aprovar:sol.linkAprovar,link_rejeitar:sol.linkRejeitar,
-        gestor_email:'anderson.assis@lumaplataforma.com.br'
-      })});
-      toast('Gestor notificado via Teams e e-mail!','success');
-    }catch(e){toast('Solicitação salva — notificação não disparada','info');}
-  }else{toast('Solicitação registrada!','success');}
+  try{
+    const mailR=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:msalApp.getAllAccounts()[0]});
+    const btnStyle=(bg,shadow)=>`display:inline-block;background:${bg};color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-family:Arial,sans-serif;font-size:15px;font-weight:700;letter-spacing:.3px;box-shadow:0 3px 10px ${shadow};`;
+    const emailBody=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f9fafb;border-radius:12px;overflow:hidden;">
+<div style="background:linear-gradient(135deg,#7c3aed,#9b66f4);padding:28px 32px;">
+<div style="font-size:22px;font-weight:700;color:#fff;">🌴 Solicitação de Férias</div>
+<div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:4px;">Portal RH · Luma Plataforma</div>
+</div>
+<div style="padding:28px 32px;background:#fff;">
+<p style="font-size:15px;color:#374151;margin:0 0 20px;">Olá,<br>Uma nova solicitação de férias foi registrada e aguarda sua análise.</p>
+<table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:14px;background:#f3f4f6;border-radius:8px;overflow:hidden;">
+<tr style="background:#ede9fe;"><td style="padding:10px 16px;color:#6b21a8;font-weight:600;width:40%;">Colaborador</td><td style="padding:10px 16px;font-weight:700;color:#111;">${UCOLAB.nome}</td></tr>
+<tr><td style="padding:10px 16px;color:#6b7280;">Período</td><td style="padding:10px 16px;color:#111;">${fD(rS)} → ${fD(rE)}</td></tr>
+<tr style="background:#f9fafb;"><td style="padding:10px 16px;color:#6b7280;">Dias corridos</td><td style="padding:10px 16px;color:#111;font-weight:600;">${dc} dias</td></tr>
+<tr><td style="padding:10px 16px;color:#6b7280;">Dias úteis</td><td style="padding:10px 16px;color:#111;">${du} dias</td></tr>
+<tr style="background:#f9fafb;"><td style="padding:10px 16px;color:#6b7280;">Observação</td><td style="padding:10px 16px;color:#111;">${obs||'—'}</td></tr>
+<tr><td style="padding:10px 16px;color:#6b7280;">Protocolo</td><td style="padding:10px 16px;font-family:monospace;color:#7c3aed;font-size:12px;">${prot}</td></tr>
+</table>
+<div style="margin-top:28px;padding-top:24px;border-top:1px solid #e5e7eb;">
+<p style="font-size:13px;color:#6b7280;margin:0 0 16px;">Clique em uma das opções abaixo para registrar sua decisão:</p>
+<table cellpadding="0" cellspacing="0"><tr>
+<td style="padding-right:12px;"><a href="${sol.linkAprovar}" style="${btnStyle('#16a34a','rgba(22,163,74,.3)')}">✓ &nbsp;Aprovar</a></td>
+<td><a href="${sol.linkRejeitar}" style="${btnStyle('#dc2626','rgba(220,38,38,.3)')}">✗ &nbsp;Rejeitar</a></td>
+</tr></table>
+</div>
+</div>
+<div style="padding:14px 32px;background:#f3f4f6;font-size:11px;color:#9ca3af;">Portal de Férias · Luma Plataforma · Mensagem automática</div>
+</div>`;
+    const gestorEmail=UCOLAB.cad?.GESTOR_EMAIL||'luisa@luisamoraesadvogados.com.br';
+    const emailPayload={message:{
+      subject:`🌴 Férias · ${UCOLAB.nome} · ${fD(rS)} a ${fD(rE)}`,
+      body:{contentType:'HTML',content:emailBody},
+      toRecipients:[{emailAddress:{address:gestorEmail}}]
+    },saveToSentItems:true};
+    await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',headers:{Authorization:'Bearer '+mailR.accessToken,'Content-Type':'application/json'},body:JSON.stringify(emailPayload)});
+    toast('Gestor notificado por e-mail!','success');
+  }catch(e){toast('Solicitação registrada!','success');}
 
   setStep(2);
   $('done-msg').textContent=`Protocolo ${prot} — aguarde a decisão do gestor.`;
@@ -597,14 +624,47 @@ function renderGestorRejeitar(sol){
     <button class="btn btn-full" style="background:var(--danger);border-color:var(--danger);color:#fff;font-weight:500;margin-bottom:8px;" onclick="confirmarRej('${sol.prot}')">✗ Confirmar rejeição</button>
     <button class="btn btn-outline btn-full" onclick="renderGestorAprovar(_sols.find(s=>s.prot==='${sol.prot}'))">← Aprovar em vez disso</button>`;
 }
-function confirmarAp(prot){
+async function _enviarRetornoEmail(sol,aprovado,motivo){
+  try{
+    const acc=msalApp?.getAllAccounts()[0];if(!acc)return;
+    const mailR=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:acc});
+    const cor=aprovado?'#16a34a':'#dc2626';
+    const icon=aprovado?'✅':'❌';
+    const titulo=aprovado?'Férias aprovadas!':'Solicitação rejeitada';
+    const corpo=aprovado
+      ?`<p style="font-size:15px;color:#374151;">Suas férias foram <strong style="color:#16a34a;">aprovadas</strong> pelo gestor.</p>`
+      :`<p style="font-size:15px;color:#374151;">Sua solicitação foi <strong style="color:#dc2626;">rejeitada</strong> pelo gestor.<br><strong>Motivo:</strong> ${motivo}</p>`;
+    const emailBody=`<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#f9fafb;border-radius:12px;overflow:hidden;">
+<div style="background:linear-gradient(135deg,${cor},${cor}cc);padding:28px 32px;">
+<div style="font-size:22px;font-weight:700;color:#fff;">${icon} ${titulo}</div>
+<div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:4px;">Portal RH · Luma Plataforma</div>
+</div>
+<div style="padding:28px 32px;background:#fff;">
+${corpo}
+<table style="border-collapse:collapse;width:100%;font-size:14px;background:#f3f4f6;border-radius:8px;overflow:hidden;margin-top:20px;">
+<tr style="background:#ede9fe;"><td style="padding:10px 16px;color:#6b21a8;font-weight:600;width:40%;">Colaborador</td><td style="padding:10px 16px;font-weight:700;color:#111;">${sol.nome}</td></tr>
+<tr><td style="padding:10px 16px;color:#6b7280;">Período</td><td style="padding:10px 16px;color:#111;">${fD(sol.ini)} → ${fD(sol.fim)}</td></tr>
+<tr style="background:#f9fafb;"><td style="padding:10px 16px;color:#6b7280;">Dias corridos</td><td style="padding:10px 16px;font-weight:600;color:#111;">${sol.dc} dias</td></tr>
+<tr><td style="padding:10px 16px;color:#6b7280;">Protocolo</td><td style="padding:10px 16px;font-family:monospace;color:#7c3aed;font-size:12px;">${sol.prot}</td></tr>
+</table>
+</div>
+<div style="padding:14px 32px;background:#f3f4f6;font-size:11px;color:#9ca3af;">Portal de Férias · Luma Plataforma · Mensagem automática</div>
+</div>`;
+    await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',
+      headers:{Authorization:'Bearer '+mailR.accessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({message:{subject:`${icon} ${titulo} · ${sol.prot}`,body:{contentType:'HTML',content:emailBody},toRecipients:[{emailAddress:{address:sol.email}}]},saveToSentItems:true})
+    });
+  }catch(e){}
+}
+async function confirmarAp(prot){
   const sol=_sols.find(s=>s.prot===prot);if(!sol)return;
   sol.status='APROVADO';sol.decisaoEm=new Date().toISOString();saveSols();
   $('gest-title').textContent='✅ Férias aprovadas';
   $('gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">✅</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Aprovado!</div><div style="font-size:14px;color:var(--muted);">Férias de <strong style="color:var(--text);">${sol.nome}</strong> aprovadas.<br>${fD(sol.ini)} → ${fD(sol.fim)} · ${sol.dc} dias.</div></div>`;
   toast('Férias aprovadas!','success');
+  _enviarRetornoEmail(sol,true,null);
 }
-function confirmarRej(prot){
+async function confirmarRej(prot){
   const motivo=$('rej-motivo')?.value?.trim();
   if(!motivo){toast('Informe o motivo','error');return;}
   const sol=_sols.find(s=>s.prot===prot);if(!sol)return;
@@ -612,6 +672,7 @@ function confirmarRej(prot){
   $('gest-title').textContent='❌ Rejeitada';
   $('gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">❌</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Rejeitada</div><div style="font-size:14px;color:var(--muted);">Motivo: ${motivo}</div></div>`;
   toast('Solicitação rejeitada','error');
+  _enviarRetornoEmail(sol,false,motivo);
 }
 function logout(){tok=null;try{msalApp.logoutRedirect();}catch(e){window.location.reload();}}
 
