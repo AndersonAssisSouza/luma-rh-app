@@ -911,24 +911,37 @@ function setL(m){$('lMsg').textContent=m;}
 async function loadAll(){
   if(DEMO){loadDemo();return;}
   $('sLoad').classList.remove('hidden');$('app').style.display='none';
-  // Abas obrigatórias — falha aqui interrompe o carregamento
-  const sheetsCore=['CADASTRO_COLABORADORES','FERIAS_CLT','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH','AUSENCIAS_OCORRENCIAS','BIBLIOTECA_MENSAGENS_ANIV'];
-  // Abas opcionais — se não existirem, retorna []
-  const sheetsOpt=['LOG_AUTOMACAO_RH','PARAM_AUTOMACAO_RH'];
+  const allSheets=['CADASTRO_COLABORADORES','FERIAS_CLT','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH','AUSENCIAS_OCORRENCIAS','BIBLIOTECA_MENSAGENS_ANIV','LOG_AUTOMACAO_RH','PARAM_AUTOMACAO_RH'];
+  const erros=[];
   try{
-    for(const s of sheetsCore){setL(`Lendo ${s}...`);D[s]=await rSheet(s);}
-    for(const s of sheetsOpt){
+    // Cada aba carregada individualmente — falha isolada não derruba as demais
+    for(const s of allSheets){
       setL(`Lendo ${s}...`);
-      try{D[s]=await rSheet(s);}catch(e){D[s]=[];console.warn(`Aba ${s} não encontrada — ignorada`);}
+      try{D[s]=await rSheet(s);}
+      catch(e){
+        D[s]=[];
+        if(!['LOG_AUTOMACAO_RH','PARAM_AUTOMACAO_RH'].includes(s)){
+          erros.push(s);console.warn(`Aba ${s} falhou:`,e.message);
+        }
+      }
     }
+    // Sempre renderiza com o que foi carregado
     detectRole();
-    render();$('sLoad').classList.add('hidden');$('app').style.display='block';
+    render();
+    $('sLoad').classList.add('hidden');$('app').style.display='block';
     const dot=$('ndot');dot.classList.add('live');dot.title='Ao vivo · '+new Date().toLocaleTimeString('pt-BR');
-    toast('Dados atualizados','success');
+    if(erros.length>0)toast(`Aviso: aba(s) ${erros.join(', ')} não carregada(s)`,'info');
+    else toast('Dados atualizados','success');
   }catch(e){
+    // Só chega aqui se falha fora do loop (ex: token/auth)
     $('sLoad').classList.add('hidden');$('app').style.display='block';
     if(e.message&&e.message.includes('login')){}
-    else{toast('Erro ao carregar: '+e.message,'error');console.error('loadAll falhou:',e);}
+    else{
+      toast('Erro de autenticação: '+e.message,'error');
+      console.error('loadAll auth falhou:',e);
+      // Mesmo assim tenta renderizar com dados parciais
+      try{detectRole();render();}catch(_){}
+    }
   }
 }
 
