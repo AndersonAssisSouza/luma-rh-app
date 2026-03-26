@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LUMA RH · Entrar</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#0f0e17;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.card{background:#18162a;border:1px solid #2d2b45;border-radius:16px;padding:40px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center;}
+.logo-icon{width:44px;height:44px;background:#9b66f4;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#ffd000;flex-shrink:0;font-family:monospace;}
+.logo-text{font-size:22px;font-weight:700;color:#fff;letter-spacing:-.02em;}
+.logo-sub{font-size:12px;color:#a78bfa;margin-top:1px;letter-spacing:.04em;text-transform:uppercase;}
+h2{font-size:18px;font-weight:600;color:#f0eeff;margin-bottom:6px;text-align:center;}
+.sub{font-size:13px;color:#7c7a9e;text-align:center;margin-bottom:28px;}
+.fgrp{margin-bottom:18px;}
+label{display:block;font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase;}
+input{width:100%;background:#0f0e17;border:1px solid #2d2b45;border-radius:8px;padding:11px 14px;font-size:14px;color:#f0eeff;outline:none;transition:border-color .2s;}
+input:focus{border-color:#9b66f4;}
+input::placeholder{color:#4a4868;}
+.btn{width:100%;background:#9b66f4;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;transition:background .2s;margin-top:4px;}
+.btn:hover{background:#8b5cf6;}
+.btn:disabled{background:#3d3660;color:#6b69a3;cursor:not-allowed;}
+.link-btn{background:none;border:none;color:#a78bfa;font-size:13px;cursor:pointer;text-decoration:underline;padding:0;margin-top:16px;display:block;text-align:center;width:100%;}
+.link-btn:hover{color:#c4b5fd;}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#4a4868;font-size:12px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#2d2b45;}
+.alert{padding:12px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none;}
+.alert.error{background:#2d1c1c;border:1px solid #7f1d1d;color:#fca5a5;}
+.alert.success{background:#1c2d1c;border:1px solid #14532d;color:#86efac;}
+.alert.info{background:#1c1c2d;border:1px solid #1e3a5f;color:#93c5fd;}
+#screen-reset{display:none;}
+#screen-login{display:block;}
+.footer{text-align:center;font-size:11px;color:#4a4868;margin-top:24px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">L</div>
+    <div>
+      <div class="logo-text">LUMA RH</div>
+      <div class="logo-sub">Gestão de Pessoas</div>
+    </div>
+  </div>
+
+  <!-- TELA DE LOGIN -->
+  <div id="screen-login">
+    <h2>Bem-vindo de volta</h2>
+    <p class="sub">Entre com seu e-mail e senha corporativos</p>
+
+    <div class="alert" id="alert-login"></div>
+
+    <div class="fgrp">
+      <label for="login-email">E-mail</label>
+      <input type="email" id="login-email" placeholder="voce@empresa.com.br" autocomplete="email">
+    </div>
+    <div class="fgrp">
+      <label for="login-senha">Senha</label>
+      <input type="password" id="login-senha" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn" id="btn-entrar" onclick="doLogin()">Entrar</button>
+    <button class="link-btn" onclick="showReset()">Esqueci minha senha</button>
+  </div>
+
+  <!-- TELA DE RECUPERAÇÃO DE SENHA -->
+  <div id="screen-reset">
+    <h2>Recuperar senha</h2>
+    <p class="sub">Informe seu e-mail para receber o link de redefinição</p>
+
+    <div class="alert" id="alert-reset"></div>
+
+    <div class="fgrp">
+      <label for="reset-email">E-mail</label>
+      <input type="email" id="reset-email" placeholder="voce@empresa.com.br">
+    </div>
+    <button class="btn" id="btn-reset" onclick="doReset()">Enviar link de redefinição</button>
+    <button class="link-btn" onclick="showLogin()">← Voltar para o login</button>
+  </div>
+
+  <div class="footer">LUMA RH · Plataforma segura de Gestão de Pessoas</div>
+</div>
+
+<script type="module">
+import { sb, login, solicitarResetSenha, getProfileCached } from './supabase_client.js'
+
+window.doLogin = async function() {
+  const email  = document.getElementById('login-email').value.trim()
+  const senha  = document.getElementById('login-senha').value
+  const btn    = document.getElementById('btn-entrar')
+  const alert  = document.getElementById('alert-login')
+
+  if (!email || !senha) { showAlert(alert,'error','Preencha e-mail e senha.'); return }
+
+  btn.disabled = true
+  btn.textContent = 'Entrando...'
+  hideAlert(alert)
+
+  try {
+    await login(email, senha)
+
+    // Redirecionar conforme o role
+    const profile = await getProfileCached()
+    if (!profile) throw new Error('Perfil não encontrado.')
+
+    if (profile.role === 'manager_global') {
+      window.location.href = './manager.html'
+    } else if (profile.role === 'colaborador') {
+      window.location.href = './portal_ferias_colaborador.html'
+    } else {
+      window.location.href = './people_analytics_editor.html'
+    }
+  } catch (e) {
+    const msg = e.message?.includes('Invalid login') ? 'E-mail ou senha incorretos.' : e.message
+    showAlert(alert, 'error', msg)
+    btn.disabled = false
+    btn.textContent = 'Entrar'
+  }
+}
+
+window.doReset = async function() {
+  const email  = document.getElementById('reset-email').value.trim()
+  const btn    = document.getElementById('btn-reset')
+  const alert  = document.getElementById('alert-reset')
+
+  if (!email) { showAlert(alert,'error','Informe seu e-mail.'); return }
+
+  btn.disabled = true
+  btn.textContent = 'Enviando...'
+  hideAlert(alert)
+
+  try {
+    await solicitarResetSenha(email)
+    showAlert(alert, 'success', 'Link enviado! Verifique sua caixa de entrada (e spam).')
+    btn.textContent = 'Reenviar link'
+    btn.disabled = false
+  } catch (e) {
+    showAlert(alert, 'error', e.message)
+    btn.disabled = false
+    btn.textContent = 'Enviar link de redefinição'
+  }
+}
+
+window.showReset = function() {
+  document.getElementById('screen-login').style.display = 'none'
+  document.getElementById('screen-reset').style.display = 'block'
+  const re = document.getElementById('reset-email')
+  const le = document.getElementById('login-email')
+  if (le.value) re.value = le.value
+  re.focus()
+}
+
+window.showLogin = function() {
+  document.getElementById('screen-reset').style.display = 'none'
+  document.getElementById('screen-login').style.display = 'block'
+  document.getElementById('login-email').focus()
+}
+
+function showAlert(el, type, msg) {
+  el.className = `alert ${type}`
+  el.textContent = msg
+  el.style.display = 'block'
+}
+function hideAlert(el) { el.style.display = 'none' }
+
+// Enter para login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('screen-login').style.display !== 'none') doLogin()
+    else doReset()
+  }
+})
+
+// Se já logado, redirecionar
+;(async () => {
+  const { data: { session } } = await sb.auth.getSession()
+  if (session) {
+    const profile = await getProfileCached()
+    if (profile?.role === 'manager_global') window.location.href = './manager.html'
+    else if (profile?.role === 'colaborador') window.location.href = './portal_ferias_colaborador.html'
+    else window.location.href = './people_analytics_editor.html'
+  }
+})()
+</script>
+</body>
+</html>

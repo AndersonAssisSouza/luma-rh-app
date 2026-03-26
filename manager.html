@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LUMA RH · Manager</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f0e17;--bg2:#18162a;--bg3:#201e35;--border:#2d2b45;--border2:#3d3b5a;--accent:#9b66f4;--accent2:#ffd000;--ok:#22c55e;--danger:#ef4444;--warn:#f59e0b;--muted:#7c7a9e;--text:#f0eeff;--text2:#c4b5fd;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+/* Navbar */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.nav-logo{display:flex;align-items:center;gap:10px;}
+.nav-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;color:var(--accent2);font-size:16px;font-family:monospace;}
+.nav-title{font-weight:700;font-size:15px;}
+.nav-badge{background:#7c1fff;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.06em;text-transform:uppercase;margin-left:8px;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);transition:all .15s;}
+.btn:hover{border-color:var(--accent);color:var(--accent2);}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-primary:hover{background:#8b5cf6;}
+.btn-danger{border-color:var(--danger);color:var(--danger);}
+.btn-danger:hover{background:rgba(239,68,68,.1);}
+.btn-sm{padding:4px 10px;font-size:12px;}
+/* Layout */
+.app{display:flex;min-height:calc(100vh - 56px);}
+/* Sidebar */
+.sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);padding:20px 0;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;cursor:pointer;color:var(--muted);transition:all .15s;border-left:3px solid transparent;}
+.nav-item:hover{color:var(--text);background:var(--bg3);}
+.nav-item.active{color:var(--accent2);border-left-color:var(--accent);background:rgba(155,102,244,.08);}
+.nav-item .ico{width:18px;text-align:center;}
+/* Main */
+.main{flex:1;padding:28px;overflow:auto;}
+.page{display:none;}
+.page.active{display:block;}
+/* Cards de resumo */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:28px;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.kpi-val{font-size:28px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.kpi-lbl{font-size:12px;color:var(--muted);}
+.kpi-ico{font-size:24px;margin-bottom:8px;}
+/* Tabelas */
+.tbl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.tbl-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+.tbl-title{font-size:14px;font-weight:600;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:10px 16px;border-bottom:1px solid var(--border);}
+td{padding:12px 16px;font-size:13px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg3);}
+/* Chips */
+.chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.chip-ativo{background:rgba(34,197,94,.12);color:#4ade80;}
+.chip-inativo{background:rgba(239,68,68,.1);color:#f87171;}
+.chip-suspenso{background:rgba(245,158,11,.1);color:#fbbf24;}
+.chip-trial{background:rgba(155,102,244,.15);color:#c4b5fd;}
+.chip-pro{background:rgba(255,208,0,.12);color:#ffd000;}
+.chip-basico{background:rgba(59,130,246,.12);color:#93c5fd;}
+.chip-enterprise{background:rgba(16,185,129,.12);color:#6ee7b7;}
+/* Modal */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+.ov.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;padding:28px;}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:20px;}
+.fgrp{margin-bottom:16px;}
+.flbl{font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.fi{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;}
+.fi:focus{border-color:var(--accent);}
+.fsel{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.mf{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+/* Toast */
+#tc{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px;}
+.toast{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--bg2);border:1px solid var(--border2);font-size:13px;max-width:340px;box-shadow:0 4px 16px rgba(0,0,0,.4);}
+.tdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+/* Seção de usuários */
+.usr-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.usr-row:last-child{border-bottom:none;}
+.usr-info{display:flex;align-items:center;gap:10px;}
+.usr-avatar{width:34px;height:34px;border-radius:8px;background:rgba(155,102,244,.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--accent);}
+.section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<div class="nav">
+  <div class="nav-logo">
+    <div class="nav-icon">L</div>
+    <span class="nav-title">LUMA RH</span>
+    <span class="nav-badge">Manager</span>
+  </div>
+  <div class="nav-right">
+    <span id="nav-user" style="font-size:13px;color:var(--muted);"></span>
+    <button class="btn btn-sm" onclick="doLogout()">Sair</button>
+  </div>
+</div>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">
+      <span class="ico">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('empresas')" id="nav-empresas">
+      <span class="ico">🏢</span> Empresas
+    </div>
+    <div class="nav-item" onclick="showPage('usuarios')" id="nav-usuarios">
+      <span class="ico">👥</span> Usuários
+    </div>
+    <div class="nav-item" onclick="showPage('logs')" id="nav-logs">
+      <span class="ico">📋</span> Logs
+    </div>
+  </div>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <h1 style="font-size:20px;font-weight:700;margin-bottom:20px;">Dashboard</h1>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-ico">🏢</div><div class="kpi-val" id="kpi-tenants">—</div><div class="kpi-lbl">Empresas ativas</div></div>
+        <div class="kpi"><div class="kpi-ico">👥</div><div class="kpi-val" id="kpi-users">—</div><div class="kpi-lbl">Usuários totais</div></div>
+        <div class="kpi"><div class="kpi-ico">🔄</div><div class="kpi-val" id="kpi-trial">—</div><div class="kpi-lbl">Em trial</div></div>
+        <div class="kpi"><div class="kpi-ico">⭐</div><div class="kpi-val" id="kpi-pro">—</div><div class="kpi-lbl">Plano Pro/Enterprise</div></div>
+      </div>
+
+      <div class="tbl-wrap">
+        <div class="tbl-head">
+          <span class="tbl-title">Empresas recentes</span>
+          <button class="btn btn-primary btn-sm" onclick="showPage('empresas')">Ver todas</button>
+        </div>
+        <table>
+          <thead><tr><th>Empresa</th><th>Plano</th><th>Status</th><th>Criado em</th></tr></thead>
+          <tbody id="dash-tenants-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EMPRESAS -->
+    <div class="page" id="page-empresas">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h1 style="font-size:20px;font-weight:700;">Empresas</h1>
+        <button class="btn btn-primary" onclick="openModalTenant()">+ Nova empresa</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>Slug</th><th>Admin</th><th>Plano</th><th>Usuários</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="tenants-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div class="page" id="page-usuarios">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <h1 style="font-size:20px;font-weight:700;">Usuários</h1>
+        <button class="btn btn-primary" onclick="openModalUser()">+ Novo usuário</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <select class="fsel" id="filtro-tenant" style="max-width:240px;" onchange="renderUsers()">
+          <option value="">Todas as empresas</option>
+        </select>
+        <select class="fsel" id="filtro-role" style="max-width:180px;" onchange="renderUsers()">
+          <option value="">Todos os perfis</option>
+          <option value="master">Master</option>
+          <option value="gestor">Gestor</option>
+          <option value="rh">RH</option>
+          <option value="colaborador">Colaborador</option>
+        </select>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>E-mail</th><th>Empresa</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div class="page" id="page-logs">
+      <h1 style="font-size:20px;font-weight:700;margin-bottom:20px;">Log de Eventos</h1>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Data/Hora</th><th>Tipo</th><th>Empresa</th><th>Descrição</th></tr></thead>
+          <tbody id="logs-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Nova / Editar Empresa -->
+<div class="ov" id="mTenant">
+  <div class="modal">
+    <div class="modal-title" id="mTenant-title">Nova Empresa</div>
+    <input type="hidden" id="tId">
+    <div class="fgrid">
+      <div class="fgrp"><div class="flbl">Nome da empresa *</div><input class="fi" id="tNome" placeholder="Ex: Luisa Moraes Advogados"></div>
+      <div class="fgrp"><div class="flbl">Slug (URL) *</div><input class="fi" id="tSlug" placeholder="ex: luisa-moraes" oninput="autoSlug()"></div>
+    </div>
+    <div class="fgrp"><div class="flbl">E-mail do administrador *</div><input class="fi" id="tEmail" type="email" placeholder="admin@empresa.com"></div>
+    <div class="fgrid">
+      <div class="fgrp"><div class="flbl">Plano</div>
+        <select class="fsel" id="tPlano">
+          <option value="TRIAL">Trial</option>
+          <option value="BASICO">Básico</option>
+          <option value="PRO">Pro</option>
+          <option value="ENTERPRISE">Enterprise</option>
+        </select>
+      </div>
+      <div class="fgrp"><div class="flbl">Máx. usuários</div><input class="fi" id="tMaxUsers" type="number" min="1" value="10"></div>
+    </div>
+    <div class="fgrp"><div class="flbl">Status</div>
+      <select class="fsel" id="tStatus">
+        <option value="ATIVO">Ativo</option>
+        <option value="INATIVO">Inativo</option>
+        <option value="SUSPENSO">Suspenso</option>
+      </select>
+    </div>
+    <div class="mf">
+      <button class="btn" onclick="closeModal('mTenant')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTenant()">Salvar empresa</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Novo Usuário -->
+<div class="ov" id="mUser">
+  <div class="modal">
+    <div class="modal-title">Novo Usuário</div>
+    <div class="fgrp"><div class="flbl">Empresa *</div>
+      <select class="fsel" id="uTenant"></select>
+    </div>
+    <div class="fgrid">
+      <div class="fgrp"><div class="flbl">Nome completo *</div><input class="fi" id="uNome" placeholder="Ex: Luisa Moraes"></div>
+      <div class="fgrp"><div class="flbl">E-mail corporativo *</div><input class="fi" id="uEmail" type="email" placeholder="luisa@empresa.com"></div>
+    </div>
+    <div class="fgrid">
+      <div class="fgrp"><div class="flbl">Perfil *</div>
+        <select class="fsel" id="uRole">
+          <option value="master">Master</option>
+          <option value="gestor">Gestor</option>
+          <option value="rh">RH</option>
+          <option value="colaborador">Colaborador</option>
+        </select>
+      </div>
+      <div class="fgrp"><div class="flbl">Senha inicial *</div><input class="fi" id="uSenha" type="password" placeholder="Mínimo 8 caracteres"></div>
+    </div>
+    <div style="background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:8px;padding:12px;font-size:12px;color:var(--muted);margin-top:4px;">
+      💡 O usuário receberá as credenciais e poderá alterar a senha no primeiro acesso via <em>Esqueci minha senha</em>.
+    </div>
+    <div class="mf">
+      <button class="btn" onclick="closeModal('mUser')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveUser()">Criar usuário</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="tc"></div>
+
+<script type="module">
+import {
+  sb, requireAuth, logout, getProfileCached,
+  getTenants, criarTenant, updateTenant,
+  getProfiles, updateProfile
+} from './supabase_client.js'
+
+let TENANTS = []
+let USERS   = []
+
+window.doLogout = async function() { await logout() }
+
+// ============================================================
+// INIT
+// ============================================================
+;(async () => {
+  const profile = await requireAuth(['manager_global'])
+  if (!profile) return
+
+  document.getElementById('nav-user').textContent = profile.nome || profile.email
+
+  await loadAll()
+  renderDashboard()
+  renderTenants()
+  renderUsers()
+  renderLogs()
+})()
+
+async function loadAll() {
+  try {
+    TENANTS = await getTenants()
+    USERS   = await getProfiles()
+  } catch (e) {
+    toast('Erro ao carregar dados: ' + e.message, 'error')
+  }
+}
+
+// ============================================================
+// NAVEGAÇÃO
+// ============================================================
+window.showPage = function(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  document.getElementById('page-' + page).classList.add('active')
+  document.getElementById('nav-' + page).classList.add('active')
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const ativos  = TENANTS.filter(t => t.status === 'ATIVO').length
+  const trials  = TENANTS.filter(t => t.plano === 'TRIAL').length
+  const pro     = TENANTS.filter(t => ['PRO','ENTERPRISE'].includes(t.plano)).length
+  document.getElementById('kpi-tenants').textContent = ativos
+  document.getElementById('kpi-users').textContent   = USERS.filter(u => u.role !== 'manager_global').length
+  document.getElementById('kpi-trial').textContent   = trials
+  document.getElementById('kpi-pro').textContent     = pro
+
+  const recent = [...TENANTS].sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em)).slice(0,5)
+  document.getElementById('dash-tenants-tbody').innerHTML = recent.map(t => `
+    <tr>
+      <td><strong>${t.nome}</strong></td>
+      <td>${chipPlano(t.plano)}</td>
+      <td>${chipStatus(t.status)}</td>
+      <td>${new Date(t.criado_em).toLocaleDateString('pt-BR')}</td>
+    </tr>`).join('')
+}
+
+// ============================================================
+// EMPRESAS
+// ============================================================
+function renderTenants() {
+  document.getElementById('tenants-tbody').innerHTML = TENANTS.map(t => {
+    const usersCount = USERS.filter(u => u.tenant_id === t.id).length
+    return `<tr>
+      <td><strong>${t.nome}</strong><br><span style="font-size:11px;color:var(--muted);">${t.slug}</span></td>
+      <td><span style="font-size:11px;color:var(--muted);">${t.slug}</span></td>
+      <td style="font-size:12px;color:var(--muted);">${t.email_admin}</td>
+      <td>${chipPlano(t.plano)}</td>
+      <td style="text-align:center;">${usersCount} / ${t.max_usuarios}</td>
+      <td>${chipStatus(t.status)}</td>
+      <td><div style="display:flex;gap:6px;">
+        <button class="btn btn-sm" onclick="editTenant('${t.id}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="toggleTenant('${t.id}','${t.status}')">
+          ${t.status === 'ATIVO' ? 'Suspender' : 'Ativar'}
+        </button>
+      </div></td>
+    </tr>`}).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Nenhuma empresa cadastrada.</td></tr>'
+}
+
+window.openModalTenant = function(tenant = null) {
+  document.getElementById('mTenant-title').textContent = tenant ? 'Editar Empresa' : 'Nova Empresa'
+  document.getElementById('tId').value       = tenant?.id || ''
+  document.getElementById('tNome').value     = tenant?.nome || ''
+  document.getElementById('tSlug').value     = tenant?.slug || ''
+  document.getElementById('tEmail').value    = tenant?.email_admin || ''
+  document.getElementById('tPlano').value    = tenant?.plano || 'TRIAL'
+  document.getElementById('tMaxUsers').value = tenant?.max_usuarios || 10
+  document.getElementById('tStatus').value   = tenant?.status || 'ATIVO'
+  openModal('mTenant')
+}
+
+window.editTenant = function(id) {
+  openModalTenant(TENANTS.find(t => t.id === id))
+}
+
+window.saveTenant = async function() {
+  const id   = document.getElementById('tId').value
+  const data = {
+    nome:         document.getElementById('tNome').value.trim(),
+    slug:         document.getElementById('tSlug').value.trim().toLowerCase().replace(/\s+/g,'-'),
+    email_admin:  document.getElementById('tEmail').value.trim().toLowerCase(),
+    plano:        document.getElementById('tPlano').value,
+    max_usuarios: parseInt(document.getElementById('tMaxUsers').value) || 10,
+    status:       document.getElementById('tStatus').value
+  }
+  if (!data.nome || !data.slug || !data.email_admin) { toast('Preencha os campos obrigatórios','error'); return }
+
+  try {
+    if (id) {
+      await updateTenant(id, data)
+      toast('Empresa atualizada', 'success')
+    } else {
+      await criarTenant(data)
+      toast('Empresa criada com sucesso', 'success')
+    }
+    closeModal('mTenant')
+    await loadAll(); renderDashboard(); renderTenants()
+  } catch (e) {
+    toast('Erro: ' + e.message, 'error')
+  }
+}
+
+window.toggleTenant = async function(id, status) {
+  const novo = status === 'ATIVO' ? 'SUSPENSO' : 'ATIVO'
+  try {
+    await updateTenant(id, { status: novo })
+    toast('Status atualizado', 'success')
+    await loadAll(); renderDashboard(); renderTenants()
+  } catch (e) { toast('Erro: '+e.message,'error') }
+}
+
+window.autoSlug = function() {
+  const nome  = document.getElementById('tNome').value
+  const slugEl = document.getElementById('tSlug')
+  if (!document.getElementById('tId').value) {
+    slugEl.value = nome.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')
+  }
+}
+
+// ============================================================
+// USUÁRIOS
+// ============================================================
+function renderUsers() {
+  const filtroTenant = document.getElementById('filtro-tenant')?.value || ''
+  const filtroRole   = document.getElementById('filtro-role')?.value || ''
+
+  // Popular select de tenant no filtro
+  const sel = document.getElementById('filtro-tenant')
+  if (sel && sel.options.length === 1) {
+    TENANTS.forEach(t => {
+      const opt = document.createElement('option')
+      opt.value = t.id; opt.textContent = t.nome
+      sel.appendChild(opt)
+    })
+  }
+
+  let users = USERS.filter(u => u.role !== 'manager_global')
+  if (filtroTenant) users = users.filter(u => u.tenant_id === filtroTenant)
+  if (filtroRole)   users = users.filter(u => u.role === filtroRole)
+
+  document.getElementById('users-tbody').innerHTML = users.map(u => {
+    const tenant = TENANTS.find(t => t.id === u.tenant_id)
+    return `<tr>
+      <td><strong>${u.nome}</strong></td>
+      <td style="font-size:12px;color:var(--muted);">${u.email}</td>
+      <td style="font-size:12px;">${tenant?.nome || '—'}</td>
+      <td>${chipRole(u.role)}</td>
+      <td>${u.status === 'ATIVO' ? '<span class="chip chip-ativo">Ativo</span>' : '<span class="chip chip-inativo">Inativo</span>'}</td>
+      <td><div style="display:flex;gap:6px;">
+        <button class="btn btn-sm btn-danger" onclick="toggleUser('${u.id}','${u.status}')">
+          ${u.status === 'ATIVO' ? 'Bloquear' : 'Ativar'}
+        </button>
+      </div></td>
+    </tr>`}).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">Nenhum usuário encontrado.</td></tr>'
+}
+
+window.openModalUser = function() {
+  document.getElementById('uNome').value  = ''
+  document.getElementById('uEmail').value = ''
+  document.getElementById('uSenha').value = ''
+  document.getElementById('uRole').value  = 'master'
+
+  const sel = document.getElementById('uTenant')
+  sel.innerHTML = TENANTS.map(t => `<option value="${t.id}">${t.nome}</option>`).join('')
+
+  openModal('mUser')
+}
+
+window.saveUser = async function() {
+  const tenantId = document.getElementById('uTenant').value
+  const nome     = document.getElementById('uNome').value.trim()
+  const email    = document.getElementById('uEmail').value.trim().toLowerCase()
+  const senha    = document.getElementById('uSenha').value
+  const role     = document.getElementById('uRole').value
+
+  if (!tenantId || !nome || !email || !senha) { toast('Preencha todos os campos','error'); return }
+  if (senha.length < 8) { toast('Senha deve ter mínimo 8 caracteres','error'); return }
+
+  try {
+    // Criar usuário via Supabase Admin API
+    const { data, error } = await sb.auth.admin.createUser({
+      email, password: senha,
+      user_metadata: { nome, tenant_id: tenantId, role },
+      email_confirm: true
+    })
+    if (error) throw error
+
+    // Profile será criado automaticamente pelo trigger handle_new_user()
+    toast(`Usuário ${nome} criado com sucesso`, 'success')
+    closeModal('mUser')
+    await loadAll(); renderUsers()
+  } catch (e) {
+    toast('Erro: ' + e.message, 'error')
+  }
+}
+
+window.toggleUser = async function(id, status) {
+  const novo = status === 'ATIVO' ? 'INATIVO' : 'ATIVO'
+  try {
+    await updateProfile(id, { status: novo })
+    toast('Status do usuário atualizado', 'success')
+    await loadAll(); renderUsers()
+  } catch (e) { toast('Erro: '+e.message,'error') }
+}
+
+// ============================================================
+// LOGS
+// ============================================================
+async function renderLogs() {
+  try {
+    const { data } = await sb.from('log_eventos')
+      .select('*, tenants(nome)')
+      .order('criado_em', { ascending: false })
+      .limit(100)
+    document.getElementById('logs-tbody').innerHTML = (data||[]).map(l => `
+      <tr>
+        <td style="font-size:12px;white-space:nowrap;">${new Date(l.criado_em).toLocaleString('pt-BR')}</td>
+        <td><code style="font-size:11px;color:var(--accent2);">${l.tipo}</code></td>
+        <td style="font-size:12px;">${l.tenants?.nome||'—'}</td>
+        <td style="font-size:12px;color:var(--muted);">${l.descricao||''}</td>
+      </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">Sem logs.</td></tr>'
+  } catch (e) { console.warn(e) }
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function chipPlano(p) {
+  const m = {TRIAL:'chip-trial',BASICO:'chip-basico',PRO:'chip-pro',ENTERPRISE:'chip-enterprise'}
+  return `<span class="chip ${m[p]||'chip-trial'}">${p}</span>`
+}
+function chipStatus(s) {
+  const m = {ATIVO:'chip-ativo',INATIVO:'chip-inativo',SUSPENSO:'chip-suspenso'}
+  return `<span class="chip ${m[s]||''}">${s}</span>`
+}
+function chipRole(r) {
+  const m = {master:'color:#c4b5fd;background:rgba(155,102,244,.15)',gestor:'color:#ffd000;background:rgba(255,208,0,.1)',rh:'color:#93c5fd;background:rgba(37,99,235,.12)',colaborador:'color:var(--muted);background:var(--bg3)'}
+  return `<span class="chip" style="${m[r]||''};font-size:11px;">${r}</span>`
+}
+function openModal(id)  { document.getElementById(id).classList.add('open') }
+function closeModal(id) { document.getElementById(id).classList.remove('open') }
+window.closeModal = closeModal
+
+function toast(msg, type='success') {
+  const tc = document.getElementById('tc')
+  const t  = document.createElement('div')
+  t.className = 'toast'
+  const c = type==='success'?'#b98af7':type==='error'?'#f87171':'#ffd000'
+  t.innerHTML = `<div class="tdot" style="background:${c}"></div><span>${msg}</span>`
+  tc.appendChild(t)
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),250) }, 3500)
+}
+</script>
+</body>
+</html>
