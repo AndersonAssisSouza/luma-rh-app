@@ -522,42 +522,66 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 <!-- ══════════════ MODAIS ══════════════ -->
 
 <!-- Editar colaborador -->
-<!-- ══ MODAL CONFIRMAÇÃO DESLIGAMENTO + NR-7 ══ -->
+<!-- ══ MODAL CONFIRMAÇÃO DESLIGAMENTO + NR-7 + IMPACTO FINANCEIRO ══ -->
 <div class="ov" id="mConfDesl">
-  <div class="modal" style="max-width:520px;">
-    <div class="mh">
+  <div class="modal" style="max-width:600px;max-height:90vh;overflow-y:auto;">
+    <div class="mh" style="position:sticky;top:0;background:var(--bg2);z-index:1;">
       <div><div class="mt">Confirmar desligamento</div><div class="ms" id="mDeslSub">—</div></div>
       <button class="mc" onclick="closeModal('mConfDesl')">×</button>
     </div>
     <div class="mb">
-      <!-- Painel NR-7 -->
-      <div id="nr7Panel" style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
-        <div style="font-size:13px;font-weight:600;color:var(--warn);margin-bottom:10px;">⚖️ NR-7 — Verificação de exame demissional</div>
-        <div id="nr7Clinico" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(245,158,11,.15);">
-          <div id="nr7ClinicoIco" style="font-size:18px;width:24px;text-align:center;">⏳</div>
-          <div style="flex:1;">
-            <div style="font-size:13px;font-weight:500;">Exame clínico</div>
-            <div id="nr7ClinicoTxt" style="font-size:12px;color:var(--muted);">Calculando…</div>
-          </div>
-          <div id="nr7ClinicoChip" class="chip cw">—</div>
+      <!-- NR-7 -->
+      <div id="nr7Panel" style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:600;color:var(--warn);margin-bottom:10px;">⚖️ NR-7 — Exame demissional</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(245,158,11,.15);">
+          <div id="nr7ClinicoIco" style="font-size:16px;width:22px;text-align:center;">⏳</div>
+          <div style="flex:1;"><div style="font-size:12px;font-weight:500;">Exame clínico</div><div id="nr7ClinicoTxt" style="font-size:11px;color:var(--muted);">Calculando…</div></div>
+          <div id="nr7ClinicoChip" class="chip cw" style="font-size:11px;">—</div>
         </div>
-        <div id="nr7Audio" style="display:flex;align-items:center;gap:10px;padding:8px 0;">
-          <div id="nr7AudioIco" style="font-size:18px;width:24px;text-align:center;">⏳</div>
-          <div style="flex:1;">
-            <div style="font-size:13px;font-weight:500;">Exame audiométrico</div>
-            <div id="nr7AudioTxt" style="font-size:12px;color:var(--muted);">Calculando…</div>
-          </div>
-          <div id="nr7AudioChip" class="chip cw">—</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 0;">
+          <div id="nr7AudioIco" style="font-size:16px;width:22px;text-align:center;">⏳</div>
+          <div style="flex:1;"><div style="font-size:12px;font-weight:500;">Exame audiométrico</div><div id="nr7AudioTxt" style="font-size:11px;color:var(--muted);">Calculando…</div></div>
+          <div id="nr7AudioChip" class="chip cw" style="font-size:11px;">—</div>
         </div>
-        <div id="nr7Obs" style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5;">
-          Grau de risco I e II · Portaria MTE 3.214/78 · NR-7 (PCMSO)
+        <div id="nr7Obs" style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;">Grau de risco I e II · Portaria MTE 3.214/78 · NR-7 (PCMSO)</div>
+      </div>
+      <!-- Melhor data -->
+      <div id="deslDataPanel" style="background:rgba(56,217,169,.06);border:1px solid rgba(56,217,169,.25);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:8px;">📅 Melhor data para desligamento</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <div id="deslDataSugeridaVal" style="font-size:22px;font-weight:700;font-family:var(--mono);color:var(--accent2);">—</div>
+          <div style="flex:1;"><div id="deslDataSugeridaLabel" style="font-size:12px;font-weight:500;">Calculando…</div><div id="deslDataSugeridaMotivo" style="font-size:11px;color:var(--muted);margin-top:2px;"></div></div>
+        </div>
+        <div id="deslComparativo" style="font-size:11px;color:var(--muted);"></div>
+      </div>
+      <!-- Impacto financeiro -->
+      <div id="deslFinPanel" style="background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:600;color:var(--danger);margin-bottom:10px;">💰 Impacto financeiro estimado</div>
+        <div id="deslFinItens" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;"></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid rgba(248,113,113,.2);margin-top:4px;">
+          <span style="font-size:13px;font-weight:600;">Total estimado</span>
+          <span id="deslFinTotal" style="font-size:14px;font-weight:700;font-family:var(--mono);color:var(--danger);">R$ —</span>
+        </div>
+        <div id="deslFinObs" style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5;"></div>
+      </div>
+      <!-- Programar desligamento -->
+      <div style="background:var(--bg3);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px;">🗓️ Programar desligamento</div>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div style="flex:1;min-width:160px;">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Data programada</div>
+            <input type="date" class="fi" id="deslDataProg" style="width:100%;font-size:13px;" oninput="atualizarCustoProgramado()">
+          </div>
+          <button class="btn" style="background:var(--accent2);font-size:12px;padding:8px 14px;" onclick="programarDesl()">📅 Programar</button>
+        </div>
+        <div id="deslProgInfo" style="font-size:11px;color:var(--muted);margin-top:8px;display:none;">
+          ✅ Desligamento programado. O gestor será notificado 1 dia antes.
         </div>
       </div>
-      <!-- Confirmação -->
-      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="mDeslObs">Deseja confirmar o desligamento e abrir o formulário para registrar a data?</div>
+      <!-- Ações -->
       <div style="display:flex;gap:10px;justify-content:flex-end;">
         <button class="btn btn-g" onclick="closeModal('mConfDesl')">Cancelar</button>
-        <button class="btn" style="background:var(--danger);" onclick="executarDesl()">Confirmar desligamento</button>
+        <button class="btn" style="background:var(--danger);" onclick="executarDesl()">Desligar agora</button>
       </div>
     </div>
   </div>
@@ -951,6 +975,7 @@ function setL(m){$('lMsg').textContent=m;}
 
 async function loadAll(){
   if(DEMO){loadDemo();return;}
+  checkDesligamentosAgendados();
   $('sLoad').classList.remove('hidden');$('app').style.display='none';
   const allSheets=['CADASTRO_COLABORADORES','FERIAS_CLT','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH','AUSENCIAS_OCORRENCIAS','BIBLIOTECA_MENSAGENS_ANIV','LOG_AUTOMACAO_RH','PARAM_AUTOMACAO_RH'];
   const erros=[];
@@ -1005,6 +1030,8 @@ function render(){
   const desl=cad.filter(r=>normStatus(r)==='DESLIGADO');
   // Set de IDs de Sócios — isentos de ASO conforme NR-7
   const socioIds=new Set(ativos.filter(r=>String(r.TIPO_VINCULO||'').toUpperCase()==='SOCIO').map(r=>r.ID_COLABORADOR));
+  // Mapa global de colaboradores por ID (evita JSON.stringify em onclick)
+  window._cMap={};cad.forEach(r=>{if(r.ID_COLABORADOR)_cMap[r.ID_COLABORADOR]=r;});
   const vin={PJ:0,CLT:0,SOCIO:0,ESTAGIARIO:0,ASSOCIADO:0};
   ativos.forEach(r=>{const v=String(r.TIPO_VINCULO||'').toUpperCase().trim();if(vin[v]!==undefined)vin[v]++;});
   const empM={};ativos.forEach(r=>{const e=r.EMPRESA||'N/D';empM[e]=(empM[e]||0)+1;});
@@ -1175,8 +1202,8 @@ function render(){
     <td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
     <td style="font-family:var(--mono);font-size:17px;color:var(--accent)">${(parseFloat(r.ANOS_EMPRESA)||0).toFixed(1)}a</td>
     <td><div class="acts">
-      <button class="ab" onclick='openEditColab(${JSON.stringify(r)})'>Editar</button>
-      <button class="ab d" onclick='confirmDesl(${JSON.stringify(r)})'>Desligar</button>
+      <button class="ab" onclick="openEditColabById('${r.ID_COLABORADOR}')">Editar</button>
+      <button class="ab d" onclick="confirmDeslById('${r.ID_COLABORADOR}')">Desligar</button>
     </div></td></tr>`).join('');
 
   // Aniversários
@@ -1343,60 +1370,171 @@ async function saveEditColab(){
     toast('Colaborador atualizado','success');await loadAll();
   }catch(e){toast('Erro ao salvar: '+e.message,'error');}
 }
+function openEditColabById(id){const r=window._cMap&&_cMap[id];if(r)openEditColab(r);else toast('Colaborador não encontrado','error');}
+function confirmDeslById(id){const r=window._cMap&&_cMap[id];if(r)confirmDesl(r);else toast('Colaborador não encontrado','error');}
 let _deslPending=null;
+
+// ── Helpers financeiros ──────────────────────────────────────────────
+function _mDiff(a,b){return(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())+(b.getDate()<a.getDate()?-1:0);}
+function _fmt(v){return'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+function calcCustoDesl(r,dataDesl){
+  const vin=String(r.TIPO_VINCULO||'').toUpperCase();
+  const sal=parseFloat(String(r.SALARIO_HONORARIO||'0').replace(',','.'))||0;
+  const adm=parseDate(r.DATA_ADMISSAO);
+  const dt=dataDesl||new Date();
+  if(!adm)return{itens:[{n:'Sem data de admissão',v:0}],total:0,sal,obs:'Data de admissão não encontrada.',vin};
+  const meses=Math.max(_mDiff(adm,dt),0);
+  const anos=Math.floor(meses/12);
+  if(vin==='CLT'){
+    const diasAP=Math.min(30+3*anos,90);
+    const custoAP=sal*(diasAP/30);
+    const m13=dt.getMonth()+(dt.getDate()>=15?1:0);
+    const custo13=sal*(m13/12);
+    const iniPer=new Date(adm);iniPer.setFullYear(adm.getFullYear()+anos);
+    const mFer=Math.min(_mDiff(iniPer,dt),11);
+    const custoFer=sal*(mFer/12)*(4/3);
+    const multaFGTS=sal*0.08*meses*0.40;
+    const encargos=(custoAP+custo13+custoFer)*0.20;
+    const total=custoAP+custo13+custoFer+multaFGTS+encargos;
+    return{vin,sal,anos,meses,diasAP,itens:[
+      {n:`Aviso prévio indenizado (${diasAP} dias)`,v:custoAP},
+      {n:`13° proporcional (${m13}/12 meses)`,v:custo13},
+      {n:`Férias proporcional (${mFer}/12) + ⅓`,v:custoFer},
+      {n:'Multa FGTS 40% (sem justa causa)',v:multaFGTS},
+      {n:'Encargos empresa ~20% (INSS patr.)',v:encargos},
+    ],total,obs:'CLT sem justa causa · Art. 477/487 CLT · Dec. 99.684/90 (FGTS)'};
+  }
+  if(vin==='PJ'||vin==='MEI'){
+    const inss=sal*0.11;const iss=sal*0.05;
+    return{vin,sal,anos,meses,itens:[
+      {n:'INSS retido NF (11%)',v:inss},{n:'ISS sobre último serviço (~5%)',v:iss},
+      {n:'Multa rescisória contratual',v:0},{n:'FGTS e aviso prévio CLT',v:0},
+    ],total:inss+iss,obs:'PJ/MEI: sem FGTS, sem aviso prévio legal (CLT não se aplica). Verificar cláusula de multa no contrato de prestação de serviços.'};
+  }
+  if(vin==='ESTAGIARIO'){
+    const m13=dt.getMonth()+(dt.getDate()>=15?1:0);
+    const custo13=sal*(m13/12);
+    const mFer=Math.min(meses,12);
+    const custoFer=sal*(mFer/12);
+    return{vin,sal,anos,meses,itens:[
+      {n:`13° proporcional (${m13}/12) — Lei 11.788`,v:custo13},
+      {n:`Recesso proporcional (${mFer}/12)`,v:custoFer},
+      {n:'Aviso prévio',v:0},{n:'FGTS e multa rescisória',v:0},
+    ],total:custo13+custoFer,obs:'Estágio — Lei 11.788/2008: não há FGTS nem multa. Bolsa-auxílio e recesso proporcionais.'};
+  }
+  if(vin==='SOCIO'){
+    return{vin,sal,anos,meses,itens:[{n:'Retirada de cotas (contrato social)',v:0}],total:0,obs:'Sócio: desligamento regido pelo contrato/estatuto social. CLT não se aplica (art. 442 CLT). Consultar advogado societário.'};
+  }
+  if(vin==='ASSOCIADO'){
+    return{vin,sal,anos,meses,itens:[{n:'Verificar contrato de associação',v:0}],total:0,obs:'Associado: não há vínculo empregatício (art. 442, par. único CLT). Custo depende do contrato de associação vigente.'};
+  }
+  return{vin,sal,anos,meses,itens:[{n:'Vínculo não mapeado — verificar manualmente',v:0}],total:0,obs:''};
+}
+
+function melhorDataDesl(r){
+  const adm=parseDate(r.DATA_ADMISSAO);
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  if(!adm)return{data:new Date(hoje.getTime()+7*864e5),motivo:'Data de admissão não cadastrada.',economia:null};
+  const anosComp=Math.floor((hoje-adm)/(365*864e5));
+  const proxAniv=new Date(adm);proxAniv.setFullYear(adm.getFullYear()+anosComp+1);
+  const diasAteAniv=Math.floor((proxAniv-hoje)/864e5);
+  const anivAnterior=new Date(adm);anivAnterior.setFullYear(adm.getFullYear()+anosComp);
+  const diasDesdeAniv=Math.floor((hoje-anivAnterior)/864e5);
+  // Custo hoje vs custo logo após próximo aniversário
+  const custoHoje=calcCustoDesl(r,hoje);
+  const dataOtimaAniv=new Date(proxAniv.getTime()+3*864e5);
+  const custoAniv=calcCustoDesl(r,dataOtimaAniv);
+  const economiaAniv=custoHoje.total-custoAniv.total;
+  if(diasAteAniv<=45&&diasAteAniv>0){
+    return{data:dataOtimaAniv,motivo:`Aguardar ${diasAteAniv} dias (aniversário ${fmtD(proxAniv.toISOString().split('T')[0])}) reinicia período aquisitivo de férias.`,economia:economiaAniv>0?economiaAniv:null,tipo:'aniversario'};
+  }
+  if(diasDesdeAniv<=10){
+    const dataOtima=new Date(hoje.getTime()+5*864e5);
+    return{data:dataOtima,motivo:'Aniversário de empresa recente — período aquisitivo de férias reiniciado. Momento ideal.',economia:null,tipo:'ideal'};
+  }
+  // Último dia do mês
+  const fimMes=new Date(hoje.getFullYear(),hoje.getMonth()+1,0);
+  return{data:fimMes,motivo:'Último dia do mês facilita cálculos rescisórios (13°, férias e AP sem frações).',economia:null,tipo:'fimmes'};
+}
+
+function atualizarCustoProgramado(){
+  const r=_deslPending;if(!r)return;
+  const val=$('deslDataProg').value;if(!val)return;
+  const dataProg=new Date(val+'T12:00:00');
+  const custo=calcCustoDesl(r,dataProg);
+  $('deslFinItens').innerHTML=custo.itens.map(i=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);">
+    <span style="color:var(--muted);">${i.n}</span>
+    <span style="font-family:var(--mono);color:${i.v>0?'var(--text)':'var(--muted)'};">${i.v>0?_fmt(i.v):'—'}</span></div>`).join('');
+  $('deslFinTotal').textContent=_fmt(custo.total);
+  $('deslFinObs').textContent=custo.obs||'';
+}
+
 function confirmDesl(r){
   _deslPending=r;
-  $('mDeslSub').textContent=(r.NOME||'—')+' · '+(r.TIPO_VINCULO||'—');
-  // Busca último exame periódico do colaborador
+  const vin=String(r.TIPO_VINCULO||'').toUpperCase();
+  $('mDeslSub').textContent=(r.NOME||'—')+' · '+(r.CARGO||'—')+' · '+(r.TIPO_VINCULO||'—');
+  // NR-7
   const exames=D.EXAMES_OCUPACIONAIS||[];
   const exColab=exames.filter(e=>e.ID_COLABORADOR===r.ID_COLABORADOR||e.NOME===r.NOME);
-  // Pega o exame periódico mais recente (ou admissional, que também vale)
-  const exValidos=exColab.filter(e=>{
-    const t=String(e.TIPO_EXAME||'').toUpperCase();
-    return t==='PERIODICO'||t==='ADMISSIONAL'||t==='EXAME PERIÓDICO';
-  }).sort((a,b)=>{
-    const da=parseDate(a.ULTIMO_EXAME)||new Date(0);
-    const db=parseDate(b.ULTIMO_EXAME)||new Date(0);
-    return db-da;
-  });
+  const exValidos=exColab.filter(e=>{const t=String(e.TIPO_EXAME||'').toUpperCase();return t==='PERIODICO'||t==='ADMISSIONAL'||t.includes('PERI');}).sort((a,b)=>(parseDate(b.ULTIMO_EXAME)||new Date(0))-(parseDate(a.ULTIMO_EXAME)||new Date(0)));
   const hoje=new Date();hoje.setHours(0,0,0,0);
-  // Também considera data de admissão como referência se não houver exame
-  const refDate=exValidos.length>0
-    ?parseDate(exValidos[0].ULTIMO_EXAME)
-    :parseDate(r.DATA_ADMISSAO);
+  const refDate=exValidos.length>0?parseDate(exValidos[0].ULTIMO_EXAME):parseDate(r.DATA_ADMISSAO);
   const diasRef=refDate?Math.floor((hoje-refDate)/864e5):null;
-  const refLabel=exValidos.length>0
-    ?'último exame periódico: '+fmtD(exValidos[0].ULTIMO_EXAME)
-    :(r.DATA_ADMISSAO?'data de admissão: '+fmt(r.DATA_ADMISSAO):'sem exame registrado');
-  // Clínico: isento se ≤135 dias
+  const refLabel=exValidos.length>0?'último exame: '+fmtD(exValidos[0].ULTIMO_EXAME):(r.DATA_ADMISSAO?'admissão: '+fmt(r.DATA_ADMISSAO):'sem exame registrado');
   const clinOk=diasRef!==null&&diasRef<=135;
-  const clinTxt=diasRef!==null
-    ?`${diasRef} dias desde o ${refLabel}`
-    :`Sem referência — verificar exame`;
-  $('nr7ClinicoIco').textContent=clinOk?'✅':'⚠️';
-  $('nr7ClinicoTxt').textContent=clinTxt;
-  $('nr7ClinicoChip').textContent=clinOk?'Dispensado':'Necessário';
-  $('nr7ClinicoChip').className='chip '+(clinOk?'cok':'cd');
-  // Audiométrico: isento se ≤120 dias
   const audOk=diasRef!==null&&diasRef<=120;
-  const audTxt=diasRef!==null
-    ?`${diasRef} dias desde o ${refLabel}`
-    :`Sem referência — verificar exame`;
-  $('nr7AudioIco').textContent=audOk?'✅':'⚠️';
-  $('nr7AudioTxt').textContent=audTxt;
-  $('nr7AudioChip').textContent=audOk?'Dispensado':'Necessário';
-  $('nr7AudioChip').className='chip '+(audOk?'cok':'cd');
-  // Obs complementar
-  const obs=clinOk&&audOk
-    ?'✅ Ambos os exames dispensados para demissão conforme NR-7.'
-    :!clinOk&&!audOk
-    ?'⚠️ Agendar exame clínico e audiométrico antes do desligamento.'
-    :clinOk
-    ?'ℹ️ Exame clínico dispensado. Agendar exame audiométrico.'
-    :'ℹ️ Exame audiométrico dispensado. Agendar exame clínico.';
-  $('nr7Obs').innerHTML=obs+'<br><span style="opacity:.7;font-size:10px;">Grau de risco I e II · Portaria MTE 3.214/78 · NR-7 (PCMSO)</span>';
+  $('nr7ClinicoIco').textContent=clinOk?'✅':'⚠️';$('nr7ClinicoTxt').textContent=diasRef!==null?`${diasRef} dias desde ${refLabel}`:'Sem referência';
+  $('nr7ClinicoChip').textContent=clinOk?'Dispensado':'Necessário';$('nr7ClinicoChip').className='chip '+(clinOk?'cok':'cd');
+  $('nr7AudioIco').textContent=audOk?'✅':'⚠️';$('nr7AudioTxt').textContent=diasRef!==null?`${diasRef} dias desde ${refLabel}`:'Sem referência';
+  $('nr7AudioChip').textContent=audOk?'Dispensado':'Necessário';$('nr7AudioChip').className='chip '+(audOk?'cok':'cd');
+  $('nr7Obs').innerHTML=(clinOk&&audOk?'✅ Ambos dispensados conforme NR-7.':!clinOk&&!audOk?'⚠️ Agendar exame clínico e audiométrico.':clinOk?'ℹ️ Clínico dispensado. Agendar audiométrico.':'ℹ️ Audiométrico dispensado. Agendar clínico.')+(vin==='SOCIO'?'<br><em>Sócio: isento de ASO (NR-7).</em>':'')+'<br><span style="opacity:.6;font-size:10px;">Grau I e II · Portaria MTE 3.214/78</span>';
+  // Mostrar NR-7 apenas para CLT/Estagiário; ocultar para outros vínculos
+  $('nr7Panel').style.display=['CLT','ESTAGIARIO'].includes(vin)?'':'none';
+  // Melhor data
+  const md=melhorDataDesl(r);
+  const mdStr=md.data.toISOString().split('T')[0];
+  $('deslDataSugeridaVal').textContent=fmtD(mdStr);
+  $('deslDataSugeridaLabel').textContent=md.tipo==='ideal'?'✅ Momento ideal':md.tipo==='aniversario'?'📅 Aguardar aniversário':'📅 Fim do mês';
+  $('deslDataSugeridaMotivo').textContent=md.motivo;
+  if(md.economia&&md.economia>50){$('deslComparativo').innerHTML=`💡 Aguardar até esta data economiza aprox. <strong>${_fmt(md.economia)}</strong> em verbas rescisórias.`;}
+  else{$('deslComparativo').textContent='';}
+  $('deslDataProg').value=mdStr;
+  // Impacto financeiro com a data sugerida
+  const custo=calcCustoDesl(r,md.data);
+  $('deslFinItens').innerHTML=custo.itens.map(i=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);">
+    <span style="color:var(--muted);">${i.n}</span>
+    <span style="font-family:var(--mono);color:${i.v>0?'var(--text)':'var(--muted)'};">${i.v>0?_fmt(i.v):'—'}</span></div>`).join('');
+  $('deslFinTotal').textContent=_fmt(custo.total);
+  $('deslFinObs').textContent=custo.obs||'';
+  // Ocultar impacto financeiro para Sócio e Associado (sem cálculo aplicável)
+  $('deslFinPanel').style.display=['SOCIO','ASSOCIADO'].includes(vin)&&custo.total===0?'none':'';
+  $('deslProgInfo').style.display='none';
   openModal('mConfDesl');
 }
+
+function programarDesl(){
+  const r=_deslPending;if(!r)return;
+  const data=$('deslDataProg').value;
+  if(!data){toast('Informe a data de programação','error');return;}
+  const agendados=JSON.parse(localStorage.getItem('_deslAgendados')||'[]');
+  agendados.push({id:r.ID_COLABORADOR,nome:r.NOME,gestor:r.GESTOR||'',data,cargo:r.CARGO||'',vinculo:r.TIPO_VINCULO||'',ts:Date.now()});
+  localStorage.setItem('_deslAgendados',JSON.stringify(agendados));
+  $('deslProgInfo').style.display='';
+  toast(`Desligamento de ${r.NOME} programado para ${fmtD(data)}. Gestor será notificado em ${fmtD(new Date(new Date(data+'T12:00:00').getTime()-864e5).toISOString().split('T')[0])}.`,'success');
+}
+
+function checkDesligamentosAgendados(){
+  const agendados=JSON.parse(localStorage.getItem('_deslAgendados')||'[]');
+  if(!agendados.length)return;
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const amanha=new Date(hoje.getTime()+864e5);const amanhaStr=amanha.toISOString().split('T')[0];
+  const notif=agendados.filter(a=>a.data===amanhaStr);
+  notif.forEach(a=>{
+    setTimeout(()=>toast(`⚠️ Lembrete: desligamento de ${a.nome} (${a.vinculo}) programado para AMANHÃ (${fmtD(a.data)}). Notifique o gestor ${a.gestor||'—'}.`,'warn',8000),1500);
+  });
+}
+
 function executarDesl(){
   if(!_deslPending)return;
   closeModal('mConfDesl');
@@ -1704,8 +1842,8 @@ function filtrarColab(q){
     <td style="font-family:var(--mono);font-size:13px">${fmt(r.DATA_ADMISSAO)}</td>
     <td style="font-family:var(--mono);font-size:13px;color:var(--accent)">${(parseFloat(r.ANOS_EMPRESA)||0).toFixed(1)}a</td>
     <td><div class="acts">
-      <button class="ab" onclick='openEditColab(${JSON.stringify(r)})'>Editar</button>
-      <button class="ab d" onclick='confirmDesl(${JSON.stringify(r)})'>Desligar</button>
+      <button class="ab" onclick="openEditColabById('${r.ID_COLABORADOR}')">Editar</button>
+      <button class="ab d" onclick="confirmDeslById('${r.ID_COLABORADOR}')">Desligar</button>
     </div></td></tr>`).join('')||'<tr><td colspan="8" class="empty">Nenhum resultado.</td></tr>';
 }
 
@@ -2031,7 +2169,7 @@ function removeCoord(email){
   renderAdmin();
   toast('Coordenador removido','error');
 }
-function toast(msg,type='success'){const tc=$('tc');const t=document.createElement('div');t.className=`toast ${type}`;const c=type==='success'?'#b98af7':type==='error'?'#f87171':'#ffd000';t.innerHTML=`<div class="tdot" style="background:${c}"></div><span>${msg}</span>`;tc.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .25s';setTimeout(()=>t.remove(),250);},3000);}
+function toast(msg,type='success',dur){const tc=$('tc');const t=document.createElement('div');t.className=`toast ${type}`;const c=type==='success'?'#b98af7':type==='error'?'#f87171':'#ffd000';t.innerHTML=`<div class="tdot" style="background:${c}"></div><span>${msg}</span>`;tc.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .25s';setTimeout(()=>t.remove(),250);},dur||3500);}
 
 // Init
 $('ndate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
