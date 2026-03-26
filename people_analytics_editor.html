@@ -935,6 +935,10 @@ async function loadAll(){
 // ══════════════════════════════
 // RENDER
 // ══════════════════════════════
+// STATUS pode ser fórmula Excel (NaN no pandas, mas calculado via Graph API).
+// Fallback para RAW_STATUS garante robustez mesmo com células não cacheadas.
+const normStatus=r=>{const s=String(r.STATUS||'').trim().toUpperCase();if(s==='ATIVO'||s==='DESLIGADO')return s;const raw=String(r.RAW_STATUS||'').trim().toLowerCase();if(raw==='ativo')return'ATIVO';if(raw==='desligado'||raw==='inativo')return'DESLIGADO';return s||'';};
+
 function render(){
   const cad=D.CADASTRO_COLABORADORES||[];
   const ferias=D.FERIAS_CLT||[];
@@ -943,8 +947,10 @@ function render(){
   const aus=D.AUSENCIAS_OCORRENCIAS||[];
   const msgs=D.BIBLIOTECA_MENSAGENS_ANIV||[];
 
-  const ativos=cad.filter(r=>String(r.STATUS||'').trim().toUpperCase()==='ATIVO');
-  const desl=cad.filter(r=>String(r.STATUS||'').trim().toUpperCase()==='DESLIGADO');
+  const ativos=cad.filter(r=>normStatus(r)==='ATIVO');
+  const desl=cad.filter(r=>normStatus(r)==='DESLIGADO');
+  // Set de IDs de Sócios — isentos de ASO conforme NR-7
+  const socioIds=new Set(ativos.filter(r=>String(r.TIPO_VINCULO||'').toUpperCase()==='SOCIO').map(r=>r.ID_COLABORADOR));
   const vin={PJ:0,CLT:0,SOCIO:0,ESTAGIARIO:0,ASSOCIADO:0};
   ativos.forEach(r=>{const v=String(r.TIPO_VINCULO||'').toUpperCase().trim();if(vin[v]!==undefined)vin[v]++;});
   const empM={};ativos.forEach(r=>{const e=r.EMPRESA||'N/D';empM[e]=(empM[e]||0)+1;});
@@ -970,7 +976,7 @@ function render(){
   const prD=evA.length>0?evA[0].DIAS_PARA_EVENTO:null;
   // cSem: PJ/MEI/Associado sem flag CONTRATO_INDETERMINADO='SIM'
   const cSem=ativos.filter(r=>{const v=String(r.TIPO_VINCULO||'').toUpperCase();return['PJ','MEI','ASSOCIADO'].includes(v)&&String(r.CONTRATO_INDETERMINADO||'').toUpperCase()!=='SIM';});
-  const exV=exames.filter(r=>String(r.STATUS_EXAME||'').toUpperCase()==='VENCIDO'&&String(r.STATUS||'').toUpperCase()==='ATIVO');
+  const exV=exames.filter(r=>String(r.STATUS_EXAME||'').toUpperCase()==='VENCIDO'&&(normStatus(r)==='ATIVO'||!r.STATUS)&&!socioIds.has(r.ID_COLABORADOR));
   const fNP=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_PROGRAMADA');
   // Alerta experiência CLT: período vencendo em ≤15 dias ou já vencido, sem flag indeterminado
   const hojeMs=new Date().getTime();
@@ -1009,9 +1015,10 @@ function render(){
   $('kTurnoverSub').textContent=`${desl.length} de ${cad.length} desligados`;
 
   // LINHA 3: Saúde operacional
-  const exAtvConf=exames.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVO');
+  // Exames: STATUS nulo tratado como ativo; sócios excluídos (isentos NR-7)
+  const exAtvConf=exames.filter(r=>{const s=String(r.STATUS||'').toUpperCase();return((!s||s==='ATIVO'))&&!socioIds.has(r.ID_COLABORADOR);});
   const exOkCount=exAtvConf.length-exV.length;
-  const ferCltAtv=ferias.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVO'&&r.STATUS_FERIAS!=='NAO_APLICAVEL'&&r.STATUS_FERIAS!=='INATIVO');
+  const ferCltAtv=ferias.filter(r=>(normStatus(r)==='ATIVO'||!r.STATUS)&&r.STATUS_FERIAS!=='NAO_APLICAVEL'&&r.STATUS_FERIAS!=='INATIVO');
   const ferProgCount=ferCltAtv.filter(r=>['PROGRAMADA','GOZADA'].includes(r.STATUS_FERIAS||'')).length;
   const pjAtvCont=ativos.filter(r=>['PJ','MEI','ASSOCIADO'].includes(String(r.TIPO_VINCULO||'').toUpperCase()));
   const pjOkCount=pjAtvCont.filter(r=>String(r.CONTRATO_INDETERMINADO||'').toUpperCase()==='SIM').length;
@@ -1132,7 +1139,8 @@ function render(){
   const fIn=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='INATIVO');
   const fClt=ativos.filter(r=>String(r.TIPO_VINCULO||'').toUpperCase().trim()==='CLT');
   $('fNp').textContent=fNP.length;$('fNa').textContent=fNa.length;$('fIn').textContent=fIn.length;$('fClt').textContent=fClt.length;
-  const fAtv=ferias.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVO');$('fCount').textContent=fAtv.length+' registros';
+  const fAtv=ferias.filter(r=>normStatus(r)==='ATIVO'||!r.STATUS);$('fCount').textContent=fAtv.length+' registros';
+  if(ferias.length===0){$('fBody').innerHTML='<tr><td colspan="7" class="empty" style="padding:20px;color:var(--warn);">⚠️ Aba FERIAS_CLT sem dados — preencha a planilha base para visualizar os registros.</td></tr>';}
   $('fBody').innerHTML=fAtv.map(r=>`<tr>
     <td>${r.NOME||'—'}</td><td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
     <td><span class="chip ${r.STATUS_FERIAS==='NAO_PROGRAMADA'?'cw':r.STATUS_FERIAS==='GOZADA'?'cok':r.STATUS_FERIAS==='PROGRAMADA'?'cc':'cd'}">${(r.STATUS_FERIAS||'—').replace('_',' ')}</span></td>
@@ -1141,20 +1149,28 @@ function render(){
     <td style="font-size:17px;color:var(--muted)">${fmtD(r.FERIAS_GOZADAS_INICIO)||'—'} → ${fmtD(r.FERIAS_GOZADAS_FIM)||'—'}</td>
     <td><div class="acts"><button class="ab" onclick='openEditFer(${JSON.stringify(r)})'>Editar</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum</td></tr>';
 
-  // Exames
-  const exAtvList=exames.filter(r=>String(r.STATUS||'').toUpperCase()==='ATIVO'); // apenas ativos
-  const exSem=ativos.filter(a=>!exames.find(e=>e.ID_COLABORADOR===a.ID_COLABORADOR));
-  $('exV').textContent=exV.length;$('exT').textContent=exames.length;$('exA').textContent=exAtvList.length;$('exS').textContent=exSem.length;$('exCount').textContent=exAtvList.length+' registros (ativos)';
-  $('exBody').innerHTML=exAtvList.map(r=>`<tr>
+  // Exames — STATUS nulo tratado como ativo
+  const exAtvList=exames.filter(r=>{const s=String(r.STATUS||'').toUpperCase();return!s||s==='ATIVO';});
+  const exSem=ativos.filter(a=>!socioIds.has(a.ID_COLABORADOR)&&!exames.find(e=>e.ID_COLABORADOR===a.ID_COLABORADOR));
+  $('exV').textContent=exV.length;$('exT').textContent=exames.length;$('exA').textContent=exAtvList.length;$('exS').textContent=exSem.length;$('exCount').textContent=exAtvList.length+' registros';
+  const _nr7tip='NR-7: Exame clínico isento na demissão se ≤135 dias. Audiométrico isento se ≤120 dias (risco I e II).';
+  $('exBody').innerHTML=exAtvList.map(r=>{
+    const isSocio=socioIds.has(r.ID_COLABORADOR);
+    const isDemiss=String(r.TIPO_EXAME||'').toUpperCase()==='DEMISSIONAL';
+    const statusChip=isSocio
+      ?`<span class="chip cw" title="Sócio isento de ASO conforme NR-7">Isento NR-7</span>`
+      :`<span class="chip ${r.STATUS_EXAME==='EM_DIA'?'cok':r.STATUS_EXAME==='VENCIDO'?'cd':'cw'}">${r.STATUS_EXAME||'—'}</span>`;
+    const nr7Icon=isDemiss?`<span title="${_nr7tip}" style="cursor:help;margin-left:4px;color:var(--muted);">ℹ️</span>`:'';
+    return`<tr>
     <td>${r.NOME||'—'}</td>
-    <td><span class="chip ${String(r.STATUS||'').toUpperCase()==='ATIVO'?'cok':'cd'}">${r.STATUS||'—'}</span></td>
+    <td><span class="chip cok">${r.TIPO_EXAME||'—'}</span>${nr7Icon}</td>
     <td style="font-family:var(--mono);font-size:17px">${fmtD(r.ULTIMO_EXAME)}</td>
     <td style="font-family:var(--mono);font-size:17px">${fmtD(r.PROXIMO_EXAME)}</td>
-    <td><span class="chip ${r.STATUS_EXAME==='EM_DIA'?'cok':r.STATUS_EXAME==='VENCIDO'?'cd':'cw'}">${r.STATUS_EXAME||'—'}</span></td>
-    <td><div class="acts"><button class="ab" onclick='openEditEx(${JSON.stringify(r)})'>Editar</button></div></td></tr>`).join('')||'<tr><td colspan="6" class="empty">Nenhum</td></tr>';
+    <td>${statusChip}</td>
+    <td><div class="acts"><button class="ab" onclick='openEditEx(${JSON.stringify(r)})'>Editar</button></div></td></tr>`;}).join('')||'<tr><td colspan="6" class="empty">Nenhum</td></tr>';
 
-  // Ausências
-  const ausR=(aus||[]).filter(r=>r.ID_COLABORADOR&&r.NOME!=='Colaborador (a)');
+  // Ausências — ID_COLABORADOR pode ser NaN no Excel; filtra por NOME válido e DATA real
+  const ausR=(aus||[]).filter(r=>{const n=String(r.NOME||'').trim();const d=String(r.DATA||'').trim();return n&&n!=='Colaborador (a)'&&n!=='Colaborador'&&d&&d!=='Data';});
   $('ausCount').textContent=ausR.length+' registros';
   $('ausBody').innerHTML=ausR.map(r=>`<tr><td><span class="chip ce">${r.TIPO||'—'}</span></td><td>${r.NOME||'—'}</td><td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA)}</td><td>${r.DETALHE||'—'}</td><td></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhum registro</td></tr>';
   $('ausColab').innerHTML=ativos.map(a=>`<option value="${a.ID_COLABORADOR}">${a.NOME}</option>`).join('');
@@ -1167,6 +1183,8 @@ function render(){
   $('alC').textContent=cSem.length;$('alE').textContent=exV.length;$('alF').textContent=fNP.length;$('alT').textContent=tAl;$('alCT').textContent=cSem.length;
   $('alContList').innerHTML=cSem.map(r=>`<div class="ai"><div class="aico" style="background:rgba(248,113,113,.08)">⚠️</div><div class="ainf"><div class="an">${r.NOME||'—'}</div><div class="ad">${r.TIPO_VINCULO||'—'} · desde ${fmt(r.DATA_INICIO_CONTRATO)} · sem data fim</div></div><span class="chip cd">Sem data</span></div>`).join('')||'<div class="empty">Nenhum</div>';
   $('alExamList').innerHTML=exV.map(r=>`<div class="ai"><div class="aico" style="background:rgba(245,158,11,.1)">🩺</div><div class="ainf"><div class="an">${r.NOME||'—'}</div><div class="ad">Último: ${fmtD(r.ULTIMO_EXAME)} · Venceu: ${fmtD(r.PROXIMO_EXAME)}</div></div><span class="chip cd">Vencido</span></div>`).join('')||'<div class="empty">Nenhum vencido</div>';
+  // Nota NR-7 no rodapé de alertas de exames
+  if(socioIds.size>0){const n=socioIds.size;$('alExamList').innerHTML+=`<div style="font-size:11px;color:var(--muted);padding:8px 0 0;">${n} sócio${n!==1?'s':''} isento${n!==1?'s':''} de ASO conforme NR-7</div>`;}
   $('alResume').innerHTML=[{l:'Contratos sem data fim',v:cSem.length,c:'danger'},{l:'Exames vencidos (ativos)',v:exV.length,c:'warn'},{l:'Férias não programadas',v:fNP.length,c:'warn'},{l:'Automação Teams',v:'OK',c:'ok'}].map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 9px;background:${x.c==='ok'?'rgba(56,217,169,.05)':x.c==='danger'?'rgba(248,113,113,.07)':'rgba(245,158,11,.07)'};border-radius:6px;border:1px solid ${x.c==='ok'?'rgba(56,217,169,.15)':x.c==='danger'?'rgba(248,113,113,.2)':'rgba(245,158,11,.2)'};">
     <span style="font-size:17px;">${x.l}</span><span style="font-size:17px;font-family:var(--mono);color:var(--${x.c==='ok'?'accent2':x.c==='danger'?'danger':'warn'})">${x.v}</span></div>`).join('');
 }
@@ -1799,6 +1817,17 @@ function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList
 function loadCoords(){try{return JSON.parse(localStorage.getItem(CK_COORD)||'[]');}catch{return[];}}
 function saveCoords(arr){localStorage.setItem(CK_COORD,JSON.stringify(arr));}
 
+// Repara linha 54 (Caio) corrompida pelo patchRow com mapeamento antigo
+// Col C=EMAIL, col D=TIPO_VINCULO, col E=STATUS (índices 0-based: 2,3,4)
+async function repairCaio(){
+  if(DEMO)return;
+  await patchCell('CADASTRO_COLABORADORES',54,2,'caio.galdi@luisamoraesadvogados.com.br');
+  await patchCell('CADASTRO_COLABORADORES',54,3,'CLT');
+  await patchCell('CADASTRO_COLABORADORES',54,4,'ATIVO');
+  toast('Dados do Caio restaurados ✓','success');
+  setTimeout(()=>loadAll(),1200);
+}
+
 function detectRole(){
   const accounts=msalApp?msalApp.getAllAccounts():[];
   const msalEmail=accounts.length>0?accounts[0].username:'';
@@ -1810,6 +1839,10 @@ function detectRole(){
     USER_NOME=msalNome;
     USER_ROLE='admin';
     const t=$('tab-admin');if(t)t.style.display='';
+    // Reparar linha do Caio se STATUS estiver corrompido
+    const cad2=D.CADASTRO_COLABORADORES||[];
+    const caioRow=cad2.find(r=>String(r.NOME||'').toLowerCase().includes('caio'));
+    if(caioRow&&!normStatus(caioRow)){repairCaio().catch(e=>console.warn('repairCaio:',e));}
     return;
   }
 
