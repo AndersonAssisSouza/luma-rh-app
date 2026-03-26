@@ -522,6 +522,47 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 <!-- ══════════════ MODAIS ══════════════ -->
 
 <!-- Editar colaborador -->
+<!-- ══ MODAL CONFIRMAÇÃO DESLIGAMENTO + NR-7 ══ -->
+<div class="ov" id="mConfDesl">
+  <div class="modal" style="max-width:520px;">
+    <div class="mh">
+      <div><div class="mt">Confirmar desligamento</div><div class="ms" id="mDeslSub">—</div></div>
+      <button class="mc" onclick="closeModal('mConfDesl')">×</button>
+    </div>
+    <div class="mb">
+      <!-- Painel NR-7 -->
+      <div id="nr7Panel" style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:600;color:var(--warn);margin-bottom:10px;">⚖️ NR-7 — Verificação de exame demissional</div>
+        <div id="nr7Clinico" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(245,158,11,.15);">
+          <div id="nr7ClinicoIco" style="font-size:18px;width:24px;text-align:center;">⏳</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:500;">Exame clínico</div>
+            <div id="nr7ClinicoTxt" style="font-size:12px;color:var(--muted);">Calculando…</div>
+          </div>
+          <div id="nr7ClinicoChip" class="chip cw">—</div>
+        </div>
+        <div id="nr7Audio" style="display:flex;align-items:center;gap:10px;padding:8px 0;">
+          <div id="nr7AudioIco" style="font-size:18px;width:24px;text-align:center;">⏳</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:500;">Exame audiométrico</div>
+            <div id="nr7AudioTxt" style="font-size:12px;color:var(--muted);">Calculando…</div>
+          </div>
+          <div id="nr7AudioChip" class="chip cw">—</div>
+        </div>
+        <div id="nr7Obs" style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5;">
+          Grau de risco I e II · Portaria MTE 3.214/78 · NR-7 (PCMSO)
+        </div>
+      </div>
+      <!-- Confirmação -->
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="mDeslObs">Deseja confirmar o desligamento e abrir o formulário para registrar a data?</div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-g" onclick="closeModal('mConfDesl')">Cancelar</button>
+        <button class="btn" style="background:var(--danger);" onclick="executarDesl()">Confirmar desligamento</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="ov" id="mEditColab">
   <div class="modal" style="max-width:620px;">
     <div class="mh"><div><div class="mt">Editar colaborador</div><div class="ms" id="mEditColabSub">—</div></div><button class="mc" onclick="closeModal('mEditColab')">×</button></div>
@@ -1302,7 +1343,68 @@ async function saveEditColab(){
     toast('Colaborador atualizado','success');await loadAll();
   }catch(e){toast('Erro ao salvar: '+e.message,'error');}
 }
-function confirmDesl(r){if(confirm(`Confirmar desligamento de "${r.NOME}"?`)){openEditColab({...r});setS('eStatus','DESLIGADO');$('eDesl').value=new Date().toISOString().split('T')[0];}}
+let _deslPending=null;
+function confirmDesl(r){
+  _deslPending=r;
+  $('mDeslSub').textContent=(r.NOME||'—')+' · '+(r.TIPO_VINCULO||'—');
+  // Busca último exame periódico do colaborador
+  const exames=D.EXAMES_OCUPACIONAIS||[];
+  const exColab=exames.filter(e=>e.ID_COLABORADOR===r.ID_COLABORADOR||e.NOME===r.NOME);
+  // Pega o exame periódico mais recente (ou admissional, que também vale)
+  const exValidos=exColab.filter(e=>{
+    const t=String(e.TIPO_EXAME||'').toUpperCase();
+    return t==='PERIODICO'||t==='ADMISSIONAL'||t==='EXAME PERIÓDICO';
+  }).sort((a,b)=>{
+    const da=parseDate(a.ULTIMO_EXAME)||new Date(0);
+    const db=parseDate(b.ULTIMO_EXAME)||new Date(0);
+    return db-da;
+  });
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  // Também considera data de admissão como referência se não houver exame
+  const refDate=exValidos.length>0
+    ?parseDate(exValidos[0].ULTIMO_EXAME)
+    :parseDate(r.DATA_ADMISSAO);
+  const diasRef=refDate?Math.floor((hoje-refDate)/864e5):null;
+  const refLabel=exValidos.length>0
+    ?'último exame periódico: '+fmtD(exValidos[0].ULTIMO_EXAME)
+    :(r.DATA_ADMISSAO?'data de admissão: '+fmt(r.DATA_ADMISSAO):'sem exame registrado');
+  // Clínico: isento se ≤135 dias
+  const clinOk=diasRef!==null&&diasRef<=135;
+  const clinTxt=diasRef!==null
+    ?`${diasRef} dias desde o ${refLabel}`
+    :`Sem referência — verificar exame`;
+  $('nr7ClinicoIco').textContent=clinOk?'✅':'⚠️';
+  $('nr7ClinicoTxt').textContent=clinTxt;
+  $('nr7ClinicoChip').textContent=clinOk?'Dispensado':'Necessário';
+  $('nr7ClinicoChip').className='chip '+(clinOk?'cok':'cd');
+  // Audiométrico: isento se ≤120 dias
+  const audOk=diasRef!==null&&diasRef<=120;
+  const audTxt=diasRef!==null
+    ?`${diasRef} dias desde o ${refLabel}`
+    :`Sem referência — verificar exame`;
+  $('nr7AudioIco').textContent=audOk?'✅':'⚠️';
+  $('nr7AudioTxt').textContent=audTxt;
+  $('nr7AudioChip').textContent=audOk?'Dispensado':'Necessário';
+  $('nr7AudioChip').className='chip '+(audOk?'cok':'cd');
+  // Obs complementar
+  const obs=clinOk&&audOk
+    ?'✅ Ambos os exames dispensados para demissão conforme NR-7.'
+    :!clinOk&&!audOk
+    ?'⚠️ Agendar exame clínico e audiométrico antes do desligamento.'
+    :clinOk
+    ?'ℹ️ Exame clínico dispensado. Agendar exame audiométrico.'
+    :'ℹ️ Exame audiométrico dispensado. Agendar exame clínico.';
+  $('nr7Obs').innerHTML=obs+'<br><span style="opacity:.7;font-size:10px;">Grau de risco I e II · Portaria MTE 3.214/78 · NR-7 (PCMSO)</span>';
+  openModal('mConfDesl');
+}
+function executarDesl(){
+  if(!_deslPending)return;
+  closeModal('mConfDesl');
+  openEditColab({..._deslPending});
+  setS('eStatus','DESLIGADO');
+  $('eDesl').value=new Date().toISOString().split('T')[0];
+  _deslPending=null;
+}
 
 // NOVO COLABORADOR
 async function saveNewColab(){
