@@ -133,9 +133,11 @@ window.doReset = async function() {
 
   try {
     await solicitarResetSenha(email)
-    showAlert(alert, 'success', 'Link enviado! Verifique sua caixa de entrada (e spam).')
+    showAlert(alert, 'success', 'Link enviado! Verifique sua caixa de entrada.')
     btn.textContent = 'Reenviar link'
     btn.disabled = false
+    // Volta para login automaticamente após 2,5 segundos
+    setTimeout(() => { window.showLogin() }, 2500)
   } catch (e) {
     showAlert(alert, 'error', e.message)
     btn.disabled = false

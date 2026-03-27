@@ -438,3 +438,83 @@ export async function logEvento(tipo, descricao, dados = {}) {
     // log silencioso — não quebrar o fluxo principal
   }
 }
+
+// ============================================================
+// CONFIGURAÇÕES DO TENANT (identidade visual + modelos)
+// ============================================================
+
+export async function getTenantConfig() {
+  const profile = await getProfileCached()
+  if (!profile?.tenant_id) return { config: {} }
+  const { data, error } = await sb
+    .from('tenants')
+    .select('id, nome, slug, config')
+    .eq('id', profile.tenant_id)
+    .single()
+  if (error) return { config: {} }
+  return { ...data, config: data.config || {} }
+}
+
+export async function saveTenantConfig(configPatch) {
+  const profile = await getProfileCached()
+  if (!profile?.tenant_id) throw new Error('Tenant não encontrado')
+  // Faz merge do config existente com o patch
+  const current = await getTenantConfig()
+  const merged = { ...current.config, ...configPatch }
+  const { error } = await sb
+    .from('tenants')
+    .update({ config: merged })
+    .eq('id', profile.tenant_id)
+  if (error) throw error
+  return merged
+}
+
+export function applyTenantTheme(config) {
+  if (!config) return
+  const root = document.documentElement
+  const primary   = config.cor_primaria   || null
+  const secondary = config.cor_secundaria || null
+
+  if (primary) {
+    root.style.setProperty('--luma-purple',       primary)
+    root.style.setProperty('--luma-purple-dark',  _darken(primary, 0.15))
+    root.style.setProperty('--luma-purple-light',  _lighten(primary, 0.15))
+    root.style.setProperty('--accent', primary)
+  }
+  if (secondary) {
+    root.style.setProperty('--luma-gold',      secondary)
+    root.style.setProperty('--luma-gold-dark', _darken(secondary, 0.15))
+    root.style.setProperty('--accent2', secondary)
+  }
+
+  // Aplica logo nos elementos da página
+  if (config.logo_base64) {
+    document.querySelectorAll('.tenant-logo-img').forEach(el => {
+      el.src = config.logo_base64
+      el.style.display = 'block'
+    })
+    document.querySelectorAll('.tenant-logo-svg').forEach(el => {
+      el.style.display = 'none'
+    })
+  }
+}
+
+function _darken(hex, amount) {
+  try {
+    const n = parseInt(hex.replace('#',''), 16)
+    const r = Math.max(0, (n>>16) - Math.round(255*amount))
+    const g = Math.max(0, ((n>>8)&0xff) - Math.round(255*amount))
+    const b = Math.max(0, (n&0xff) - Math.round(255*amount))
+    return '#' + [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('')
+  } catch { return hex }
+}
+
+function _lighten(hex, amount) {
+  try {
+    const n = parseInt(hex.replace('#',''), 16)
+    const r = Math.min(255, (n>>16) + Math.round(255*amount))
+    const g = Math.min(255, ((n>>8)&0xff) + Math.round(255*amount))
+    const b = Math.min(255, (n&0xff) + Math.round(255*amount))
+    return '#' + [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('')
+  } catch { return hex }
+}

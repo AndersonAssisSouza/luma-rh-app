@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LUMA RH · Configurações</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f5f3ff;color:#1e1b35;min-height:100vh;}
+
+/* HEADER */
+.header{background:#fff;border-bottom:1px solid #e5e3ff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-box{width:38px;height:38px;border-radius:8px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.logo-box svg{width:38px;height:38px;}
+.logo-box .tenant-logo-img{width:38px;height:38px;object-fit:contain;display:none;}
+.logo-text{font-size:17px;font-weight:700;color:#1e1b35;}
+.logo-sub{font-size:11px;color:#7c3aed;letter-spacing:.04em;text-transform:uppercase;}
+.header-nav{display:flex;gap:10px;align-items:center;}
+.btn-back{color:#7c3aed;background:none;border:1px solid #ddd6fe;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer;text-decoration:none;transition:all .2s;}
+.btn-back:hover{background:#f5f3ff;}
+.btn-sair{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:7px;padding:6px 14px;font-size:13px;color:#7c3aed;cursor:pointer;transition:all .2s;}
+.btn-sair:hover{background:#ede9fe;}
+
+/* MAIN */
+.main{max-width:700px;margin:0 auto;padding:32px 20px 60px;}
+.page-title{font-size:22px;font-weight:700;color:#1e1b35;margin-bottom:4px;}
+.page-sub{font-size:13px;color:#6b7280;margin-bottom:28px;}
+
+/* CARDS */
+.card{background:#fff;border:1px solid #e5e3ff;border-radius:14px;padding:24px;margin-bottom:20px;}
+.card-header{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.card-icon{font-size:18px;}
+.card-title{font-size:15px;font-weight:700;color:#1e1b35;}
+.card-desc{font-size:12px;color:#9ca3af;margin-bottom:20px;}
+
+/* FORM */
+.fgrp{margin-bottom:16px;}
+label{display:block;font-size:12px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+input[type="text"],input[type="email"],textarea,select{
+  width:100%;border:1px solid #ddd6fe;border-radius:8px;padding:9px 12px;font-size:14px;
+  color:#1e1b35;background:#fdfcff;outline:none;transition:border .2s;font-family:inherit;
+}
+input:focus,textarea:focus,select:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.08);}
+.slug-hint{font-size:11px;color:#9ca3af;margin-top:4px;}
+
+/* LOGO UPLOAD */
+.logo-upload{border:2px dashed #ddd6fe;border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.logo-upload:hover{border-color:#7c3aed;background:#f9f8ff;}
+.logo-upload.drag{border-color:#7c3aed;background:#f0eeff;}
+.logo-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.logo-preview{display:none;max-height:100px;max-width:200px;object-fit:contain;margin:0 auto 10px;border-radius:8px;}
+.logo-upload-icon{font-size:28px;margin-bottom:8px;}
+.logo-upload-text{font-size:13px;color:#6b7280;}
+.logo-upload-hint{font-size:11px;color:#9ca3af;margin-top:4px;}
+.logo-clear{display:none;background:#fee2e2;border:none;border-radius:6px;padding:4px 10px;font-size:11px;color:#dc2626;cursor:pointer;margin-top:8px;}
+
+/* CORES */
+.color-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.color-field{position:relative;}
+.color-swatch{width:36px;height:36px;border-radius:6px;border:2px solid #ddd6fe;cursor:pointer;flex-shrink:0;overflow:hidden;position:relative;}
+.color-swatch input[type="color"]{position:absolute;inset:-4px;width:calc(100%+8px);height:calc(100%+8px);opacity:0;cursor:pointer;border:none;}
+.color-input-wrap{display:flex;align-items:center;gap:8px;}
+.color-input-wrap input[type="text"]{font-family:monospace;}
+
+.color-preview-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
+.preview-btn{height:36px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:default;transition:all .3s;}
+.preview-btn.primary{background:var(--prev-primary,#9b66f4);color:#fff;}
+.preview-btn.secondary{background:var(--prev-secondary,#ffd000);color:#1e1b35;}
+
+/* MODELOS */
+.modelos-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:600px){.modelos-grid{grid-template-columns:1fr;}}
+.modelo-slot{border:1px solid #ddd6fe;border-radius:10px;overflow:hidden;}
+.modelo-preview{width:100%;height:160px;background:#f3f0ff;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.modelo-preview img{width:100%;height:100%;object-fit:cover;display:none;}
+.modelo-preview .placeholder{text-align:center;color:#c4b5fd;}
+.modelo-preview .placeholder .icon{font-size:32px;margin-bottom:6px;}
+.modelo-preview .placeholder .txt{font-size:12px;}
+.modelo-preview .overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;gap:8px;}
+.modelo-preview:hover .overlay{display:flex;}
+.modelo-info{padding:12px;}
+.modelo-num{font-size:11px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;}
+.modelo-select{width:100%;margin-bottom:6px;}
+.modelo-upload-btn{width:100%;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:7px;font-size:12px;font-weight:600;color:#7c3aed;cursor:pointer;text-align:center;transition:all .2s;position:relative;overflow:hidden;margin-top:4px;}
+.modelo-upload-btn:hover{background:#ede9fe;}
+.modelo-upload-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.modelo-clear-btn{width:100%;background:#fff;border:1px solid #fecaca;border-radius:6px;padding:5px;font-size:11px;color:#dc2626;cursor:pointer;text-align:center;margin-top:4px;display:none;}
+.modelo-clear-btn:hover{background:#fef2f2;}
+
+/* SAVE */
+.save-bar{display:flex;justify-content:flex-end;margin-top:8px;}
+.btn-save{background:#7c3aed;border:none;border-radius:9px;padding:12px 28px;font-size:14px;font-weight:700;color:#fff;cursor:pointer;transition:background .2s;display:flex;align-items:center;gap:8px;}
+.btn-save:hover{background:#6d28d9;}
+.btn-save:disabled{background:#c4b5fd;cursor:not-allowed;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;z-index:2000;transform:translateY(100px);opacity:0;transition:all .3s;max-width:360px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{background:#22c55e;color:#fff;}
+.toast.error{background:#ef4444;color:#fff;}
+.toast.info{background:#3b82f6;color:#fff;}
+
+.loading-spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.reset-btn{background:none;border:none;font-size:11px;color:#9ca3af;cursor:pointer;text-decoration:underline;margin-top:6px;display:block;}
+.reset-btn:hover{color:#7c3aed;}
+</style>
+</head>
+<body>
+
+<!-- AUTH GUARD -->
+<script type="module">
+import {
+  sb, requireAuth, logout,
+  getTenantConfig, saveTenantConfig, applyTenantTheme
+} from './supabase_client.js'
+
+window._sbLogout = () => logout()
+
+;(async () => {
+  const profile = await requireAuth(['master','manager_global'])
+  if (!profile) return
+  window._profile = profile
+  window._getTenantConfig  = getTenantConfig
+  window._saveTenantConfig = saveTenantConfig
+  window._applyTheme       = applyTenantTheme
+  document.dispatchEvent(new Event('auth-ready'))
+})()
+</script>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-box">
+      <svg class="tenant-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="12" fill="#9b66f4"/>
+        <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
+      </svg>
+      <img class="tenant-logo-img" alt="Logo">
+    </div>
+    <div>
+      <div class="logo-text">LUMA RH</div>
+      <div class="logo-sub">Configurações</div>
+    </div>
+  </div>
+  <div class="header-nav">
+    <a href="./people_analytics_editor.html" class="btn-back">← Voltar ao Sistema</a>
+    <button class="btn-sair" onclick="window._sbLogout&&_sbLogout()">Sair</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-title">⚙️ Configurações</div>
+  <div class="page-sub">Personalize a identidade visual e os modelos do sistema</div>
+
+  <!-- IDENTIDADE VISUAL -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">🎨</span>
+      <span class="card-title">Identidade Visual</span>
+    </div>
+    <div class="card-desc">Cores e logo do sistema. Se não configurado, usa as cores padrão LUMA.</div>
+
+    <!-- Logo -->
+    <div class="fgrp">
+      <label>Logo do Sistema</label>
+      <div class="logo-upload" id="logo-drop" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="onLogoDrop(event)">
+        <input type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml,image/gif" onchange="onLogoFile(this)">
+        <img id="logo-preview" class="logo-preview" alt="Preview">
+        <div id="logo-placeholder">
+          <div class="logo-upload-icon">📤</div>
+          <div class="logo-upload-text">Clique para enviar o logo</div>
+          <div class="logo-upload-hint">JPG, PNG, WebP, GIF ou SVG (max. 2MB)</div>
+        </div>
+        <button class="logo-clear" id="logo-clear" onclick="clearLogo(event)">✕ Remover logo</button>
+      </div>
+    </div>
+
+    <!-- Cores -->
+    <div class="color-row">
+      <div class="fgrp">
+        <label>Cor Primária</label>
+        <div class="color-input-wrap">
+          <div class="color-swatch" id="swatch-primary" style="background:#9b66f4;">
+            <input type="color" id="picker-primary" value="#9b66f4" oninput="onColorChange('primary',this.value)">
+          </div>
+          <input type="text" id="text-primary" value="#9b66f4" maxlength="7"
+            oninput="onColorText('primary',this.value)" placeholder="#9b66f4">
+        </div>
+        <button class="reset-btn" onclick="resetColor('primary')">Restaurar padrão (#9b66f4)</button>
+      </div>
+      <div class="fgrp">
+        <label>Cor Secundária</label>
+        <div class="color-input-wrap">
+          <div class="color-swatch" id="swatch-secondary" style="background:#ffd000;">
+            <input type="color" id="picker-secondary" value="#ffd000" oninput="onColorChange('secondary',this.value)">
+          </div>
+          <input type="text" id="text-secondary" value="#ffd000" maxlength="7"
+            oninput="onColorText('secondary',this.value)" placeholder="#ffd000">
+        </div>
+        <button class="reset-btn" onclick="resetColor('secondary')">Restaurar padrão (#ffd000)</button>
+      </div>
+    </div>
+
+    <div class="color-preview-row">
+      <div class="preview-btn primary" id="prev-primary">Cor Primária</div>
+      <div class="preview-btn secondary" id="prev-secondary">Cor Secundária</div>
+    </div>
+  </div>
+
+  <!-- MODELOS DE ANIVERSÁRIO -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">🎂</span>
+      <span class="card-title">Modelos de Aniversário</span>
+    </div>
+    <div class="card-desc">
+      Imagens usadas para gerar os cards de aniversário. Defina a empresa e o tipo de cada modelo.
+    </div>
+    <div class="modelos-grid" id="modelos-grid">
+      <!-- Renderizado via JS -->
+    </div>
+  </div>
+
+  <!-- SALVAR -->
+  <div class="save-bar">
+    <button class="btn-save" id="btn-save" onclick="salvarConfig()">
+      💾 Salvar Configurações
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// ESTADO
+// ============================================================
+let _cfg = {
+  cor_primaria: '#9b66f4',
+  cor_secundaria: '#ffd000',
+  logo_base64: null,
+  modelos: [
+    { key: 'modelo1', empresa: 'luisa', tipo: 'funcionario', base64: null },
+    { key: 'modelo2', empresa: 'luma',  tipo: 'funcionario', base64: null },
+    { key: 'modelo3', empresa: 'luisa', tipo: 'empresa',     base64: null },
+    { key: 'modelo4', empresa: 'luma',  tipo: 'empresa',     base64: null }
+  ]
+}
+const EMPRESA_OPTS = [
+  { value: 'luisa', label: 'Luisa Moraes Advogados' },
+  { value: 'luma',  label: 'Luma Plataforma' }
+]
+const TIPO_OPTS = [
+  { value: 'funcionario', label: '🎂 Aniversário de Funcionário' },
+  { value: 'empresa',     label: '🏆 Aniversário de Empresa' }
+]
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('auth-ready', async () => {
+  try {
+    const tenant = await window._getTenantConfig()
+    const cfg = tenant.config || {}
+    if (cfg.cor_primaria)   _cfg.cor_primaria   = cfg.cor_primaria
+    if (cfg.cor_secundaria) _cfg.cor_secundaria = cfg.cor_secundaria
+    if (cfg.logo_base64)    _cfg.logo_base64    = cfg.logo_base64
+    if (Array.isArray(cfg.modelos) && cfg.modelos.length === 4) _cfg.modelos = cfg.modelos
+
+    renderColors()
+    renderLogo()
+    renderModelos()
+    window._applyTheme(cfg)
+  } catch(e) {
+    toast('Erro ao carregar configurações: ' + e.message, 'error')
+    renderModelos()
+  }
+})
+
+// ============================================================
+// CORES
+// ============================================================
+function renderColors() {
+  setColor('primary',   _cfg.cor_primaria)
+  setColor('secondary', _cfg.cor_secundaria)
+}
+
+function setColor(key, val) {
+  const hex = val || (key === 'primary' ? '#9b66f4' : '#ffd000')
+  document.getElementById('picker-' + key).value = hex
+  document.getElementById('text-'   + key).value = hex
+  document.getElementById('swatch-' + key).style.background = hex
+  const cssKey = key === 'primary' ? '--prev-primary' : '--prev-secondary'
+  document.documentElement.style.setProperty(cssKey, hex)
+}
+
+function onColorChange(key, val) {
+  document.getElementById('text-' + key).value = val
+  document.getElementById('swatch-' + key).style.background = val
+  document.documentElement.style.setProperty(key === 'primary' ? '--prev-primary' : '--prev-secondary', val)
+  if (key === 'primary')   _cfg.cor_primaria   = val
+  else                     _cfg.cor_secundaria = val
+}
+
+function onColorText(key, val) {
+  if (!/^#[0-9a-fA-F]{6}$/.test(val)) return
+  onColorChange(key, val)
+  document.getElementById('picker-' + key).value = val
+}
+
+function resetColor(key) {
+  const def = key === 'primary' ? '#9b66f4' : '#ffd000'
+  onColorChange(key, def)
+  document.getElementById('text-' + key).value = def
+  document.getElementById('picker-' + key).value = def
+}
+
+// ============================================================
+// LOGO
+// ============================================================
+function renderLogo() {
+  if (_cfg.logo_base64) {
+    showLogoPreview(_cfg.logo_base64)
+  }
+}
+
+function showLogoPreview(src) {
+  const prev = document.getElementById('logo-preview')
+  const ph   = document.getElementById('logo-placeholder')
+  const clr  = document.getElementById('logo-clear')
+  prev.src = src; prev.style.display = 'block'
+  ph.style.display  = 'none'
+  clr.style.display = 'block'
+}
+
+function onLogoFile(input) {
+  const file = input.files?.[0]
+  if (!file) return
+  if (file.size > 2097152) { toast('Logo muito grande. Máximo 2MB.', 'error'); return }
+  compressImage(file, 400, 0.88).then(b64 => {
+    _cfg.logo_base64 = b64
+    showLogoPreview(b64)
+    // Aplica já no header da própria página
+    document.querySelectorAll('.tenant-logo-img').forEach(e => { e.src = b64; e.style.display = 'block' })
+    document.querySelectorAll('.tenant-logo-svg').forEach(e => e.style.display = 'none')
+  })
+}
+
+function onLogoDrop(e) {
+  e.preventDefault()
+  document.getElementById('logo-drop').classList.remove('drag')
+  const file = e.dataTransfer?.files?.[0]
+  if (file) onLogoFile({ files: [file] })
+}
+
+function clearLogo(e) {
+  e.preventDefault(); e.stopPropagation()
+  _cfg.logo_base64 = null
+  document.getElementById('logo-preview').style.display = 'none'
+  document.getElementById('logo-placeholder').style.display = ''
+  document.getElementById('logo-clear').style.display = 'none'
+  document.querySelectorAll('.tenant-logo-img').forEach(el => { el.src=''; el.style.display='none' })
+  document.querySelectorAll('.tenant-logo-svg').forEach(el => el.style.display='block')
+}
+
+// ============================================================
+// MODELOS
+// ============================================================
+function renderModelos() {
+  const grid = document.getElementById('modelos-grid')
+  grid.innerHTML = _cfg.modelos.map((m, i) => `
+    <div class="modelo-slot" id="slot-${i}">
+      <div class="modelo-preview" id="prev-${i}">
+        <img id="img-${i}" src="${m.base64||''}" alt="Modelo ${i+1}" ${m.base64?'style="display:block"':''}>
+        <div class="placeholder" ${m.base64?'style="display:none"':''} id="ph-${i}">
+          <div class="icon">🖼️</div>
+          <div class="txt">Modelo ${i+1}</div>
+        </div>
+        <div class="overlay">
+          <button onclick="triggerModeloUpload(${i})" style="background:rgba(255,255,255,.9);border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">📤 Trocar</button>
+        </div>
+      </div>
+      <div class="modelo-info">
+        <div class="modelo-num">Modelo ${i+1}</div>
+        <label style="font-size:11px;margin-bottom:4px;">Empresa</label>
+        <select class="modelo-select" id="emp-${i}" onchange="_cfg.modelos[${i}].empresa=this.value">
+          ${EMPRESA_OPTS.map(o=>`<option value="${o.value}" ${m.empresa===o.value?'selected':''}>${o.label}</option>`).join('')}
+        </select>
+        <label style="font-size:11px;margin-bottom:4px;margin-top:8px;display:block;">Tipo</label>
+        <select class="modelo-select" id="tipo-${i}" onchange="_cfg.modelos[${i}].tipo=this.value">
+          ${TIPO_OPTS.map(o=>`<option value="${o.value}" ${m.tipo===o.value?'selected':''}>${o.label}</option>`).join('')}
+        </select>
+        <div class="modelo-upload-btn" style="margin-top:8px;">
+          📤 ${m.base64?'Trocar imagem':'Enviar imagem'}
+          <input type="file" accept="image/jpeg,image/png,image/webp" onchange="onModeloFile(${i},this)">
+        </div>
+        <button class="modelo-clear-btn" id="clr-${i}" onclick="clearModelo(${i})" ${m.base64?'style="display:block"':''}>✕ Remover</button>
+      </div>
+    </div>
+  `).join('')
+}
+
+function triggerModeloUpload(i) {
+  document.querySelector(`#slot-${i} .modelo-upload-btn input`).click()
+}
+
+function onModeloFile(i, input) {
+  const file = input.files?.[0]
+  if (!file) return
+  if (file.size > 5242880) { toast('Imagem muito grande. Máximo 5MB.', 'error'); return }
+  compressImage(file, 1200, 0.85).then(b64 => {
+    _cfg.modelos[i].base64 = b64
+    const img = document.getElementById('img-' + i)
+    const ph  = document.getElementById('ph-'  + i)
+    const clr = document.getElementById('clr-' + i)
+    img.src = b64; img.style.display = 'block'
+    ph.style.display  = 'none'
+    clr.style.display = 'block'
+    document.querySelector(`#slot-${i} .modelo-upload-btn`).innerHTML =
+      '🔄 Trocar imagem<input type="file" accept="image/jpeg,image/png,image/webp" onchange="onModeloFile('+i+',this)">'
+  })
+}
+
+function clearModelo(i) {
+  _cfg.modelos[i].base64 = null
+  const img = document.getElementById('img-' + i)
+  const ph  = document.getElementById('ph-'  + i)
+  const clr = document.getElementById('clr-' + i)
+  img.src = ''; img.style.display = 'none'
+  ph.style.display  = 'flex'
+  clr.style.display = 'none'
+}
+
+// ============================================================
+// SALVAR
+// ============================================================
+async function salvarConfig() {
+  const btn = document.getElementById('btn-save')
+  btn.disabled = true
+  btn.innerHTML = '<span class="loading-spin"></span> Salvando...'
+  try {
+    const patch = {
+      cor_primaria:   _cfg.cor_primaria,
+      cor_secundaria: _cfg.cor_secundaria,
+      logo_base64:    _cfg.logo_base64,
+      modelos:        _cfg.modelos
+    }
+    await window._saveTenantConfig(patch)
+    window._applyTheme(patch)
+    toast('Configurações salvas com sucesso!', 'success')
+  } catch(e) {
+    toast('Erro ao salvar: ' + e.message, 'error')
+  } finally {
+    btn.disabled = false
+    btn.innerHTML = '💾 Salvar Configurações'
+  }
+}
+
+// ============================================================
+// COMPRESSÃO DE IMAGEM
+// ============================================================
+function compressImage(file, maxW, quality) {
+  return new Promise(resolve => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      let w = img.naturalWidth, h = img.naturalHeight
+      if (w > maxW) { h = Math.round(h * maxW / w); w = maxW }
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+      URL.revokeObjectURL(url)
+      resolve(canvas.toDataURL('image/jpeg', quality))
+    }
+    img.src = url
+  })
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let _toastTimer
+function toast(msg, type='success') {
+  const el = document.getElementById('toast')
+  el.textContent = msg
+  el.className = 'toast show ' + type
+  clearTimeout(_toastTimer)
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3500)
+}
+</script>
+</body>
+</html>
