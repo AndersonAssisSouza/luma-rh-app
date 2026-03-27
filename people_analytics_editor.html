@@ -840,9 +840,18 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
       </div>
       <!-- Impacto financeiro -->
       <div id="deslFinPanel" style="background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
           <div style="font-size:13px;font-weight:600;color:var(--danger);">💰 Impacto financeiro estimado</div>
           <div id="deslFinSalBase" style="font-size:11px;color:var(--muted);font-family:var(--mono);"></div>
+        </div>
+        <div id="deslAvisoToggle" style="display:flex;gap:16px;margin-bottom:10px;padding:7px 10px;background:rgba(255,255,255,.04);border-radius:6px;align-items:center;">
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap;">Tipo de aviso:</span>
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;color:var(--text);">
+            <input type="radio" name="deslTipoAviso" id="rAviso_inde" value="indenizado" onchange="setTipoAviso('indenizado')" checked> Indenizado <span style="color:var(--muted);font-size:10px;">(não cumpre)</span>
+          </label>
+          <label style="font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;color:var(--text);">
+            <input type="radio" name="deslTipoAviso" id="rAviso_trab" value="trabalhado" onchange="setTipoAviso('trabalhado')"> Trabalhado <span style="color:var(--muted);font-size:10px;">(cumpre)</span>
+          </label>
         </div>
         <div id="deslFinItens" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;"></div>
         <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid rgba(248,113,113,.2);margin-top:4px;">
@@ -1857,6 +1866,8 @@ async function saveEditColab(){
 function openEditColabById(id,row){let r=(window._cMap)&&(_cMap[String(id)]||_cMap['__r'+row]);if(!r&&D.CADASTRO_COLABORADORES)r=D.CADASTRO_COLABORADORES.find(x=>String(x._row||'')==String(row)||String(x.ID_COLABORADOR||'')==String(id));if(r)openEditColab(r);else toast('Colaborador não encontrado','error');}
 function confirmDeslById(id,row){let r=(window._cMap)&&(_cMap[String(id)]||_cMap['__r'+row]);if(!r&&D.CADASTRO_COLABORADORES)r=D.CADASTRO_COLABORADORES.find(x=>String(x._row||'')==String(row)||String(x.ID_COLABORADOR||'')==String(id));if(r)confirmDesl(r);else toast('Colaborador não encontrado','error');}
 let _deslPending=null;
+window._deslTipoAviso='indenizado';
+function setTipoAviso(tipo){window._deslTipoAviso=tipo;atualizarCustoProgramado();}
 
 // ── Helpers financeiros ──────────────────────────────────────────────
 function _mDiff(a,b){return(b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth())+(b.getDate()<a.getDate()?-1:0);}
@@ -1888,7 +1899,8 @@ function _calcIrrf(baseDeducao){
   return Math.round((baseDeducao*0.275-896.00)*100)/100;
 }
 
-function calcCustoDesl(r,dataDesl){
+function calcCustoDesl(r,dataDesl,tipoAviso){
+  tipoAviso=tipoAviso||window._deslTipoAviso||'indenizado';
   const vin=String(r.TIPO_VINCULO||'').toUpperCase();
   // Leitura robusta do salário: campo mapeado → dado bruto Supabase → 0
   let sal=parseFloat(String(r.SALARIO_HONORARIO||'0').replace(/[R$\s.]/g,'').replace(',','.'))||0;
@@ -1906,56 +1918,103 @@ function calcCustoDesl(r,dataDesl){
   const meses=Math.max(_mDiff(adm,dt),0);
   const anos=Math.floor(meses/12);
   if(vin==='CLT'){
-    // ── 1. Verbas brutas ──
-    const diasNoMes=new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate();
-    const diasTrab=dt.getDate();
-    const saldoSal=sal*(diasTrab/diasNoMes);
+    const isInden=tipoAviso!=='trabalhado';
+    // ── Aviso prévio: 30d base + 3d por ano completo, máx 90d ──
     const diasAP=Math.min(30+3*anos,90);
-    const custoAP=sal*(diasAP/30);
-    const m13=dt.getMonth()+(dt.getDate()>=15?1:0);
+    // Data efetiva de demissão (no trabalhado, conta os dias do aviso para 13° e férias)
+    const dtEfetiva=isInden?dt:new Date(dt.getTime()+diasAP*86400000);
+    // ── 1. Saldo de salário ──
+    // CLT Art. 64: divisor fixo 30 (independente dos dias do mês)
+    const diasTrab=dtEfetiva.getDate();
+    const saldoSal=sal*(diasTrab/30);
+    // ── 2. Aviso prévio indenizado (apenas cenário indenizado) ──
+    const custoAP=isInden?sal*(diasAP/30):0;
+    // ── 3. Indenização Adicional — Lei 7.238/84 (1 salário, ambos os cenários) ──
+    const indenAdicional=sal;
+    // ── 4. 13° Salário proporcional ──
+    const m13=dtEfetiva.getMonth()+(dtEfetiva.getDate()>=15?1:0);
     const custo13=sal*(m13/12);
+    // 13° 1/12 relativo ao aviso prévio indenizado (acrescenta 1/12 ao 13°)
+    const custo13_12=isInden?(sal/12):0;
+    // ── 5. Férias vencidas (períodos aquisitivos completos não gozados) ──
+    const periodos=anos; // cada período completo = 30 dias = 1 salário
+    const feriasVenc=sal*periodos;
+    const terco_venc=feriasVenc/3;
+    // ── 6. Férias proporcionais (meses no período aquisitivo atual) ──
+    // CLT: mês conta inteiro se trabalhados ≥ 15 dias (inclui mês parcial da demissão)
     const iniPer=new Date(adm);iniPer.setFullYear(adm.getFullYear()+anos);
-    const mFer=Math.min(_mDiff(iniPer,dt),11);
-    const custoFer=sal*(mFer/12)*(4/3);
-    const totalBruto=saldoSal+custoAP+custo13+custoFer;
-    // ── 2. Descontos (INSS e IRRF incidem sobre saldo salário + 13°) ──
-    const baseInss=saldoSal+custo13;
-    const inss=_calcInss(baseInss);
-    const baseIrrf=baseInss-inss;
+    const _priMesCheio=new Date(iniPer.getFullYear(),iniPer.getMonth()+1,1);
+    const _mesesCompletos=(dtEfetiva.getFullYear()-_priMesCheio.getFullYear())*12+(dtEfetiva.getMonth()-_priMesCheio.getMonth());
+    const mFer=Math.min(_mesesCompletos+(dtEfetiva.getDate()>=15?1:0),11);
+    const feriasProp=sal*(mFer/12);
+    const terco_prop=feriasProp/3;
+    // Férias 1/12 do aviso prévio indenizado
+    const ferias_12=isInden?(sal/12):0;
+    const terco_12=ferias_12/3;
+    // ── 7. Total bruto ──
+    const totalBruto=saldoSal+custoAP+indenAdicional+custo13+custo13_12
+      +(feriasVenc>0?feriasVenc+terco_venc:0)
+      +(mFer>0?feriasProp+terco_prop:0)
+      +(isInden&&ferias_12>0?ferias_12+terco_12:0);
+    // ── 8. Descontos ──
+    // INSS: base = saldo salário + 13° (progressive)
+    const inss_sal=_calcInss(saldoSal);
+    const inss_13=_calcInss(custo13+custo13_12);
+    const totalInss=inss_sal+inss_13;
+    // IRRF: base tributável = saldo sal + 13° após INSS (férias são isentas na rescisão)
+    const baseIrrf=Math.max((saldoSal+custo13+custo13_12)-totalInss,0);
     const irrf=Math.max(_calcIrrf(baseIrrf),0);
-    const totalDescontos=inss+irrf;
+    const totalDescontos=totalInss+irrf;
     const liquido=totalBruto-totalDescontos;
-    // ── 3. FGTS ──
-    const saldoFgts=sal*0.08*meses;
-    const multaFgts=saldoFgts*0.40;
-    const fgtsRescisao=(saldoSal+custoAP+custo13)*0.08;
-    // ── 4. Custo total empresa ──
+    // ── 9. FGTS ──
+    // FGTS acumula durante todo o aviso prévio (trabalhado ou indenizado — CLT art. 15 §5°)
+    // Referência: adm → dt + diasAP (mesmo para indenizado, pois FGTS continua acruindo)
+    const dtFgts=new Date(dt.getTime()+diasAP*86400000);
+    const mesesTotais=Math.max(_mDiff(adm,dtFgts),meses);
+    const saldoFgts=sal*0.08*mesesTotais; // estimativa (saldo real via extrato FGTS)
+    const baseGrrf=saldoSal+custoAP+custo13+custo13_12; // verbas que geram FGTS na rescisão
+    const fgtsRescisao=baseGrrf*0.08;
+    const multaFgts=(saldoFgts+fgtsRescisao)*0.40;
     const total=liquido+totalDescontos+fgtsRescisao+multaFgts;
-    return{vin,sal,anos,meses,diasAP,mFer,m13,
-      // Itens para exibição estruturada
+    const lbl=isInden?'Aviso Indenizado':'Aviso Trabalhado';
+    return{vin,sal,anos,meses,diasAP,mFer,m13,tipoAviso,
       itens:[
-        {n:'── 1. Verbas Rescisórias Brutas ──',v:null,tipo:'header'},
-        {n:`Saldo de salário (${diasTrab}/${diasNoMes} dias)`,v:saldoSal},
-        {n:`Aviso prévio indenizado (${diasAP} dias — 30+${3*anos}d por ${anos} ano${anos!==1?'s':''})`,v:custoAP},
-        {n:`13º proporcional (${m13}/12 meses)`,v:custo13},
-        {n:`Férias proporcionais (${mFer}/12) + ⅓ constitucional`,v:custoFer},
+        {n:`── PROVENTOS — ${lbl} (${30+3*anos}d) ──`,v:null,tipo:'header'},
+        {n:`Saldo de salário (${diasTrab}/30 dias)`,v:saldoSal},
+        ...(isInden?[{n:`Aviso prévio indenizado (${diasAP} dias)`,v:custoAP}]:[]),
+        {n:'Indenização adicional — Lei 7.238/84',v:indenAdicional},
+        {n:`13° proporcional (${m13}/12 meses)`,v:custo13},
+        ...(isInden&&custo13_12>0?[{n:'13° — 1/12 aviso indenizado',v:custo13_12}]:[]),
+        ...(feriasVenc>0?[
+          {n:`Férias vencidas (${periodos} período${periodos!==1?'s':''} × 30 dias)`,v:feriasVenc},
+          {n:'+ ⅓ constitucional férias vencidas',v:terco_venc},
+        ]:[]),
+        ...(mFer>0?[
+          {n:`Férias proporcionais (${mFer}/12 meses)`,v:feriasProp},
+          {n:'+ ⅓ constitucional férias proporcionais',v:terco_prop},
+        ]:[]),
+        ...(isInden&&ferias_12>0?[
+          {n:'Férias — 1/12 aviso indenizado',v:ferias_12},
+          {n:'+ ⅓ férias indenizadas',v:terco_12},
+        ]:[]),
         {n:'TOTAL BRUTO',v:totalBruto,tipo:'subtotal'},
-        {n:'── 2. Descontos (INSS + IRRF) ──',v:null,tipo:'header'},
-        {n:`INSS rescisório (base: ${_fmt(baseInss)})`,v:-inss},
-        {n:`IRRF rescisório (base: ${_fmt(baseIrrf)})`,v:-irrf},
-        {n:'VALOR LÍQUIDO A PAGAR',v:liquido,tipo:'subtotal'},
-        {n:'── 3. FGTS e Multa Rescisória ──',v:null,tipo:'header'},
-        {n:`Saldo FGTS estimado (8% × ${_fmt(sal)} × ${meses} meses)`,v:saldoFgts},
-        {n:'Multa rescisória 40% do FGTS',v:multaFgts},
-        {n:`FGTS da rescisão — Guia GRRF (8% sobre saldo+AP+13°)`,v:fgtsRescisao},
-        {n:'── 4. Custo Total para a Empresa ──',v:null,tipo:'header'},
-        {n:'Verbas rescisórias (líquido)',v:liquido},
+        {n:'── DESCONTOS ──',v:null,tipo:'header'},
+        {n:`INSS — saldo salário (base ${_fmt(saldoSal)})`,v:-inss_sal},
+        {n:`INSS — 13° salário (base ${_fmt(custo13+custo13_12)})`,v:-inss_13},
+        {n:`IRRF — rescisão (base ${_fmt(baseIrrf)})`,v:-irrf},
+        {n:'VALOR LÍQUIDO AO FUNCIONÁRIO',v:liquido,tipo:'subtotal'},
+        {n:'── FGTS (estimativa) ──',v:null,tipo:'header'},
+        {n:`Saldo FGTS est. (8% × sal × ${mesesTotais} meses)`,v:saldoFgts},
+        {n:'Multa rescisória 40% sobre FGTS total',v:multaFgts},
+        {n:'FGTS rescisão — Guia GRRF (8% verbas)',v:fgtsRescisao},
+        {n:'── CUSTO TOTAL EMPRESA ──',v:null,tipo:'header'},
+        {n:'Verbas rescisórias (líquido ao funcionário)',v:liquido},
         {n:'Encargos retidos (INSS + IRRF)',v:totalDescontos},
-        {n:'FGTS rescisão (Guia GRRF)',v:fgtsRescisao},
-        {n:'Multa 40% FGTS',v:multaFgts},
+        {n:'FGTS rescisão — GRRF',v:fgtsRescisao},
+        {n:'Multa 40% FGTS (empresa paga ao fundo)',v:multaFgts},
         {n:'CUSTO TOTAL ESTIMADO',v:total,tipo:'total'},
       ],
-      total,obs:'CLT s/ justa causa · Art. 477/487 CLT · Dec. 99.684/90 (FGTS) · INSS/IRRF tabelas 2026 (estimado)'};
+      total,obs:`CLT s/ justa causa · ${lbl} · Art. 477/487 CLT · Dec. 99.684/90 · INSS/IRRF 2026 (estimativa — valores reais dependem do extrato FGTS e histórico de faltas/férias)`};
   }
   if(vin==='PJ'||vin==='MEI'){
     const inss=sal*0.11;const iss=sal*0.05;
@@ -2015,10 +2074,10 @@ function melhorDataDesl(r){
   const diasAteAniv=Math.floor((proxAniv-hoje)/864e5);
   const anivAnterior=new Date(adm);anivAnterior.setFullYear(adm.getFullYear()+anosComp);
   const diasDesdeAniv=Math.floor((hoje-anivAnterior)/864e5);
-  // Custo hoje vs custo logo após próximo aniversário
-  const custoHoje=calcCustoDesl(r,hoje);
+  // Custo hoje vs custo logo após próximo aniversário (sempre cenário indenizado = pior caso)
+  const custoHoje=calcCustoDesl(r,hoje,'indenizado');
   const dataOtimaAniv=new Date(proxAniv.getTime()+3*864e5);
-  const custoAniv=calcCustoDesl(r,dataOtimaAniv);
+  const custoAniv=calcCustoDesl(r,dataOtimaAniv,'indenizado');
   const economiaAniv=custoHoje.total-custoAniv.total;
   if(diasAteAniv<=45&&diasAteAniv>0){
     return{data:dataOtimaAniv,motivo:`Aguardar ${diasAteAniv} dias (aniversário ${fmtD(proxAniv.toISOString().split('T')[0])}) reinicia período aquisitivo de férias.`,economia:economiaAniv>0?economiaAniv:null,tipo:'aniversario'};
@@ -2036,7 +2095,7 @@ function atualizarCustoProgramado(){
   const r=_deslPending;if(!r)return;
   const val=$('deslDataProg').value;if(!val)return;
   const dataProg=new Date(val+'T12:00:00');
-  const custo=calcCustoDesl(r,dataProg);
+  const custo=calcCustoDesl(r,dataProg,window._deslTipoAviso||'indenizado');
   $('deslFinItens').innerHTML=_renderCustoItens(custo);
   $('deslFinTotal').textContent=_fmt(custo.total);
   $('deslFinObs').textContent=custo.obs||'';
@@ -2074,8 +2133,14 @@ function confirmDesl(r){
   if(md.economia&&md.economia>50){$('deslComparativo').innerHTML=`💡 Aguardar até esta data economiza aprox. <strong>${_fmt(md.economia)}</strong> em verbas rescisórias.`;}
   else{$('deslComparativo').textContent='';}
   $('deslDataProg').value=mdStr;
+  // Reset toggle para indenizado ao abrir o modal
+  window._deslTipoAviso='indenizado';
+  const ri=$('rAviso_inde');if(ri)ri.checked=true;
+  const rt=$('rAviso_trab');if(rt)rt.checked=false;
+  // Mostrar toggle apenas para CLT
+  const tog=$('deslAvisoToggle');if(tog)tog.style.display=vin==='CLT'?'':'none';
   // Impacto financeiro com a data sugerida
-  const custo=calcCustoDesl(r,md.data);
+  const custo=calcCustoDesl(r,md.data,'indenizado');
   $('deslFinItens').innerHTML=_renderCustoItens(custo);
   $('deslFinTotal').textContent=_fmt(custo.total);
   $('deslFinObs').textContent=custo.obs||'';
