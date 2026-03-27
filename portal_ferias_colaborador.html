@@ -83,23 +83,31 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
 .fi{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--font);font-size:13px;width:100%;transition:border-color .15s;}
 .fi:focus{outline:none;border-color:var(--accent);}
 .fgrp{margin-bottom:12px;}
-.main{max-width:860px;margin:0 auto;padding:28px 24px;}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:16px;}
-.ct{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:16px;}
-.kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
-.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;}
-.kl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
-.kv{font-size:36px;font-weight:300;line-height:1;margin-bottom:4px;}
-.ks{font-size:12px;color:var(--muted);}
+/* ── Layout principal: tela cheia sem scroll ── */
+.main{max-width:1280px;margin:0 auto;padding:10px 20px;height:calc(100vh - 64px);display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:0;}
+.ct{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+/* ── KPIs compactos ── */
+.kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;position:relative;overflow:hidden;}
+.kl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px;}
+.kv{font-size:22px;font-weight:300;line-height:1;margin-bottom:1px;}
+.ks{font-size:11px;color:var(--muted);}
 .kbar{position:absolute;bottom:0;left:0;right:0;height:2px;}
-.cal-wrap{background:var(--bg3);border-radius:10px;padding:16px;}
-.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.cal-month{font-size:15px;font-weight:500;}
-.cal-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+/* ── 2 colunas: esquerda=calendário, direita=solicitações+política ── */
+.portal-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0;}
+.portal-col-left{display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;}
+.portal-col-right{display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;}
+.portal-col-right .card{flex:1;overflow-y:auto;min-height:0;}
+/* ── Calendário compacto ── */
+.cal-wrap{background:var(--bg3);border-radius:10px;padding:10px;}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cal-month{font-size:14px;font-weight:500;}
+.cal-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
 .cal-btn:hover{background:var(--bg2);}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-.cal-dname{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}
-.cal-day{text-align:center;padding:7px 2px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-dname{text-align:center;font-size:10px;color:var(--muted);padding:2px 0;font-weight:500;}
+.cal-day{text-align:center;padding:5px 2px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}
 .cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}
 .cal-day.tod{border-color:var(--accent);color:var(--accent);}
 .cal-day.rs,.cal-day.re{background:var(--accent);color:#fff;}
@@ -108,14 +116,14 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
 .cal-day.oth{opacity:.15;cursor:default;}
 .cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}
 .cal-day.fds{color:var(--muted);}
-.cal-legend{display:flex;gap:12px;margin-top:10px;}
-.cal-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
-.cal-dot{width:8px;height:8px;border-radius:3px;}
-.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+.cal-legend{display:flex;gap:10px;margin-top:6px;}
+.cal-leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);}
+.cal-dot{width:7px;height:7px;border-radius:3px;}
+.chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500;}
 .c-pend{background:rgba(255,208,0,.15);color:var(--gold);}
 .c-ok{background:rgba(56,217,169,.1);color:var(--ok);}
 .c-rej{background:rgba(248,113,113,.15);color:var(--danger);}
-.steps{display:flex;margin-bottom:22px;}
+.steps{display:flex;margin-bottom:10px;}
 .step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}
 .step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:1px;background:var(--border2);}
 .step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--bg);z-index:1;margin-bottom:5px;}
@@ -202,16 +210,19 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
   <div class="kgrid">
     <div class="kpi"><div class="kl">Saldo disponível</div><div class="kv" style="color:var(--ok)" id="k-saldo">—</div><div class="ks" id="k-saldo-sub">dias</div><div class="kbar" style="background:var(--ok)"></div></div>
     <div class="kpi"><div class="kl">Dias já utilizados</div><div class="kv" style="color:var(--accent)" id="k-usados">—</div><div class="ks">de 30 dias de direito</div><div class="kbar" style="background:var(--accent)"></div></div>
-    <div class="kpi"><div class="kl">Prazo concessivo</div><div class="kv" style="font-size:20px;margin-top:6px;color:var(--gold)" id="k-prazo">—</div><div class="ks">último dia para gozar</div><div class="kbar" style="background:var(--gold)"></div></div>
+    <div class="kpi"><div class="kl">Prazo concessivo</div><div class="kv" style="font-size:18px;margin-top:2px;color:var(--gold)" id="k-prazo">—</div><div class="ks">último dia para gozar</div><div class="kbar" style="background:var(--gold)"></div></div>
   </div>
 
-  <div class="card" id="card-ultimo" style="display:none;">
-    <div class="ct">Último período de férias</div>
-    <div id="ultimo-conteudo"></div>
-  </div>
+  <div class="portal-cols">
+    <!-- COLUNA ESQUERDA: calendário / solicitar -->
+    <div class="portal-col-left">
+      <div class="card" id="card-ultimo" style="display:none;">
+        <div class="ct">Último período de férias</div>
+        <div id="ultimo-conteudo"></div>
+      </div>
 
-  <div class="card">
-    <div class="ct">Solicitar férias</div>
+      <div class="card">
+        <div class="ct">Solicitar férias</div>
     <div class="steps">
       <div class="step-item active" id="s0"><div class="step-circle">1</div><div class="step-label">Escolher datas</div></div>
       <div class="step-item" id="s1"><div class="step-circle">2</div><div class="step-label">Confirmar</div></div>
@@ -250,28 +261,33 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
       </div>
     </div>
 
-    <div id="step-done" style="display:none;text-align:center;padding:32px 20px;">
-      <div style="font-size:44px;margin-bottom:14px;">✅</div>
-      <div style="font-size:20px;font-weight:500;margin-bottom:8px;">Solicitação enviada!</div>
-      <div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:18px;" id="done-msg">—</div>
-      <div style="background:var(--bg3);border-radius:10px;padding:14px;text-align:left;margin-bottom:20px;" id="done-resumo"></div>
+    <div id="step-done" style="display:none;text-align:center;padding:20px 16px;">
+      <div style="font-size:36px;margin-bottom:10px;">✅</div>
+      <div style="font-size:18px;font-weight:500;margin-bottom:6px;">Solicitação enviada!</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;" id="done-msg">—</div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:left;margin-bottom:16px;" id="done-resumo"></div>
       <button class="btn btn-gold" id="btn-nova">Nova solicitação</button>
     </div>
-  </div>
+      </div><!-- /card solicitar -->
+    </div><!-- /portal-col-left -->
 
-  <div class="card">
-    <div class="ct">Minhas solicitações <span id="hist-count" style="color:var(--muted);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;"></span></div>
-    <div id="hist-list"><div class="empty">Nenhuma solicitação ainda.</div></div>
-  </div>
+    <!-- COLUNA DIREITA: solicitações + política -->
+    <div class="portal-col-right">
+      <div class="card">
+        <div class="ct">Minhas solicitações <span id="hist-count" style="color:var(--muted);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;"></span></div>
+        <div id="hist-list"><div class="empty">Nenhuma solicitação ainda.</div></div>
+      </div>
 
-  <div class="info-box">
-    <strong>Política de Férias / Recesso</strong><br>
-    <span style="color:var(--accent);font-weight:500;">CLT:</span> 📅 <strong>30 dias corridos</strong> após 12 meses · aviso prévio <strong>30 dias</strong> · mín. <strong>14 dias</strong> no 1º período · pagamento 2 dias úteis antes.<br>
-    <span style="color:var(--accent);font-weight:500;">Associado OAB:</span> 📅 <strong>30 dias de recesso anual remunerado</strong> conforme Estatuto OAB (Lei 8.906/94) e contrato de associação.<br>
-    <span style="color:var(--danger);font-weight:500;">PJ / MEI:</span> ⚠ Não há férias CLT. Recesso conforme contrato de prestação de serviços.<br>
-    ✅ Todas as solicitações sujeitas à aprovação do gestor.
-  </div>
-</div>
+      <div class="info-box" style="flex-shrink:0;">
+        <strong>Política de Férias / Recesso</strong><br>
+        <span style="color:var(--accent);font-weight:500;">CLT:</span> 📅 <strong>30 dias corridos</strong> após 12 meses · aviso prévio <strong>30 dias</strong> · mín. <strong>14 dias</strong> no 1º período · pagamento 2 dias úteis antes.<br>
+        <span style="color:var(--accent);font-weight:500;">Associado OAB:</span> 📅 <strong>30 dias de recesso anual remunerado</strong> conforme Estatuto OAB (Lei 8.906/94) e contrato de associação.<br>
+        <span style="color:var(--danger);font-weight:500;">PJ / MEI:</span> ⚠ Não há férias CLT. Recesso conforme contrato de prestação de serviços.<br>
+        ✅ Todas as solicitações sujeitas à aprovação do gestor.
+      </div>
+    </div><!-- /portal-col-right -->
+  </div><!-- /portal-cols -->
+</div><!-- /main -->
 </div><!-- /app -->
 
 <!-- GESTOR -->
