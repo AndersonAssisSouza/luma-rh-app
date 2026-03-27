@@ -2222,8 +2222,8 @@ async function saveNewColab(){
   closeModal('mNewColab');toast('Registrando admissão...','info');
   try{
     const cad=D.CADASTRO_COLABORADORES||[];
-    const lastId=cad.map(r=>parseInt((r.ID_COLABORADOR||'COL-000').replace('COL-',''))||0).reduce((a,b)=>Math.max(a,b),0);
-    const newId='COL-'+String(lastId+1).padStart(3,'0');
+    const lastId=cad.map(r=>parseInt((r.ID_COLABORADOR||'0000').replace(/[^0-9]/g,''))||0).reduce((a,b)=>Math.max(a,b),0);
+    const newId=String(lastId+1).padStart(4,'0');
     const nasc=$('nNasc').value;const hoje=new Date();
     const anos=((hoje-new Date(adm))/(1000*60*60*24*365.25)).toFixed(1);
     const idade=nasc?((hoje-new Date(nasc))/(1000*60*60*24*365.25)).toFixed(0):null;
@@ -3648,8 +3648,8 @@ function filterTable(tbodyId, query) {
 const _CARD_CFG = {
   modelo1:{textColor:'#ffffff',nameColor:'#ffd000',shadowColor:'rgba(0,0,0,0.7)',textX:.07,textY:.22,textW:.60,nameSz:.048,bodySz:.032,lineH:1.55,sep:'rgba(255,208,0,0.6)',header:false},
   modelo2:{textColor:'#ffffff',nameColor:'#ffd000',shadowColor:'rgba(0,0,0,0.7)',textX:.07,textY:.22,textW:.58,nameSz:.048,bodySz:.032,lineH:1.55,sep:'rgba(255,208,0,0.6)',header:false},
-  modelo3:{textColor:'#c9a84c',nameColor:'#ffd000',shadowColor:'rgba(0,0,0,0.6)',textX:.07,textY:.09,textW:.62,nameSz:.048,bodySz:.032,lineH:1.55,sep:'rgba(201,168,76,0.7)',header:true},
-  modelo4:{textColor:'#c4b5fd',nameColor:'#ffd000',shadowColor:'rgba(0,0,0,0.6)',textX:.06,textY:.08,textW:.60,nameSz:.048,bodySz:.032,lineH:1.55,sep:'rgba(196,181,253,0.6)',header:true}
+  modelo3:{textColor:'#c9a84c',nameColor:'#ffd000',shadowColor:'rgba(0,0,0,0.6)',textX:.07,textY:.38,textW:.62,nameSz:.048,bodySz:.032,lineH:1.55,sep:'rgba(201,168,76,0.7)',header:false},
+  modelo4:{textColor:'#c4b5fd',nameColor:'#ffd000',shadowColor:'rgba(0,0,0,0.6)',textX:.06,textY:.38,textW:.60,nameSz:.048,bodySz:.032,lineH:1.55,sep:'rgba(196,181,253,0.6)',header:false}
 };
 let _cardData={nome:'',tipo:'',data:'',dias:0};
 let _cardCanvas=null;

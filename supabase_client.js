@@ -232,7 +232,7 @@ export async function getSolicitacaoPorProtocolo(protocolo) {
 export async function getExames() {
   const { data, error } = await sb
     .from('exames_ocupacionais')
-    .select('*, colaboradores(nome, status)')
+    .select('*, colaboradores(id_colaborador, nome, status, email_corporativo)')
     .order('proximo_exame')
   if (error) throw error
   return data
