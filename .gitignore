@@ -19,3 +19,11 @@ desktop.ini
 .vscode/
 *.swp
 *.swo
+
+# Claude Code
+.claude/
+
+# Scripts de migração (contêm credenciais embutidas — usar .env em vez disso)
+scripts/migrate_*.cjs
+scripts/migrate_*.js
+scripts/serve_migration.cjs

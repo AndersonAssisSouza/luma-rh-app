@@ -158,20 +158,30 @@ function setStep(n, state, msg=''){
 }
 
 // ── MSAL ─────────────────────────────────────────────────────
+const MSAL_TENANT_REAL = 'aadb5cad-6c69-4d6d-a942-e027203a4675'
 const msalApp = new msal.PublicClientApplication({
-  auth:{clientId:MSAL_CLIENT,authority:'https://login.microsoftonline.com/'+MSAL_TENANT},
-  cache:{cacheLocation:'sessionStorage'}
+  auth:{clientId:MSAL_CLIENT,authority:'https://login.microsoftonline.com/'+MSAL_TENANT_REAL,
+        redirectUri: window.location.origin + window.location.pathname},
+  cache:{cacheLocation:'localStorage'}
 })
 
 async function getGraphToken(){
   await msalApp.initialize()
+  // Processar redirect de retorno, se houver
+  await msalApp.handleRedirectPromise()
   let account = msalApp.getAllAccounts()[0]
   if(!account){
-    const res = await msalApp.loginPopup({scopes:['Files.ReadWrite','User.Read']})
-    account = res.account
+    // Usar redirect (compatível com ambientes sem popup)
+    await msalApp.loginRedirect({scopes:['Files.ReadWrite.All','User.Read']})
+    return null // página vai recarregar após redirect
   }
-  const res = await msalApp.acquireTokenSilent({scopes:['Files.ReadWrite'],account})
-  return res.accessToken
+  try {
+    const res = await msalApp.acquireTokenSilent({scopes:['Files.ReadWrite.All'],account})
+    return res.accessToken
+  } catch(e) {
+    await msalApp.acquireTokenRedirect({scopes:['Files.ReadWrite.All'],account})
+    return null
+  }
 }
 
 async function readSheet(tok, sheetName){
@@ -221,10 +231,11 @@ window.iniciarMigracao = async function(){
 
   try{
     // ── STEP 1: LOGIN ────────────────────────────────────────
-    setStep(1,'run','Abrindo janela de login...')
+    setStep(1,'run','Autenticando Microsoft 365...')
     let tok
     try{
       tok = await getGraphToken()
+      if(tok === null){ setStep(1,'run','Redirecionando para login...'); return } // redirect em andamento
       setStep(1,'done','Login realizado com sucesso.')
     }catch(e){
       setStep(1,'err','Erro no login: '+e.message)
@@ -420,6 +431,24 @@ window.iniciarMigracao = async function(){
     alert('Erro inesperado: '+e.message)
   }
 }
+
+// Auto-iniciar após redirect de login
+;(async () => {
+  try {
+    const app = new msal.PublicClientApplication({
+      auth:{clientId:MSAL_CLIENT, authority:'https://login.microsoftonline.com/aadb5cad-6c69-4d6d-a942-e027203a4675',
+            redirectUri: window.location.origin + window.location.pathname},
+      cache:{cacheLocation:'localStorage'}
+    })
+    await app.initialize()
+    const result = await app.handleRedirectPromise()
+    if (result && result.account) {
+      // Retornou do redirect com conta — iniciar migração automaticamente
+      document.getElementById('btnStart').disabled = false
+      window.iniciarMigracao()
+    }
+  } catch(e) { /* silencioso */ }
+})()
 </script>
 </body>
 </html>

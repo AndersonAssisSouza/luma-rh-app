@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup · People Analytics · Luma RH</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#2a2535;--bg2:#322d42;--bg3:#3c3650;
+  --border:rgba(155,102,244,0.15);--border2:rgba(155,102,244,0.28);
+  --text:#f0ecff;--muted:#8a7faa;
+  --accent:#9b66f4;--accent2:#ffd000;--warn:#ffd000;
+  --danger:#f87171;--purple:#b98af7;--coral:#fb923c;--ok:#38d9a9;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:12px 28px;border-bottom:1px solid rgba(155,102,244,.3);background:#2a2535;position:sticky;top:0;z-index:100;gap:8px;flex-wrap:wrap;}
+.nbrand{display:flex;align-items:center;gap:9px;}
+.ntitle{font-weight:600;font-size:15px;color:#f0ecff;}
+.nsub{color:#9b66f4;font-size:11px;font-weight:500;}
+.ntabs{display:flex;gap:2px;flex-wrap:wrap;}
+.tab{padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;border:none;background:none;font-family:var(--font);}
+.tab:hover{color:var(--text);background:var(--bg3);}
+.tab.active{color:#ffd000;background:rgba(155,102,244,.18);}
+.nright{display:flex;align-items:center;gap:7px;}
+.ndot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 5px rgba(56,217,169,.5);}
+.ndate{font-family:var(--mono);font-size:12px;color:var(--muted);}
+.btn{padding:5px 13px;border-radius:6px;border:1px solid var(--border2);background:none;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.btn:hover{background:var(--bg3);}
+.btn-a{border-color:var(--accent);color:var(--accent);}
+.btn-g{border-color:var(--accent2);color:var(--accent2);}
+
+/* LAYOUT */
+.main{padding:20px 28px;width:100%;}
+.sec{display:none;animation:fi .2s ease;}
+.sec.active{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* KPIs */
+.kg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+.kg6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;}
+.kl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.kv{font-size:44px;font-weight:300;line-height:1;margin-bottom:4px;}
+.kv2{font-size:34px;font-weight:300;line-height:1;margin-bottom:4px;}
+.ks{font-size:12px;color:var(--muted);}
+.kbadge{position:absolute;top:10px;right:10px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.bb{background:rgba(155,102,244,.15);color:var(--accent);}
+.bg{background:rgba(56,217,169,.15);color:var(--ok);}
+.bw{background:rgba(255,208,0,.15);color:var(--warn);}
+.bd{background:rgba(248,113,113,.15);color:var(--danger);}
+.kbar{position:absolute;bottom:0;left:0;right:0;height:2px;}
+
+/* CARDS */
+.g3{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:14px;margin-bottom:14px;}
+.g4{display:grid;grid-template-columns:1.4fr .8fr .8fr .8fr;gap:14px;margin-bottom:14px;}
+.g3b{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;}
+.ct{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+
+/* TABELA */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 8px 10px;text-align:left;font-weight:500;}
+.tbl td{padding:9px 8px;border-top:1px solid var(--border);font-size:13px;vertical-align:middle;}
+.tbl tr:hover td{background:rgba(255,255,255,.012);}
+.chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.cp{background:rgba(185,138,247,.15);color:var(--purple);}
+.cc{background:rgba(155,102,244,.15);color:var(--accent);}
+.cs{background:rgba(56,217,169,.15);color:var(--ok);}
+.ce{background:rgba(251,146,60,.15);color:var(--coral);}
+.cw{background:rgba(255,208,0,.15);color:var(--warn);}
+.cd{background:rgba(248,113,113,.15);color:var(--danger);}
+.ca{background:rgba(20,184,166,.15);color:#14b8a6;}
+
+/* BARRA */
+.br{display:flex;align-items:center;gap:7px;margin-bottom:10px;}
+.bl{width:90px;font-size:12px;color:var(--muted);text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bt{flex:1;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.bf{height:100%;border-radius:3px;}
+.bc{width:20px;font-size:12px;color:var(--text);font-family:var(--mono);text-align:right;flex-shrink:0;}
+
+/* ALERTAS */
+.ai{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);}
+.ai:first-child{border-top:none;padding-top:0;}
+.aico{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;}
+.ainf{flex:1;}.an{font-size:13px;font-weight:500;margin-bottom:1px;}.ad{font-size:12px;color:var(--muted);}
+
+/* TÍTULO DE SEÇÃO */
+.sttl{font-size:20px;font-weight:500;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.sttl-l{display:flex;align-items:center;gap:7px;}
+.sdot{width:5px;height:5px;border-radius:50%;}
+
+/* MODAL */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
+.ov.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.5);animation:mi .18s ease;}
+@keyframes mi{from{opacity:0;transform:scale(.96) translateY(7px)}to{opacity:1;transform:none}}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid var(--border);}
+.mt{font-size:15px;font-weight:500;}.ms{font-size:12px;color:var(--muted);margin-top:1px;}
+.mc{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.mc:hover{color:var(--text);}
+.mb{padding:16px;}
+.mf{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:7px;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fgrp{display:flex;flex-direction:column;gap:4px;}
+.fgrp.s2{grid-column:1/-1;}
+.flbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:500;}
+.fi,.fsel,.fta{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;color:var(--text);font-family:var(--font);font-size:13px;width:100%;}
+.fi:focus,.fsel:focus{outline:none;border-color:var(--accent);}
+.fsel option{background:var(--bg3);}
+.fta{resize:vertical;min-height:60px;}
+.fsec{grid-column:1/-1;font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-top:2px;}
+.fdiv{grid-column:1/-1;height:1px;background:var(--border);margin:4px 0;}
+
+/* BADGE MOCKUP */
+.mockup-badge{position:fixed;bottom:16px;left:16px;background:rgba(155,102,244,.2);border:1px solid rgba(155,102,244,.4);border-radius:8px;padding:6px 12px;font-size:11px;color:var(--accent);z-index:9999;}
+
+/* ADMIN */
+.admin-section{margin-bottom:14px;}
+.admin-section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.admin-row{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg3);border-radius:8px;margin-bottom:4px;}
+.admin-row-left{display:flex;align-items:center;gap:8px;}
+.admin-name{font-size:13px;font-weight:500;}
+.admin-email{font-size:11px;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<!-- BADGE MOCKUP -->
+<div class="mockup-badge">✦ Visualização — dados fictícios</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nbrand">
+    <svg width="34" height="34" viewBox="0 0 100 100"><rect width="100" height="100" rx="12" fill="#9b66f4"/><polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/><polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/></svg>
+    <div><div class="ntitle">People Analytics</div><div class="nsub">Luma Plataforma · RH</div></div>
+  </div>
+  <div class="ntabs">
+    <button class="tab active" onclick="show('vg',this)">Visão Geral</button>
+    <button class="tab" onclick="show('ps',this)">Pessoal</button>
+    <button class="tab" onclick="show('aniv',this)">Aniversários</button>
+    <button class="tab" onclick="show('fer',this)">Férias</button>
+    <button class="tab" onclick="show('ex',this)">Exames</button>
+    <button class="tab" onclick="show('aus',this)">Ausências</button>
+    <button class="tab" onclick="show('alert',this)">Alertas</button>
+    <button class="tab" onclick="show('desl',this)">Desligados</button>
+    <button class="tab" onclick="show('acoes',this)">Ações</button>
+  </div>
+  <div class="nright">
+    <div class="ndot" title="Online"></div>
+    <div class="ndate" id="ndate"></div>
+    <button class="btn btn-a">↻ Atualizar</button>
+    <button class="btn btn-a" onclick="openModal('mAdmin')">⚙ Administração</button>
+  </div>
+</nav>
+
+<div class="main">
+
+<!-- ══════════════════════════════════════════════════════════
+     VISÃO GERAL
+══════════════════════════════════════════════════════════ -->
+<div class="sec active" id="vg">
+
+  <!-- KPIs principais -->
+  <div class="kg">
+    <div class="kpi">
+      <div class="kl">Colaboradores ativos</div>
+      <div class="kv" style="color:var(--accent)">18</div>
+      <div class="ks">3 empresas · 2 gestores</div>
+      <span class="kbadge bb">Admin</span>
+      <div class="kbar" style="background:linear-gradient(90deg,#9b66f4,#ffd000)"></div>
+    </div>
+    <div class="kpi">
+      <div class="kl">Alertas críticos</div>
+      <div class="kv" style="color:var(--danger)">5</div>
+      <div class="ks">contratos + exames + férias</div>
+      <span class="kbadge bd">Atenção</span>
+      <div class="kbar" style="background:var(--danger)"></div>
+    </div>
+    <div class="kpi">
+      <div class="kl">Próx. aniversário</div>
+      <div class="kv" style="color:var(--accent2)">3</div>
+      <div class="ks">dias · Ana Beatriz Silva</div>
+      <span class="kbadge bg">Em breve</span>
+      <div class="kbar" style="background:var(--accent2)"></div>
+    </div>
+    <div class="kpi">
+      <div class="kl">Automação Teams</div>
+      <div class="kv" style="color:var(--ok)">ON</div>
+      <div class="ks">Power Automate ativo</div>
+      <span class="kbadge bg">Operando</span>
+      <div class="kbar" style="background:var(--ok)"></div>
+    </div>
+  </div>
+
+  <!-- KPIs secundários -->
+  <div class="kg6">
+    <div class="kpi" style="padding:14px;">
+      <div class="kl">Idade média</div>
+      <div class="kv2" style="color:var(--purple)">34</div>
+      <div class="ks">anos</div>
+      <div class="kbar" style="background:var(--purple)"></div>
+    </div>
+    <div class="kpi" style="padding:14px;">
+      <div class="kl">Senioridade média</div>
+      <div class="kv2" style="color:var(--accent2)">2.8</div>
+      <div class="ks">anos na empresa</div>
+      <div class="kbar" style="background:var(--accent2)"></div>
+    </div>
+    <div class="kpi" style="padding:14px;">
+      <div class="kl">Histórico total</div>
+      <div class="kv2" style="color:var(--muted)">24</div>
+      <div class="ks">colaboradores</div>
+      <div class="kbar" style="background:var(--muted)"></div>
+    </div>
+    <div class="kpi" style="padding:14px;">
+      <div class="kl">Ausências</div>
+      <div class="kv2" style="color:var(--coral)">7</div>
+      <div class="ks">atestados + faltas</div>
+      <div class="kbar" style="background:var(--coral)"></div>
+    </div>
+    <div class="kpi" style="padding:14px;">
+      <div class="kl">Exames vencidos</div>
+      <div class="kv2" style="color:var(--warn)">3</div>
+      <div class="ks">colaboradores ativos</div>
+      <div class="kbar" style="background:var(--warn)"></div>
+    </div>
+    <div class="kpi" style="padding:14px;">
+      <div class="kl">Turnover</div>
+      <div class="kv2" style="color:var(--danger)">12%</div>
+      <div class="ks">últimos 12 meses</div>
+      <div class="kbar" style="background:var(--danger)"></div>
+    </div>
+  </div>
+
+  <!-- Cards analíticos -->
+  <div class="g3">
+    <div class="card">
+      <div class="ct">Composição por vínculo</div>
+      <div style="display:flex;justify-content:center;margin-bottom:14px;">
+        <svg width="160" height="160" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="32" fill="none" stroke="#1a1826" stroke-width="13"/>
+          <!-- PJ 44% -->
+          <circle cx="45" cy="45" r="32" fill="none" stroke="#9b66f4" stroke-width="13"
+            stroke-dasharray="88 113" stroke-dashoffset="0" transform="rotate(-90 45 45)"/>
+          <!-- CLT 28% -->
+          <circle cx="45" cy="45" r="32" fill="none" stroke="#ffd000" stroke-width="13"
+            stroke-dasharray="56 145" stroke-dashoffset="-88" transform="rotate(-90 45 45)"/>
+          <!-- SÓCIO 17% -->
+          <circle cx="45" cy="45" r="32" fill="none" stroke="#b98af7" stroke-width="13"
+            stroke-dasharray="34 167" stroke-dashoffset="-144" transform="rotate(-90 45 45)"/>
+          <!-- EST 11% -->
+          <circle cx="45" cy="45" r="32" fill="none" stroke="#fb923c" stroke-width="13"
+            stroke-dasharray="22 179" stroke-dashoffset="-178" transform="rotate(-90 45 45)"/>
+          <text x="45" y="42" text-anchor="middle" fill="#e8eaf0" font-size="16" font-family="DM Sans" font-weight="300">18</text>
+          <text x="45" y="53" text-anchor="middle" fill="#7a7f94" font-size="7" font-family="DM Sans">ativos</text>
+        </svg>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:#9b66f4;flex-shrink:0"></div>PJ · 8</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:#ffd000;flex-shrink:0"></div>CLT · 5</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:#b98af7;flex-shrink:0"></div>Sócio · 3</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:#fb923c;flex-shrink:0"></div>Estag. · 2</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Movimentações por ano</div>
+      <div style="display:flex;gap:12px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:var(--ok)"></div>Admissões</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:2px;background:var(--danger)"></div>Desligamentos</div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px;height:100px;padding-bottom:4px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+          <div style="width:100%;background:var(--ok);border-radius:3px 3px 0 0;height:60px;"></div>
+          <div style="width:100%;background:var(--danger);border-radius:3px 3px 0 0;height:20px;"></div>
+          <span style="font-size:10px;color:var(--muted)">2022</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+          <div style="width:100%;background:var(--ok);border-radius:3px 3px 0 0;height:80px;"></div>
+          <div style="width:100%;background:var(--danger);border-radius:3px 3px 0 0;height:30px;"></div>
+          <span style="font-size:10px;color:var(--muted)">2023</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+          <div style="width:100%;background:var(--ok);border-radius:3px 3px 0 0;height:50px;"></div>
+          <div style="width:100%;background:var(--danger);border-radius:3px 3px 0 0;height:25px;"></div>
+          <span style="font-size:10px;color:var(--muted)">2024</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1">
+          <div style="width:100%;background:var(--ok);border-radius:3px 3px 0 0;height:35px;"></div>
+          <div style="width:100%;background:var(--danger);border-radius:3px 3px 0 0;height:10px;"></div>
+          <span style="font-size:10px;color:var(--muted)">2025</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Saúde operacional</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--muted)">Exames em dia</span><span style="color:var(--ok)">83%</span></div>
+          <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:83%;background:var(--ok);border-radius:3px;"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--muted)">Férias programadas</span><span style="color:var(--warn)">60%</span></div>
+          <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:60%;background:var(--warn);border-radius:3px;"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--muted)">Contratos regulares</span><span style="color:var(--accent)">94%</span></div>
+          <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:94%;background:var(--accent);border-radius:3px;"></div></div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;"><span style="color:var(--muted)">Ausências / mês</span><span style="color:var(--coral)">39%</span></div>
+          <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;"><div style="height:100%;width:39%;background:var(--coral);border-radius:3px;"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Distribuição por área / empresa / faixa etária / tempo -->
+  <div class="g4">
+    <div class="card">
+      <div class="ct">Distribuição por área</div>
+      <div class="br"><div class="bl">Jurídico</div><div class="bt"><div class="bf" style="width:88%;background:var(--accent)"></div></div><div class="bc">8</div></div>
+      <div class="br"><div class="bl">Adm / Fin</div><div class="bt"><div class="bf" style="width:55%;background:var(--purple)"></div></div><div class="bc">5</div></div>
+      <div class="br"><div class="bl">Operações</div><div class="bt"><div class="bf" style="width:33%;background:var(--accent2)"></div></div><div class="bc">3</div></div>
+      <div class="br"><div class="bl">Estagiários</div><div class="bt"><div class="bf" style="width:22%;background:var(--coral)"></div></div><div class="bc">2</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Por empresa</div>
+      <div class="br"><div class="bl">Luisa Moraes</div><div class="bt"><div class="bf" style="width:72%;background:var(--accent)"></div></div><div class="bc">13</div></div>
+      <div class="br"><div class="bl">LM Holding</div><div class="bt"><div class="bf" style="width:28%;background:var(--purple)"></div></div><div class="bc">5</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Faixa etária</div>
+      <div class="br"><div class="bl">20–29</div><div class="bt"><div class="bf" style="width:22%;background:var(--coral)"></div></div><div class="bc">4</div></div>
+      <div class="br"><div class="bl">30–39</div><div class="bt"><div class="bf" style="width:44%;background:var(--accent)"></div></div><div class="bc">8</div></div>
+      <div class="br"><div class="bl">40–49</div><div class="bt"><div class="bf" style="width:28%;background:var(--purple)"></div></div><div class="bc">5</div></div>
+      <div class="br"><div class="bl">50+</div><div class="bt"><div class="bf" style="width:6%;background:var(--muted)"></div></div><div class="bc">1</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Tempo de empresa</div>
+      <div class="br"><div class="bl">&lt; 1 ano</div><div class="bt"><div class="bf" style="width:33%;background:var(--ok)"></div></div><div class="bc">6</div></div>
+      <div class="br"><div class="bl">1–3 anos</div><div class="bt"><div class="bf" style="width:44%;background:var(--accent2)"></div></div><div class="bc">8</div></div>
+      <div class="br"><div class="bl">3–5 anos</div><div class="bt"><div class="bf" style="width:22%;background:var(--accent)"></div></div><div class="bc">4</div></div>
+      <div class="br"><div class="bl">5+ anos</div><div class="bt"><div class="bf" style="width:0%;background:var(--purple)"></div></div><div class="bc">0</div></div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;">
+        <span style="font-size:12px;color:var(--muted)">Média</span>
+        <span style="font-size:12px;font-family:var(--mono);color:var(--accent)">2.8 anos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gestor / Top Senioridade / Próximos Aniversários -->
+  <div class="g3b">
+    <div class="card">
+      <div class="ct">Equipe por gestor</div>
+      <div class="br"><div class="bl">Anderson Assis</div><div class="bt"><div class="bf" style="width:61%;background:var(--accent)"></div></div><div class="bc">11</div></div>
+      <div class="br"><div class="bl">Luisa Moraes</div><div class="bt"><div class="bf" style="width:39%;background:var(--purple)"></div></div><div class="bc">7</div></div>
+    </div>
+    <div class="card">
+      <div class="ct">Top senioridade</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:7px;background:rgba(155,102,244,.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--accent)">1</div><div style="flex:1"><div style="font-size:13px;font-weight:500">Luisa M. Advogados</div><div style="font-size:11px;color:var(--muted)">5 anos · Sócia</div></div><span style="font-size:14px;font-family:var(--mono);color:var(--accent2)">5.0</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:7px;background:rgba(155,102,244,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--muted)">2</div><div style="flex:1"><div style="font-size:13px;font-weight:500">Anderson A. Souza</div><div style="font-size:11px;color:var(--muted)">3.5 anos · Gerente</div></div><span style="font-size:14px;font-family:var(--mono);color:var(--accent)">3.5</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><div style="width:28px;height:28px;border-radius:7px;background:rgba(155,102,244,.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--muted)">3</div><div style="flex:1"><div style="font-size:13px;font-weight:500">Ana Beatriz Silva</div><div style="font-size:11px;color:var(--muted)">3.1 anos · Advogada</div></div><span style="font-size:14px;font-family:var(--mono);color:var(--accent)">3.1</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Próximos aniversários <span>30 dias</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(255,208,0,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;"><span style="font-size:14px;font-weight:600;line-height:1;color:var(--accent2)">29</span><span style="font-size:9px;text-transform:uppercase;color:var(--accent2)">mar</span></div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:500">Ana Beatriz Silva</div><div style="font-size:11px;color:var(--muted)">🎂 31 anos</div></div>
+          <span class="chip cw">3 dias</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(155,102,244,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;"><span style="font-size:14px;font-weight:600;line-height:1;color:var(--accent)">08</span><span style="font-size:9px;text-transform:uppercase;color:var(--accent)">abr</span></div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:500">Carlos R. Pereira</div><div style="font-size:11px;color:var(--muted)">🏢 2 anos de empresa</div></div>
+          <span class="chip cc">13 dias</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;">
+          <div style="width:36px;height:36px;border-radius:8px;background:rgba(251,146,60,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;"><span style="font-size:14px;font-weight:600;line-height:1;color:var(--coral)">14</span><span style="font-size:9px;text-transform:uppercase;color:var(--coral)">abr</span></div>
+          <div style="flex:1"><div style="font-size:13px;font-weight:500">Mariana G. Tavares</div><div style="font-size:11px;color:var(--muted)">🎂 28 anos</div></div>
+          <span class="chip ce">19 dias</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PESSOAL
+══════════════════════════════════════════════════════════ -->
+<div class="sec" id="ps">
+  <div class="sttl">
+    <div class="sttl-l"><div class="sdot" style="background:var(--accent)"></div>Gestão de Pessoal</div>
+    <button class="btn btn-g" onclick="openModal('mEditColab')">+ Novo colaborador</button>
+  </div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Total ativos</div><div class="kv" style="color:var(--accent)">18</div><div class="ks">3 empresas</div><div class="kbar" style="background:var(--accent)"></div></div>
+    <div class="kpi"><div class="kl">Desligados</div><div class="kv" style="color:var(--muted)">6</div><div class="ks">histórico</div><div class="kbar" style="background:var(--muted)"></div></div>
+    <div class="kpi"><div class="kl">Turnover</div><div class="kv" style="color:var(--warn)">12%</div><div class="ks">últimos 12 meses</div><div class="kbar" style="background:var(--warn)"></div></div>
+    <div class="kpi"><div class="kl">Maior senioridade</div><div class="kv" style="color:var(--accent2)">5.0</div><div class="ks">Luisa M. Advogados</div><div class="kbar" style="background:var(--accent2)"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">
+      Colaboradores ativos <span style="color:var(--accent);font-family:var(--mono)">18</span>
+      <input placeholder="🔍 Buscar por nome..." style="padding:5px 11px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--font);font-size:12px;width:200px;outline:none;">
+    </div>
+    <table class="tbl">
+      <thead><tr>
+        <th>Nome</th><th>Vínculo</th><th>Cargo</th><th>Área</th><th>Empresa</th><th>Admissão</th><th>Tempo</th><th></th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Ana Beatriz Silva</td><td><span class="chip cc">CLT</span></td><td>Advogada Sênior</td><td>Jurídico</td><td>Luisa Moraes Adv.</td><td style="font-family:var(--mono);font-size:12px">Mar/2021</td><td style="font-family:var(--mono);font-size:12px;color:var(--accent2)">3.1a</td><td><button class="btn" style="font-size:11px;padding:3px 8px;" onclick="openModal('mEditColab')">✏ Editar</button></td></tr>
+        <tr><td>Carlos R. Pereira</td><td><span class="chip cp">PJ</span></td><td>Consultor Fiscal</td><td>Adm / Fin</td><td>Luisa Moraes Adv.</td><td style="font-family:var(--mono);font-size:12px">Abr/2022</td><td style="font-family:var(--mono);font-size:12px;color:var(--accent)">2.0a</td><td><button class="btn" style="font-size:11px;padding:3px 8px;" onclick="openModal('mEditColab')">✏ Editar</button></td></tr>
+        <tr><td>Mariana G. Tavares</td><td><span class="chip cc">CLT</span></td><td>Assistente Jur.</td><td>Jurídico</td><td>Luisa Moraes Adv.</td><td style="font-family:var(--mono);font-size:12px">Jun/2022</td><td style="font-family:var(--mono);font-size:12px;color:var(--accent)">1.8a</td><td><button class="btn" style="font-size:11px;padding:3px 8px;" onclick="openModal('mEditColab')">✏ Editar</button></td></tr>
+        <tr><td>Ricardo F. Campos</td><td><span class="chip" style="background:rgba(255,208,0,.1);color:var(--accent2)">SÓCIO</span></td><td>Sócio Fundador</td><td>Jurídico</td><td>Luisa Moraes Adv.</td><td style="font-family:var(--mono);font-size:12px">Jan/2019</td><td style="font-family:var(--mono);font-size:12px;color:var(--accent2)">5.0a</td><td><button class="btn" style="font-size:11px;padding:3px 8px;" onclick="openModal('mEditColab')">✏ Editar</button></td></tr>
+        <tr><td>Patrícia N. Lima</td><td><span class="chip cp">PJ</span></td><td>Analista Financeira</td><td>Adm / Fin</td><td>LM Holding</td><td style="font-family:var(--mono);font-size:12px">Set/2023</td><td style="font-family:var(--mono);font-size:12px;color:var(--muted)">0.6a</td><td><button class="btn" style="font-size:11px;padding:3px 8px;" onclick="openModal('mEditColab')">✏ Editar</button></td></tr>
+        <tr><td>Fernando O. Alves</td><td><span class="chip ce">ESTAG</span></td><td>Estagiário Jur.</td><td>Jurídico</td><td>Luisa Moraes Adv.</td><td style="font-family:var(--mono);font-size:12px">Fev/2024</td><td style="font-family:var(--mono);font-size:12px;color:var(--muted)">0.1a</td><td><button class="btn" style="font-size:11px;padding:3px 8px;" onclick="openModal('mEditColab')">✏ Editar</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     ANIVERSÁRIOS
+══════════════════════════════════════════════════════════ -->
+<div class="sec" id="aniv">
+  <div class="sttl"><div class="sttl-l"><div class="sdot" style="background:var(--accent2)"></div>Aniversários</div></div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Eventos mapeados</div><div class="kv" style="color:var(--accent2)">36</div><div class="ks">pessoal + empresa</div><div class="kbar" style="background:var(--accent2)"></div></div>
+    <div class="kpi"><div class="kl">Próximo evento</div><div class="kv" style="color:var(--accent)">3</div><div class="ks">dias · Ana Beatriz</div><div class="kbar" style="background:var(--accent)"></div></div>
+    <div class="kpi"><div class="kl">Automação Teams</div><div class="kv" style="color:var(--ok)">ON</div><div class="ks">D-1 · Comunicados</div><div class="kbar" style="background:var(--ok)"></div></div>
+    <div class="kpi"><div class="kl">Mensagens</div><div class="kv" style="color:var(--purple)">4</div><div class="ks">modelos ativos</div><div class="kbar" style="background:var(--purple)"></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div class="card">
+      <div class="ct">Próximos 60 dias</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="ai"><div class="aico" style="background:rgba(255,208,0,.12)">🎂</div><div class="ainf"><div class="an">Ana Beatriz Silva</div><div class="ad">29/mar · 31 anos</div></div><span class="chip cw">3 dias</span></div>
+        <div class="ai"><div class="aico" style="background:rgba(155,102,244,.12)">🏢</div><div class="ainf"><div class="an">Carlos R. Pereira</div><div class="ad">08/abr · 2 anos de empresa</div></div><span class="chip cc">13 dias</span></div>
+        <div class="ai"><div class="aico" style="background:rgba(251,146,60,.12)">🎂</div><div class="ainf"><div class="an">Mariana G. Tavares</div><div class="ad">14/abr · 28 anos</div></div><span class="chip ce">19 dias</span></div>
+        <div class="ai"><div class="aico" style="background:rgba(155,102,244,.12)">🏢</div><div class="ainf"><div class="an">Mariana G. Tavares</div><div class="ad">20/abr · 1 ano de empresa</div></div><span class="chip cc">25 dias</span></div>
+        <div class="ai"><div class="aico" style="background:rgba(255,208,0,.12)">🎂</div><div class="ainf"><div class="an">Ricardo F. Campos</div><div class="ad">03/mai · 48 anos</div></div><span class="chip" style="background:rgba(56,217,169,.1);color:var(--ok)">38 dias</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Automação Teams</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;justify-content:space-between;"><span style="font-size:13px;color:var(--muted)">Power Automate</span><span class="chip cs">Ativo</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="font-size:13px;color:var(--muted)">Canal</span><span style="font-size:13px;">Comunicados</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="font-size:13px;color:var(--muted)">Antecedência</span><span style="font-size:13px;font-family:var(--mono);color:var(--accent)">D-1</span></div>
+        <div style="display:flex;justify-content:space-between;"><span style="font-size:13px;color:var(--muted)">Sexta cobre</span><span style="font-size:13px;">Sáb + Dom + Seg</span></div>
+        <div style="margin-top:6px;font-size:12px;color:var(--muted);line-height:1.7;background:var(--bg3);padding:10px;border-radius:8px;font-style:italic;">
+          "Hoje celebramos o aniversário de [Nome]. Desejamos um novo ciclo cheio de saúde, conquistas e muitas alegrias. 🎉"
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FÉRIAS
+══════════════════════════════════════════════════════════ -->
+<div class="sec" id="fer">
+  <div class="sttl"><div class="sttl-l"><div class="sdot" style="background:var(--warn)"></div>Férias CLT</div></div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Não programadas</div><div class="kv" style="color:var(--warn)">2</div><div class="ks">atenção</div><span class="kbadge bw">Atenção</span><div class="kbar" style="background:var(--warn)"></div></div>
+    <div class="kpi"><div class="kl">N/A (não CLT)</div><div class="kv" style="color:var(--muted)">13</div><div class="ks">PJ, Sócio, Estag.</div><div class="kbar" style="background:var(--muted)"></div></div>
+    <div class="kpi"><div class="kl">Inativos</div><div class="kv" style="color:var(--muted)">0</div><div class="ks">desligados com saldo</div><div class="kbar" style="background:var(--muted)"></div></div>
+    <div class="kpi"><div class="kl">CLT ativos</div><div class="kv" style="color:var(--accent)">5</div><div class="ks">com controle de férias</div><div class="kbar" style="background:var(--accent)"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Controle de férias CLT <span>5 registros</span>
+      <button class="btn btn-g" style="font-size:12px;">🏖 Férias Coletivas</button>
+    </div>
+    <table class="tbl">
+      <thead><tr><th>Colaborador</th><th>Aquisição</th><th>Fim concessivo</th><th>Programado</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>Ana Beatriz Silva</td><td style="font-family:var(--mono);font-size:12px">Mar/23–Mar/24</td><td style="font-family:var(--mono);font-size:12px">Mar/25</td><td style="font-family:var(--mono);font-size:12px">Jul/24</td><td><span class="chip cs">PROGRAMADA</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">✏</button></td></tr>
+        <tr><td>Carlos R. Pereira</td><td style="font-family:var(--mono);font-size:12px">Abr/22–Abr/23</td><td style="font-family:var(--mono);font-size:12px">Abr/24</td><td>—</td><td><span class="chip cw">NÃO PROGRAMADA</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">✏</button></td></tr>
+        <tr><td>Mariana G. Tavares</td><td style="font-family:var(--mono);font-size:12px">Jun/23–Jun/24</td><td style="font-family:var(--mono);font-size:12px">Jun/25</td><td style="font-family:var(--mono);font-size:12px">Ago/24</td><td><span class="chip cs">PROGRAMADA</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">✏</button></td></tr>
+        <tr><td>Patrícia N. Lima</td><td style="font-family:var(--mono);font-size:12px">Set/23–Set/24</td><td style="font-family:var(--mono);font-size:12px">Set/25</td><td>—</td><td><span class="chip cw">NÃO PROGRAMADA</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">✏</button></td></tr>
+        <tr><td>Fernando O. Alves</td><td style="font-family:var(--mono);font-size:12px">Fev/24–Fev/25</td><td style="font-family:var(--mono);font-size:12px">Fev/26</td><td style="font-family:var(--mono);font-size:12px">Dez/24</td><td><span class="chip ca">GOZADA</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">✏</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     EXAMES
+══════════════════════════════════════════════════════════ -->
+<div class="sec" id="ex">
+  <div class="sttl"><div class="sttl-l"><div class="sdot" style="background:var(--ok)"></div>Exames Ocupacionais</div></div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Vencidos (ativos)</div><div class="kv" style="color:var(--danger)">3</div><span class="kbadge bd">Urgente</span><div class="kbar" style="background:var(--danger)"></div></div>
+    <div class="kpi"><div class="kl">Total registros</div><div class="kv" style="color:var(--muted)">18</div><div class="kbar" style="background:var(--muted)"></div></div>
+    <div class="kpi"><div class="kl">Ativos com exame</div><div class="kv" style="color:var(--accent)">15</div><div class="kbar" style="background:var(--accent)"></div></div>
+    <div class="kpi"><div class="kl">Sem registro</div><div class="kv" style="color:var(--warn)">3</div><span class="kbadge bw">Atenção</span><div class="kbar" style="background:var(--warn)"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Controle de exames <span>18 registros</span></div>
+    <table class="tbl">
+      <thead><tr><th>Colaborador</th><th>Último exame</th><th>Próximo exame</th><th>Situação</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>Ana Beatriz Silva</td><td style="font-family:var(--mono);font-size:12px">15/03/2023</td><td style="font-family:var(--mono);font-size:12px;color:var(--ok)">15/03/2024</td><td><span class="chip cs">Em dia</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">✏</button></td></tr>
+        <tr><td>Carlos R. Pereira</td><td style="font-family:var(--mono);font-size:12px">10/01/2023</td><td style="font-family:var(--mono);font-size:12px;color:var(--danger)">10/01/2024</td><td><span class="chip cd">Vencido</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">✏</button></td></tr>
+        <tr><td>Mariana G. Tavares</td><td style="font-family:var(--mono);font-size:12px">22/06/2023</td><td style="font-family:var(--mono);font-size:12px;color:var(--warn)">22/06/2024</td><td><span class="chip cw">Próximo</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">✏</button></td></tr>
+        <tr><td>Ricardo F. Campos</td><td style="font-family:var(--mono);font-size:12px">05/08/2022</td><td style="font-family:var(--mono);font-size:12px;color:var(--danger)">05/08/2023</td><td><span class="chip cd">Vencido</span></td><td><button class="btn" style="font-size:11px;padding:3px 8px;">✏</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     AUSÊNCIAS
+══════════════════════════════════════════════════════════ -->
+<div class="sec" id="aus">
+  <div class="sttl">
+    <div class="sttl-l"><div class="sdot" style="background:var(--coral)"></div>Ausências e Ocorrências</div>
+    <button class="btn btn-g" onclick="openModal('mNewAus')">+ Registrar ausência</button>
+  </div>
+  <div class="card">
+    <div class="ct">Registros de ausência <span>7 no período</span></div>
+    <table class="tbl">
+      <thead><tr><th>Colaborador</th><th>Tipo</th><th>Data</th><th>Detalhe</th></tr></thead>
+      <tbody>
+        <tr><td>Ana Beatriz Silva</td><td><span class="chip ce">Atestado</span></td><td style="font-family:var(--mono);font-size:12px">12/01/2024</td><td style="color:var(--muted);font-size:12px">CID J06 – Sinusite</td></tr>
+        <tr><td>Carlos R. Pereira</td><td><span class="chip cw">Falta</span></td><td style="font-family:var(--mono);font-size:12px">25/01/2024</td><td style="color:var(--muted);font-size:12px">Não justificada</td></tr>
+        <tr><td>Mariana G. Tavares</td><td><span class="chip cc">Afastamento</span></td><td style="font-family:var(--mono);font-size:12px">03/02/2024</td><td style="color:var(--muted);font-size:12px">INSS – Licença maternidade</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     ALERTAS
+══════════════════════════════════════════════════════════ -->
+<div class="sec" id="alert">
+  <div class="sttl"><div class="sttl-l"><div class="sdot" style="background:var(--danger)"></div>Alertas</div></div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Contratos s/ data fim</div><div class="kv" style="color:var(--danger)">2</div><span class="kbadge bd">Crítico</span><div class="kbar" style="background:var(--danger)"></div></div>
+    <div class="kpi"><div class="kl">Exames vencidos</div><div class="kv" style="color:var(--warn)">3</div><span class="kbadge bw">Urgente</span><div class="kbar" style="background:var(--warn)"></div></div>
+    <div class="kpi"><div class="kl">Férias pendentes</div><div class="kv" style="color:var(--warn)">2</div><span class="kbadge bw">Atenção</span><div class="kbar" style="background:var(--warn)"></div></div>
+    <div class="kpi"><div class="kl">Total alertas</div><div class="kv" style="color:var(--danger)">7</div><div class="kbar" style="background:var(--danger)"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Alertas ativos</div>
+    <div class="ai"><div class="aico" style="background:rgba(248,113,113,.12)">⚠</div><div class="ainf"><div class="an" style="color:var(--danger)">Contrato sem data de fim — Carlos R. Pereira</div><div class="ad">PJ · Admitido em Abr/2022 · Sem prazo definido</div></div><span class="chip cd">Crítico</span></div>
+    <div class="ai"><div class="aico" style="background:rgba(248,113,113,.12)">⚠</div><div class="ainf"><div class="an" style="color:var(--danger)">Contrato sem data de fim — Ricardo F. Campos</div><div class="ad">Sócio · Admitido em Jan/2019 · Regularizar documentação</div></div><span class="chip cd">Crítico</span></div>
+    <div class="ai"><div class="aico" style="background:rgba(255,208,0,.12)">🩺</div><div class="ainf"><div class="an" style="color:var(--warn)">Exame vencido — Carlos R. Pereira</div><div class="ad">Venceu em 10/01/2024 · Agendar renovação</div></div><span class="chip cw">Urgente</span></div>
+    <div class="ai"><div class="aico" style="background:rgba(255,208,0,.12)">🩺</div><div class="ainf"><div class="an" style="color:var(--warn)">Exame vencido — Ricardo F. Campos</div><div class="ad">Venceu em 05/08/2023 · Agendar renovação</div></div><span class="chip cw">Urgente</span></div>
+    <div class="ai"><div class="aico" style="background:rgba(255,208,0,.12)">🌴</div><div class="ainf"><div class="an" style="color:var(--warn)">Férias não programadas — Carlos R. Pereira</div><div class="ad">Período concessivo termina em Abr/2024</div></div><span class="chip cw">Atenção</span></div>
+    <div class="ai"><div class="aico" style="background:rgba(255,208,0,.12)">🌴</div><div class="ainf"><div class="an" style="color:var(--warn)">Férias não programadas — Patrícia N. Lima</div><div class="ad">Período concessivo termina em Set/2025</div></div><span class="chip cw">Atenção</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     DESLIGADOS
+══════════════════════════════════════════════════════════ -->
+<div class="sec" id="desl">
+  <div class="sttl"><div class="sttl-l"><div class="sdot" style="background:var(--muted)"></div>Desligamentos</div></div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Total desligados</div><div class="kv" style="color:var(--muted)">6</div><div class="kbar" style="background:var(--muted)"></div></div>
+    <div class="kpi"><div class="kl">Turnover acumulado</div><div class="kv" style="color:var(--danger)">25%</div><div class="kbar" style="background:var(--danger)"></div></div>
+    <div class="kpi"><div class="kl">Último desligamento</div><div class="kv" style="color:var(--muted);font-size:32px">Fev/24</div><div class="kbar" style="background:var(--muted)"></div></div>
+    <div class="kpi"><div class="kl">Média tempo empresa</div><div class="kv" style="color:var(--muted)">1.4</div><div class="ks">anos</div><div class="kbar" style="background:var(--muted)"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Histórico de desligamentos</div>
+    <table class="tbl">
+      <thead><tr><th>Nome</th><th>Vínculo</th><th>Cargo</th><th>Desligamento</th><th>Tempo</th></tr></thead>
+      <tbody>
+        <tr><td>Juliana C. Ramos</td><td><span class="chip cc">CLT</span></td><td>Assistente Adm.</td><td style="font-family:var(--mono);font-size:12px">15/02/2024</td><td style="font-family:var(--mono);font-size:12px;color:var(--muted)">1.2a</td></tr>
+        <tr><td>Thiago M. Santos</td><td><span class="chip cp">PJ</span></td><td>Consultor Jur.</td><td style="font-family:var(--mono);font-size:12px">30/11/2023</td><td style="font-family:var(--mono);font-size:12px;color:var(--muted)">0.8a</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     AÇÕES
+══════════════════════════════════════════════════════════ -->
+<div class="sec" id="acoes">
+  <div class="sttl">
+    <div class="sttl-l"><div class="sdot" style="background:var(--ok)"></div>Ações de Tratativa</div>
+    <button class="btn btn-g">+ Nova ação</button>
+  </div>
+  <div class="kg">
+    <div class="kpi"><div class="kl">Em andamento</div><div class="kv" style="color:var(--warn)">3</div><div class="kbar" style="background:var(--warn)"></div></div>
+    <div class="kpi"><div class="kl">Atrasadas</div><div class="kv" style="color:var(--danger)">1</div><div class="kbar" style="background:var(--danger)"></div></div>
+    <div class="kpi"><div class="kl">Concluídas</div><div class="kv" style="color:var(--ok)">5</div><div class="kbar" style="background:var(--ok)"></div></div>
+    <div class="kpi"><div class="kl">Canceladas</div><div class="kv" style="color:var(--muted)">1</div><div class="kbar" style="background:var(--muted)"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct">Lista de ações</div>
+    <table class="tbl">
+      <thead><tr><th>Alerta / Motivo</th><th>Atividade</th><th>Vencimento</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Exame vencido – Carlos</td><td>Agendar renovação do ASO</td><td style="font-family:var(--mono);font-size:12px;color:var(--warn)">15/04/2024</td><td><span class="chip cw">Em andamento</span></td></tr>
+        <tr><td>Contrato PJ irregular</td><td>Solicitar aditivo contratual</td><td style="font-family:var(--mono);font-size:12px;color:var(--danger)">01/03/2024</td><td><span class="chip cd">Atrasada</span></td></tr>
+        <tr><td>Férias não programadas</td><td>Definir período com gestor</td><td style="font-family:var(--mono);font-size:12px">30/04/2024</td><td><span class="chip cw">Em andamento</span></td></tr>
+        <tr><td>Atestado recorrente</td><td>Conversa com colaborador</td><td style="font-family:var(--mono);font-size:12px">28/02/2024</td><td><span class="chip cs">Concluída</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     MODAIS
+══════════════════════════════════════════════════════════ -->
+
+<!-- MODAL: EDITAR COLABORADOR -->
+<div class="ov" id="mEditColab">
+  <div class="modal">
+    <div class="mh">
+      <div><div class="mt">Editar colaborador</div><div class="ms">Dados pessoais e contratuais</div></div>
+      <button class="mc" onclick="closeModal('mEditColab')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="fg">
+        <div class="fgrp s2"><div class="flbl">Nome completo <span style="color:var(--danger)">*</span></div><input class="fi" value="Ana Beatriz Silva"></div>
+        <div class="fgrp"><div class="flbl">E-mail corporativo</div><input class="fi" type="email" value="ana@luisamoraes.adv.br"></div>
+        <div class="fgrp"><div class="flbl">Data de nascimento</div><input class="fi" type="date" value="1993-03-29"></div>
+        <div class="fgrp"><div class="flbl">Tipo de vínculo <span style="color:var(--danger)">*</span></div><select class="fsel"><option selected>CLT</option><option>PJ</option><option>MEI</option><option>Sócio</option><option>Estagiário</option></select></div>
+        <div class="fgrp"><div class="flbl">Data de admissão</div><input class="fi" type="date" value="2021-03-15"></div>
+        <div class="fsec">Cargo e Estrutura</div>
+        <div class="fgrp"><div class="flbl">Cargo</div><input class="fi" value="Advogada Sênior"></div>
+        <div class="fgrp"><div class="flbl">Área</div><select class="fsel"><option selected>Jurídico</option><option>Adm / Financeiro</option><option>Operações</option></select></div>
+        <div class="fgrp"><div class="flbl">Gestor</div><select class="fsel"><option selected>Anderson A. Souza</option><option>Luisa Moraes</option></select></div>
+        <div class="fgrp"><div class="flbl">Empresa</div><select class="fsel"><option selected>Luisa Moraes Adv.</option><option>LM Holding</option></select></div>
+        <div class="fsec">Remuneração</div>
+        <div class="fgrp"><div class="flbl">Salário / Honorário R$</div><input class="fi" value="R$ 8.500,00"></div>
+        <div class="fgrp"><div class="flbl">Vale Refeição R$/mês</div><input class="fi" value="R$ 550,00"></div>
+        <div class="fgrp"><div class="flbl">Vale Transporte R$/mês</div><input class="fi" value="R$ 220,00"></div>
+        <div class="fgrp"><div class="flbl">Plano de Saúde</div><select class="fsel"><option selected>Unimed</option><option>SulAmérica</option><option>Amil</option><option>Nenhum</option></select></div>
+        <div class="fdiv"></div>
+        <div class="fgrp"><div class="flbl">Status</div><select class="fsel"><option selected>ATIVO</option><option>INATIVO</option><option>AFASTADO</option></select></div>
+        <div class="fgrp"><div class="flbl">Data de desligamento</div><input class="fi" type="date"></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn" onclick="closeModal('mEditColab')">Cancelar</button>
+      <button class="btn btn-g">💾 Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: REGISTRAR AUSÊNCIA -->
+<div class="ov" id="mNewAus">
+  <div class="modal">
+    <div class="mh">
+      <div><div class="mt">Registrar ausência</div><div class="ms">Atestado, falta ou ocorrência</div></div>
+      <button class="mc" onclick="closeModal('mNewAus')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="fg">
+        <div class="fgrp"><div class="flbl">Tipo <span style="color:var(--danger)">*</span></div><select class="fsel"><option>Atestado médico</option><option>Falta não justificada</option><option>Afastamento INSS</option><option>Licença maternidade</option><option>Licença paternidade</option><option>Falta justificada</option></select></div>
+        <div class="fgrp"><div class="flbl">Data <span style="color:var(--danger)">*</span></div><input class="fi" type="date"></div>
+        <div class="fgrp s2"><div class="flbl">Colaborador <span style="color:var(--danger)">*</span></div><select class="fsel"><option>Ana Beatriz Silva</option><option>Carlos R. Pereira</option><option>Mariana G. Tavares</option><option>Ricardo F. Campos</option></select></div>
+        <div class="fgrp s2"><div class="flbl">Detalhe / CID</div><input class="fi" placeholder="Ex: CID J06, gripe, cirurgia..."></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn" onclick="closeModal('mNewAus')">Cancelar</button>
+      <button class="btn btn-g">💾 Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADMINISTRAÇÃO -->
+<div class="ov" id="mAdmin">
+  <div class="modal">
+    <div class="mh">
+      <div><div class="mt">⚙ Administração</div><div class="ms">Gerenciar perfis de acesso ao People Analytics</div></div>
+      <button class="mc" onclick="closeModal('mAdmin')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="admin-section">
+        <div class="admin-section-title"><span style="color:var(--accent2)">⭐</span> MASTER — Acesso total</div>
+        <div class="admin-row">
+          <div class="admin-row-left">
+            <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;">A</div>
+            <div><div class="admin-name">Anderson A. Souza</div><div class="admin-email">anderson@lumaplataforma.com.br</div></div>
+          </div>
+          <span class="chip cw">Master</span>
+        </div>
+      </div>
+      <div class="admin-section">
+        <div class="admin-section-title"><span>👥</span> GESTORES — Visualiza própria equipe</div>
+        <div class="admin-row">
+          <div class="admin-row-left">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(155,102,244,.2);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;color:var(--accent);">L</div>
+            <div><div class="admin-name">Luisa Moraes</div><div class="admin-email">luisa@luisamoraesadvogados.com.br</div></div>
+          </div>
+          <span class="chip cc">Gestor</span>
+        </div>
+      </div>
+      <div class="admin-section">
+        <div class="admin-section-title"><span>🏥</span> RH — Acesso total + notificações</div>
+        <div class="admin-row" style="opacity:.5;border:1px dashed var(--border2);background:transparent;">
+          <div class="admin-row-left">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(56,217,169,.1);display:flex;align-items:center;justify-content:center;font-size:16px;">+</div>
+            <div><div class="admin-name" style="color:var(--muted)">Nenhum usuário RH cadastrado</div></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-g" style="width:100%;justify-content:center;padding:9px;margin-top:4px;">+ Convidar usuário</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Data/hora
+function updateDate(){
+  const n=new Date();
+  document.getElementById('ndate').textContent=
+    n.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'})
+    +' '+n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+updateDate();setInterval(updateDate,30000);
+
+// Troca de abas
+function show(id,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+
+// Modais
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.ov').forEach(ov=>{
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');});
+});
+</script>
+
+</body>
+</html>

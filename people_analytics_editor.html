@@ -615,7 +615,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
     <div style="font-size:48px;margin-bottom:14px;">🔒</div>
     <div style="font-size:18px;font-weight:500;margin-bottom:8px;">Acesso não autorizado</div>
     <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;">Sua conta não tem permissão para acessar este painel. Entre em contato com o administrador.</div>
-    <button class="btn" onclick="msalApp&&msalApp.logoutRedirect()" style="font-size:13px;">Sair</button>
+    <button class="btn" onclick="window._sbLogout&&_sbLogout()" style="font-size:13px;">Sair</button>
   </div>
 </div>
 
@@ -2026,16 +2026,11 @@ async function saveFeriasColetivas(){
     if(!reg){erros++;continue;}
     try{
       if(!DEMO){
-        // Col 7=FP_INI, 8=FP_FIM, 9=FG_INI, 10=FG_FIM, 11=STATUS_FERIAS
-        await patchRow('FERIAS_CLT',reg._row,{
-          7:'FERIAS_PROGRAMADAS_INICIO',8:'FERIAS_PROGRAMADAS_FIM',
-          9:'FERIAS_GOZADAS_INICIO',10:'FERIAS_GOZADAS_FIM',
-          11:'STATUS_FERIAS'
-        },{
-          FERIAS_PROGRAMADAS_INICIO:ini,FERIAS_PROGRAMADAS_FIM:fimInd,
-          FERIAS_GOZADAS_INICIO:ini,FERIAS_GOZADAS_FIM:fimInd,
-          STATUS_FERIAS:'PROGRAMADA'
-        });
+        await window._sb.from('ferias_saldo').update({
+          ferias_programadas_inicio:ini,ferias_programadas_fim:fimInd,
+          ferias_gozadas_inicio:ini,ferias_gozadas_fim:fimInd,
+          status_ferias:'PROGRAMADA'
+        }).eq('id',reg._id);
       } else {
         Object.assign(reg,{FERIAS_PROGRAMADAS_INICIO:ini,FERIAS_PROGRAMADAS_FIM:fimInd,
           FERIAS_GOZADAS_INICIO:ini,FERIAS_GOZADAS_FIM:fimInd,STATUS_FERIAS:'PROGRAMADA'});
@@ -2356,11 +2351,13 @@ function saveCoords(arr){localStorage.setItem(CK_COORD,JSON.stringify(arr));}
 // Col C=EMAIL, col D=TIPO_VINCULO, col E=STATUS (índices 0-based: 2,3,4)
 async function repairCaio(){
   if(DEMO)return;
-  await patchCell('CADASTRO_COLABORADORES',54,2,'caio.galdi@luisamoraesadvogados.com.br');
-  await patchCell('CADASTRO_COLABORADORES',54,3,'CLT');
-  await patchCell('CADASTRO_COLABORADORES',54,4,'ATIVO');
-  toast('Dados do Caio restaurados ✓','success');
-  setTimeout(()=>loadAll(),1200);
+  // Dados já corrigidos no Supabase — função mantida por compatibilidade
+  const c=D.CADASTRO_COLABORADORES.find(r=>r.EMAIL_CORPORATIVO&&r.EMAIL_CORPORATIVO.includes('caio'));
+  if(c&&window._sbFns){
+    await window._sbFns.updateColaborador(c._id,{email_corporativo:'caio.galdi@luisamoraesadvogados.com.br',tipo_vinculo:'CLT',status:'ATIVO'});
+    toast('Dados do Caio restaurados ✓','success');
+    setTimeout(()=>loadAll(),1200);
+  }
 }
 
 function detectRole(){
