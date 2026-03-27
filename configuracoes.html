@@ -77,8 +77,8 @@ select option{background:#18162a;}
 .modelos-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 @media(max-width:600px){.modelos-grid{grid-template-columns:1fr;}}
 .modelo-slot{border:1px solid #2d2b45;border-radius:10px;overflow:hidden;}
-.modelo-preview{width:100%;height:160px;background:#1a1832;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-.modelo-preview img{width:100%;height:100%;object-fit:cover;display:none;}
+.modelo-preview{width:100%;aspect-ratio:9/16;height:auto;background:#1a1832;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.modelo-preview img{width:100%;height:100%;object-fit:contain;display:none;}
 .modelo-preview .placeholder{text-align:center;color:#4a4868;}
 .modelo-preview .placeholder .icon{font-size:32px;margin-bottom:6px;}
 .modelo-preview .placeholder .txt{font-size:12px;}
