@@ -307,7 +307,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
     <div class="kpi"><div class="kl">Colaboradores ativos</div><div class="kv" style="color:var(--accent)" id="kAtivos">—</div><div class="ks" id="kAtivosSub">—</div><span class="kbadge bb" id="kAdm">—</span><div class="kbar" style="background:linear-gradient(90deg,#9b66f4,#ffd000)"></div></div>
     <div class="kpi"><div class="kl">Alertas críticos</div><div class="kv" style="color:var(--danger)" id="kAlert">—</div><div class="ks">contratos + exames + férias</div><span class="kbadge bd">Atenção</span><div class="kbar" style="background:var(--danger)"></div></div>
     <div class="kpi"><div class="kl">Próx. aniversário</div><div class="kv" style="color:var(--accent2)" id="kProx">—</div><div class="ks" id="kProxSub">—</div><span class="kbadge bg" id="kProxBadge">—</span><div class="kbar" style="background:var(--accent2)"></div></div>
-    <div class="kpi"><div class="kl">Automação Teams</div><div class="kv" style="color:var(--accent2)">ON</div><div class="ks">Power Automate ativo</div><span class="kbadge bg">Operando</span><div class="kbar" style="background:var(--accent2)"></div></div>
+    <div class="kpi"><div class="kl">Férias a vencer</div><div class="kv" style="color:var(--warn)" id="kFerVenc">—</div><div class="ks">vence em 60 dias</div><span class="kbadge bd" id="kFerVencBadge">—</span><div class="kbar" style="background:var(--warn)"></div></div>
   </div>
 
   <!-- LINHA 2: 6 KPIs secundários -->
@@ -418,18 +418,19 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
   <div class="kg">
     <div class="kpi"><div class="kl">Eventos mapeados</div><div class="kv" style="color:var(--accent2)" id="aTotal">—</div><div class="ks">pessoal + empresa</div><div class="kbar" style="background:var(--accent2)"></div></div>
     <div class="kpi"><div class="kl">Próximo evento</div><div class="kv" style="color:var(--accent)" id="aProx">—</div><div class="ks" id="aProxS">—</div><div class="kbar" style="background:var(--accent)"></div></div>
-    <div class="kpi"><div class="kl">Automação Teams</div><div class="kv" style="color:var(--accent2)">ON</div><div class="ks">D-1 · Comunicados</div><div class="kbar" style="background:var(--accent2)"></div></div>
+    <div class="kpi"><div class="kl">Cards gerados</div><div class="kv" style="color:var(--accent2)" id="aCards">0</div><div class="ks">artes prontas</div><div class="kbar" style="background:var(--accent2)"></div></div>
     <div class="kpi"><div class="kl">Mensagens</div><div class="kv" style="color:var(--purple)" id="aMsgs">—</div><div class="ks">modelos ativos</div><div class="kbar" style="background:var(--purple)"></div></div>
   </div>
   <div class="g2">
     <div class="card"><div class="ct">Próximos 60 dias</div><div id="proxEvts"><div class="empty">Carregando...</div></div></div>
     <div class="card">
-      <div class="ct">Automação Teams</div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:17px;color:var(--muted)">Power Automate</span><span class="chip cok">Ativo</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:17px;color:var(--muted)">Canal</span><span style="font-size:17px;">Comunicados</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><span style="font-size:17px;color:var(--muted)">Antecedência</span><span style="font-size:17px;font-family:var(--mono);color:var(--accent)">D-1</span></div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:12px;"><span style="font-size:17px;color:var(--muted)">Sexta verifica</span><span style="font-size:17px;">Sáb+Dom+Seg</span></div>
-      <div style="font-size:17px;color:var(--muted);line-height:1.7;background:var(--bg3);padding:9px;border-radius:6px;font-style:italic;">"Hoje celebramos o aniversário de [Nome]. Desejamos um novo ciclo cheio de saúde, conquistas e muitas alegrias."</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="ct" style="margin-bottom:0;">🎨 Cards de Aniversário</div>
+        <span style="font-size:12px;color:var(--muted);" id="cardsCount">0 artes</span>
+      </div>
+      <div id="cardsGaleria" style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;min-height:60px;">
+        <div class="empty" style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-size:13px;">Nenhum card gerado ainda.<br>Clique em 🎨 Gerar Card nos eventos.</div>
+      </div>
     </div>
   </div>
   <div class="card"><div class="ct">Log de comunicações</div><table class="tbl"><thead><tr><th>Data</th><th>Colaborador</th><th>Evento</th><th>Empresa</th><th>Status</th></tr></thead><tbody id="logBody"></tbody></table></div>
@@ -1338,6 +1339,10 @@ function render(){
   $('kAdm').textContent=admEY>0?`+${admEY} em ${new Date().getFullYear()}`:'sem novas admissões';
   $('kAlert').textContent=tAl;
   if(prD!==null){$('kProx').textContent=prD;$('kProxSub').textContent='dias · '+fmtD(evA[0].DATA_EVENTO);$('kProxBadge').textContent=fmtD(evA[0].DATA_EVENTO);}
+  // Férias a vencer (próximos 60 dias)
+  const _hoje60=new Date(Date.now()+60*864e5);
+  const ferVenc=ferias.filter(r=>{if(normStatus(r)!=='ATIVO')return false;const d=new Date(String(r.FIM_PERIODO_CONCESSIVO)+'T12:00:00');return!isNaN(d)&&d>=new Date()&&d<=_hoje60;});
+  $('kFerVenc').textContent=ferVenc.length;$('kFerVencBadge').textContent=ferVenc.length>0?'⚠️ Atenção':'✓ Em dia';
 
   // LINHA 2: KPIs secundários
   const idadeMed=ativos.length>0?(ativos.reduce((s,r)=>s+(parseFloat(r.IDADE)||0),0)/ativos.length).toFixed(1):0;
@@ -1480,7 +1485,7 @@ function render(){
   const fIn=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='INATIVO');
   const fClt=ativos.filter(r=>String(r.TIPO_VINCULO||'').toUpperCase().trim()==='CLT');
   $('fNp').textContent=fNP.length;$('fNa').textContent=fNa.length;$('fIn').textContent=fIn.length;$('fClt').textContent=fClt.length;
-  const fAtv=ferias.filter(r=>normStatus(r)==='ATIVO'||!r.STATUS);$('fCount').textContent=fAtv.length+' registros';
+  const fAtv=ferias.filter(r=>normStatus(r)==='ATIVO');$('fCount').textContent=fAtv.length+' registros';
   if(ferias.length===0){$('fBody').innerHTML='<tr><td colspan="7" class="empty" style="padding:20px;color:var(--warn);">⚠️ Aba FERIAS_CLT sem dados — preencha a planilha base para visualizar os registros.</td></tr>';}
   else $('fBody').innerHTML=fAtv.map(r=>`<tr>
     <td>${r.NOME||'—'}</td><td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
@@ -1491,7 +1496,7 @@ function render(){
     <td><div class="acts"><button class="ab" onclick='openEditFer(${JSON.stringify(r)})'>Editar</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum</td></tr>';
 
   // Exames — exibir todos os registros (ATIVO primeiro); STATUS_EXAME='INATIVO' = desligado
-  const exAtvList=[...exames].sort((a,b)=>{const sa=normStatus(a)==='ATIVO'?0:1,sb=normStatus(b)==='ATIVO'?0:1;if(sa!==sb)return sa-sb;return(a.NOME||'').localeCompare(b.NOME||'','pt-BR');});
+  const exAtvList=[...exames].filter(r=>normStatus(r)==='ATIVO').sort((a,b)=>(a.NOME||'').localeCompare(b.NOME||'','pt-BR'));
   const exSem=ativos.filter(a=>!socioIds.has(a.ID_COLABORADOR)&&!exames.find(e=>e.ID_COLABORADOR===a.ID_COLABORADOR));
   $('exV').textContent=exV.length;$('exT').textContent=exames.length;$('exA').textContent=exAtvList.length;$('exS').textContent=exSem.length;$('exCount').textContent=exAtvList.length+' registros';
   const _nr7tip='NR-7: Exame clínico isento na demissão se ≤135 dias. Audiométrico isento se ≤120 dias (risco I e II).';
@@ -2897,9 +2902,59 @@ function downloadCardAniversario(){
   const link=document.createElement('a');
   const n=(_cardData.nome||'aniversario').replace(/\s+/g,'_');
   link.download=`luma_aniversario_${n}.png`;
-  link.href=_cardCanvas.toDataURL('image/png');
+  const dataUrl=_cardCanvas.toDataURL('image/png');
+  link.href=dataUrl;
   link.click();
+  // Salva na galeria
+  _saveCardGaleria({id:Date.now(),nome:_cardData.nome,tipo:_cardData.tipo,data:_cardData.data,dataUrl});
 }
+
+// ── GALERIA DE CARDS ──
+const _CARDS_KEY='_lumaCards_v1';
+function _loadCards(){try{return JSON.parse(localStorage.getItem(_CARDS_KEY)||'[]');}catch{return[];}}
+function _saveCardGaleria(card){
+  const cards=_loadCards().filter(c=>c.nome!==card.nome||c.tipo!==card.tipo);
+  cards.unshift(card);
+  localStorage.setItem(_CARDS_KEY,JSON.stringify(cards.slice(0,30)));
+  renderCardsGaleria();
+}
+function deleteSavedCard(id){
+  const cards=_loadCards().filter(c=>c.id!==id);
+  localStorage.setItem(_CARDS_KEY,JSON.stringify(cards));
+  renderCardsGaleria();
+}
+function renderCardsGaleria(){
+  const el=document.getElementById('cardsGaleria');
+  const cnt=document.getElementById('cardsCount');
+  const ac=document.getElementById('aCards');
+  if(!el)return;
+  const cards=_loadCards();
+  if(ac)ac.textContent=cards.length;
+  if(cnt)cnt.textContent=cards.length+' arte'+(cards.length!==1?'s':'');
+  if(cards.length===0){
+    el.innerHTML='<div class="empty" style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-size:13px;">Nenhum card gerado ainda.<br>Clique em 🎨 Gerar Card nos eventos.</div>';
+    return;
+  }
+  el.innerHTML=cards.map(c=>`
+    <div style="position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--border);background:var(--bg3);">
+      <img src="${c.dataUrl}" style="width:100%;display:block;aspect-ratio:1.5;object-fit:cover;">
+      <div style="padding:6px 8px;font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.nome||'—'}</div>
+      <div style="padding:0 8px 6px;font-size:11px;color:var(--muted);">${c.tipo==='empresa'?'🏆':'🎂'} ${fmtD(c.data)||''}</div>
+      <div style="display:flex;gap:4px;padding:0 8px 8px;">
+        <button onclick="_dlCard(${c.id})" style="flex:1;background:var(--accent);border:none;border-radius:5px;padding:4px;font-size:11px;font-weight:600;color:#fff;cursor:pointer;">⬇ Baixar</button>
+        <button onclick="deleteSavedCard(${c.id})" style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:4px;font-size:11px;color:var(--danger);cursor:pointer;">🗑 Excluir</button>
+      </div>
+    </div>`).join('');
+}
+function _dlCard(id){
+  const c=_loadCards().find(x=>x.id===id);
+  if(!c)return;
+  const a=document.createElement('a');
+  a.download=`luma_aniversario_${(c.nome||'card').replace(/\s+/g,'_')}.png`;
+  a.href=c.dataUrl;a.click();
+}
+// Inicializa galeria ao carregar
+document.addEventListener('DOMContentLoaded',()=>setTimeout(renderCardsGaleria,800));
 
 async function enviarEmailAniversarioCard(){
   const dest=document.getElementById('cardEmailDest').value.trim();
