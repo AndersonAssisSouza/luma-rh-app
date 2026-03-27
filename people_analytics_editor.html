@@ -840,7 +840,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
       </div>
       <!-- Impacto financeiro -->
       <div id="deslFinPanel" style="background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
-        <div style="font-size:13px;font-weight:600;color:var(--danger);margin-bottom:10px;">💰 Impacto financeiro estimado</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:13px;font-weight:600;color:var(--danger);">💰 Impacto financeiro estimado</div>
+          <div id="deslFinSalBase" style="font-size:11px;color:var(--muted);font-family:var(--mono);"></div>
+        </div>
         <div id="deslFinItens" style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px;"></div>
         <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid rgba(248,113,113,.2);margin-top:4px;">
           <span style="font-size:13px;font-weight:600;">Total estimado</span>
@@ -1887,10 +1890,19 @@ function _calcIrrf(baseDeducao){
 
 function calcCustoDesl(r,dataDesl){
   const vin=String(r.TIPO_VINCULO||'').toUpperCase();
-  const sal=parseFloat(String(r.SALARIO_HONORARIO||'0').replace(',','.'))||0;
+  // Leitura robusta do salário: campo mapeado → dado bruto Supabase → 0
+  let sal=parseFloat(String(r.SALARIO_HONORARIO||'0').replace(/[R$\s.]/g,'').replace(',','.'))||0;
+  if(!sal&&r._sbRaw?.salario_honorario)sal=parseFloat(r._sbRaw.salario_honorario)||0;
+  // Sem salário cadastrado → aviso claro
+  if(!sal&&vin!=='SOCIO'){
+    return{vin,sal:0,anos:0,meses:0,
+      itens:[{n:'⚠️ Salário não cadastrado',v:null,tipo:'header'},
+             {n:'Edite o colaborador → Aba Financeiro → Salário/Honorário e salve para habilitar este cálculo.',v:null}],
+      total:0,obs:'Cadastre o salário para calcular o impacto financeiro rescisório.'};
+  }
   const adm=parseDate(r.DATA_ADMISSAO);
   const dt=dataDesl||new Date();
-  if(!adm)return{itens:[{n:'Sem data de admissão',v:0}],total:0,sal,obs:'Data de admissão não encontrada.',vin};
+  if(!adm)return{itens:[{n:'Sem data de admissão',v:null}],total:0,sal,obs:'Data de admissão não encontrada.',vin};
   const meses=Math.max(_mDiff(adm,dt),0);
   const anos=Math.floor(meses/12);
   if(vin==='CLT'){
@@ -2028,6 +2040,8 @@ function atualizarCustoProgramado(){
   $('deslFinItens').innerHTML=_renderCustoItens(custo);
   $('deslFinTotal').textContent=_fmt(custo.total);
   $('deslFinObs').textContent=custo.obs||'';
+  const sb=$('deslFinSalBase');
+  if(sb)sb.textContent=custo.sal>0?'Base: '+_fmt(custo.sal)+'/mês':'⚠️ Salário não cadastrado';
 }
 
 function confirmDesl(r){
@@ -2065,6 +2079,9 @@ function confirmDesl(r){
   $('deslFinItens').innerHTML=_renderCustoItens(custo);
   $('deslFinTotal').textContent=_fmt(custo.total);
   $('deslFinObs').textContent=custo.obs||'';
+  // Exibe o salário base utilizado no cálculo
+  const sb=$('deslFinSalBase');
+  if(sb)sb.textContent=custo.sal>0?'Base: '+_fmt(custo.sal)+'/mês':'⚠️ Salário não cadastrado';
   // Ocultar impacto financeiro apenas para Sócio sem cálculo; Associado sempre exibe
   $('deslFinPanel').style.display=(vin==='SOCIO'&&custo.total===0)?'none':'';
   $('deslProgInfo').style.display='none';
