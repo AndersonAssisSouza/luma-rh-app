@@ -443,28 +443,49 @@ export async function logEvento(tipo, descricao, dados = {}) {
 // CONFIGURAÇÕES DO TENANT (identidade visual + modelos)
 // ============================================================
 
-export async function getTenantConfig() {
+/** Resolve o tenant_id correto para o usuário logado.
+ *  - master/rh/gestor/colaborador → usa profile.tenant_id
+ *  - manager_global (tenant_id = null) → busca o primeiro tenant acessível
+ */
+async function _resolveTenantId() {
   const profile = await getProfileCached()
-  if (!profile?.tenant_id) return { config: {} }
-  const { data, error } = await sb
+  if (profile?.tenant_id) return profile.tenant_id
+  // manager_global: busca o tenant pelo slug "luisa-moraes" ou o primeiro disponível
+  const { data } = await sb
     .from('tenants')
-    .select('id, nome, slug, config')
-    .eq('id', profile.tenant_id)
+    .select('id')
+    .order('criado_em', { ascending: true })
+    .limit(1)
     .single()
-  if (error) return { config: {} }
-  return { ...data, config: data.config || {} }
+  return data?.id || null
+}
+
+export async function getTenantConfig() {
+  try {
+    const tenantId = await _resolveTenantId()
+    if (!tenantId) return { config: {} }
+    const { data, error } = await sb
+      .from('tenants')
+      .select('id, nome, slug, config')
+      .eq('id', tenantId)
+      .single()
+    if (error) return { config: {} }
+    return { ...data, config: data.config || {} }
+  } catch {
+    return { config: {} }
+  }
 }
 
 export async function saveTenantConfig(configPatch) {
-  const profile = await getProfileCached()
-  if (!profile?.tenant_id) throw new Error('Tenant não encontrado')
+  const tenantId = await _resolveTenantId()
+  if (!tenantId) throw new Error('Tenant não encontrado')
   // Faz merge do config existente com o patch
   const current = await getTenantConfig()
   const merged = { ...current.config, ...configPatch }
   const { error } = await sb
     .from('tenants')
     .update({ config: merged })
-    .eq('id', profile.tenant_id)
+    .eq('id', tenantId)
   if (error) throw error
   return merged
 }
