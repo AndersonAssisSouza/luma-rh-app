@@ -376,6 +376,53 @@ export async function updateTenant(id, campos) {
 }
 
 // ============================================================
+// MENSAGENS DE ANIVERSÁRIO
+// ============================================================
+
+export async function getMensagensAniversario(tipo = null) {
+  let q = sb.from('mensagens_aniversario').select('*').order('criado_em')
+  if (tipo) q = q.eq('tipo', tipo)
+  const { data, error } = await q
+  if (error) throw error
+  return data
+}
+
+export async function upsertMensagemAniversario(msg) {
+  const profile = await getProfileCached()
+  const payload = { ...msg, tenant_id: profile.tenant_id, atualizado_em: new Date().toISOString() }
+  const { data, error } = await sb
+    .from('mensagens_aniversario')
+    .upsert(payload, { onConflict: 'id' })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteMensagemAniversario(id) {
+  const { error } = await sb.from('mensagens_aniversario').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function seedMensagensDefault(tenantId) {
+  const defaults = [
+    { tipo: 'funcionario', texto: '🎂 Feliz aniversário, {nome}! Que seu dia seja repleto de alegria e conquistas. É uma honra tê-lo(a) em nossa equipe!' },
+    { tipo: 'funcionario', texto: '✨ Parabéns, {nome}! Que a vida te reserve muito sucesso, saúde e felicidade. Celebramos com você este dia especial!' },
+    { tipo: 'funcionario', texto: '🎉 Hoje é o dia de celebrar você, {nome}! Sua dedicação e talento fazem toda a diferença. Muitos anos de conquistas!' },
+    { tipo: 'funcionario', texto: '🌟 Feliz aniversário, {nome}! Que este novo ano de vida traga ainda mais realizações. Toda a equipe vibra com você!' },
+    { tipo: 'funcionario', texto: '💫 Parabéns pelo seu aniversário, {nome}! Sua presença ilumina nosso time todos os dias. Que venham muitas vitórias!' },
+    { tipo: 'empresa', texto: '🏆 {nome} completa {anos} anos conosco! Obrigado pela dedicação e parceria. É uma honra ter você nessa jornada!' },
+    { tipo: 'empresa', texto: '⭐ {anos} anos de história juntos, {nome}! Sua trajetória é inspiração para todos nós. Parabéns pelo aniversário de empresa!' },
+    { tipo: 'empresa', texto: '🎊 Celebramos {anos} anos de {nome} em nossa equipe! Gratidão pela confiança e dedicação ao longo dessa jornada!' },
+    { tipo: 'empresa', texto: '💼 {anos} anos de comprometimento e crescimento! Parabéns, {nome}! Sua presença faz nossa equipe mais forte a cada dia.' },
+    { tipo: 'empresa', texto: '🌟 Que jornada incrível! {nome} completa {anos} anos conosco. Obrigado por fazer parte dessa história e por todo o esforço dedicado!' }
+  ]
+  const rows = defaults.map(d => ({ ...d, tenant_id: tenantId }))
+  const { error } = await sb.from('mensagens_aniversario').insert(rows)
+  if (error) throw error
+}
+
+// ============================================================
 // LOG DE EVENTOS
 // ============================================================
 

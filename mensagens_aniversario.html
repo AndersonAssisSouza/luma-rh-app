@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LUMA RH · Mensagens de Aniversário</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#0f0e17;color:#f0eeff;min-height:100vh;}
+
+/* HEADER */
+.header{background:#18162a;border-bottom:1px solid #2d2b45;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:38px;height:38px;background:#9b66f4;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#ffd000;font-family:monospace;flex-shrink:0;}
+.logo-text{font-size:17px;font-weight:700;color:#fff;}
+.logo-sub{font-size:11px;color:#a78bfa;letter-spacing:.04em;text-transform:uppercase;}
+.header-nav{display:flex;align-items:center;gap:10px;}
+.btn-back{color:#a78bfa;background:none;border:1px solid #3d3660;border-radius:7px;padding:6px 14px;font-size:13px;cursor:pointer;text-decoration:none;transition:all .2s;}
+.btn-back:hover{background:#3d3660;color:#f0eeff;}
+.btn-sair{background:#2d1c3e;border:1px solid #5b21b6;border-radius:7px;padding:6px 14px;font-size:13px;color:#c4b5fd;cursor:pointer;transition:all .2s;}
+.btn-sair:hover{background:#5b21b6;color:#fff;}
+
+/* TABS */
+.tabs{background:#18162a;border-bottom:1px solid #2d2b45;display:flex;padding:0 24px;}
+.tab{padding:14px 22px;font-size:14px;font-weight:500;color:#7c7a9e;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;}
+.tab:hover{color:#c4b5fd;}
+.tab.active{color:#9b66f4;border-bottom-color:#9b66f4;font-weight:600;}
+
+/* MAIN */
+.main{padding:28px 24px;max-width:1300px;margin:0 auto;}
+
+/* SECTION MENSAGENS */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.section-title{font-size:16px;font-weight:600;color:#f0eeff;display:flex;align-items:center;gap:8px;}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;border-radius:11px;font-size:11px;font-weight:700;padding:0 6px;}
+.badge-func{background:#312e81;color:#a5b4fc;}
+.badge-emp{background:#1e3a5f;color:#7dd3fc;}
+
+.btn-add{background:#9b66f4;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:background .2s;display:flex;align-items:center;gap:6px;}
+.btn-add:hover{background:#8b5cf6;}
+
+.msgs-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px;}
+@media(max-width:800px){.msgs-grid{grid-template-columns:1fr;}}
+
+.msgs-col{background:#18162a;border:1px solid #2d2b45;border-radius:12px;overflow:hidden;}
+.msgs-col-header{padding:16px 20px;border-bottom:1px solid #2d2b45;display:flex;align-items:center;justify-content:space-between;}
+.msgs-col-title{font-size:14px;font-weight:600;color:#f0eeff;display:flex;align-items:center;gap:8px;}
+.msgs-list{padding:8px;}
+
+.msg-card{background:#0f0e17;border:1px solid #2d2b45;border-radius:8px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;transition:border-color .2s;}
+.msg-card:hover{border-color:#9b66f4;}
+.msg-card.inativo{opacity:.5;}
+.msg-texto{flex:1;font-size:13px;color:#d4d0f0;line-height:1.6;}
+.msg-actions{display:flex;gap:6px;flex-shrink:0;}
+.btn-icon{width:30px;height:30px;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;}
+.btn-edit{background:#1e1a36;color:#a78bfa;}
+.btn-edit:hover{background:#3d3660;color:#c4b5fd;}
+.btn-del{background:#2d1c1c;color:#f87171;}
+.btn-del:hover{background:#7f1d1d;color:#fca5a5;}
+.btn-toggle{background:#1e2a1e;color:#4ade80;}
+.btn-toggle:hover{background:#14532d;color:#86efac;}
+.btn-toggle.off{background:#2d1c1c;color:#f87171;}
+.btn-toggle.off:hover{background:#7f1d1d;}
+
+.empty-state{text-align:center;padding:32px 20px;color:#4a4868;font-size:13px;}
+
+/* GERAR POST */
+.gerar-wrap{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start;}
+@media(max-width:900px){.gerar-wrap{grid-template-columns:1fr;}}
+
+.form-card{background:#18162a;border:1px solid #2d2b45;border-radius:12px;padding:24px;}
+.form-card h3{font-size:15px;font-weight:600;color:#f0eeff;margin-bottom:20px;}
+.fgrp{margin-bottom:16px;}
+label{display:block;font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase;}
+select,input[type="text"],input[type="number"],textarea{width:100%;background:#0f0e17;border:1px solid #2d2b45;border-radius:8px;padding:10px 12px;font-size:14px;color:#f0eeff;outline:none;transition:border-color .2s;font-family:inherit;}
+select:focus,input:focus,textarea:focus{border-color:#9b66f4;}
+textarea{resize:vertical;min-height:80px;}
+.btn-gerar{width:100%;background:#9b66f4;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;transition:background .2s;margin-top:4px;}
+.btn-gerar:hover{background:#8b5cf6;}
+.btn-gerar:disabled{background:#3d3660;color:#6b69a3;cursor:not-allowed;}
+
+.preview-card{background:#18162a;border:1px solid #2d2b45;border-radius:12px;padding:24px;}
+.preview-card h3{font-size:15px;font-weight:600;color:#f0eeff;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.preview-hint{color:#4a4868;font-size:13px;text-align:center;padding:60px 20px;}
+.canvas-wrap{position:relative;text-align:center;}
+#canvas-preview{max-width:100%;border-radius:8px;display:none;}
+.btn-download{width:100%;background:#1e3a5f;border:1px solid #2563eb;border-radius:8px;padding:11px;font-size:14px;font-weight:600;color:#7dd3fc;cursor:pointer;transition:all .2s;margin-top:12px;display:none;}
+.btn-download:hover{background:#1d4ed8;color:#fff;}
+
+.msg-preview-info{background:#1a1830;border:1px solid #2d2b45;border-radius:8px;padding:12px 14px;margin-top:12px;display:none;}
+.msg-preview-info p{font-size:12px;color:#7c7a9e;margin-bottom:4px;}
+.msg-preview-info .msg-selected{font-size:13px;color:#c4b5fd;line-height:1.5;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+.modal-overlay.open{display:flex;}
+.modal{background:#18162a;border:1px solid #2d2b45;border-radius:14px;padding:28px;width:100%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.modal h3{font-size:16px;font-weight:600;color:#f0eeff;margin-bottom:20px;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-cancel{flex:1;background:#1e1a36;border:1px solid #2d2b45;border-radius:8px;padding:11px;font-size:14px;color:#7c7a9e;cursor:pointer;transition:all .2s;}
+.btn-cancel:hover{background:#2d2b45;color:#f0eeff;}
+.btn-save{flex:2;background:#9b66f4;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;transition:background .2s;}
+.btn-save:hover{background:#8b5cf6;}
+.btn-save:disabled{background:#3d3660;color:#6b69a3;cursor:not-allowed;}
+
+.hint{font-size:11px;color:#4a4868;margin-top:6px;line-height:1.6;}
+
+.toast{position:fixed;bottom:24px;right:24px;background:#22c55e;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:600;z-index:2000;transform:translateY(100px);opacity:0;transition:all .3s;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.error{background:#ef4444;}
+.toast.info{background:#3b82f6;}
+
+.loading{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<script type="module">
+import {
+  sb, requireAuth, logout,
+  getMensagensAniversario, upsertMensagemAniversario,
+  deleteMensagemAniversario, seedMensagensDefault, getProfileCached
+} from './supabase_client.js'
+
+window._sbLogout = () => logout()
+
+;(async () => {
+  const profile = await requireAuth(['master','rh','gestor','manager_global'])
+  if (!profile) return
+  window._profile = profile
+
+  // Expõe funções
+  window._getMsgs    = getMensagensAniversario
+  window._upsertMsg  = upsertMensagemAniversario
+  window._deleteMsg  = deleteMensagemAniversario
+  window._seedMsgs   = () => seedMensagensDefault(profile.tenant_id)
+  window._getProfile = getProfileCached
+
+  // Sinaliza que auth completou
+  window._authReady = true
+  document.dispatchEvent(new Event('auth-ready'))
+})()
+</script>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">L</div>
+    <div>
+      <div class="logo-text">LUMA RH</div>
+      <div class="logo-sub">Mensagens de Aniversário</div>
+    </div>
+  </div>
+  <div class="header-nav">
+    <a href="./people_analytics_editor.html" class="btn-back">← Voltar ao Sistema</a>
+    <button class="btn-sair" onclick="window._sbLogout&&_sbLogout()">Sair</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('mensagens',this)">📝 Banco de Mensagens</button>
+  <button class="tab" onclick="showTab('gerar',this)">🎨 Gerar Post</button>
+</div>
+
+<div class="main">
+
+  <!-- ===== TAB MENSAGENS ===== -->
+  <div id="tab-mensagens">
+    <div class="msgs-grid">
+      <!-- Aniversário Funcionário -->
+      <div class="msgs-col">
+        <div class="msgs-col-header">
+          <div class="msgs-col-title">🎂 Aniversário de Funcionário <span class="badge badge-func" id="count-func">0</span></div>
+          <button class="btn-add" onclick="openModal('funcionario')">+ Adicionar</button>
+        </div>
+        <div class="msgs-list" id="list-funcionario">
+          <div class="empty-state">Carregando...</div>
+        </div>
+      </div>
+      <!-- Aniversário Empresa -->
+      <div class="msgs-col">
+        <div class="msgs-col-header">
+          <div class="msgs-col-title">🏆 Aniversário de Empresa <span class="badge badge-emp" id="count-emp">0</span></div>
+          <button class="btn-add" onclick="openModal('empresa')">+ Adicionar</button>
+        </div>
+        <div class="msgs-list" id="list-empresa">
+          <div class="empty-state">Carregando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB GERAR ===== -->
+  <div id="tab-gerar" style="display:none">
+    <div class="gerar-wrap">
+      <div class="form-card">
+        <h3>Configurar Post</h3>
+        <div class="fgrp">
+          <label for="g-tipo">Tipo de comemoração</label>
+          <select id="g-tipo" onchange="onTipoChange()">
+            <option value="funcionario">🎂 Aniversário de Funcionário</option>
+            <option value="empresa">🏆 Aniversário de Empresa</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label for="g-empresa">Empresa</label>
+          <select id="g-empresa">
+            <option value="luisa">Luisa Moraes Advogados</option>
+            <option value="luma">Luma Plataforma</option>
+          </select>
+        </div>
+        <div class="fgrp">
+          <label for="g-nome">Nome do colaborador</label>
+          <input type="text" id="g-nome" placeholder="Ex: Maria Silva">
+        </div>
+        <div class="fgrp" id="fgrp-anos" style="display:none">
+          <label for="g-anos">Anos de empresa</label>
+          <input type="number" id="g-anos" min="1" max="50" placeholder="Ex: 3">
+        </div>
+        <div class="fgrp">
+          <label for="g-msg-manual">Mensagem personalizada (opcional)</label>
+          <textarea id="g-msg-manual" placeholder="Deixe em branco para sortear automaticamente das mensagens cadastradas..."></textarea>
+          <div class="hint">Use {nome} e {anos} como variáveis. Ex: Parabéns, {nome}! {anos} anos conosco!</div>
+        </div>
+        <button class="btn-gerar" id="btn-gerar" onclick="gerarPost()">🎨 Gerar Post</button>
+      </div>
+
+      <div class="preview-card">
+        <h3>🖼️ Pré-visualização</h3>
+        <div id="preview-hint" class="preview-hint">
+          Preencha o formulário e clique em<br><strong>"Gerar Post"</strong> para criar o card.
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="canvas-preview"></canvas>
+        </div>
+        <div class="msg-preview-info" id="msg-preview-info">
+          <p>Mensagem sorteada:</p>
+          <div class="msg-selected" id="msg-selected-text"></div>
+        </div>
+        <button class="btn-download" id="btn-download" onclick="downloadPost()">⬇️ Download da imagem</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- MODAL EDIÇÃO -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="modal-title">Nova mensagem</h3>
+    <input type="hidden" id="modal-id">
+    <input type="hidden" id="modal-tipo">
+    <div class="fgrp">
+      <label>Texto da mensagem</label>
+      <textarea id="modal-texto" rows="5" placeholder="Use {nome} para o nome e {anos} para os anos de empresa..."></textarea>
+      <div class="hint">Variáveis disponíveis: {nome} → nome do colaborador &nbsp;|&nbsp; {anos} → anos de empresa</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" id="btn-save-modal" onclick="saveModal()">Salvar mensagem</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG DE MODELOS DE IMAGEM
+// ============================================================
+// Mapeamento: empresa + tipo → arquivo de imagem
+// Luisa Moraes + funcionário → modelo1.jpg
+// Luisa Moraes + empresa     → modelo3.jpg
+// Luma          + funcionário → modelo2.jpg
+// Luma          + empresa     → modelo4.jpg
+
+const MODELO_CONFIG = {
+  modelo1: {
+    // Dark red com "FELIZ ANIVERSÁRIO" pre-baked no topo esquerdo
+    textColor: '#ffffff',
+    nameColor: '#ffd000',
+    shadowColor: 'rgba(0,0,0,0.7)',
+    textX: 0.07,
+    textY: 0.42,    // começa abaixo da arte pré-existente
+    textW: 0.60,
+    nameSizePct: 0.048,
+    bodySizePct: 0.032,
+    lineH: 1.55,
+    align: 'left',
+    separatorColor: 'rgba(255,208,0,0.6)'
+  },
+  modelo2: {
+    // Roxo com "FELIZ ANIVERSÁRIO" pre-baked no topo esquerdo
+    textColor: '#ffffff',
+    nameColor: '#ffd000',
+    shadowColor: 'rgba(0,0,0,0.7)',
+    textX: 0.07,
+    textY: 0.42,
+    textW: 0.58,
+    nameSizePct: 0.048,
+    bodySizePct: 0.032,
+    lineH: 1.55,
+    align: 'left',
+    separatorColor: 'rgba(255,208,0,0.6)'
+  },
+  modelo3: {
+    // Dark maroon sem texto — área segura superior esquerda
+    textColor: '#c9a84c',
+    nameColor: '#ffd000',
+    shadowColor: 'rgba(0,0,0,0.6)',
+    textX: 0.07,
+    textY: 0.09,
+    textW: 0.62,
+    nameSizePct: 0.048,
+    bodySizePct: 0.032,
+    lineH: 1.55,
+    align: 'left',
+    headerText: true,   // desenha "FELIZ ANIVERSÁRIO DE EMPRESA" no topo
+    separatorColor: 'rgba(201,168,76,0.7)'
+  },
+  modelo4: {
+    // Dark purple sem texto — área segura superior esquerda
+    textColor: '#c4b5fd',
+    nameColor: '#ffd000',
+    shadowColor: 'rgba(0,0,0,0.6)',
+    textX: 0.06,
+    textY: 0.08,
+    textW: 0.60,
+    nameSizePct: 0.048,
+    bodySizePct: 0.032,
+    lineH: 1.55,
+    align: 'left',
+    headerText: true,
+    separatorColor: 'rgba(196,181,253,0.6)'
+  }
+}
+
+function getModelo(empresa, tipo) {
+  if (empresa === 'luisa') return tipo === 'funcionario' ? 'modelo1' : 'modelo3'
+  return tipo === 'funcionario' ? 'modelo2' : 'modelo4'
+}
+
+// ============================================================
+// ESTADO
+// ============================================================
+let _msgs = []
+let _lastCanvas = null
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('auth-ready', async () => {
+  await loadMensagens()
+})
+
+async function loadMensagens() {
+  try {
+    _msgs = await window._getMsgs()
+    // Se não tem nenhuma mensagem, seed defaults
+    if (_msgs.length === 0) {
+      await window._seedMsgs()
+      _msgs = await window._getMsgs()
+      toast('10 mensagens padrão criadas!', 'info')
+    }
+    renderLists()
+  } catch(e) {
+    toast('Erro ao carregar mensagens: ' + e.message, 'error')
+  }
+}
+
+function renderLists() {
+  const func = _msgs.filter(m => m.tipo === 'funcionario')
+  const emp  = _msgs.filter(m => m.tipo === 'empresa')
+
+  document.getElementById('count-func').textContent = func.length
+  document.getElementById('count-emp').textContent  = emp.length
+
+  document.getElementById('list-funcionario').innerHTML =
+    func.length ? func.map(renderCard).join('') : '<div class="empty-state">Nenhuma mensagem cadastrada.</div>'
+  document.getElementById('list-empresa').innerHTML =
+    emp.length ? emp.map(renderCard).join('') : '<div class="empty-state">Nenhuma mensagem cadastrada.</div>'
+}
+
+function renderCard(m) {
+  const inativo = !m.ativo ? ' inativo' : ''
+  const toggleIcon = m.ativo ? '👁' : '🚫'
+  const toggleTitle = m.ativo ? 'Desativar' : 'Ativar'
+  const toggleClass = m.ativo ? '' : ' off'
+  return `<div class="msg-card${inativo}" id="card-${m.id}">
+    <div class="msg-texto">${escHtml(m.texto)}</div>
+    <div class="msg-actions">
+      <button class="btn-icon btn-toggle${toggleClass}" title="${toggleTitle}" onclick="toggleAtivo('${m.id}',${m.ativo})">${toggleIcon}</button>
+      <button class="btn-icon btn-edit" title="Editar" onclick="openModal('${m.tipo}','${m.id}')">✏️</button>
+      <button class="btn-icon btn-del" title="Excluir" onclick="deleteMsg('${m.id}')">🗑</button>
+    </div>
+  </div>`
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function showTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+  el.classList.add('active')
+  document.getElementById('tab-mensagens').style.display = name === 'mensagens' ? '' : 'none'
+  document.getElementById('tab-gerar').style.display     = name === 'gerar'     ? '' : 'none'
+}
+
+function onTipoChange() {
+  const tipo = document.getElementById('g-tipo').value
+  document.getElementById('fgrp-anos').style.display = tipo === 'empresa' ? '' : 'none'
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(tipo, id) {
+  const existing = id ? _msgs.find(m => m.id === id) : null
+  document.getElementById('modal-title').textContent = existing ? 'Editar mensagem' : 'Nova mensagem'
+  document.getElementById('modal-id').value   = existing ? existing.id  : ''
+  document.getElementById('modal-tipo').value = existing ? existing.tipo : tipo
+  document.getElementById('modal-texto').value = existing ? existing.texto : ''
+  document.getElementById('modal-overlay').classList.add('open')
+  document.getElementById('modal-texto').focus()
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open')
+}
+
+async function saveModal() {
+  const id    = document.getElementById('modal-id').value
+  const tipo  = document.getElementById('modal-tipo').value
+  const texto = document.getElementById('modal-texto').value.trim()
+  if (!texto) { toast('Digite o texto da mensagem.', 'error'); return }
+
+  const btn = document.getElementById('btn-save-modal')
+  btn.disabled = true; btn.innerHTML = '<span class="loading"></span>Salvando...'
+  try {
+    const payload = { tipo, texto, ativo: true }
+    if (id) payload.id = id
+    const saved = await window._upsertMsg(payload)
+    // Atualiza lista local
+    const idx = _msgs.findIndex(m => m.id === saved.id)
+    if (idx >= 0) _msgs[idx] = saved; else _msgs.push(saved)
+    renderLists()
+    closeModal()
+    toast('Mensagem salva!', 'success')
+  } catch(e) {
+    toast('Erro: ' + e.message, 'error')
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar mensagem'
+  }
+}
+
+// ============================================================
+// TOGGLE ATIVO / DELETE
+// ============================================================
+async function toggleAtivo(id, currentAtivo) {
+  try {
+    const msg = _msgs.find(m => m.id === id)
+    if (!msg) return
+    const saved = await window._upsertMsg({ ...msg, ativo: !currentAtivo })
+    const idx = _msgs.findIndex(m => m.id === id)
+    if (idx >= 0) _msgs[idx] = saved
+    renderLists()
+    toast(saved.ativo ? 'Mensagem ativada.' : 'Mensagem desativada.', 'info')
+  } catch(e) { toast('Erro: ' + e.message, 'error') }
+}
+
+async function deleteMsg(id) {
+  if (!confirm('Excluir esta mensagem permanentemente?')) return
+  try {
+    await window._deleteMsg(id)
+    _msgs = _msgs.filter(m => m.id !== id)
+    renderLists()
+    toast('Mensagem excluída.', 'info')
+  } catch(e) { toast('Erro: ' + e.message, 'error') }
+}
+
+// ============================================================
+// GERAR POST
+// ============================================================
+async function gerarPost() {
+  const tipo    = document.getElementById('g-tipo').value
+  const empresa = document.getElementById('g-empresa').value
+  const nome    = document.getElementById('g-nome').value.trim()
+  const anos    = document.getElementById('g-anos').value.trim()
+  const manual  = document.getElementById('g-msg-manual').value.trim()
+
+  if (!nome) { toast('Informe o nome do colaborador.', 'error'); return }
+  if (tipo === 'empresa' && !anos) { toast('Informe os anos de empresa.', 'error'); return }
+
+  // Seleciona mensagem
+  let textoFinal
+  if (manual) {
+    textoFinal = manual
+  } else {
+    const pool = _msgs.filter(m => m.tipo === tipo && m.ativo)
+    if (pool.length === 0) { toast('Nenhuma mensagem ativa para este tipo. Cadastre uma na aba "Banco de Mensagens".', 'error'); return }
+    const chosen = pool[Math.floor(Math.random() * pool.length)]
+    textoFinal = chosen.texto
+    document.getElementById('msg-selected-text').textContent = chosen.texto
+    document.getElementById('msg-preview-info').style.display = 'block'
+  }
+
+  // Substitui variáveis
+  textoFinal = textoFinal.replace(/\{nome\}/gi, nome).replace(/\{anos\}/gi, anos || '')
+
+  // Determina imagem
+  const modeloKey = getModelo(empresa, tipo)
+  const imgSrc = `./assets/${modeloKey}.jpg`
+
+  const btn = document.getElementById('btn-gerar')
+  btn.disabled = true; btn.innerHTML = '<span class="loading"></span>Gerando...'
+
+  try {
+    await renderCanvas(imgSrc, nome, textoFinal, tipo, modeloKey)
+    toast('Post gerado!', 'success')
+  } catch(e) {
+    toast('Erro ao carregar imagem. Verifique se ' + imgSrc + ' existe na pasta assets/.', 'error')
+    console.error(e)
+  } finally {
+    btn.disabled = false; btn.textContent = '🎨 Gerar Post'
+  }
+}
+
+// ============================================================
+// CANVAS
+// ============================================================
+async function renderCanvas(imgSrc, nome, texto, tipo, modeloKey) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.getElementById('canvas-preview')
+      const ctx = canvas.getContext('2d')
+      canvas.width  = img.naturalWidth
+      canvas.height = img.naturalHeight
+      ctx.drawImage(img, 0, 0)
+
+      const cfg = MODELO_CONFIG[modeloKey]
+      const W = canvas.width, H = canvas.height
+      const x   = W * cfg.textX
+      const y   = H * cfg.textY
+      const maxW = W * cfg.textW
+      const nameSize = H * cfg.nameSizePct
+      const bodySize = H * cfg.bodySizePct
+      const lineH    = nameSize * cfg.lineH
+
+      ctx.textBaseline = 'top'
+      ctx.textAlign    = 'left'
+
+      let curY = y
+
+      // Se o modelo não tem header pré-baked, desenha cabeçalho
+      if (cfg.headerText) {
+        const tipoLabel = tipo === 'funcionario' ? 'ANIVERSÁRIO' : 'ANIVERSÁRIO DE EMPRESA'
+        setShadow(ctx, cfg.shadowColor)
+        ctx.fillStyle = cfg.textColor
+        ctx.font = `300 ${bodySize * 0.85}px Arial, sans-serif`
+        ctx.fillText('FELIZ', x, curY)
+        curY += bodySize * 1.1
+
+        ctx.font = `900 ${nameSize * 1.05}px Arial, sans-serif`
+        ctx.fillText(tipoLabel, x, curY)
+        curY += nameSize * 1.3
+
+        // Linha decorativa
+        ctx.shadowColor = 'transparent'
+        ctx.strokeStyle = cfg.separatorColor
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.moveTo(x, curY)
+        ctx.lineTo(x + maxW * 0.55, curY)
+        ctx.stroke()
+        curY += nameSize * 0.9
+        setShadow(ctx, cfg.shadowColor)
+      }
+
+      // Nome em destaque
+      ctx.fillStyle = cfg.nameColor
+      ctx.font = `700 ${nameSize}px Arial, sans-serif`
+      const nomeWrapped = wrapText(ctx, nome, x, curY, maxW, nameSize * cfg.lineH, false)
+      curY += nomeWrapped * nameSize * cfg.lineH
+
+      // Linha separadora (para modelos com header pré-baked)
+      if (!cfg.headerText) {
+        ctx.shadowColor = 'transparent'
+        ctx.strokeStyle = cfg.separatorColor
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.moveTo(x, curY + nameSize * 0.2)
+        ctx.lineTo(x + maxW * 0.55, curY + nameSize * 0.2)
+        ctx.stroke()
+        curY += nameSize * 0.7
+        setShadow(ctx, cfg.shadowColor)
+      }
+
+      // Texto da mensagem
+      ctx.fillStyle = cfg.textColor
+      ctx.font = `400 ${bodySize}px Arial, sans-serif`
+      wrapText(ctx, texto, x, curY, maxW, bodySize * cfg.lineH, true)
+
+      // Mostra canvas
+      canvas.style.display = 'block'
+      document.getElementById('preview-hint').style.display = 'none'
+      document.getElementById('btn-download').style.display = 'block'
+      _lastCanvas = canvas
+      resolve()
+    }
+    img.onerror = reject
+    img.src = imgSrc
+  })
+}
+
+function setShadow(ctx, color) {
+  ctx.shadowColor   = color
+  ctx.shadowBlur    = 6
+  ctx.shadowOffsetX = 1
+  ctx.shadowOffsetY = 1
+}
+
+// Retorna número de linhas desenhadas
+function wrapText(ctx, text, x, y, maxWidth, lineHeight, draw) {
+  const lines = []
+  const paragraphs = text.split('\n')
+  for (const para of paragraphs) {
+    const words = para.split(' ')
+    let line = ''
+    for (const word of words) {
+      const test = line ? line + ' ' + word : word
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line); line = word
+      } else { line = test }
+    }
+    lines.push(line)
+  }
+  if (draw) {
+    let curY = y
+    for (const l of lines) {
+      if (l) ctx.fillText(l, x, curY)
+      curY += lineHeight
+    }
+  }
+  return lines.length
+}
+
+// ============================================================
+// DOWNLOAD
+// ============================================================
+function downloadPost() {
+  if (!_lastCanvas) return
+  const tipo    = document.getElementById('g-tipo').value
+  const nome    = document.getElementById('g-nome').value.trim().replace(/\s+/g,'_')
+  const empresa = document.getElementById('g-empresa').value
+  const tipoLabel = tipo === 'funcionario' ? 'aniv_func' : 'aniv_empresa'
+  const link = document.createElement('a')
+  link.download = `luma_${tipoLabel}_${nome}_${empresa}.png`
+  link.href = _lastCanvas.toDataURL('image/png')
+  link.click()
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let _toastTimer
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast')
+  el.textContent = msg
+  el.className = 'toast show ' + type
+  clearTimeout(_toastTimer)
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3500)
+}
+</script>
+</body>
+</html>
