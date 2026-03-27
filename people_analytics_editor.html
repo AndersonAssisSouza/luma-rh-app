@@ -6,6 +6,8 @@
 <title>People Analytics · RH</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3C/svg%3E">
 <script>if(location.hostname==='lumaplataforma.com.br'){var _b=document.createElement('base');_b.href='/gestaorh/';document.head.insertBefore(_b,document.head.firstChild);}</script>
+<!-- Microsoft MSAL — usado APENAS para envio de e-mail via Graph API (Mail.Send) -->
+<script src="./msal-browser.min.js"></script>
 <!-- Supabase Auth Guard + Data Layer -->
 <script type="module">
 import {
@@ -2862,8 +2864,32 @@ function _setupCurInput(el){
 }
 function setupCurrencyInputs(){document.querySelectorAll('.cur-input').forEach(_setupCurInput);}
 
-// --- E-mail (envio via Graph desabilitado — autenticação Microsoft removida) ---
-async function _getMailToken(){return null;}
+// --- E-mail via Microsoft Graph (Mail.Send) ---
+// Autenticação MSAL usada exclusivamente para envio de e-mail (não para login)
+let msalApp=null;
+const _MSAL_MAIL_CFG={
+  auth:{
+    clientId:'6d43cab3-e4b8-471e-ab64-8eec4d3bd538',
+    authority:'https://login.microsoftonline.com/aadb5cad-6c69-4d6d-a942-e027203a4675',
+    redirectUri:window.location.origin+window.location.pathname
+  },
+  cache:{cacheLocation:'localStorage',storeAuthStateInCookie:true}
+};
+async function _getMailToken(){
+  try{
+    if(!msalApp&&typeof msal!=='undefined'){
+      msalApp=await msal.createStandardPublicClientApplication(_MSAL_MAIL_CFG);
+    }
+    if(!msalApp)return null;
+    const accounts=msalApp.getAllAccounts();
+    const scopes=['https://graph.microsoft.com/Mail.Send'];
+    if(accounts.length){
+      try{const r=await msalApp.acquireTokenSilent({scopes,account:accounts[0]});return r.accessToken;}catch(_){}
+    }
+    const r=await msalApp.acquireTokenPopup({scopes});
+    return r.accessToken;
+  }catch(e){console.warn('_getMailToken:',e.message);return null;}
+}
 function _getRHEmails(){return loadCoords().filter(c=>c.role==='rh').map(c=>c.email);}
 function _getGestorEmail(gestorNome){
   if(!gestorNome)return null;
@@ -2871,9 +2897,25 @@ function _getGestorEmail(gestorNome){
   const g=cad.find(r=>String(r.NOME||'').trim().toLowerCase()===String(gestorNome).trim().toLowerCase());
   return g?g.EMAIL_CORPORATIVO:null;
 }
-async function _emailLumaRH(subject,htmlBody,toEmail,ccEmails){
-  console.warn('_emailLumaRH: envio de e-mail via Graph API desabilitado.');
-  return false;
+async function _emailLumaRH(subject,htmlBody,toEmail,ccEmails,attachments){
+  const tok=await _getMailToken();
+  if(!tok){console.warn('_emailLumaRH: token não disponível');return false;}
+  const msg={
+    subject,
+    body:{contentType:'HTML',content:htmlBody},
+    toRecipients:[{emailAddress:{address:toEmail}}]
+  };
+  if(ccEmails&&ccEmails.length)msg.ccRecipients=ccEmails.map(e=>({emailAddress:{address:e}}));
+  if(attachments&&attachments.length)msg.attachments=attachments;
+  try{
+    const res=await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},
+      body:JSON.stringify({message:msg,saveToSentItems:true})
+    });
+    if(!res.ok){console.error('_emailLumaRH Graph error:',res.status,await res.text());return false;}
+    return true;
+  }catch(e){console.error('_emailLumaRH:',e.message);return false;}
 }
 
 // --- E-mail de desligamento programado ---
@@ -3726,26 +3768,60 @@ async function enviarEmailAniversarioCard(){
     const imgB64=_cardCanvas.toDataURL('image/png').split(',')[1];
     const nome=_cardData.nome||'Colaborador';
     const tipo=_cardData.tipo;
-    const subject=tipo==='empresa'?`🏆 [LUMA RH] Feliz Aniversário de Empresa, ${nome}!`:`🎂 [LUMA RH] Feliz Aniversário, ${nome}!`;
-    const htmlBody=`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f5f3ff;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff;padding:24px 0;"><tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-<tr><td style="background:#7c3aed;padding:24px 32px;">
-  <span style="color:#fff;font-size:20px;font-weight:700;font-family:Arial,sans-serif;">${tipo==='empresa'?'🏆':'🎂'} ${tipo==='empresa'?'Feliz Aniversário de Empresa!':'Feliz Aniversário!'}</span><br>
-  <span style="color:rgba(255,255,255,0.75);font-size:12px;font-family:Arial,sans-serif;">LUMA RH · Gestão de Pessoas</span>
+    const isEmpresa=tipo==='empresa';
+    const emoji=isEmpresa?'🏆':'🎂';
+    const tituloCard=isEmpresa?'Aniversário de Empresa':'Aniversário';
+    const corHeader=isEmpresa?'#0369a1':'#be185d';
+    const subject=`${emoji} [LUMA RH] Feliz ${tituloCard}, ${nome}!`;
+    const msg=_cardMsgAtual.replace(/\{nome\}/gi,nome);
+
+    const htmlBody=`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#f0f0f0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:24px 0;"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e0e0e0;">
+<!-- HEADER -->
+<tr><td style="background:${corHeader};padding:28px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><span style="font-size:24px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">${emoji} Feliz ${tituloCard}!</span><br>
+    <span style="font-size:12px;color:rgba(255,255,255,0.8);font-family:Arial,sans-serif;">Portal RH · Luma Plataforma</span></td>
+    <td align="right"><span style="font-size:32px;">${emoji}</span></td>
+  </tr></table>
 </td></tr>
-<tr><td style="padding:28px 32px;">
-  <p style="font-size:15px;color:#374151;font-family:Arial,sans-serif;">Olá, <strong>${nome}</strong>!</p>
-  <p style="font-size:14px;color:#6b7280;font-family:Arial,sans-serif;margin:12px 0 20px;">${_cardMsgAtual.replace(/\{nome\}/gi,nome)}</p>
-  <img src="cid:cardaniv" alt="Card de Aniversário" style="max-width:100%;border-radius:8px;">
+<!-- BODY -->
+<tr><td style="padding:32px;">
+  <p style="font-size:15px;color:#374151;font-family:Arial,sans-serif;margin:0 0 8px;line-height:1.6;">Olá, <strong>${nome}</strong>!</p>
+  <p style="font-size:14px;color:#6b7280;font-family:Arial,sans-serif;margin:0 0 24px;line-height:1.7;">${msg}</p>
+  <!-- Card de aniversário -->
+  <div style="text-align:center;margin:0 0 24px;">
+    <img src="cid:cardaniv" alt="Card de Aniversário" style="max-width:100%;border-radius:8px;display:block;margin:0 auto;">
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;border:1px solid #e5e7eb;">
+    <tr style="background:#f3f4f6;"><td style="padding:10px 16px;color:#6b7280;font-weight:700;border-bottom:1px solid #e5e7eb;width:38%;">Colaborador</td><td style="padding:10px 16px;font-weight:700;color:#111;border-bottom:1px solid #e5e7eb;">${nome}</td></tr>
+    <tr><td style="padding:10px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Tipo</td><td style="padding:10px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${isEmpresa?'Aniversário de Empresa':'Aniversário de Nascimento'}</td></tr>
+    <tr style="background:#f3f4f6;"><td style="padding:10px 16px;color:#6b7280;">Sistema</td><td style="padding:10px 16px;color:#111;">LUMA RH · Gestão de Pessoas</td></tr>
+  </table>
 </td></tr>
-<tr><td style="background:#f8fafc;padding:14px 32px;border-top:1px solid #e5e7eb;text-align:center;">
-  <span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Este e-mail foi enviado pelo sistema LUMA RH</span>
+<!-- FOOTER -->
+<tr><td style="background:#f3f4f6;padding:14px 32px;border-top:1px solid #e5e7eb;">
+  <span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal RH &middot; Luma Plataforma &middot; Mensagem automática &middot; Não responda este e-mail</span>
 </td></tr>
 </table></td></tr></table></body></html>`;
 
-    // Envio de e-mail via Microsoft Graph desabilitado
-    throw new Error('Envio de e-mail não disponível. Faça o download do card e envie manualmente.');
+    const attachments=[{
+      '@odata.type':'#microsoft.graph.fileAttachment',
+      name:'card-aniversario.png',
+      contentType:'image/png',
+      isInline:true,
+      contentId:'cardaniv',
+      contentBytes:imgB64
+    }];
+
+    const ok=await _emailLumaRH(subject,htmlBody,dest,[],attachments);
+    if(ok){
+      toast('E-mail enviado com sucesso!','success');
+      document.getElementById('cardEmailDest').value='';
+    } else {
+      toast('Não foi possível enviar o e-mail. Verifique o login Microsoft ou faça o download do card.','error');
+    }
   } catch(e) {
     toast('Erro ao enviar: '+e.message,'error');
   } finally {
