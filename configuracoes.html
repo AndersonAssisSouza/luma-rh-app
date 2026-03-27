@@ -112,6 +112,21 @@ select option{background:#18162a;}
 
 .reset-btn{background:none;border:none;font-size:11px;color:#4a4868;cursor:pointer;text-decoration:underline;margin-top:6px;display:block;}
 .reset-btn:hover{color:#9b66f4;}
+
+/* MOBILE */
+@media(max-width:600px){
+  .header{padding:10px 14px;}
+  .logo-text{font-size:15px;}
+  .header-nav{gap:6px;}
+  .btn-back,.btn-sair{padding:5px 10px;font-size:12px;}
+  .main{padding:14px 12px 32px;}
+  .cards-grid{grid-template-columns:1fr;}
+  .card{padding:14px 12px;}
+  .color-row{grid-template-columns:1fr;}
+  .modelos-grid{grid-template-columns:repeat(2,1fr)!important;}
+  .save-bar{margin-top:6px;}
+  .btn-save{width:100%;justify-content:center;}
+}
 </style>
 </head>
 <body>
@@ -418,7 +433,7 @@ function triggerModeloUpload(i) {
 function onModeloFile(i, input) {
   const file = input.files?.[0]
   if (!file) return
-  compressImage(file, 1200, 0.85).then(b64 => {
+  compressImage(file, 900, 0.80).then(b64 => {
     _cfg.modelos[i].base64 = b64
     const img = document.getElementById('img-' + i)
     const ph  = document.getElementById('ph-'  + i)

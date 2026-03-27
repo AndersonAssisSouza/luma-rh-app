@@ -245,6 +245,35 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 .toast.error{border-color:rgba(248,113,113,.3);}
 .toast.info{border-color:rgba(79,156,249,.3);}
 .tdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+
+/* ── MOBILE RESPONSIVE ── */
+@media(max-width:768px){
+  nav{padding:0 10px;gap:4px;flex-wrap:wrap;}
+  .nlogo{width:32px;height:32px;font-size:14px;}
+  .nbrand{font-size:13px;}
+  .nbdate{display:none;}
+  .ntab{padding:10px 10px;font-size:12px;}
+  .ntab span{display:none;}
+  #app>div[style*="padding"]{padding:12px 8px!important;}
+  .kpis{grid-template-columns:repeat(2,1fr)!important;}
+  .kpi{padding:12px 10px;}
+  table{font-size:12px;}
+  table th,table td{padding:7px 6px;}
+  .ov{padding:0;}
+  .modal{border-radius:0!important;max-width:100vw!important;width:100vw!important;min-height:100vh;max-height:100vh!important;overflow-y:auto;}
+  .modal[style*="max-width:680px"],.modal[style*="max-width:720px"],.modal[style*="max-width:600px"],.modal[style*="max-width:560px"]{max-width:100vw!important;width:100vw!important;border-radius:0!important;}
+  .mh{padding:12px 14px 10px;}
+  .mb{padding:12px 14px;}
+  .mf{padding:10px 14px;}
+  .fg{grid-template-columns:1fr!important;}
+  .mtpane.active{grid-template-columns:1fr!important;}
+  .mtabs{overflow-x:auto;}
+}
+@media(min-width:769px){
+  .modal[style*="max-width:680px"]{max-width:min(900px,95vw)!important;width:min(900px,95vw)!important;max-height:95vh!important;}
+  .modal[style*="max-width:720px"]{max-width:min(900px,95vw)!important;width:min(900px,95vw)!important;max-height:95vh!important;}
+}
+
 .pf-cal-wrap{background:var(--bg3);border-radius:10px;padding:16px;}.pf-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}.pf-cal-month{font-size:15px;font-weight:500;}.pf-cal-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}.pf-cal-btn:hover{background:var(--bg2);}.pf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}.pf-cal-dname{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}.pf-cal-day{text-align:center;padding:7px 2px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}.pf-cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}.pf-cal-day.tod{border-color:var(--accent);color:var(--accent);}.pf-cal-day.rs,.pf-cal-day.re{background:var(--accent);color:#fff;}.pf-cal-day.ri{background:rgba(155,102,244,.2);}.pf-cal-day.dis{opacity:.2;cursor:not-allowed;}.pf-cal-day.oth{opacity:.15;cursor:default;}.pf-cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}.pf-cal-day.fds{color:var(--muted);}.pf-cal-legend{display:flex;gap:12px;margin-top:10px;}.pf-cal-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}.pf-cal-dot{width:8px;height:8px;border-radius:3px;}.pf-steps{display:flex;margin-bottom:22px;}.pf-step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}.pf-step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:1px;background:var(--border2);}.pf-step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--bg);z-index:1;margin-bottom:5px;}.pf-step-item.done .pf-step-circle{background:var(--ok);border-color:var(--ok);color:#0d2a1e;}.pf-step-item.active .pf-step-circle{background:var(--accent);border-color:var(--accent);color:#fff;}.pf-step-label{font-size:10px;color:var(--muted);text-align:center;}.pf-step-item.active .pf-step-label{color:var(--accent);}#pf .hist-row{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}#pf .hist-row:last-child{border-bottom:none;}#pf .hist-info{flex:1;}#pf .hist-period{font-size:14px;font-weight:500;margin-bottom:3px;}#pf .hist-meta{font-size:12px;color:var(--muted);}#pf .hist-motivo{font-size:12px;color:var(--danger);margin-top:4px;}
 </style>
 </head>
@@ -732,9 +761,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
         <div style="margin-top:16px;font-size:11px;color:var(--muted);line-height:1.6;" id="cardMsgUsada"></div>
       </div>
       <!-- Preview -->
-      <div>
-        <canvas id="canvasAniv" style="width:100%;border-radius:8px;display:none;"></canvas>
-        <div id="cardHint" style="height:240px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;background:var(--bg3);border-radius:8px;">Gerando preview...</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+        <div style="width:100%;max-height:380px;overflow:hidden;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--bg3);">
+          <canvas id="canvasAniv" style="max-width:100%;max-height:380px;width:auto;height:auto;border-radius:8px;display:none;"></canvas>
+          <div id="cardHint" style="height:240px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;">Gerando preview...</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);">Miniatura — download salva em alta resolução</div>
       </div>
     </div>
     <!-- Email -->
@@ -1822,6 +1854,28 @@ function _fmt(v){
   catch(e){return'R$ '+n.toFixed(2).replace('.',',');}
 }
 
+// ── Tabelas INSS e IRRF 2026 ──
+function _calcInss(base){
+  if(base<=0)return 0;
+  const faixas=[{ate:1518.00,al:0.075},{ate:2793.88,al:0.09},{ate:4190.83,al:0.12},{ate:8157.41,al:0.14}];
+  let inss=0,prev=0;
+  for(const f of faixas){
+    if(base<=prev)break;
+    inss+=(Math.min(base,f.ate)-prev)*f.al;
+    prev=f.ate;
+    if(base<=f.ate)break;
+  }
+  if(base>8157.41)inss+=(base-8157.41)*0.14;
+  return Math.round(inss*100)/100;
+}
+function _calcIrrf(baseDeducao){
+  if(baseDeducao<=2259.20)return 0;
+  if(baseDeducao<=2826.65)return Math.round((baseDeducao*0.075-169.44)*100)/100;
+  if(baseDeducao<=3751.05)return Math.round((baseDeducao*0.15-381.44)*100)/100;
+  if(baseDeducao<=4664.68)return Math.round((baseDeducao*0.225-662.77)*100)/100;
+  return Math.round((baseDeducao*0.275-896.00)*100)/100;
+}
+
 function calcCustoDesl(r,dataDesl){
   const vin=String(r.TIPO_VINCULO||'').toUpperCase();
   const sal=parseFloat(String(r.SALARIO_HONORARIO||'0').replace(',','.'))||0;
@@ -1831,6 +1885,10 @@ function calcCustoDesl(r,dataDesl){
   const meses=Math.max(_mDiff(adm,dt),0);
   const anos=Math.floor(meses/12);
   if(vin==='CLT'){
+    // ── 1. Verbas brutas ──
+    const diasNoMes=new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate();
+    const diasTrab=dt.getDate();
+    const saldoSal=sal*(diasTrab/diasNoMes);
     const diasAP=Math.min(30+3*anos,90);
     const custoAP=sal*(diasAP/30);
     const m13=dt.getMonth()+(dt.getDate()>=15?1:0);
@@ -1838,16 +1896,45 @@ function calcCustoDesl(r,dataDesl){
     const iniPer=new Date(adm);iniPer.setFullYear(adm.getFullYear()+anos);
     const mFer=Math.min(_mDiff(iniPer,dt),11);
     const custoFer=sal*(mFer/12)*(4/3);
-    const multaFGTS=sal*0.08*meses*0.40;
-    const encargos=(custoAP+custo13+custoFer)*0.20;
-    const total=custoAP+custo13+custoFer+multaFGTS+encargos;
-    return{vin,sal,anos,meses,diasAP,itens:[
-      {n:`Aviso prévio indenizado (${diasAP} dias)`,v:custoAP},
-      {n:`13° proporcional (${m13}/12 meses)`,v:custo13},
-      {n:`Férias proporcional (${mFer}/12) + ⅓`,v:custoFer},
-      {n:'Multa FGTS 40% (sem justa causa)',v:multaFGTS},
-      {n:'Encargos empresa ~20% (INSS patr.)',v:encargos},
-    ],total,obs:'CLT sem justa causa · Art. 477/487 CLT · Dec. 99.684/90 (FGTS)'};
+    const totalBruto=saldoSal+custoAP+custo13+custoFer;
+    // ── 2. Descontos (INSS e IRRF incidem sobre saldo salário + 13°) ──
+    const baseInss=saldoSal+custo13;
+    const inss=_calcInss(baseInss);
+    const baseIrrf=baseInss-inss;
+    const irrf=Math.max(_calcIrrf(baseIrrf),0);
+    const totalDescontos=inss+irrf;
+    const liquido=totalBruto-totalDescontos;
+    // ── 3. FGTS ──
+    const saldoFgts=sal*0.08*meses;
+    const multaFgts=saldoFgts*0.40;
+    const fgtsRescisao=(saldoSal+custoAP+custo13)*0.08;
+    // ── 4. Custo total empresa ──
+    const total=liquido+totalDescontos+fgtsRescisao+multaFgts;
+    return{vin,sal,anos,meses,diasAP,mFer,m13,
+      // Itens para exibição estruturada
+      itens:[
+        {n:'── 1. Verbas Rescisórias Brutas ──',v:null,tipo:'header'},
+        {n:`Saldo de salário (${diasTrab}/${diasNoMes} dias)`,v:saldoSal},
+        {n:`Aviso prévio indenizado (${diasAP} dias — 30+${3*anos}d por ${anos} ano${anos!==1?'s':''})`,v:custoAP},
+        {n:`13º proporcional (${m13}/12 meses)`,v:custo13},
+        {n:`Férias proporcionais (${mFer}/12) + ⅓ constitucional`,v:custoFer},
+        {n:'TOTAL BRUTO',v:totalBruto,tipo:'subtotal'},
+        {n:'── 2. Descontos (INSS + IRRF) ──',v:null,tipo:'header'},
+        {n:`INSS rescisório (base: ${_fmt(baseInss)})`,v:-inss},
+        {n:`IRRF rescisório (base: ${_fmt(baseIrrf)})`,v:-irrf},
+        {n:'VALOR LÍQUIDO A PAGAR',v:liquido,tipo:'subtotal'},
+        {n:'── 3. FGTS e Multa Rescisória ──',v:null,tipo:'header'},
+        {n:`Saldo FGTS estimado (8% × ${_fmt(sal)} × ${meses} meses)`,v:saldoFgts},
+        {n:'Multa rescisória 40% do FGTS',v:multaFgts},
+        {n:`FGTS da rescisão — Guia GRRF (8% sobre saldo+AP+13°)`,v:fgtsRescisao},
+        {n:'── 4. Custo Total para a Empresa ──',v:null,tipo:'header'},
+        {n:'Verbas rescisórias (líquido)',v:liquido},
+        {n:'Encargos retidos (INSS + IRRF)',v:totalDescontos},
+        {n:'FGTS rescisão (Guia GRRF)',v:fgtsRescisao},
+        {n:'Multa 40% FGTS',v:multaFgts},
+        {n:'CUSTO TOTAL ESTIMADO',v:total,tipo:'total'},
+      ],
+      total,obs:'CLT s/ justa causa · Art. 477/487 CLT · Dec. 99.684/90 (FGTS) · INSS/IRRF tabelas 2026 (estimado)'};
   }
   if(vin==='PJ'||vin==='MEI'){
     const inss=sal*0.11;const iss=sal*0.05;
@@ -1875,7 +1962,7 @@ function calcCustoDesl(r,dataDesl){
     const diasNoMes=new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate();
     const diasTrab=dt.getDate();
     const honorariosProp=sal*(diasTrab/diasNoMes);
-    const avisoCont=sal; // aviso contratual 30 dias (padrão)
+    const avisoCont=sal;
     const total=honorariosProp+avisoCont;
     return{vin,sal,anos,meses,itens:[
       {n:`Honorários proporcionais ao mês (${diasTrab}/${diasNoMes} dias)`,v:honorariosProp},
@@ -1885,6 +1972,17 @@ function calcCustoDesl(r,dataDesl){
     ],total,obs:'Associado: sem vínculo CLT (art. 442, §ú). Aviso de 30 dias estimado por boa prática contratual. Valores dependem do contrato vigente.'};
   }
   return{vin,sal,anos,meses,itens:[{n:'Vínculo não mapeado — verificar manualmente',v:0}],total:0,obs:''};
+}
+
+function _renderCustoItens(custo){
+  return custo.itens.map(i=>{
+    if(i.tipo==='header')return`<div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;padding:10px 0 4px;border-top:1px solid var(--border);margin-top:4px;">${i.n.replace(/^── |──$/g,'').trim()}</div>`;
+    if(i.tipo==='subtotal')return`<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-top:1px solid var(--border2);font-weight:700;margin-top:2px;"><span>${i.n}</span><span style="font-family:var(--mono);color:${i.v>=0?'var(--accent2)':'var(--danger)'};">${i.v>=0?_fmt(i.v):'-'+_fmt(Math.abs(i.v))}</span></div>`;
+    if(i.tipo==='total')return`<div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-top:2px solid var(--danger);font-weight:700;margin-top:4px;"><span style="color:var(--danger);">${i.n}</span><span style="font-family:var(--mono);color:var(--danger);">${_fmt(i.v)}</span></div>`;
+    if(i.v===null)return'';
+    const isNeg=i.v<0;
+    return`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04);"><span style="color:var(--muted);">${i.n}</span><span style="font-family:var(--mono);color:${i.v===0?'var(--muted)':isNeg?'var(--danger)':'var(--text)'};">${i.v===0?'—':isNeg?'-'+_fmt(Math.abs(i.v)):_fmt(i.v)}</span></div>`;
+  }).join('');
 }
 
 function melhorDataDesl(r){
@@ -1918,9 +2016,7 @@ function atualizarCustoProgramado(){
   const val=$('deslDataProg').value;if(!val)return;
   const dataProg=new Date(val+'T12:00:00');
   const custo=calcCustoDesl(r,dataProg);
-  $('deslFinItens').innerHTML=custo.itens.map(i=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);">
-    <span style="color:var(--muted);">${i.n}</span>
-    <span style="font-family:var(--mono);color:${i.v>0?'var(--text)':'var(--muted)'};">${i.v>0?_fmt(i.v):'—'}</span></div>`).join('');
+  $('deslFinItens').innerHTML=_renderCustoItens(custo);
   $('deslFinTotal').textContent=_fmt(custo.total);
   $('deslFinObs').textContent=custo.obs||'';
 }
@@ -1957,9 +2053,7 @@ function confirmDesl(r){
   $('deslDataProg').value=mdStr;
   // Impacto financeiro com a data sugerida
   const custo=calcCustoDesl(r,md.data);
-  $('deslFinItens').innerHTML=custo.itens.map(i=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);">
-    <span style="color:var(--muted);">${i.n}</span>
-    <span style="font-family:var(--mono);color:${i.v>0?'var(--text)':'var(--muted)'};">${i.v>0?_fmt(i.v):'—'}</span></div>`).join('');
+  $('deslFinItens').innerHTML=_renderCustoItens(custo);
   $('deslFinTotal').textContent=_fmt(custo.total);
   $('deslFinObs').textContent=custo.obs||'';
   // Ocultar impacto financeiro apenas para Sócio sem cálculo; Associado sempre exibe
