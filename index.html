@@ -7,7 +7,6 @@ import { sb, getProfileCached } from './supabase_client.js'
   const profile = await getProfileCached()
   if (!profile) { window.location.href = './login.html'; return }
   if (profile.role === 'manager_global') window.location.href = './manager.html'
-  else if (profile.role === 'colaborador') window.location.href = './portal_ferias_colaborador.html'
   else window.location.href = './people_analytics_editor.html'
 })()
 </script>

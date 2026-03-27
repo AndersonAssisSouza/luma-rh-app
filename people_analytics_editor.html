@@ -6,13 +6,13 @@
 <title>People Analytics · RH</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3C/svg%3E">
 <script>if(location.hostname==='lumaplataforma.com.br'){var _b=document.createElement('base');_b.href='/gestaorh/';document.head.insertBefore(_b,document.head.firstChild);}</script>
-<script src="msal-browser.min.js"></script>
 <!-- Supabase Auth Guard + Data Layer -->
 <script type="module">
 import {
   sb, requireAuth, logout,
   getColaboradores, getAllFeriasSaldo, getExames, getAusencias,
   getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
+  getColaboradorByEmail, getFeriasSaldo, getSolicitacaoPorProtocolo,
   getDesligamentosAgendados, agendarDesligamento, marcarLembreteEnviado,
   updateColaborador, upsertColaborador, gerarIdColaborador,
   updateFeriasSaldo, updateExame, inserirAusencia,
@@ -25,7 +25,7 @@ window._sbLogout = () => logout()
 window._sb = sb
 
 ;(async () => {
-  const profile = await requireAuth(['master','gestor','rh','manager_global'])
+  const profile = await requireAuth(['master','gestor','rh','manager_global','colaborador'])
   if (!profile) return
 
   window._sbProfile = profile
@@ -38,6 +38,7 @@ window._sb = sb
   window._sbFns = {
     getColaboradores, getAllFeriasSaldo, getExames, getAusencias,
     getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
+    getColaboradorByEmail, getFeriasSaldo, getSolicitacaoPorProtocolo,
     getDesligamentosAgendados, agendarDesligamento, marcarLembreteEnviado,
     updateColaborador, upsertColaborador, gerarIdColaborador,
     updateFeriasSaldo, updateExame, inserirAusencia,
@@ -45,10 +46,13 @@ window._sb = sb
     getMensagensAniversario, seedMensagensDefault
   }
 
-  // Aplica tema do tenant (cores + logo)
+  // Aplica tema do tenant (cores + logo + modelos)
   try {
     const tenantData = await getTenantConfig()
     applyTenantTheme(tenantData.config || {})
+    if (Array.isArray(tenantData.config?.modelos)) {
+      window._tenantModelos = tenantData.config.modelos
+    }
   } catch (_) {}
 
   // Oculta tela de config — não é mais necessária
@@ -211,6 +215,12 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 .fta{resize:vertical;min-height:60px;}
 .fdiv{grid-column:1/-1;height:1px;background:var(--border);margin:2px 0;}
 .fsec{grid-column:1/-1;font-size:17px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;font-weight:500;}
+/* ── MODAL TABS ── */
+.mtabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin:0 -18px 14px;padding:0 10px;overflow-x:auto;}
+.mtab{padding:9px 12px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font);}
+.mtab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.mtab:hover:not(.active){color:var(--text);}
+.mtpane{display:none;}.mtpane.active{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 
 /* ── CONFIG ── */
 .cscr{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:900;padding:16px;}
@@ -235,32 +245,10 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 .toast.error{border-color:rgba(248,113,113,.3);}
 .toast.info{border-color:rgba(79,156,249,.3);}
 .tdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.pf-cal-wrap{background:var(--bg3);border-radius:10px;padding:16px;}.pf-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}.pf-cal-month{font-size:15px;font-weight:500;}.pf-cal-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}.pf-cal-btn:hover{background:var(--bg2);}.pf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}.pf-cal-dname{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}.pf-cal-day{text-align:center;padding:7px 2px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}.pf-cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}.pf-cal-day.tod{border-color:var(--accent);color:var(--accent);}.pf-cal-day.rs,.pf-cal-day.re{background:var(--accent);color:#fff;}.pf-cal-day.ri{background:rgba(155,102,244,.2);}.pf-cal-day.dis{opacity:.2;cursor:not-allowed;}.pf-cal-day.oth{opacity:.15;cursor:default;}.pf-cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}.pf-cal-day.fds{color:var(--muted);}.pf-cal-legend{display:flex;gap:12px;margin-top:10px;}.pf-cal-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}.pf-cal-dot{width:8px;height:8px;border-radius:3px;}.pf-steps{display:flex;margin-bottom:22px;}.pf-step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}.pf-step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:1px;background:var(--border2);}.pf-step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--bg);z-index:1;margin-bottom:5px;}.pf-step-item.done .pf-step-circle{background:var(--ok);border-color:var(--ok);color:#0d2a1e;}.pf-step-item.active .pf-step-circle{background:var(--accent);border-color:var(--accent);color:#fff;}.pf-step-label{font-size:10px;color:var(--muted);text-align:center;}.pf-step-item.active .pf-step-label{color:var(--accent);}#pf .hist-row{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}#pf .hist-row:last-child{border-bottom:none;}#pf .hist-info{flex:1;}#pf .hist-period{font-size:14px;font-weight:500;margin-bottom:3px;}#pf .hist-meta{font-size:12px;color:var(--muted);}#pf .hist-motivo{font-size:12px;color:var(--danger);margin-top:4px;}
 </style>
 </head>
 <body>
-
-<!-- CONFIG -->
-<div class="cscr hidden" id="sConfig">
-  <div class="cbox">
-    <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px;">
-      <div class="nlogo" style="width:42px;height:42px;background:none;padding:0;"><svg width="42" height="42" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" rx="12" fill="#9b66f4"/>
-            <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
-            <polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/>
-          </svg></div>
-      <div><div class="ctitle">People Analytics</div><div style="font-size:17px;color:var(--muted)">Configuração Microsoft 365</div></div>
-    </div>
-    <div class="csub">Informe as credenciais do Azure AD. O app precisa de permissão <strong>Files.ReadWrite</strong> para leitura e gravação no Excel.</div>
-    <div class="fgrp" style="margin-bottom:9px;"><div class="flbl">Client ID <span class="rq">*</span></div><input class="fi" id="cClientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:var(--mono);font-size:17px;"></div>
-    <div class="fgrp" style="margin-bottom:9px;"><div class="flbl">Tenant ID <span class="rq">*</span></div><input class="fi" id="cTenantId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:var(--mono);font-size:17px;"></div>
-    <div class="fgrp" style="margin-bottom:9px;"><div class="flbl">Drive ID (opcional — deixar vazio usa /me/drive)</div><input class="fi" id="cDriveId" placeholder="b!xxxxxx..." style="font-family:var(--mono);font-size:17px;"></div>
-    <div class="fgrp" style="margin-bottom:4px;"><div class="flbl">Item ID do arquivo Excel <span class="rq">*</span></div><input class="fi" id="cItemId" placeholder="01XXXXXXXXXXXXXXXX" style="font-family:var(--mono);font-size:17px;"></div>
-    <div class="chint">💡 Para obter o Item ID: abra o Excel no OneDrive → "..." → Detalhes → copie o ID da URL. Ou use graph.microsoft.com → /me/drive/root/children</div>
-    <div class="csep"></div>
-    <button class="btn btn-g" style="width:100%;justify-content:center;padding:9px;" onclick="saveConf()">Conectar ao Microsoft 365</button>
-    <div style="margin-top:9px;text-align:center;"><span style="font-size:17px;color:var(--muted);cursor:pointer;text-decoration:underline;" onclick="demoMode()">Usar modo demonstração (sem Excel)</span></div>
-  </div>
-</div>
 
 <!-- LOADING -->
 <div class="lscr hidden" id="sLoad">
@@ -285,6 +273,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
     <button class="tab" onclick="showTab('alert',this)">Alertas</button>
     <button class="tab" onclick="showTab('desl',this)">Desligados</button>
     <button class="tab" onclick="showTab('acoes',this)">Ações</button>
+    <button class="tab" onclick="showTab('pf',this)">Portal Férias</button>
   </div>
   <div class="nright">
     <div id="ndot" class="ndot" title="Offline"></div>
@@ -567,6 +556,98 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
     <div class="sy" id="ac_list"><div class="empty">Nenhuma ação registrada.</div></div>
   </div>
 </div>
+<!-- PORTAL FÉRIAS -->
+<div class="sec" id="pf">
+  <div class="sttl">
+    <div class="sttl-l"><div class="sdot" style="background:var(--accent)"></div>Portal de Férias</div>
+    <div id="pf-gestor-selector" style="display:none;">
+      <select class="fsel" id="pf-colab-select" onchange="pfSelectColab()" style="font-size:13px;min-width:250px;">
+        <option value="">-- Selecione um colaborador --</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="kg" id="pf-kpis">
+    <div class="kpi"><div class="kl">Saldo disponível</div><div class="kv" style="color:var(--ok)" id="pf-k-saldo">—</div><div class="ks" id="pf-k-saldo-sub">dias</div><div class="kbar" style="background:var(--ok)"></div></div>
+    <div class="kpi"><div class="kl">Dias já utilizados</div><div class="kv" style="color:var(--accent)" id="pf-k-usados">—</div><div class="ks">de 30 dias de direito</div><div class="kbar" style="background:var(--accent)"></div></div>
+    <div class="kpi"><div class="kl">Prazo concessivo</div><div class="kv" style="font-size:20px;margin-top:6px;color:var(--gold)" id="pf-k-prazo">—</div><div class="ks">último dia para gozar</div><div class="kbar" style="background:var(--gold)"></div></div>
+  </div>
+
+  <div class="card" id="pf-card-ultimo" style="display:none;">
+    <div class="ct">Último período de férias</div>
+    <div id="pf-ultimo-conteudo"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Solicitar férias</div>
+    <div class="pf-steps">
+      <div class="pf-step-item active" id="pf-s0"><div class="pf-step-circle">1</div><div class="pf-step-label">Escolher datas</div></div>
+      <div class="pf-step-item" id="pf-s1"><div class="pf-step-circle">2</div><div class="pf-step-label">Confirmar</div></div>
+      <div class="pf-step-item" id="pf-s2"><div class="pf-step-circle">3</div><div class="pf-step-label">Enviado</div></div>
+    </div>
+
+    <div id="pf-step-cal">
+      <div id="pf-avisos"></div>
+      <div class="pf-cal-wrap">
+        <div class="pf-cal-nav">
+          <button class="pf-cal-btn" id="pf-btn-prev">&#8249;</button>
+          <div class="pf-cal-month" id="pf-cal-month">—</div>
+          <button class="pf-cal-btn" id="pf-btn-next">&#8250;</button>
+        </div>
+        <div class="pf-cal-grid" id="pf-cal-grid"></div>
+        <div class="pf-cal-legend">
+          <div class="pf-cal-leg"><div class="pf-cal-dot" style="background:var(--accent)"></div>Selecionado</div>
+          <div class="pf-cal-leg"><div class="pf-cal-dot" style="background:rgba(155,102,244,.25)"></div>Período</div>
+          <div class="pf-cal-leg"><div class="pf-cal-dot" style="background:rgba(248,113,113,.2)"></div>Feriado</div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <div id="pf-sel-msg" style="font-size:13px;color:var(--muted);margin-bottom:12px;">Clique em uma data para iniciar a seleção do período.</div>
+        <button class="btn btn-g" id="pf-btn-continuar" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <div id="pf-step-confirm" style="display:none;">
+      <div id="pf-confirm-body" style="margin-bottom:16px;"></div>
+      <div style="margin-bottom:14px;">
+        <label class="flbl">Observação para o gestor (opcional)</label>
+        <textarea class="fi" id="pf-obs" rows="3" placeholder="Ex: prefiro retornar na segunda-feira..."></textarea>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn" id="pf-btn-voltar">← Voltar</button>
+        <button class="btn btn-a" id="pf-btn-enviar">✓ Enviar solicitação para aprovação</button>
+      </div>
+    </div>
+
+    <div id="pf-step-done" style="display:none;text-align:center;padding:32px 20px;">
+      <div style="font-size:44px;margin-bottom:14px;">✅</div>
+      <div style="font-size:20px;font-weight:500;margin-bottom:8px;">Solicitação enviada!</div>
+      <div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:18px;" id="pf-done-msg">—</div>
+      <div style="background:var(--bg3);border-radius:10px;padding:14px;text-align:left;margin-bottom:20px;" id="pf-done-resumo"></div>
+      <button class="btn btn-g" id="pf-btn-nova">Nova solicitação</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Solicitações <span id="pf-hist-count" style="color:var(--muted);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;"></span></div>
+    <div id="pf-hist-list"><div class="empty">Nenhuma solicitação ainda.</div></div>
+  </div>
+
+  <!-- Gestor: painel de aprovação inline -->
+  <div class="card" id="pf-gestor-panel" style="display:none;">
+    <div class="ct">Aprovação de Férias</div>
+    <div id="pf-gest-body"></div>
+  </div>
+
+  <div style="background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:9px;padding:14px;font-size:13px;color:var(--muted);line-height:1.7;">
+    <strong style="color:var(--text);">Política de Férias / Recesso</strong><br>
+    <span style="color:var(--accent);font-weight:500;">CLT:</span> 📅 <strong>30 dias corridos</strong> após 12 meses · aviso prévio <strong>30 dias</strong> · mín. <strong>14 dias</strong> no 1º período · pagamento 2 dias úteis antes.<br>
+    <span style="color:var(--accent);font-weight:500;">Associado OAB:</span> 📅 <strong>30 dias de recesso anual remunerado</strong> conforme Estatuto OAB (Lei 8.906/94) e contrato de associação.<br>
+    <span style="color:var(--danger);font-weight:500;">PJ / MEI:</span> ⚠ Não há férias CLT. Recesso conforme contrato de prestação de serviços.<br>
+    ✅ Todas as solicitações sujeitas à aprovação do gestor.
+  </div>
+</div>
+
 <!-- MODAL ADMINISTRAÇÃO -->
 <div class="ov" id="mAdmin">
   <div class="modal" style="max-width:680px;max-height:90vh;overflow-y:auto;">
@@ -635,7 +716,6 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
   <div class="modal" style="max-width:720px;max-height:95vh;overflow-y:auto;">
     <div class="mh">
       <div><div class="mt">🎨 Card de Aniversário</div><div class="ms" id="mCardAnivSub">—</div></div>
-      <button class="mx" onclick="closeModal('mCardAniv')">×</button>
     </div>
     <div style="display:grid;grid-template-columns:200px 1fr;gap:20px;padding:16px 0;">
       <!-- Configurações -->
@@ -760,58 +840,122 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 </div>
 
 <div class="ov" id="mEditColab">
-  <div class="modal" style="max-width:620px;">
+  <div class="modal" style="max-width:680px;">
     <div class="mh"><div><div class="mt">Editar colaborador</div><div class="ms" id="mEditColabSub">—</div></div><button class="mc" onclick="closeModal('mEditColab')">×</button></div>
     <div class="mb">
       <input type="hidden" id="eColabId"><input type="hidden" id="eColabRow">
-      <div class="fg">
-        <div class="fgrp s2"><div class="flbl">Nome completo</div><input class="fi" id="eNome"></div>
-        <div class="fgrp s2"><div class="flbl">E-mail corporativo</div><input class="fi" id="eEmail" type="email" placeholder="nome@lumaplataforma.com.br"></div>
+      <!-- TABS -->
+      <div class="mtabs" id="eColabTabs">
+        <button class="mtab active" onclick="switchColabTab(0,'e')">👤 Pessoal</button>
+        <button class="mtab" onclick="switchColabTab(1,'e')">📋 Vínculo</button>
+        <button class="mtab" onclick="switchColabTab(2,'e')">💰 Financeiro</button>
+        <button class="mtab" onclick="switchColabTab(3,'e')">📊 RH Estratégico</button>
+      </div>
+
+      <!-- TAB 0: DADOS PESSOAIS -->
+      <div class="mtpane active" id="eTab0">
+        <div class="fgrp s2"><div class="flbl">Nome completo <span class="rq">*</span></div><input class="fi" id="eNome"></div>
         <div class="fgrp"><div class="flbl">Data de nascimento</div><input class="fi" id="eNasc" type="date"></div>
+        <div class="fgrp"><div class="flbl">Gênero</div>
+          <select class="fsel" id="eGenero"><option value="">Não informado</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="NB">Não-binário</option><option value="O">Outro</option><option value="PI">Prefiro não informar</option></select>
+        </div>
+        <div class="fdiv"></div><div class="fsec">Documentos</div>
+        <div class="fgrp"><div class="flbl">CPF</div><input class="fi" id="eCpf" placeholder="000.000.000-00"></div>
+        <div class="fgrp"><div class="flbl">RG</div><input class="fi" id="eRg" placeholder="00.000.000-0"></div>
+        <div class="fgrp"><div class="flbl">PIS / PASEP</div><input class="fi" id="ePis" placeholder="000.00000.00-0"></div>
+        <div class="fgrp"><div class="flbl">CTPS (nº / série)</div><input class="fi" id="eCtps" placeholder="Ex: 123456 / 0001"></div>
+        <div class="fgrp"><div class="flbl">Título de Eleitor</div><input class="fi" id="eTitulo" placeholder="0000 0000 0000"></div>
+        <div class="fdiv"></div><div class="fsec">Contato Pessoal</div>
+        <div class="fgrp"><div class="flbl">E-mail pessoal</div><input class="fi" id="eEmailPes" type="email" placeholder="email@pessoal.com"></div>
+        <div class="fgrp"><div class="flbl">Telefone / WhatsApp</div><input class="fi" id="eTelefone" placeholder="(00) 00000-0000"></div>
+        <div class="fdiv"></div><div class="fsec">Endereço</div>
+        <div class="fgrp"><div class="flbl">CEP</div><input class="fi" id="eCep" placeholder="00000-000"></div>
+        <div class="fgrp s2"><div class="flbl">Rua / Logradouro</div><input class="fi" id="eEndereco" placeholder="Ex: Rua das Flores"></div>
+        <div class="fgrp"><div class="flbl">Número</div><input class="fi" id="eNumero" placeholder="Ex: 123 / Apto 4"></div>
+        <div class="fgrp"><div class="flbl">Bairro</div><input class="fi" id="eBairro"></div>
+        <div class="fgrp"><div class="flbl">Cidade</div><input class="fi" id="eCidade"></div>
+        <div class="fgrp"><div class="flbl">UF</div>
+          <select class="fsel" id="eUf"><option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select>
+        </div>
+        <div class="fdiv"></div><div class="fsec">Contato de Emergência</div>
+        <div class="fgrp s2"><div class="flbl">Nome do contato</div><input class="fi" id="eEmergNome" placeholder="Nome completo"></div>
+        <div class="fgrp"><div class="flbl">Telefone</div><input class="fi" id="eEmergTel" placeholder="(00) 00000-0000"></div>
+        <div class="fgrp"><div class="flbl">Parentesco</div><input class="fi" id="eEmergPar" placeholder="Ex: Cônjuge, Mãe, Pai"></div>
+      </div>
+
+      <!-- TAB 1: VÍNCULO -->
+      <div class="mtpane" id="eTab1">
+        <div class="fgrp s2"><div class="flbl">E-mail corporativo</div><input class="fi" id="eEmail" type="email" placeholder="nome@lumaplataforma.com.br"></div>
+        <div class="fgrp"><div class="flbl">Matrícula</div><input class="fi" id="eMatricula" placeholder="Ex: 00123"></div>
         <div class="fgrp"><div class="flbl">Tipo de vínculo</div>
           <select class="fsel" id="eVinculo" onchange="toggleIndetGrp()"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="MEI">MEI</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option><option value="ASSOCIADO">Associado</option></select>
         </div>
         <div class="fgrp s2" id="eIndetGrp" style="display:none;">
-          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px 14px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.25);border-radius:8px;margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 14px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.25);border-radius:8px;">
             <input type="checkbox" id="eIndet" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;">
-            <div>
-              <div style="font-size:13px;font-weight:500;color:var(--text);">Contrato por tempo indeterminado</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px;">CLT padrão · PJ / MEI / Associado sem data fim — remove alerta</div>
-            </div>
+            <div><div style="font-size:13px;font-weight:500;color:var(--text);">Contrato por tempo indeterminado</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">CLT padrão · PJ / MEI / Associado sem data fim</div></div>
           </label>
         </div>
-        <!-- DATA_FIM_CONTRATO removida na v4 da planilha -->
         <div class="fgrp" id="eExpGrp" style="display:none;">
-          <div class="flbl">Período de experiência (dias) <span style="color:var(--muted);font-size:11px;">máx. 90 · art. 445 CLT</span></div>
+          <div class="flbl">Período de experiência (dias) <span style="color:var(--muted);font-size:11px;">máx. 90</span></div>
           <input class="fi" id="eExperiencia" type="number" min="1" max="90" placeholder="Ex: 45 ou 90">
         </div>
         <div class="fgrp"><div class="flbl">Data de admissão</div><input class="fi" id="eAdmissao" type="date"></div>
         <div class="fgrp"><div class="flbl">Cargo</div><input class="fi" id="eCargo"></div>
-        <div class="fgrp"><div class="flbl">Setor</div><input class="fi" id="eSetor"></div>
         <div class="fgrp"><div class="flbl">Área</div>
           <select class="fsel" id="eArea"><option>Jurídico</option><option>Tecnologia</option><option>Operacional</option><option>Controladoria</option><option>Administrativo</option><option>Atendimento</option><option>Vendas</option><option>Financeiro</option><option>Marketing</option><option>Recursos Humanos</option><option>Sucesso do Cliente</option><option>Contas a Pagar</option><option>Contas a Receber</option><option>Diretor</option></select>
         </div>
+        <div class="fgrp"><div class="flbl">Setor</div><input class="fi" id="eSetor"></div>
         <div class="fgrp"><div class="flbl">Gestor</div>
           <select class="fsel" id="eGestor"><option>Luisa Moraes</option><option>Anderson de Assis de Souza</option><option>Matheus Rocha</option><option>Amanda Mapa</option></select>
         </div>
         <div class="fgrp"><div class="flbl">Empresa</div>
           <select class="fsel" id="eEmpresa"><option>Luma Plataforma</option><option>Luisa Moraes Advogados</option></select>
         </div>
-        <div class="fdiv"></div>
-        <div class="fsec">Remuneração</div>
+        <div class="fgrp"><div class="flbl">Jornada de trabalho</div><input class="fi" id="eJornada" placeholder="Ex: 08h–17h, Seg–Sex"></div>
+        <div class="fgrp s2"><div class="flbl">Descrição da função</div><textarea class="fi fta" id="eDescFuncao" rows="3" placeholder="Descreva as principais responsabilidades..."></textarea></div>
+        <div class="fdiv"></div><div class="fsec">Status</div>
+        <div class="fgrp"><div class="flbl">Status</div>
+          <select class="fsel" id="eStatus"><option value="ATIVO">Ativo</option><option value="DESLIGADO">Desligado</option><option value="AFASTADO">Afastado</option></select>
+        </div>
+        <div class="fgrp"><div class="flbl">Data de desligamento</div><input class="fi" id="eDesl" type="date"></div>
+      </div>
+
+      <!-- TAB 2: FINANCEIRO -->
+      <div class="mtpane" id="eTab2">
         <div class="fgrp"><div class="flbl">Salário / Honorário (R$)</div><input class="fi cur-input" id="eSalario" type="text" placeholder="R$ 0,00"></div>
+        <div class="fgrp"><div class="flbl">Banco</div><input class="fi" id="eBanco" placeholder="Ex: Itaú, Bradesco, Nubank"></div>
+        <div class="fgrp"><div class="flbl">Agência</div><input class="fi" id="eAgencia" placeholder="Ex: 0001"></div>
+        <div class="fgrp"><div class="flbl">Conta bancária</div><input class="fi" id="eContaBanc" placeholder="Ex: 12345-6"></div>
+        <div class="fgrp"><div class="flbl">Tipo de conta</div>
+          <select class="fsel" id="eTipoConta"><option value="">—</option><option value="CC">Corrente</option><option value="CP">Poupança</option></select>
+        </div>
+        <div class="fdiv"></div><div class="fsec">Benefícios</div>
         <div class="fgrp"><div class="flbl">Vale Refeição (R$/mês)</div><input class="fi cur-input" id="eVR" type="text" placeholder="R$ 0,00"></div>
         <div class="fgrp"><div class="flbl">Vale Transporte (R$/mês)</div><input class="fi cur-input" id="eVT" type="text" placeholder="R$ 0,00"></div>
         <div class="fgrp"><div class="flbl">Plano de Saúde</div>
           <select class="fsel" id="ePlanoSaude"><option value="">Sem plano</option><option value="SIM">Sim</option><option value="NAO">Não</option></select>
         </div>
-        <div class="fgrp s2"><div class="flbl">Outros benefícios</div><input class="fi" id="eBeneficios" placeholder="Ex: Gympass, seguro vida..."></div>
-        <div class="fdiv"></div>
-        <div class="fsec">Desligamento</div>
-        <div class="fgrp"><div class="flbl">Status</div>
-          <select class="fsel" id="eStatus"><option value="ATIVO">Ativo</option><option value="DESLIGADO">Desligado</option><option value="AFASTADO">Afastado</option></select>
+        <div class="fgrp"><div class="flbl">Seguro de Vida</div>
+          <select class="fsel" id="eSeguroVida"><option value="">Sem seguro</option><option value="SIM">Sim</option><option value="NAO">Não</option></select>
         </div>
-        <div class="fgrp"><div class="flbl">Data de desligamento</div><input class="fi" id="eDesl" type="date"></div>
+        <div class="fgrp s2"><div class="flbl">Outros benefícios</div><input class="fi" id="eBeneficios" placeholder="Ex: Gympass, auxílio home office..."></div>
+      </div>
+
+      <!-- TAB 3: RH ESTRATÉGICO -->
+      <div class="mtpane" id="eTab3">
+        <div class="fsec">Avaliação de Desempenho</div>
+        <div class="fgrp"><div class="flbl">Última avaliação</div><input class="fi" id="eAvaliData" type="date"></div>
+        <div class="fgrp"><div class="flbl">Nota (0–10)</div><input class="fi" id="eAvaliNota" type="number" min="0" max="10" step="0.1" placeholder="Ex: 8.5"></div>
+        <div class="fgrp s2"><div class="flbl">Observações da avaliação</div><textarea class="fi fta" id="eAvaliObs" rows="3" placeholder="Pontos fortes, metas, feedbacks..."></textarea></div>
+        <div class="fdiv"></div><div class="fsec">Treinamentos e Certificações</div>
+        <div class="fgrp s2"><div class="flbl">Treinamentos realizados</div><textarea class="fi fta" id="eTreinamentos" rows="3" placeholder="Liste os treinamentos e datas..."></textarea></div>
+        <div class="fgrp s2"><div class="flbl">Certificações</div><textarea class="fi fta" id="eCertificacoes" rows="2" placeholder="Ex: CPA-20, OAB, PMI..."></textarea></div>
+        <div class="fdiv"></div><div class="fsec">Engajamento e Clima</div>
+        <div class="fgrp"><div class="flbl">Nível de engajamento</div>
+          <select class="fsel" id="eEngajamento"><option value="">Não avaliado</option><option value="ALTO">Alto</option><option value="MEDIO">Médio</option><option value="BAIXO">Baixo</option></select>
+        </div>
+        <div class="fgrp s2"><div class="flbl">Observações gerais</div><textarea class="fi fta" id="eObsGerais" rows="3" placeholder="Notas adicionais sobre o colaborador..."></textarea></div>
       </div>
     </div>
     <div class="mf"><button class="btn" onclick="closeModal('mEditColab')">Cancelar</button><button class="btn btn-g" onclick="saveEditColab()">Salvar</button></div>
@@ -820,51 +964,116 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 
 <!-- Novo colaborador -->
 <div class="ov" id="mNewColab">
-  <div class="modal">
+  <div class="modal" style="max-width:680px;">
     <div class="mh"><div><div class="mt">Novo colaborador</div><div class="ms">Registrar admissão</div></div><button class="mc" onclick="closeModal('mNewColab')">×</button></div>
     <div class="mb">
-      <div class="fg">
+      <!-- TABS -->
+      <div class="mtabs" id="nColabTabs">
+        <button class="mtab active" onclick="switchColabTab(0,'n')">👤 Pessoal</button>
+        <button class="mtab" onclick="switchColabTab(1,'n')">📋 Vínculo</button>
+        <button class="mtab" onclick="switchColabTab(2,'n')">💰 Financeiro</button>
+        <button class="mtab" onclick="switchColabTab(3,'n')">📊 RH Estratégico</button>
+      </div>
+
+      <!-- TAB 0: DADOS PESSOAIS -->
+      <div class="mtpane active" id="nTab0">
         <div class="fgrp s2"><div class="flbl">Nome completo <span class="rq">*</span></div><input class="fi" id="nNome" placeholder="Nome completo"></div>
+        <div class="fgrp"><div class="flbl">Data de nascimento</div><input class="fi" id="nNasc" type="date"></div>
+        <div class="fgrp"><div class="flbl">Gênero</div>
+          <select class="fsel" id="nGenero"><option value="">Não informado</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="NB">Não-binário</option><option value="O">Outro</option><option value="PI">Prefiro não informar</option></select>
+        </div>
+        <div class="fdiv"></div><div class="fsec">Documentos</div>
+        <div class="fgrp"><div class="flbl">CPF</div><input class="fi" id="nCpf" placeholder="000.000.000-00"></div>
+        <div class="fgrp"><div class="flbl">RG</div><input class="fi" id="nRg" placeholder="00.000.000-0"></div>
+        <div class="fgrp"><div class="flbl">PIS / PASEP</div><input class="fi" id="nPis" placeholder="000.00000.00-0"></div>
+        <div class="fgrp"><div class="flbl">CTPS (nº / série)</div><input class="fi" id="nCtps" placeholder="Ex: 123456 / 0001"></div>
+        <div class="fgrp"><div class="flbl">Título de Eleitor</div><input class="fi" id="nTitulo" placeholder="0000 0000 0000"></div>
+        <div class="fdiv"></div><div class="fsec">Contato Pessoal</div>
+        <div class="fgrp"><div class="flbl">E-mail pessoal</div><input class="fi" id="nEmailPes" type="email" placeholder="email@pessoal.com"></div>
+        <div class="fgrp"><div class="flbl">Telefone / WhatsApp</div><input class="fi" id="nTelefone" placeholder="(00) 00000-0000"></div>
+        <div class="fdiv"></div><div class="fsec">Endereço</div>
+        <div class="fgrp"><div class="flbl">CEP</div><input class="fi" id="nCep" placeholder="00000-000"></div>
+        <div class="fgrp s2"><div class="flbl">Rua / Logradouro</div><input class="fi" id="nEndereco" placeholder="Ex: Rua das Flores"></div>
+        <div class="fgrp"><div class="flbl">Número</div><input class="fi" id="nNumero" placeholder="Ex: 123 / Apto 4"></div>
+        <div class="fgrp"><div class="flbl">Bairro</div><input class="fi" id="nBairro"></div>
+        <div class="fgrp"><div class="flbl">Cidade</div><input class="fi" id="nCidade"></div>
+        <div class="fgrp"><div class="flbl">UF</div>
+          <select class="fsel" id="nUf"><option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select>
+        </div>
+        <div class="fdiv"></div><div class="fsec">Contato de Emergência</div>
+        <div class="fgrp s2"><div class="flbl">Nome do contato</div><input class="fi" id="nEmergNome" placeholder="Nome completo"></div>
+        <div class="fgrp"><div class="flbl">Telefone</div><input class="fi" id="nEmergTel" placeholder="(00) 00000-0000"></div>
+        <div class="fgrp"><div class="flbl">Parentesco</div><input class="fi" id="nEmergPar" placeholder="Ex: Cônjuge, Mãe, Pai"></div>
+      </div>
+
+      <!-- TAB 1: VÍNCULO -->
+      <div class="mtpane" id="nTab1">
         <div class="fgrp s2"><div class="flbl">E-mail corporativo</div><input class="fi" id="nEmail" type="email" placeholder="nome@lumaplataforma.com.br"></div>
+        <div class="fgrp"><div class="flbl">Matrícula</div><input class="fi" id="nMatricula" placeholder="Ex: 00123"></div>
         <div class="fgrp"><div class="flbl">Vínculo <span class="rq">*</span></div>
           <select class="fsel" id="nVinc" onchange="toggleNIndetGrp()"><option value="CLT">CLT</option><option value="PJ">PJ</option><option value="MEI">MEI</option><option value="SOCIO">Sócio</option><option value="ESTAGIARIO">Estagiário</option><option value="ASSOCIADO">Associado</option></select>
         </div>
         <div class="fgrp s2" id="nIndetGrp" style="display:none;">
-          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:12px 14px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.25);border-radius:8px;margin-top:4px;">
+          <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 14px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.25);border-radius:8px;">
             <input type="checkbox" id="nIndet" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;" onchange="toggleNIndetGrp()">
-            <div>
-              <div style="font-size:13px;font-weight:500;color:var(--text);">Contrato por tempo indeterminado</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px;">CLT padrão · PJ / MEI / Associado sem data fim — remove alerta</div>
-            </div>
+            <div><div style="font-size:13px;font-weight:500;color:var(--text);">Contrato por tempo indeterminado</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">CLT padrão · PJ / MEI / Associado sem data fim</div></div>
           </label>
         </div>
-        <!-- DATA_FIM_CONTRATO removida na v4 da planilha -->
         <div class="fgrp" id="nExpGrp" style="display:none;">
-          <div class="flbl">Período de experiência (dias) <span style="color:var(--muted);font-size:11px;">máx. 90 · art. 445 CLT</span></div>
+          <div class="flbl">Período de experiência (dias) <span style="color:var(--muted);font-size:11px;">máx. 90</span></div>
           <input class="fi" id="nExperiencia" type="number" min="1" max="90" placeholder="Ex: 45 ou 90">
         </div>
         <div class="fgrp"><div class="flbl">Admissão <span class="rq">*</span></div><input class="fi" id="nAdm" type="date"></div>
-        <div class="fgrp"><div class="flbl">Nascimento</div><input class="fi" id="nNasc" type="date"></div>
         <div class="fgrp"><div class="flbl">Cargo</div><input class="fi" id="nCargo" placeholder="Ex: Analista Jurídico"></div>
         <div class="fgrp"><div class="flbl">Área</div>
           <select class="fsel" id="nArea"><option>Jurídico</option><option>Tecnologia</option><option>Operacional</option><option>Controladoria</option><option>Administrativo</option><option>Atendimento</option><option>Vendas</option><option>Financeiro</option><option>Marketing</option><option>Recursos Humanos</option><option>Sucesso do Cliente</option><option>Contas a Pagar</option><option>Contas a Receber</option><option>Diretor</option></select>
         </div>
+        <div class="fgrp"><div class="flbl">Setor</div><input class="fi" id="nSetor" placeholder="Ex: Diretoria"></div>
         <div class="fgrp"><div class="flbl">Gestor</div>
           <select class="fsel" id="nGestor"><option>Luisa Moraes</option><option>Anderson de Assis de Souza</option><option>Matheus Rocha</option><option>Amanda Mapa</option></select>
         </div>
         <div class="fgrp"><div class="flbl">Empresa <span class="rq">*</span></div>
           <select class="fsel" id="nEmpresa"><option>Luma Plataforma</option><option>Luisa Moraes Advogados</option></select>
         </div>
-        <div class="fgrp"><div class="flbl">Setor</div><input class="fi" id="nSetor" placeholder="Ex: Diretoria"></div>
-        <div class="fdiv"></div>
-        <div class="fsec">Remuneração</div>
+        <div class="fgrp"><div class="flbl">Jornada de trabalho</div><input class="fi" id="nJornada" placeholder="Ex: 08h–17h, Seg–Sex"></div>
+        <div class="fgrp s2"><div class="flbl">Descrição da função</div><textarea class="fi fta" id="nDescFuncao" rows="3" placeholder="Descreva as principais responsabilidades..."></textarea></div>
+      </div>
+
+      <!-- TAB 2: FINANCEIRO -->
+      <div class="mtpane" id="nTab2">
         <div class="fgrp"><div class="flbl">Salário / Honorário (R$)</div><input class="fi cur-input" id="nSalario" type="text" placeholder="R$ 0,00"></div>
+        <div class="fgrp"><div class="flbl">Banco</div><input class="fi" id="nBanco" placeholder="Ex: Itaú, Bradesco, Nubank"></div>
+        <div class="fgrp"><div class="flbl">Agência</div><input class="fi" id="nAgencia" placeholder="Ex: 0001"></div>
+        <div class="fgrp"><div class="flbl">Conta bancária</div><input class="fi" id="nContaBanc" placeholder="Ex: 12345-6"></div>
+        <div class="fgrp"><div class="flbl">Tipo de conta</div>
+          <select class="fsel" id="nTipoConta"><option value="">—</option><option value="CC">Corrente</option><option value="CP">Poupança</option></select>
+        </div>
+        <div class="fdiv"></div><div class="fsec">Benefícios</div>
         <div class="fgrp"><div class="flbl">Vale Refeição (R$/mês)</div><input class="fi cur-input" id="nVR" type="text" placeholder="R$ 0,00"></div>
         <div class="fgrp"><div class="flbl">Vale Transporte (R$/mês)</div><input class="fi cur-input" id="nVT" type="text" placeholder="R$ 0,00"></div>
         <div class="fgrp"><div class="flbl">Plano de Saúde</div>
           <select class="fsel" id="nPlanoSaude"><option value="">Sem plano</option><option value="SIM">Sim</option><option value="NAO">Não</option></select>
         </div>
-        <div class="fgrp s2"><div class="flbl">Outros benefícios</div><input class="fi" id="nBeneficios" placeholder="Ex: Gympass, seguro vida..."></div>
+        <div class="fgrp"><div class="flbl">Seguro de Vida</div>
+          <select class="fsel" id="nSeguroVida"><option value="">Sem seguro</option><option value="SIM">Sim</option><option value="NAO">Não</option></select>
+        </div>
+        <div class="fgrp s2"><div class="flbl">Outros benefícios</div><input class="fi" id="nBeneficios" placeholder="Ex: Gympass, auxílio home office..."></div>
+      </div>
+
+      <!-- TAB 3: RH ESTRATÉGICO -->
+      <div class="mtpane" id="nTab3">
+        <div class="fsec">Avaliação de Desempenho</div>
+        <div class="fgrp"><div class="flbl">Última avaliação</div><input class="fi" id="nAvaliData" type="date"></div>
+        <div class="fgrp"><div class="flbl">Nota (0–10)</div><input class="fi" id="nAvaliNota" type="number" min="0" max="10" step="0.1" placeholder="Ex: 8.5"></div>
+        <div class="fgrp s2"><div class="flbl">Observações da avaliação</div><textarea class="fi fta" id="nAvaliObs" rows="3" placeholder="Pontos fortes, metas, feedbacks..."></textarea></div>
+        <div class="fdiv"></div><div class="fsec">Treinamentos e Certificações</div>
+        <div class="fgrp s2"><div class="flbl">Treinamentos realizados</div><textarea class="fi fta" id="nTreinamentos" rows="3" placeholder="Liste os treinamentos e datas..."></textarea></div>
+        <div class="fgrp s2"><div class="flbl">Certificações</div><textarea class="fi fta" id="nCertificacoes" rows="2" placeholder="Ex: CPA-20, OAB, PMI..."></textarea></div>
+        <div class="fdiv"></div><div class="fsec">Engajamento e Clima</div>
+        <div class="fgrp"><div class="flbl">Nível de engajamento</div>
+          <select class="fsel" id="nEngajamento"><option value="">Não avaliado</option><option value="ALTO">Alto</option><option value="MEDIO">Médio</option><option value="BAIXO">Baixo</option></select>
+        </div>
+        <div class="fgrp s2"><div class="flbl">Observações gerais</div><textarea class="fi fta" id="nObsGerais" rows="3" placeholder="Notas adicionais sobre o colaborador..."></textarea></div>
       </div>
     </div>
     <div class="mf"><button class="btn" onclick="closeModal('mNewColab')">Cancelar</button><button class="btn btn-g" onclick="saveNewColab()">Registrar admissão</button></div>
@@ -1052,7 +1261,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
 const CK='pa_v3_cfg';
 const ADMIN_EMAIL='anderson.assis@lumaplataforma.com.br';
 const CK_COORD='luma_coordenadores_v1';
-let msalApp=null,tok=null,CFG=null,D={},DEMO=false;
+let D={},DEMO=false;
 let USER_EMAIL='',USER_ROLE='none',USER_NOME='';
 const $=id=>document.getElementById(id);
 const parseDate=d=>{if(!d)return null;if(typeof d==='number'||(/^\d+$/.test(String(d).trim()))){const n=Number(d);if(n>59)return new Date((n-25569)*86400*1000);if(n>0)return new Date((n-25568)*86400*1000);}const x=new Date(d);return isNaN(x)?null:x;};
@@ -1065,11 +1274,10 @@ const lblV=v=>({PJ:'PJ',CLT:'CLT',SOCIO:'Sócio',ESTAGIARIO:'Estag.',ASSOCIADO:'
 const setS=(id,val)=>{const e=$(id);if(!e)return;for(const o of e.options){if(o.value===val||o.text===val){e.value=o.value;return;}}};
 
 
-function demoMode(){DEMO=true;$('sConfig').classList.add('hidden');loadDemo();}
-
 // ── Mapeamento Supabase ↔ formato Excel (compatibilidade com render() existente) ──
 function _sbToExcel(r){
   const hoje=new Date();
+  const dc=r.dados_complementares||{};
   return {
     _row:r.id, _id:r.id, _tenant_id:r.tenant_id, _sbRaw:r,
     ID_COLABORADOR:r.id_colaborador, NOME:r.nome,
@@ -1087,6 +1295,14 @@ function _sbToExcel(r){
     OUTROS_BENEFICIOS:r.outros_beneficios,
     ANOS_EMPRESA:r.data_admissao?parseFloat(((hoje-new Date(r.data_admissao))/(1000*60*60*24*365.25)).toFixed(1)):null,
     IDADE:r.data_nascimento?parseInt(((hoje-new Date(r.data_nascimento))/(1000*60*60*24*365.25)).toFixed(0)):null,
+    // Novos campos v2
+    GENERO:r.genero, CPF:r.cpf, RG:r.rg, PIS_PASEP:r.pis_pasep, CTPS:r.ctps, TITULO_ELEITOR:r.titulo_eleitor,
+    EMAIL_PESSOAL:r.email_pessoal, TELEFONE:r.telefone,
+    CEP:r.cep, ENDERECO:r.endereco, NUMERO:r.numero, BAIRRO:r.bairro, CIDADE:r.cidade, UF:r.uf,
+    EMERGENCIA_NOME:r.emergencia_nome, EMERGENCIA_TELEFONE:r.emergencia_telefone, EMERGENCIA_PARENTESCO:r.emergencia_parentesco,
+    MATRICULA:r.matricula, JORNADA_TRABALHO:r.jornada_trabalho, DESCRICAO_FUNCAO:r.descricao_funcao,
+    BANCO:r.banco, AGENCIA:r.agencia, CONTA_BANCARIA:r.conta_bancaria, TIPO_CONTA:r.tipo_conta, SEGURO_VIDA:r.seguro_vida,
+    DADOS_COMPLEMENTARES:dc,
   };
 }
 function _sbFerToExcel(f){
@@ -1137,85 +1353,22 @@ function _excelToSb(r){
     salario_honorario:r.SALARIO_HONORARIO||null,
     vale_refeicao:r.VALE_REFEICAO||null, vale_transporte:r.VALE_TRANSPORTE||null,
     plano_saude:r.PLANO_SAUDE||null, outros_beneficios:r.OUTROS_BENEFICIOS||null,
+    // Novos campos v2
+    genero:r.GENERO||null, cpf:r.CPF||null, rg:r.RG||null, pis_pasep:r.PIS_PASEP||null,
+    ctps:r.CTPS||null, titulo_eleitor:r.TITULO_ELEITOR||null,
+    email_pessoal:r.EMAIL_PESSOAL||null, telefone:r.TELEFONE||null,
+    cep:r.CEP||null, endereco:r.ENDERECO||null, numero:r.NUMERO||null,
+    bairro:r.BAIRRO||null, cidade:r.CIDADE||null, uf:r.UF||null,
+    emergencia_nome:r.EMERGENCIA_NOME||null, emergencia_telefone:r.EMERGENCIA_TELEFONE||null,
+    emergencia_parentesco:r.EMERGENCIA_PARENTESCO||null,
+    matricula:r.MATRICULA||null, jornada_trabalho:r.JORNADA_TRABALHO||null,
+    descricao_funcao:r.DESCRICAO_FUNCAO||null,
+    banco:r.BANCO||null, agencia:r.AGENCIA||null, conta_bancaria:r.CONTA_BANCARIA||null,
+    tipo_conta:r.TIPO_CONTA||null, seguro_vida:r.SEGURO_VIDA||null,
+    dados_complementares:r.DADOS_COMPLEMENTARES||{},
   };
 }
 
-async function initApp(c){
-  CFG=c;$('sConfig').classList.add('hidden');$('sLoad').classList.remove('hidden');setL('Inicializando autenticação...');
-  try{
-    const msalConfig={
-      auth:{
-        clientId:c.clientId,
-        authority:`https://login.microsoftonline.com/${c.tenantId}`,
-        redirectUri:window.location.origin+window.location.pathname
-      },
-      cache:{cacheLocation:'localStorage',storeAuthStateInCookie:true}
-    };
-    msalApp=await msal.createStandardPublicClientApplication(msalConfig);
-    await msalApp.initialize();
-    // Processa retorno do redirect
-    const r=await msalApp.handleRedirectPromise();
-    if(r){tok=r.accessToken;loadAll();return;}
-    // Tenta token silencioso
-    const accounts=msalApp.getAllAccounts();
-    if(accounts.length>0){
-      try{
-        const silent=await msalApp.acquireTokenSilent({
-          scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],
-          account:accounts[0]
-        });
-        tok=silent.accessToken;loadAll();return;
-      }catch(e){/* token expirado, faz redirect */}
-    }
-    // Login via redirect — funciona em qualquer contexto
-    await msalApp.loginRedirect({
-      scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All']
-    });
-  }catch(e){
-    $('sLoad').classList.add('hidden');
-    $('sConfig').classList.remove('hidden');
-    toast('Erro: '+e.message,'error');
-  }
-}
-async function doLogin(){
-  try{
-    await msalApp.loginRedirect({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All']});
-  }catch(e){toast('Erro no login: '+e.message,'error');}
-}
-async function getT(){
-  if(tok)return tok;
-  const a=msalApp.getAllAccounts();
-  if(!a.length){await doLogin();throw new Error('Redirecionando para login...');}
-  try{
-    const r=await msalApp.acquireTokenSilent({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],account:a[0]});
-    return tok=r.accessToken;
-  }catch(e){
-    await msalApp.acquireTokenRedirect({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],account:a[0]});
-    throw new Error('Renovando token...');
-  }
-}
-function driveB(){return CFG.driveId?`/drives/${CFG.driveId}/items/${CFG.itemId}`:`/me/drive/items/${CFG.itemId}`;}
-async function gGet(url){const t=await getT();const r=await fetch('https://graph.microsoft.com/v1.0'+url,{headers:{Authorization:'Bearer '+t}});if(!r.ok)throw new Error(`Graph ${r.status}`);return r.json();}
-async function gPatch(url,body){const t=await getT();const r=await fetch('https://graph.microsoft.com/v1.0'+url,{method:'PATCH',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok){const e=await r.text();throw new Error(`PATCH ${r.status}: ${e}`);}return r.json();}
-async function rSheet(sh){
-  const d=await gGet(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/usedRange`);
-  const rows=d.values||[];if(rows.length<2)return[];
-  const hdr=rows[0];return rows.slice(1).map((row,i)=>{const o={_row:i+2};hdr.forEach((h,j)=>o[h]=row[j]??null);return o;});
-}
-function col2L(n){let s='';n++;while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s;}
-async function patchRow(sh,row,colMap,data){
-  for(const[ci,field]of Object.entries(colMap)){
-    const v=data[field]??null;
-    await gPatch(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/range(address='${col2L(parseInt(ci))}${row}')`,{values:[[v]]});
-  }
-}
-async function appendR(sh,headers,rowData){
-  const d=await gGet(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/usedRange`);
-  const nr=(d.rowCount||1)+1;
-  const vals=[headers.map(h=>rowData[h]??null)];
-  const eC=col2L(headers.length-1);
-  await gPatch(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/range(address='A${nr}:${eC}${nr}')`,{values:vals});
-}
 function setL(m){$('lMsg').textContent=m;}
 
 async function loadAll(){
@@ -1541,34 +1694,62 @@ function render(){
 function openModal(id){$(id).classList.add('open');}
 function closeModal(id){$(id).classList.remove('open');}
 document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+function switchColabTab(idx, prefix) {
+  const tabsEl = document.getElementById(prefix==='e'?'eColabTabs':'nColabTabs');
+  if(tabsEl) tabsEl.querySelectorAll('.mtab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  for(let i=0;i<4;i++){const p=document.getElementById(prefix+'Tab'+i);if(p)p.style.display=i===idx?'grid':'none';}
+}
 
 // EDITAR COLABORADOR
 function openEditColab(r){
   $('eColabId').value=r.ID_COLABORADOR||'';$('eColabRow').value=r._row||'';
   $('mEditColabSub').textContent=(r.NOME||'—')+' · '+(r.ID_COLABORADOR||'—');
+  // Volta para primeira aba
+  switchColabTab(0,'e');
+  // Tab 0 — Pessoal
   $('eNome').value=r.NOME||'';
-  $('eEmail').value=r.EMAIL_CORPORATIVO||'';
   $('eNasc').value=iso(r.DATA_NASCIMENTO)||'';
-  $('eAdmissao').value=iso(r.DATA_ADMISSAO)||'';
-  $('eCargo').value=r.CARGO||'';
-  $('eSetor').value=r.SETOR||'';
+  setS('eGenero',r.GENERO||'');
+  $('eCpf').value=r.CPF||''; $('eRg').value=r.RG||'';
+  $('ePis').value=r.PIS_PASEP||''; $('eCtps').value=r.CTPS||'';
+  $('eTitulo').value=r.TITULO_ELEITOR||'';
+  $('eEmailPes').value=r.EMAIL_PESSOAL||''; $('eTelefone').value=r.TELEFONE||'';
+  $('eCep').value=r.CEP||''; $('eEndereco').value=r.ENDERECO||'';
+  $('eNumero').value=r.NUMERO||''; $('eBairro').value=r.BAIRRO||'';
+  $('eCidade').value=r.CIDADE||''; setS('eUf',r.UF||'');
+  $('eEmergNome').value=r.EMERGENCIA_NOME||'';
+  $('eEmergTel').value=r.EMERGENCIA_TELEFONE||'';
+  $('eEmergPar').value=r.EMERGENCIA_PARENTESCO||'';
+  // Tab 1 — Vínculo
+  $('eEmail').value=r.EMAIL_CORPORATIVO||'';
+  $('eMatricula').value=r.MATRICULA||'';
   setS('eVinculo',r.TIPO_VINCULO||'CLT');
   setS('eArea',r.AREA);setS('eGestor',r.GESTOR);setS('eEmpresa',r.EMPRESA);setS('eStatus',r.STATUS||'ATIVO');
+  $('eAdmissao').value=iso(r.DATA_ADMISSAO)||'';
   $('eDesl').value=iso(r.DATA_DESLIGAMENTO)||'';
-  $('eSalario').value=_fmtBRL(r.SALARIO_HONORARIO)||'';
-  $('eVR').value=_fmtBRL(r.VALE_REFEICAO)||'';
-  $('eVT').value=_fmtBRL(r.VALE_TRANSPORTE)||'';
-  setS('ePlanoSaude',r.PLANO_SAUDE||'');
-  $('eBeneficios').value=r.OUTROS_BENEFICIOS||'';
-  // Campo experiência CLT
+  $('eCargo').value=r.CARGO||''; $('eSetor').value=r.SETOR||'';
+  $('eJornada').value=r.JORNADA_TRABALHO||'';
+  $('eDescFuncao').value=r.DESCRICAO_FUNCAO||'';
   $('eExperiencia').value=r.TEMPO_EXPERIENCIA||'';
-  // Flag indeterminado
   const _vIndet=String(r.TIPO_VINCULO||'').toUpperCase();
   const _isIndet=String(r.CONTRATO_INDETERMINADO||'').toUpperCase()==='SIM';
   $('eIndetGrp').style.display=['CLT','PJ','MEI','ASSOCIADO'].includes(_vIndet)?'':'none';
   $('eIndet').checked=_isIndet;
-  const _eDFG=$('eDataFimGrp');if(_eDFG)_eDFG.style.display=(['CLT','PJ','MEI','ASSOCIADO'].includes(_vIndet)&&!_isIndet)?'':'none';
   $('eExpGrp').style.display=(_vIndet==='CLT'&&!_isIndet)?'':'none';
+  // Tab 2 — Financeiro
+  $('eSalario').value=_fmtBRL(r.SALARIO_HONORARIO)||'';
+  $('eBanco').value=r.BANCO||''; $('eAgencia').value=r.AGENCIA||'';
+  $('eContaBanc').value=r.CONTA_BANCARIA||''; setS('eTipoConta',r.TIPO_CONTA||'');
+  $('eVR').value=_fmtBRL(r.VALE_REFEICAO)||'';
+  $('eVT').value=_fmtBRL(r.VALE_TRANSPORTE)||'';
+  setS('ePlanoSaude',r.PLANO_SAUDE||''); setS('eSeguroVida',r.SEGURO_VIDA||'');
+  $('eBeneficios').value=r.OUTROS_BENEFICIOS||'';
+  // Tab 3 — RH Estratégico
+  const dc=r.DADOS_COMPLEMENTARES||{};
+  $('eAvaliData').value=dc.avali_data||''; $('eAvaliNota').value=dc.avali_nota||'';
+  $('eAvaliObs').value=dc.avali_obs||'';
+  $('eTreinamentos').value=dc.treinamentos||''; $('eCertificacoes').value=dc.certificacoes||'';
+  setS('eEngajamento',dc.engajamento||''); $('eObsGerais').value=dc.obs_gerais||'';
   openModal('mEditColab');
 }
 function toggleIndetGrp(){
@@ -1587,30 +1768,40 @@ function toggleNIndetGrp(){
   $('nExpGrp').style.display=(v==='CLT'&&!indet)?'':'none';
 }
 async function saveEditColab(){
-  const colabId=$('eColabRow').value;  // agora é UUID
+  const colabId=$('eColabRow').value;
   if(!colabId){toast('Colaborador não identificado','error');return;}
-  const nasc=$('eNasc').value;
+  const dc={
+    avali_data:$('eAvaliData').value||null, avali_nota:$('eAvaliNota').value||null,
+    avali_obs:$('eAvaliObs').value||null,
+    treinamentos:$('eTreinamentos').value||null, certificacoes:$('eCertificacoes').value||null,
+    engajamento:$('eEngajamento').value||null, obs_gerais:$('eObsGerais').value||null,
+  };
   const campos=_excelToSb({
-    NOME:$('eNome').value,
-    EMAIL_CORPORATIVO:$('eEmail').value.trim()||null,
-    TIPO_VINCULO:$('eVinculo').value,
-    CONTRATO_INDETERMINADO:$('eIndet').checked?'SIM':'',
-    TEMPO_EXPERIENCIA:$('eExperiencia').value||null,
-    STATUS:$('eStatus').value,
-    DATA_NASCIMENTO:nasc||null,
-    DATA_ADMISSAO:$('eAdmissao').value||null,
+    NOME:$('eNome').value, EMAIL_CORPORATIVO:$('eEmail').value.trim()||null,
+    TIPO_VINCULO:$('eVinculo').value, CONTRATO_INDETERMINADO:$('eIndet').checked?'SIM':'',
+    TEMPO_EXPERIENCIA:$('eExperiencia').value||null, STATUS:$('eStatus').value,
+    DATA_NASCIMENTO:$('eNasc').value||null, DATA_ADMISSAO:$('eAdmissao').value||null,
     DATA_DESLIGAMENTO:$('eDesl').value||null,
-    CARGO:$('eCargo').value,
-    AREA:$('eArea').value,
-    SETOR:$('eSetor').value,
-    GESTOR:$('eGestor').value,
-    GESTOR_EMAIL:null,  // será buscado automaticamente via trigger se necessário
-    EMPRESA:$('eEmpresa').value,
+    CARGO:$('eCargo').value, AREA:$('eArea').value, SETOR:$('eSetor').value,
+    GESTOR:$('eGestor').value, GESTOR_EMAIL:null, EMPRESA:$('eEmpresa').value,
     SALARIO_HONORARIO:_parseBRL($('eSalario').value),
-    VALE_REFEICAO:_parseBRL($('eVR').value),
-    VALE_TRANSPORTE:_parseBRL($('eVT').value),
-    PLANO_SAUDE:$('ePlanoSaude').value||null,
-    OUTROS_BENEFICIOS:$('eBeneficios').value||null
+    VALE_REFEICAO:_parseBRL($('eVR').value), VALE_TRANSPORTE:_parseBRL($('eVT').value),
+    PLANO_SAUDE:$('ePlanoSaude').value||null, OUTROS_BENEFICIOS:$('eBeneficios').value||null,
+    // v2
+    GENERO:$('eGenero').value||null, CPF:$('eCpf').value||null, RG:$('eRg').value||null,
+    PIS_PASEP:$('ePis').value||null, CTPS:$('eCtps').value||null,
+    TITULO_ELEITOR:$('eTitulo').value||null,
+    EMAIL_PESSOAL:$('eEmailPes').value||null, TELEFONE:$('eTelefone').value||null,
+    CEP:$('eCep').value||null, ENDERECO:$('eEndereco').value||null, NUMERO:$('eNumero').value||null,
+    BAIRRO:$('eBairro').value||null, CIDADE:$('eCidade').value||null, UF:$('eUf').value||null,
+    EMERGENCIA_NOME:$('eEmergNome').value||null, EMERGENCIA_TELEFONE:$('eEmergTel').value||null,
+    EMERGENCIA_PARENTESCO:$('eEmergPar').value||null,
+    MATRICULA:$('eMatricula').value||null, JORNADA_TRABALHO:$('eJornada').value||null,
+    DESCRICAO_FUNCAO:$('eDescFuncao').value||null,
+    BANCO:$('eBanco').value||null, AGENCIA:$('eAgencia').value||null,
+    CONTA_BANCARIA:$('eContaBanc').value||null, TIPO_CONTA:$('eTipoConta').value||null,
+    SEGURO_VIDA:$('eSeguroVida').value||null,
+    DADOS_COMPLEMENTARES:dc,
   });
   closeModal('mEditColab');toast('Salvando...','info');
   try{
@@ -1856,6 +2047,12 @@ async function saveNewColab(){
     if(DEMO){D.CADASTRO_COLABORADORES.push({...row,_row:cad.length+2});render();toast(`${nome} admitido! ID: ${newId}`,'success');return;}
     // Supabase: gerar ID e inserir
     const tenantId=window._sbTenantId;
+    const _nDc={
+      avali_data:$('nAvaliData').value||null, avali_nota:$('nAvaliNota').value||null,
+      avali_obs:$('nAvaliObs').value||null,
+      treinamentos:$('nTreinamentos').value||null, certificacoes:$('nCertificacoes').value||null,
+      engajamento:$('nEngajamento').value||null, obs_gerais:$('nObsGerais').value||null,
+    };
     const sbRow={
       tenant_id:tenantId,
       id_colaborador:newId,
@@ -1877,7 +2074,22 @@ async function saveNewColab(){
       vale_refeicao:_parseBRL($('nVR').value),
       vale_transporte:_parseBRL($('nVT').value),
       plano_saude:$('nPlanoSaude').value||null,
-      outros_beneficios:$('nBeneficios').value||null
+      outros_beneficios:$('nBeneficios').value||null,
+      // v2
+      genero:$('nGenero').value||null, cpf:$('nCpf').value||null, rg:$('nRg').value||null,
+      pis_pasep:$('nPis').value||null, ctps:$('nCtps').value||null,
+      titulo_eleitor:$('nTitulo').value||null,
+      email_pessoal:$('nEmailPes').value||null, telefone:$('nTelefone').value||null,
+      cep:$('nCep').value||null, endereco:$('nEndereco').value||null, numero:$('nNumero').value||null,
+      bairro:$('nBairro').value||null, cidade:$('nCidade').value||null, uf:$('nUf').value||null,
+      emergencia_nome:$('nEmergNome').value||null, emergencia_telefone:$('nEmergTel').value||null,
+      emergencia_parentesco:$('nEmergPar').value||null,
+      matricula:$('nMatricula').value||null, jornada_trabalho:$('nJornada').value||null,
+      descricao_funcao:$('nDescFuncao').value||null,
+      banco:$('nBanco').value||null, agencia:$('nAgencia').value||null,
+      conta_bancaria:$('nContaBanc').value||null, tipo_conta:$('nTipoConta').value||null,
+      seguro_vida:$('nSeguroVida').value||null,
+      dados_complementares:_nDc,
     };
     await window._sbFns.upsertColaborador(sbRow);
     toast(`${nome} admitido! ID: ${newId}`,'success');await loadAll();
@@ -2412,7 +2624,7 @@ function renderAcoes(){
   }).join('');
 }
 
-function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');el.classList.add('active');if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();if(id==='admin')renderAdmin();}
+function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');if(el)el.classList.add('active');else{document.querySelectorAll('.tab').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'"))t.classList.add('active');});}if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();if(id==='admin')renderAdmin();if(id==='pf')pfInit();}
 
 // ── CONTROLE DE ACESSO ──
 function loadCoords(){try{const arr=JSON.parse(localStorage.getItem(CK_COORD)||'[]');return arr.map(c=>({...c,role:c.role||'gestor'}));}catch{return[];}}
@@ -2455,6 +2667,22 @@ function detectRole(){
   if(sbRole==='gestor'){
     USER_ROLE='gestor';
     filterDataForCoord(sbNome);
+    return;
+  }
+  // Colaborador: só vê Portal Férias
+  if(sbRole==='colaborador'){
+    USER_ROLE='colaborador';
+    // Esconde abas administrativas, mostra só Portal Férias
+    document.querySelectorAll('.tab').forEach(t=>{
+      if(!t.getAttribute('onclick')||!t.getAttribute('onclick').includes("'pf'"))t.style.display='none';
+    });
+    // Esconde botões admin da navbar
+    const btns=document.querySelectorAll('.nright .btn');
+    btns.forEach(b=>{
+      const oc=b.getAttribute('onclick')||'';
+      if(oc.includes('loadAll')||oc.includes('mensagens_aniversario')||oc.includes('configuracoes'))b.style.display='none';
+    });
+    showTab('pf');
     return;
   }
   USER_ROLE='none';
@@ -2536,13 +2764,8 @@ function _setupCurInput(el){
 }
 function setupCurrencyInputs(){document.querySelectorAll('.cur-input').forEach(_setupCurInput);}
 
-// --- E-mail via Graph API (LUMA RH) ---
-async function _getMailToken(){
-  const a=msalApp?msalApp.getAllAccounts():[];
-  if(!a.length)throw new Error('Nenhuma conta autenticada');
-  const r=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:a[0]});
-  return r.accessToken;
-}
+// --- E-mail (envio via Graph desabilitado — autenticação Microsoft removida) ---
+async function _getMailToken(){return null;}
 function _getRHEmails(){return loadCoords().filter(c=>c.role==='rh').map(c=>c.email);}
 function _getGestorEmail(gestorNome){
   if(!gestorNome)return null;
@@ -2551,14 +2774,8 @@ function _getGestorEmail(gestorNome){
   return g?g.EMAIL_CORPORATIVO:null;
 }
 async function _emailLumaRH(subject,htmlBody,toEmail,ccEmails){
-  try{
-    const mt=await _getMailToken();
-    const cc=(ccEmails||[]).filter(Boolean).map(e=>({emailAddress:{address:e}}));
-    const payload={message:{subject,from:{emailAddress:{name:'LUMA RH',address:'lumarh@lumaplataforma.com.br'}},toRecipients:[{emailAddress:{address:toEmail}}],ccRecipients:cc,body:{contentType:'HTML',content:htmlBody}},saveToSentItems:false};
-    const res=await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',headers:{Authorization:'Bearer '+mt,'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(!res.ok&&res.status!==202){const e=await res.text();throw new Error(`Graph ${res.status}: ${e}`);}
-    return true;
-  }catch(e){console.warn('_emailLumaRH error:',e);return false;}
+  console.warn('_emailLumaRH: envio de e-mail via Graph API desabilitado.');
+  return false;
 }
 
 // --- E-mail de desligamento programado ---
@@ -2707,18 +2924,448 @@ function cfgLoad(){
   }catch(e){}
   return null;
 }
-function saveConf(){
-  const c={clientId:$('cClientId').value.trim(),tenantId:$('cTenantId').value.trim(),driveId:$('cDriveId').value.trim(),itemId:$('cItemId').value.trim()};
-  if(!c.clientId||!c.tenantId||!c.itemId){toast('Client ID, Tenant ID e Item ID são obrigatórios','error');return;}
-  cfgSave(c);initApp(c);
+
+// ══════════════════════════════════════════════════════════
+// ██  PORTAL FÉRIAS — integrado no People Analytics
+// ══════════════════════════════════════════════════════════
+const PF_CK_FERIAS='luma_ferias_v2';
+let pfColab=null; // colaborador selecionado {email,nome,cad,fer,vinculo}
+let pfSolsColabId=null;
+let pfSols=[];
+let pfCalY=new Date().getFullYear(),pfCalM=new Date().getMonth(),pfRS=null,pfRE=null,pfPicking=false;
+let pfInited=false;
+
+const PF_FERIADOS=['2025-01-01','2025-03-03','2025-03-04','2025-04-18','2025-04-21','2025-05-01','2025-06-19','2025-09-07','2025-10-12','2025-11-02','2025-11-15','2025-11-20','2025-12-25','2026-01-01','2026-02-16','2026-02-17','2026-04-03','2026-04-05','2026-04-21','2026-04-30','2026-05-01','2026-09-07','2026-10-12','2026-11-02','2026-11-15','2026-12-25','2027-01-01','2027-04-21','2027-05-01','2027-09-07'];
+const PF_MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const PF_DS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const pfIsFer=d=>PF_FERIADOS.includes(d);
+const pfIsFds=d=>{const x=new Date(d+'T12:00:00');return x.getDay()===0||x.getDay()===6;};
+const pfDiasCorr=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5)+1;
+const pfDiasUteis=(a,b)=>{let n=0,d=new Date(a+'T12:00:00');const f=new Date(b+'T12:00:00');while(d<=f){const s=d.toISOString().split('T')[0];if(!pfIsFds(s)&&!pfIsFer(s))n++;d.setDate(d.getDate()+1);}return n;};
+const pfFD=d=>{if(!d)return'—';try{const x=new Date(d.toString().length<=5?((Number(d)-25569)*86400*1000):d+'T12:00:00');if(isNaN(x))return'—';return x.toLocaleDateString('pt-BR');}catch{return'—'}};
+const pfToISO=d=>{if(!d)return'';if(typeof d==='number'||/^\d+$/.test(String(d).trim())){const n=Number(d);const x=new Date((n>59?n-25569:n-25568)*86400*1000);return x.toISOString().split('T')[0];}try{const x=new Date(d+'T12:00:00');return isNaN(x)?'':x.toISOString().split('T')[0];}catch{return''}};
+
+async function pfInit(){
+  if(pfInited&&pfColab)return;
+  pfInited=true;
+  const role=USER_ROLE||window._sbRole||'none';
+  // Gestor/Master/RH: mostra seletor de colaborador
+  if(role!=='colaborador'){
+    $('pf-gestor-selector').style.display='';
+    await pfLoadColabSelect();
+  } else {
+    $('pf-gestor-selector').style.display='none';
+    await pfLoadSelfData();
+  }
+  // Bind event listeners
+  $('pf-btn-prev').onclick=()=>{if(pfCalM===0){pfCalM=11;pfCalY--;}else pfCalM--;pfRenderCal();};
+  $('pf-btn-next').onclick=()=>{if(pfCalM===11){pfCalM=0;pfCalY++;}else pfCalM++;pfRenderCal();};
+  $('pf-btn-continuar').onclick=pfGoStep2;
+  $('pf-btn-voltar').onclick=()=>pfSetStep(0);
+  $('pf-btn-enviar').onclick=pfEnviarSolicitar;
+  $('pf-btn-nova').onclick=pfNovaSol;
+  // Check URL params for gestor approval
+  pfCheckGestorUrl();
 }
-const _CFG_FIXED={
-  clientId:'6d43cab3-e4b8-471e-ab64-8eec4d3bd538',
-  tenantId:'aadb5cad-6c69-4d6d-a942-e027203a4675',
-  driveId:'b!SYzrfr_-hkupnbeS1zKsZmB6CS4c97VMpJmz3oLVkalAzuB5sMOLR7djv69Vlty9',
-  itemId:'01O2PYW3EQZTMNB4MN4BB363SUCCHGX7HV'
-};
-initApp(_CFG_FIXED);
+
+async function pfLoadColabSelect(){
+  const sel=$('pf-colab-select');
+  sel.innerHTML='<option value="">-- Selecione um colaborador --</option>';
+  const colabs=D.CADASTRO_COLABORADORES||[];
+  colabs.sort((a,b)=>(a.NOME||'').localeCompare(b.NOME||''));
+  colabs.forEach(c=>{
+    if(c.STATUS&&String(c.STATUS).toUpperCase()!=='ATIVO')return;
+    const opt=document.createElement('option');
+    opt.value=c.EMAIL_CORPORATIVO||c.NOME;
+    opt.textContent=`${c.NOME} — ${c.TIPO_VINCULO||'N/A'} — ${c.AREA||''}`;
+    opt.dataset.id=c._id||'';
+    sel.appendChild(opt);
+  });
+}
+
+async function pfSelectColab(){
+  const sel=$('pf-colab-select');
+  const opt=sel.selectedOptions[0];
+  if(!opt||!opt.value){pfColab=null;pfRenderEmpty();return;}
+  const email=opt.value;
+  const sbId=opt.dataset.id;
+  try{
+    const cad=await window._sbFns.getColaboradorByEmail(email).catch(()=>null);
+    if(cad){
+      pfSolsColabId=cad.id;
+      pfColab={
+        email:cad.email_corporativo||email,
+        nome:cad.nome||opt.textContent.split(' — ')[0],
+        cad:{...cad,ID_COLABORADOR:cad.id_colaborador,NOME:cad.nome,EMAIL_CORPORATIVO:cad.email_corporativo,TIPO_VINCULO:cad.tipo_vinculo,GESTOR:cad.gestor,GESTOR_EMAIL:cad.gestor_email,CARGO:cad.cargo,AREA:cad.area,EMPRESA:cad.empresa},
+        vinculo:String(cad.tipo_vinculo||'').toUpperCase().trim(),
+        fer:null
+      };
+      const fer=await window._sbFns.getFeriasSaldo(cad.id).catch(()=>null);
+      if(fer){
+        pfColab.fer={...fer,_row:fer.id,INICIO_PERIODO_AQUISITIVO:fer.inicio_periodo_aquisitivo,FIM_PERIODO_AQUISITIVO:fer.fim_periodo_aquisitivo,FIM_PERIODO_CONCESSIVO:fer.fim_periodo_concessivo,FERIAS_PROGRAMADAS_INICIO:fer.ferias_programadas_inicio,FERIAS_PROGRAMADAS_FIM:fer.ferias_programadas_fim,STATUS_FERIAS:fer.status_ferias};
+      }
+      const sols=await window._sbFns.getSolicitacoesFerias(cad.id).catch(()=>[]);
+      pfSols=(sols||[]).map(s=>({_sbId:s.id,prot:s.protocolo,email:pfColab.email,nome:pfColab.nome,ini:s.data_inicio,fim:s.data_fim,dc:s.dias_corridos,du:s.dias_uteis,obs:s.observacao||'',status:s.status,em:s.solicitado_em,decisaoEm:s.decisao_em,motivoRej:s.motivo_rejeicao||null}));
+    } else {
+      pfColab={email,nome:opt.textContent.split(' — ')[0],cad:null,fer:null,vinculo:'N/A'};
+      pfSols=[];
+    }
+  }catch(e){
+    pfColab={email,nome:opt.textContent.split(' — ')[0],cad:null,fer:null,vinculo:'N/A'};
+    pfSols=[];
+  }
+  pfRS=null;pfRE=null;pfPicking=false;
+  pfRenderPortal();
+}
+
+async function pfLoadSelfData(){
+  const email=(window._sbProfile?.email||window.USER_EMAIL||'').toLowerCase();
+  const nome=window._sbProfile?.nome||window.USER_NOME||email;
+  pfColab={email,nome,cad:null,fer:null,vinculo:'N/A'};
+  try{
+    const cad=await window._sbFns.getColaboradorByEmail(email).catch(()=>null);
+    if(cad){
+      pfSolsColabId=cad.id;
+      pfColab.cad={...cad,ID_COLABORADOR:cad.id_colaborador,NOME:cad.nome,EMAIL_CORPORATIVO:cad.email_corporativo,TIPO_VINCULO:cad.tipo_vinculo,GESTOR:cad.gestor,GESTOR_EMAIL:cad.gestor_email,CARGO:cad.cargo,AREA:cad.area,EMPRESA:cad.empresa};
+      pfColab.vinculo=String(cad.tipo_vinculo||'').toUpperCase().trim();
+      const fer=await window._sbFns.getFeriasSaldo(cad.id).catch(()=>null);
+      if(fer){
+        pfColab.fer={...fer,_row:fer.id,INICIO_PERIODO_AQUISITIVO:fer.inicio_periodo_aquisitivo,FIM_PERIODO_AQUISITIVO:fer.fim_periodo_aquisitivo,FIM_PERIODO_CONCESSIVO:fer.fim_periodo_concessivo,FERIAS_PROGRAMADAS_INICIO:fer.ferias_programadas_inicio,FERIAS_PROGRAMADAS_FIM:fer.ferias_programadas_fim,STATUS_FERIAS:fer.status_ferias};
+      }
+      const sols=await window._sbFns.getSolicitacoesFerias(cad.id).catch(()=>[]);
+      pfSols=(sols||[]).map(s=>({_sbId:s.id,prot:s.protocolo,email:pfColab.email,nome:pfColab.nome,ini:s.data_inicio,fim:s.data_fim,dc:s.dias_corridos,du:s.dias_uteis,obs:s.observacao||'',status:s.status,em:s.solicitado_em,decisaoEm:s.decisao_em,motivoRej:s.motivo_rejeicao||null}));
+    }
+  }catch(e){console.warn('pfLoadSelfData:',e);}
+  pfRenderPortal();
+}
+
+function pfRenderEmpty(){
+  $('pf-k-saldo').textContent='—';$('pf-k-usados').textContent='—';$('pf-k-prazo').textContent='—';
+  $('pf-card-ultimo').style.display='none';
+  $('pf-hist-list').innerHTML='<div class="empty">Selecione um colaborador acima.</div>';
+  $('pf-step-cal').innerHTML='<div class="empty">Selecione um colaborador para solicitar férias.</div>';
+}
+
+function pfRenderPortal(){
+  if(!pfColab)return pfRenderEmpty();
+  const isSocio=pfColab.vinculo==='SOCIO';
+  const isCLT=pfColab.vinculo==='CLT'||pfColab.vinculo==='ASSOCIADO'||isSocio;
+  const isAssociado=pfColab.vinculo==='ASSOCIADO';
+  const isPJ=pfColab.vinculo==='PJ'||pfColab.vinculo==='MEI';
+  const fer=pfColab.fer;
+  const usados=pfSols.filter(s=>s.email===pfColab.email&&s.status!=='REJEITADO').reduce((a,s)=>a+(s.dc||0),0);
+  const saldo=isCLT?Math.max(0,30-usados):0;
+
+  $('pf-k-saldo').textContent=(isCLT||isPJ)?saldo:'N/A';
+  $('pf-k-saldo-sub').textContent=isAssociado?'de 30 dias de recesso OAB':isSocio?'de 30 dias — recesso sócio':isCLT?'de 30 dias de direito CLT':isPJ?'recesso contratual':'Não aplicável — '+pfColab.vinculo;
+  $('pf-k-usados').textContent=(isCLT||isPJ)?usados:'—';
+  $('pf-k-prazo').textContent=fer&&fer.FIM_PERIODO_CONCESSIVO?pfFD(fer.FIM_PERIODO_CONCESSIVO):'N/A';
+
+  // Último período gozado
+  const aprovadas=pfSols.filter(s=>s.email===pfColab.email&&s.status==='APROVADO').sort((a,b)=>new Date(b.ini)-new Date(a.ini));
+  if(aprovadas.length>0){
+    const u=aprovadas[0];
+    $('pf-card-ultimo').style.display='';
+    $('pf-ultimo-conteudo').innerHTML=pfBlocoKPIs(pfFD(u.ini),pfFD(u.fim),u.dc,u.du);
+  } else {
+    $('pf-card-ultimo').style.display='none';
+  }
+
+  // Avisos por tipo de vínculo
+  const avisos=$('pf-avisos');avisos.innerHTML='';
+  if(isPJ){
+    avisos.innerHTML=`<div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:9px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7;">
+      <strong style="color:var(--danger);">⚠ Atenção — Vínculo ${pfColab.vinculo}</strong><br>
+      Colaboradores PJ/MEI não possuem direito a férias pela CLT. A solicitação será registrada como <strong>recesso contratual</strong>.</div>`;
+  }
+  if(isAssociado){
+    avisos.innerHTML=`<div style="background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:9px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7;">
+      <strong style="color:var(--accent);">ℹ Advogado Associado</strong><br>
+      Recesso anual de 30 dias garantido pelo Estatuto da OAB (Lei 8.906/94). Solicitação tratada como <strong>recesso contratual remunerado</strong>.</div>`;
+  }
+
+  if(!isCLT&&!isPJ){
+    $('pf-step-cal').querySelector('.pf-cal-wrap').style.display='none';
+  } else {
+    $('pf-step-cal').querySelector('.pf-cal-wrap').style.display='';
+    pfRenderCal();
+  }
+  pfRenderHist();
+  pfSetStep(0);
+}
+
+function pfBlocoKPIs(ini,fim,dc,du){
+  return`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Início</div><div style="font-size:15px;font-weight:500;">${ini}</div></div>
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Término</div><div style="font-size:15px;font-weight:500;">${fim}</div></div>
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Dias corridos</div><div style="font-size:26px;font-weight:300;color:var(--ok);">${dc}</div></div>
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Dias úteis</div><div style="font-size:26px;font-weight:300;">${du}</div></div>
+  </div>`;
+}
+
+function pfRenderCal(){
+  $('pf-cal-month').textContent=`${PF_MESES[pfCalM]} ${pfCalY}`;
+  const g=$('pf-cal-grid');g.innerHTML='';
+  PF_DS.forEach(d=>{const el=document.createElement('div');el.className='pf-cal-dname';el.textContent=d;g.appendChild(el);});
+  const first=new Date(pfCalY,pfCalM,1),last=new Date(pfCalY,pfCalM+1,0);
+  const today=new Date().toISOString().split('T')[0];
+  for(let i=0;i<first.getDay();i++){const el=document.createElement('div');el.className='pf-cal-day oth';g.appendChild(el);}
+  for(let d=1;d<=last.getDate();d++){
+    const iso=`${pfCalY}-${String(pfCalM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let cls='pf-cal-day';
+    if(iso<today)cls+=' dis';
+    else if(pfIsFer(iso))cls+=' fer';
+    else if(pfIsFds(iso))cls+=' fds';
+    if(iso===today)cls+=' tod';
+    if(pfRS&&pfRE){if(iso===pfRS)cls+=' rs';else if(iso===pfRE)cls+=' re';else if(iso>pfRS&&iso<pfRE)cls+=' ri';}
+    else if(iso===pfRS)cls+=' rs';
+    const el=document.createElement('div');el.className=cls;el.textContent=d;
+    if(!cls.includes('dis')&&!cls.includes('oth')){const _i=iso;el.onclick=()=>pfClickD(_i);}
+    g.appendChild(el);
+  }
+}
+function pfClickD(iso){if(!pfRS||pfRE){pfRS=iso;pfRE=null;pfPicking=true;}else if(pfPicking&&iso>pfRS){pfRE=iso;pfPicking=false;}else{pfRS=iso;pfRE=null;pfPicking=true;}pfUpdMsg();pfRenderCal();}
+function pfUpdMsg(){
+  const btn=$('pf-btn-continuar');
+  if(!pfRS){$('pf-sel-msg').textContent='Clique em uma data para iniciar a seleção.';btn.disabled=true;return;}
+  if(!pfRE){$('pf-sel-msg').textContent=`Início: ${pfFD(pfRS)} — agora clique na data de término.`;btn.disabled=true;return;}
+  const dc=pfDiasCorr(pfRS,pfRE),du=pfDiasUteis(pfRS,pfRE);
+  $('pf-sel-msg').innerHTML=`<strong>${pfFD(pfRS)}</strong> → <strong>${pfFD(pfRE)}</strong> · <span style="color:var(--ok)">${dc} dias corridos</span> · ${du} úteis`;
+  btn.disabled=false;
+}
+
+function pfSetStep(i){
+  ['pf-s0','pf-s1','pf-s2'].forEach((id,j)=>{const el=$(id);el.classList.remove('active','done');if(j<i)el.classList.add('done');else if(j===i)el.classList.add('active');});
+  $('pf-step-cal').style.display=i===0?'':'none';
+  $('pf-step-confirm').style.display=i===1?'':'none';
+  $('pf-step-done').style.display=i===2?'':'none';
+}
+
+function pfGoStep2(){
+  if(!pfRS||!pfRE){toast('Selecione o período completo','error');return;}
+  const dc=pfDiasCorr(pfRS,pfRE);
+  const hoje=new Date().toISOString().split('T')[0];
+  const diffInicio=Math.round((new Date(pfRS+'T12:00:00')-new Date(hoje+'T12:00:00'))/864e5);
+  if(diffInicio<30){toast('Aviso prévio mínimo de 30 dias antes do início.','error');return;}
+  const isPJVal=pfColab.vinculo==='PJ'||pfColab.vinculo==='MEI';
+  const usados=pfSols.filter(s=>s.email===pfColab.email&&s.status!=='REJEITADO').reduce((a,s)=>a+(s.dc||0),0);
+  const saldo=isPJVal?999:Math.max(0,30-usados);
+  if(!isPJVal&&dc>saldo){toast(`Saldo insuficiente. Disponível: ${saldo} dias`,'error');return;}
+  const solsAprov=pfSols.filter(s=>s.email===pfColab.email&&s.status!=='REJEITADO');
+  if(solsAprov.length===0&&dc<14){toast('O primeiro período deve ter no mínimo 14 dias corridos.','error');return;}
+  if(solsAprov.length>=3){toast('Limite de 3 períodos de férias atingido.','error');return;}
+  if(dc<5){toast('O período mínimo é de 5 dias corridos.','error');return;}
+  pfSetStep(1);
+  const gestorNome=pfColab.cad?.GESTOR||pfColab.cad?.gestor||'o gestor';
+  $('pf-confirm-body').innerHTML=pfBlocoKPIs(pfFD(pfRS),pfFD(pfRE),pfDiasCorr(pfRS,pfRE),pfDiasUteis(pfRS,pfRE))+
+    `<div style="font-size:13px;color:var(--muted);margin-top:12px;">Ao confirmar, <strong style="color:var(--text);">${gestorNome}</strong> receberá notificação por e-mail para aprovar ou rejeitar.</div>
+    <div style="margin-top:10px;background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:8px;padding:10px;font-size:12px;color:var(--muted);line-height:1.7;">
+      ⏰ Aviso prévio mínimo: <strong style="color:var(--text);">30 dias</strong><br>
+      ✂️ Máximo de <strong style="color:var(--text);">3 períodos</strong> · mínimo de <strong style="color:var(--text);">14 dias</strong> no 1º período<br>
+      💰 Pagamento <strong style="color:var(--text);">2 dias úteis antes</strong> do início
+    </div>`;
+}
+
+async function pfEnviarSolicitar(){
+  const dc=pfDiasCorr(pfRS,pfRE),du=pfDiasUteis(pfRS,pfRE);
+  const obs=$('pf-obs').value.trim();
+  const prot='SOL-'+Date.now();
+  const baseUrl=window.location.href.split('?')[0];
+  const sol={prot,email:pfColab.email,nome:pfColab.nome,ini:pfRS,fim:pfRE,dc,du,obs,
+    status:'PENDENTE',em:new Date().toISOString(),decisaoEm:null,motivoRej:null,
+    linkAprovar:`${baseUrl}?acao=APROVAR&prot=${prot}`,
+    linkRejeitar:`${baseUrl}?acao=REJEITAR&prot=${prot}`};
+  if(window._sbFns&&pfSolsColabId){
+    try{
+      const sbSol=await window._sbFns.criarSolicitacaoFerias({
+        tenant_id:window._sbTenantId||window._sbProfile?.tenant_id,
+        colaborador_id:pfSolsColabId,
+        protocolo:prot,data_inicio:pfRS,data_fim:pfRE,
+        dias_corridos:dc,dias_uteis:du,observacao:obs||null
+      });
+      sol._sbId=sbSol?.id;
+    }catch(e){console.warn('criarSolicitacaoFerias:',e);}
+  }
+  pfSols.push(sol);
+  // Enviar email ao gestor via Graph API
+  try{
+    const gestorEmail=pfColab.cad?.GESTOR_EMAIL||pfColab.cad?.gestor_email||'';
+    if(gestorEmail&&msalApp){
+      const mailR=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:msalApp.getAllAccounts()[0]});
+      const emailBody=`<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0f0f0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:24px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e0e0e0;">
+<tr><td style="background:#7c3aed;padding:28px 32px;">
+  <span style="font-size:24px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">🌴 Solicitação de Férias</span><br>
+  <span style="font-size:12px;color:#d8b4fe;font-family:Arial,sans-serif;">Portal RH · Luma Plataforma</span>
+</td></tr>
+<tr><td style="padding:32px;">
+  <p style="font-size:15px;color:#374151;font-family:Arial,sans-serif;margin:0 0 24px;line-height:1.6;">Olá,<br>Uma nova solicitação de férias foi registrada e <strong>aguarda sua análise</strong>.</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;border:1px solid #e5e7eb;">
+    <tr style="background:#ede9fe;"><td style="padding:11px 16px;color:#6b21a8;font-weight:700;border-bottom:1px solid #e5e7eb;width:38%;">Colaborador</td><td style="padding:11px 16px;font-weight:700;color:#111;border-bottom:1px solid #e5e7eb;">${pfColab.nome}</td></tr>
+    <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Período</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${pfFD(pfRS)} &rarr; ${pfFD(pfRE)}</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias corridos</td><td style="padding:11px 16px;color:#111;font-weight:700;border-bottom:1px solid #e5e7eb;">${dc} dias</td></tr>
+    <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias úteis</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${du} dias</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Observação</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${obs||'—'}</td></tr>
+    <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;">Protocolo</td><td style="padding:11px 16px;color:#7c3aed;font-family:monospace;font-size:12px;">${prot}</td></tr>
+  </table>
+  <p style="font-size:13px;color:#6b7280;font-family:Arial,sans-serif;margin:28px 0 14px;">Clique em uma das opções abaixo:</p>
+  <table cellpadding="0" cellspacing="0"><tr>
+    <td style="padding-right:12px;"><a href="${sol.linkAprovar}" style="display:inline-block;background:#16a34a;color:#ffffff;padding:14px 32px;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border:2px solid #15803d;">&#10003; Aprovar</a></td>
+    <td><a href="${sol.linkRejeitar}" style="display:inline-block;background:#dc2626;color:#ffffff;padding:14px 32px;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border:2px solid #b91c1c;">&#10007; Rejeitar</a></td>
+  </tr></table>
+</td></tr>
+<tr><td style="background:#f3f4f6;padding:14px 32px;border-top:1px solid #e5e7eb;">
+  <span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal de Férias · Luma Plataforma · Mensagem automática</span>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+      await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',headers:{Authorization:'Bearer '+mailR.accessToken,'Content-Type':'application/json'},body:JSON.stringify({message:{subject:`[Férias] ${pfColab.nome} · ${pfFD(pfRS)} a ${pfFD(pfRE)} · Aguarda aprovação`,body:{contentType:'HTML',content:emailBody},toRecipients:[{emailAddress:{address:gestorEmail}}]},saveToSentItems:true})});
+      toast('Gestor notificado por e-mail!','success');
+    } else {
+      toast('Solicitação registrada!','success');
+    }
+  }catch(e){toast('Solicitação registrada!','success');}
+  pfSetStep(2);
+  $('pf-done-msg').textContent=`Protocolo ${prot} — aguarde a decisão do gestor.`;
+  $('pf-done-resumo').innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Resumo</div>
+    <div style="font-size:13px;margin-bottom:3px;"><strong>Período:</strong> ${pfFD(pfRS)} → ${pfFD(pfRE)} · ${dc} dias corridos · ${du} úteis</div>
+    <div style="font-size:12px;color:var(--muted);">Status aparecerá em "Solicitações".</div>`;
+  pfRS=null;pfRE=null;pfPicking=false;pfRenderHist();pfUpdMsg();
+}
+
+function pfNovaSol(){$('pf-obs').value='';pfSetStep(0);pfRenderCal();pfUpdMsg();}
+
+function pfRenderHist(){
+  if(!pfColab){$('pf-hist-list').innerHTML='<div class="empty">Nenhuma solicitação ainda.</div>';return;}
+  const meus=pfSols.filter(s=>s.email===pfColab.email).reverse();
+  $('pf-hist-count').textContent=meus.length?`${meus.length} registros`:'';
+  if(!meus.length){$('pf-hist-list').innerHTML='<div class="empty">Nenhuma solicitação ainda.</div>';return;}
+  $('pf-hist-list').innerHTML=meus.map(s=>{
+    const cls=s.status==='APROVADO'?'c-ok':s.status==='REJEITADO'?'c-rej':'c-pend';
+    return`<div class="hist-row">
+      <div class="hist-info">
+        <div class="hist-period">${pfFD(s.ini)} → ${pfFD(s.fim)}</div>
+        <div class="hist-meta">${s.dc} dias corridos · ${s.du} úteis · <span style="font-family:var(--mono);font-size:11px;">${s.prot}</span></div>
+        ${s.motivoRej?`<div class="hist-motivo">Motivo da rejeição: ${s.motivoRej}</div>`:''}
+      </div>
+      <span class="chip ${cls}">${s.status}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── GESTOR APPROVAL VIA URL PARAMS ──
+async function pfCheckGestorUrl(){
+  const p=new URLSearchParams(window.location.search);
+  const acao=p.get('acao'),prot=p.get('prot');
+  if(!acao||!prot)return;
+  // Auto-navigate to Portal Férias tab
+  showTab('pf');
+  $('pf-gestor-panel').style.display='';
+  let sol=pfSols.find(s=>s.prot===prot);
+  if(!sol&&window._sbFns){
+    try{
+      const sbSol=await window._sbFns.getSolicitacaoPorProtocolo(prot);
+      if(sbSol){
+        const c=sbSol.colaboradores||{};
+        sol={_sbId:sbSol.id,prot:sbSol.protocolo,email:c.email_corporativo||'',nome:c.nome||'',ini:sbSol.data_inicio,fim:sbSol.data_fim,dc:sbSol.dias_corridos,du:sbSol.dias_uteis||0,obs:sbSol.observacao||'',status:sbSol.status,motivoRej:sbSol.motivo_rejeicao||null,decisaoEm:sbSol.decisao_em||null};
+        pfSols.push(sol);
+      }
+    }catch(e){console.warn('getSolicitacaoPorProtocolo:',e);}
+  }
+  if(!sol){$('pf-gest-body').innerHTML='<div style="color:var(--muted)">Solicitação não encontrada.</div>';return;}
+  if(sol.status!=='PENDENTE'){$('pf-gest-body').innerHTML=`<div style="color:var(--muted)">Esta solicitação já foi ${sol.status.toLowerCase()}.</div>`;return;}
+  if(acao==='APROVAR')pfRenderGestorAprovar(sol);else pfRenderGestorRejeitar(sol);
+}
+
+function pfRenderGestorAprovar(sol){
+  $('pf-gest-body').innerHTML=`
+    <div style="background:var(--bg3);border-radius:10px;padding:16px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Colaborador</div><div style="font-size:15px;font-weight:500;">${sol.nome}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Protocolo</div><div style="font-size:12px;font-family:var(--mono);color:var(--accent);">${sol.prot}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Início</div><div style="font-size:15px;font-weight:500;">${pfFD(sol.ini)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Término</div><div style="font-size:15px;font-weight:500;">${pfFD(sol.fim)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias corridos</div><div style="font-size:26px;font-weight:300;color:var(--ok);">${sol.dc}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias úteis</div><div style="font-size:26px;font-weight:300;">${sol.du}</div></div>
+      </div>
+      ${sol.obs?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);">Obs: ${sol.obs}</div>`:''}
+    </div>
+    <button class="btn btn-g" style="width:100%;justify-content:center;margin-bottom:8px;" onclick="pfConfirmarAp('${sol.prot}')">✓ Confirmar aprovação</button>
+    <button class="btn" style="width:100%;justify-content:center;" onclick="pfRenderGestorRejeitar(pfSols.find(s=>s.prot==='${sol.prot}'))">Rejeitar em vez disso</button>`;
+}
+function pfRenderGestorRejeitar(sol){
+  $('pf-gest-body').innerHTML=`
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Solicitação de <strong style="color:var(--text);">${sol.nome}</strong> · ${pfFD(sol.ini)} → ${pfFD(sol.fim)} · ${sol.dc} dias</div>
+    <div style="margin-bottom:14px;">
+      <label class="flbl">Motivo da rejeição <span style="color:var(--danger)">*</span></label>
+      <textarea class="fi" id="pf-rej-motivo" rows="4" placeholder="Ex: conflito com audiências programadas..."></textarea>
+    </div>
+    <button class="btn" style="width:100%;justify-content:center;background:var(--danger);border-color:var(--danger);color:#fff;font-weight:500;margin-bottom:8px;" onclick="pfConfirmarRej('${sol.prot}')">✗ Confirmar rejeição</button>
+    <button class="btn" style="width:100%;justify-content:center;" onclick="pfRenderGestorAprovar(pfSols.find(s=>s.prot==='${sol.prot}'))">← Aprovar em vez disso</button>`;
+}
+
+async function pfConfirmarAp(prot){
+  const sol=pfSols.find(s=>s.prot===prot);if(!sol)return;
+  sol.status='APROVADO';sol.decisaoEm=new Date().toISOString();
+  if(window._sbFns&&sol._sbId){
+    try{await window._sbFns.atualizarStatusSolicitacao(sol._sbId,'APROVADO',null);}catch(e){console.warn('atualizarStatus:',e);}
+  }
+  $('pf-gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">✅</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Aprovado!</div><div style="font-size:14px;color:var(--muted);">Férias de <strong style="color:var(--text);">${sol.nome}</strong> aprovadas.<br>${pfFD(sol.ini)} → ${pfFD(sol.fim)} · ${sol.dc} dias.</div></div>`;
+  toast('Férias aprovadas!','success');
+  pfSendReturnEmail(sol,true,null);
+  pfRenderHist();
+}
+
+async function pfConfirmarRej(prot){
+  const motivo=$('pf-rej-motivo')?.value?.trim();
+  if(!motivo){toast('Informe o motivo','error');return;}
+  const sol=pfSols.find(s=>s.prot===prot);if(!sol)return;
+  sol.status='REJEITADO';sol.motivoRej=motivo;sol.decisaoEm=new Date().toISOString();
+  if(window._sbFns&&sol._sbId){
+    try{await window._sbFns.atualizarStatusSolicitacao(sol._sbId,'REJEITADO',motivo);}catch(e){console.warn('atualizarStatus:',e);}
+  }
+  $('pf-gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">❌</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Rejeitada</div><div style="font-size:14px;color:var(--muted);">Motivo: ${motivo}</div></div>`;
+  toast('Solicitação rejeitada','error');
+  pfSendReturnEmail(sol,false,motivo);
+  pfRenderHist();
+}
+
+async function pfSendReturnEmail(sol,aprovado,motivo){
+  try{
+    if(!msalApp)return;
+    const acc=msalApp.getAllAccounts()[0];if(!acc)return;
+    const mailR=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:acc});
+    const headerBg=aprovado?'#16a34a':'#dc2626';
+    const icon=aprovado?'✅':'❌';
+    const titulo=aprovado?'Férias Aprovadas':'Solicitação Rejeitada';
+    const msgP=aprovado
+      ?`Suas férias foram <strong style="color:#16a34a;">aprovadas</strong> pelo gestor.`
+      :`Sua solicitação foi <strong style="color:#dc2626;">rejeitada</strong>.<br><br><strong>Motivo:</strong><br><span style="background:#fef2f2;display:inline-block;padding:8px 12px;border-left:3px solid #dc2626;color:#374151;">${motivo}</span>`;
+    const emailBody=`<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0f0f0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:24px 0;"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e0e0e0;">
+<tr><td style="background:${headerBg};padding:28px 32px;"><span style="font-size:24px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">${icon} ${titulo}</span><br><span style="font-size:12px;color:#ffffff;opacity:.8;font-family:Arial,sans-serif;">Portal RH · Luma Plataforma</span></td></tr>
+<tr><td style="background:${aprovado?'#f0fdf4':'#fef2f2'};padding:16px 32px;border-bottom:3px solid ${headerBg};"><span style="font-size:14px;color:${aprovado?'#166534':'#991b1b'};font-family:Arial,sans-serif;">${msgP}</span></td></tr>
+<tr><td style="padding:32px;">
+  <p style="font-size:15px;color:#374151;font-family:Arial,sans-serif;margin:0 0 20px;">Olá, <strong>${sol.nome}</strong>,<br>Resumo:</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;border:1px solid #e5e7eb;">
+    <tr style="background:#f3f4f6;"><td style="padding:11px 16px;color:#374151;font-weight:700;border-bottom:1px solid #e5e7eb;width:38%;">Período</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${pfFD(sol.ini)} → ${pfFD(sol.fim)}</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias corridos</td><td style="padding:11px 16px;font-weight:700;color:#111;border-bottom:1px solid #e5e7eb;">${sol.dc} dias</td></tr>
+    <tr style="background:#f3f4f6;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Status</td><td style="padding:11px 16px;font-weight:700;color:${headerBg};border-bottom:1px solid #e5e7eb;">${aprovado?'APROVADO':'REJEITADO'}</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;">Protocolo</td><td style="padding:11px 16px;color:#7c3aed;font-family:monospace;font-size:12px;">${sol.prot}</td></tr>
+  </table>
+</td></tr>
+<tr><td style="background:#f3f4f6;padding:14px 32px;border-top:1px solid #e5e7eb;"><span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal de Férias · Luma Plataforma</span></td></tr>
+</table></td></tr></table></body></html>`;
+    await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',
+      headers:{Authorization:'Bearer '+mailR.accessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({message:{subject:`${icon} [Férias ${aprovado?'Aprovadas':'Rejeitadas'}] ${sol.prot} · ${pfFD(sol.ini)} a ${pfFD(sol.fim)}`,body:{contentType:'HTML',content:emailBody},toRecipients:[{emailAddress:{address:sol.email}}]},saveToSentItems:true})
+    });
+  }catch(e){}
+}
 </script>
 
 <script>
@@ -2788,10 +3435,10 @@ function abrirCardAniversario(nomeEnc, tipo, data, dias) {
   _cardData = {nome, tipo, data, dias};
   document.getElementById('mCardAnivSub').textContent = nome + ' · ' + (tipo==='empresa'?'Aniversário de empresa':'Aniversário pessoal') + (data?' · '+fmtD(data):'');
   document.getElementById('cardMsgManual').value = '';
-  document.getElementById('cardEmailDest').value = '';
-  // Auto-detecta empresa pelo colaborador (busca em D)
+  // Auto-detecta empresa e preenche email pelo colaborador
   const col = (D?.CADASTRO_COLABORADORES||[]).find(c=>(c.NOME||'').toLowerCase()===nome.toLowerCase());
   const empresa = col?.EMPRESA?.toLowerCase().includes('luma') ? 'luma' : 'luisa';
+  document.getElementById('cardEmailDest').value = col?.EMAIL_CORPORATIVO || '';
   document.getElementById('cardEmpresa').value = empresa;
   openModal('mCardAniv');
   gerarCardAniversario();
@@ -2828,60 +3475,74 @@ async function gerarCardAniversario() {
   texto = texto.replace(/\{nome\}/gi, nome).replace(/\{anos\}/gi, String(anos));
   document.getElementById('cardMsgUsada').textContent = 'Mensagem: ' + _cardMsgAtual;
 
-  // Modelo
+  // Modelo — usa base64 do config se disponível, senão tenta arquivo local
   const modeloKey = empresa==='luisa' ? (tipo==='funcionario'?'modelo1':'modelo3') : (tipo==='funcionario'?'modelo2':'modelo4');
-  const imgSrc = `./assets/${modeloKey}.jpg`;
+  const _mCfg = (window._tenantModelos||[]).find(m=>m.key===modeloKey);
+  const imgSrc = _mCfg?.base64 || `./assets/${modeloKey}.jpg`;
 
   const hint = document.getElementById('cardHint');
   const canvas = document.getElementById('canvasAniv');
   hint.style.display='flex'; canvas.style.display='none';
   hint.textContent='Gerando preview...';
 
-  try {
-    await _renderCardAniv(canvas, imgSrc, nome, texto, tipo, modeloKey);
-    canvas.style.display='block'; hint.style.display='none';
-    _cardCanvas = canvas;
-  } catch(e) {
-    hint.textContent='⚠️ Imagem não encontrada. Salve os arquivos modelo1.jpg ~ modelo4.jpg na pasta assets/';
-  }
+  await _renderCardAniv(canvas, imgSrc, nome, texto, tipo, modeloKey);
+  canvas.style.display='block'; hint.style.display='none';
+  _cardCanvas = canvas;
 }
 
 async function _renderCardAniv(canvas, imgSrc, nome, texto, tipo, modeloKey) {
-  return new Promise((resolve,reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const ctx = canvas.getContext('2d');
-      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
-      ctx.drawImage(img, 0, 0);
-      const cfg = _CARD_CFG[modeloKey];
-      const W=canvas.width, H=canvas.height;
-      const x=W*cfg.textX, maxW=W*cfg.textW;
-      const nameSize=H*cfg.nameSz, bodySize=H*cfg.bodySz, lineH=nameSize*cfg.lineH;
+  return new Promise((resolve) => {
+    const ctx = canvas.getContext('2d');
+
+    function drawText(W, H, c) {
+      const x=W*c.textX, maxW=W*c.textW;
+      const nameSize=H*c.nameSz, bodySize=H*c.bodySz, lineH=nameSize*c.lineH;
       ctx.textBaseline='top'; ctx.textAlign='left';
-      let curY=H*cfg.textY;
-      if(cfg.header){
-        ctx.shadowColor=cfg.shadowColor; ctx.shadowBlur=6; ctx.shadowOffsetX=1; ctx.shadowOffsetY=1;
-        ctx.fillStyle=cfg.textColor; ctx.font=`300 ${bodySize*.9}px Arial,sans-serif`;
+      let curY=H*c.textY;
+      if(c.header){
+        ctx.shadowColor=c.shadowColor; ctx.shadowBlur=6; ctx.shadowOffsetX=1; ctx.shadowOffsetY=1;
+        ctx.fillStyle=c.textColor; ctx.font=`300 ${bodySize*.9}px Arial,sans-serif`;
         ctx.fillText('FELIZ',x,curY); curY+=bodySize*1.1;
         const hdr=tipo==='empresa'?'ANIVERSÁRIO DE EMPRESA':'ANIVERSÁRIO';
         ctx.font=`900 ${nameSize*1.05}px Arial,sans-serif`; ctx.fillText(hdr,x,curY); curY+=nameSize*1.3;
-        ctx.shadowColor='transparent'; ctx.strokeStyle=cfg.sep; ctx.lineWidth=2;
+        ctx.shadowColor='transparent'; ctx.strokeStyle=c.sep; ctx.lineWidth=2;
         ctx.beginPath(); ctx.moveTo(x,curY); ctx.lineTo(x+maxW*.55,curY); ctx.stroke();
-        curY+=nameSize*.9; ctx.shadowColor=cfg.shadowColor;
+        curY+=nameSize*.9; ctx.shadowColor=c.shadowColor;
       }
-      ctx.fillStyle=cfg.nameColor; ctx.font=`700 ${nameSize}px Arial,sans-serif`;
+      ctx.fillStyle=c.nameColor; ctx.font=`700 ${nameSize}px Arial,sans-serif`;
       const nl=_wrapCardText(ctx,nome,x,curY,maxW,lineH,false);
       curY+=nl*lineH;
-      if(!cfg.header){
-        ctx.shadowColor='transparent'; ctx.strokeStyle=cfg.sep; ctx.lineWidth=1.5;
+      if(!c.header){
+        ctx.shadowColor='transparent'; ctx.strokeStyle=c.sep; ctx.lineWidth=1.5;
         ctx.beginPath(); ctx.moveTo(x,curY+nameSize*.2); ctx.lineTo(x+maxW*.55,curY+nameSize*.2); ctx.stroke();
-        curY+=nameSize*.7; ctx.shadowColor=cfg.shadowColor;
+        curY+=nameSize*.7; ctx.shadowColor=c.shadowColor;
       }
-      ctx.fillStyle=cfg.textColor; ctx.font=`400 ${bodySize}px Arial,sans-serif`;
-      _wrapCardText(ctx,texto,x,curY,maxW,bodySize*cfg.lineH,true);
+      ctx.fillStyle=c.textColor; ctx.font=`400 ${bodySize}px Arial,sans-serif`;
+      _wrapCardText(ctx,texto,x,curY,maxW,bodySize*c.lineH,true);
+    }
+
+    const cfg = _CARD_CFG[modeloKey] || _CARD_CFG.modelo1;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      canvas.width=img.naturalWidth; canvas.height=img.naturalHeight;
+      ctx.drawImage(img,0,0);
+      drawText(canvas.width, canvas.height, cfg);
       resolve();
     };
-    img.onerror=reject;
+    img.onerror = () => {
+      canvas.width=1080; canvas.height=1920;
+      const grad=ctx.createLinearGradient(0,0,1080,1920);
+      grad.addColorStop(0,'#1a0e2e'); grad.addColorStop(1,'#0f0e17');
+      ctx.fillStyle=grad; ctx.fillRect(0,0,1080,1920);
+      ctx.fillStyle='rgba(155,102,244,0.18)';
+      ctx.beginPath(); ctx.arc(950,180,380,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='rgba(255,208,0,0.08)';
+      ctx.beginPath(); ctx.arc(130,1780,500,0,Math.PI*2); ctx.fill();
+      drawText(1080, 1920, {...cfg, header:true, textY:0.12});
+      resolve();
+    };
     img.src=imgSrc;
   });
 }
@@ -2985,34 +3646,8 @@ async function enviarEmailAniversarioCard(){
 </td></tr>
 </table></td></tr></table></body></html>`;
 
-    // Envia via Graph API com imagem em linha
-    const mailToken = await _getMailToken().catch(()=>null);
-    if (!mailToken) throw new Error('Token de e-mail não disponível');
-
-    const payload = {
-      message: {
-        subject,
-        from: {emailAddress:{name:'LUMA RH',address:'lumarh@lumaplataforma.com.br'}},
-        toRecipients: [{emailAddress:{address:dest}}],
-        body: {contentType:'HTML',content:htmlBody},
-        attachments: [{
-          '@odata.type':'#microsoft.graph.fileAttachment',
-          name:'card_aniversario.png',
-          contentType:'image/png',
-          contentId:'cardaniv',
-          isInline:true,
-          contentBytes:imgB64
-        }]
-      },
-      saveToSentItems:false
-    };
-    const res = await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{
-      method:'POST',
-      headers:{Authorization:'Bearer '+mailToken,'Content-Type':'application/json'},
-      body:JSON.stringify(payload)
-    });
-    if(!res.ok&&res.status!==202) throw new Error('Erro ao enviar: '+res.status);
-    toast('E-mail enviado com sucesso para '+dest,'success');
+    // Envio de e-mail via Microsoft Graph desabilitado
+    throw new Error('Envio de e-mail não disponível. Faça o download do card e envie manualmente.');
   } catch(e) {
     toast('Erro ao enviar: '+e.message,'error');
   } finally {
