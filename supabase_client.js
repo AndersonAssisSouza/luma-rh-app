@@ -40,10 +40,9 @@ export async function logout() {
 
 /** Solicita e-mail de recuperação de senha */
 export async function solicitarResetSenha(email) {
-  // Deriva o redirectTo a partir da URL atual (garante path correto em qualquer deploy)
-  const base = window.location.href.replace(/\/[^/]*(\?.*)?$/, '/')
+  // Usa apenas window.location.origin para evitar open redirect via path/query string manipulado
   const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: base + 'reset-password.html'
+    redirectTo: window.location.origin + '/reset-password.html'
   })
   if (error) throw error
 }

@@ -335,33 +335,31 @@ const MODELO_CONFIG = {
     separatorColor: 'rgba(255,208,0,0.6)'
   },
   modelo3: {
-    // Dark maroon sem texto — área segura superior esquerda
+    // Dark maroon — título já está na imagem, não repetir
     textColor: '#c9a84c',
     nameColor: '#ffd000',
     shadowColor: 'rgba(0,0,0,0.6)',
     textX: 0.07,
-    textY: 0.09,
+    textY: 0.38,
     textW: 0.62,
     nameSizePct: 0.048,
     bodySizePct: 0.032,
     lineH: 1.55,
     align: 'left',
-    headerText: true,   // desenha "FELIZ ANIVERSÁRIO DE EMPRESA" no topo
     separatorColor: 'rgba(201,168,76,0.7)'
   },
   modelo4: {
-    // Dark purple sem texto — área segura superior esquerda
+    // Dark purple — título já está na imagem, não repetir
     textColor: '#c4b5fd',
     nameColor: '#ffd000',
     shadowColor: 'rgba(0,0,0,0.6)',
     textX: 0.06,
-    textY: 0.08,
+    textY: 0.38,
     textW: 0.60,
     nameSizePct: 0.048,
     bodySizePct: 0.032,
     lineH: 1.55,
     align: 'left',
-    headerText: true,
     separatorColor: 'rgba(196,181,253,0.6)'
   }
 }
@@ -428,8 +426,10 @@ function renderCard(m) {
 }
 
 function escHtml(s) {
-  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;')
 }
+// Alias para consistência com outros módulos
+const esc = escHtml
 
 // ============================================================
 // TABS

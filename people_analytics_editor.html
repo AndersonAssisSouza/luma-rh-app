@@ -1317,6 +1317,7 @@ const CK_COORD='luma_coordenadores_v1';
 let D={},DEMO=false;
 let USER_EMAIL='',USER_ROLE='none',USER_NOME='';
 const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 const parseDate=d=>{if(!d)return null;if(typeof d==='number'||(/^\d+$/.test(String(d).trim()))){const n=Number(d);if(n>59)return new Date((n-25569)*86400*1000);if(n>0)return new Date((n-25568)*86400*1000);}const x=new Date(d);return isNaN(x)?null:x;};
 const validDate=d=>{const x=parseDate(d);if(!x)return false;const y=x.getFullYear();return y>=1970&&y<=2100;};
 const fmt=d=>{const x=parseDate(d);if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'—';try{return x.toLocaleDateString('pt-BR',{month:'2-digit',year:'numeric'})}catch{return'—'}};
@@ -1602,7 +1603,7 @@ function render(){
           <div style="font-size:17px;font-weight:600;color:${cor};line-height:1;">${d}</div>
           <div style="font-size:17px;color:${cor};opacity:.8;">dias</div>
         </div>
-        <div><div style="font-size:17px;font-weight:500;">${r.NOME?.split(' ')[0]||'—'}</div>
+        <div><div style="font-size:17px;font-weight:500;">${esc(r.NOME?.split(' ')[0]||'—')}</div>
         <div style="font-size:17px;color:var(--muted);">${emp?'🏢':'🎂'} ${fmtD(r.DATA_EVENTO)}</div></div>
       </div>`}).join('');
 
@@ -1610,13 +1611,13 @@ function render(){
   const areaMap={};ativos.forEach(r=>{const a=r.AREA||'N/D';areaMap[a]=(areaMap[a]||0)+1;});
   const areaE=Object.entries(areaMap).sort((a,b)=>b[1]-a[1]);const mxArea=Math.max(...areaE.map(e=>e[1]),1);
   const aC=['#ffd000','#b98af7','#9b66f4','#fb923c','#f59e0b','#f87171','#34d399','#60a5fa','#c084fc','#fb7185','#a3e635'];
-  $('areaChart').innerHTML=areaE.map((e,i)=>`<div class="br"><div class="bl" title="${e[0]}" style="font-size:17px;">${e[0].length>13?e[0].slice(0,13)+'…':e[0]}</div><div class="bt" style="height:6px;"><div class="bf" style="width:${(e[1]/mxArea)*100}%;background:${aC[i%aC.length]}"></div></div><div class="bc" style="font-size:17px;">${e[1]}</div></div>`).join('');
+  $('areaChart').innerHTML=areaE.map((e,i)=>`<div class="br"><div class="bl" title="${esc(e[0])}" style="font-size:17px;">${esc(e[0]).length>13?esc(e[0]).slice(0,13)+'…':esc(e[0])}</div><div class="bt" style="height:6px;"><div class="bf" style="width:${(e[1]/mxArea)*100}%;background:${aC[i%aC.length]}"></div></div><div class="bc" style="font-size:17px;">${e[1]}</div></div>`).join('');
 
   // ── GESTOR CHART ──
   const gestMap={};ativos.forEach(r=>{const g=r.GESTOR||'N/D';gestMap[g]=(gestMap[g]||0)+1;});
   const gestE=Object.entries(gestMap).sort((a,b)=>b[1]-a[1]);const mxGest=Math.max(...gestE.map(e=>e[1]),1);
   $('gestorChart').innerHTML=gestE.map((e,i)=>{const pct=Math.round((e[1]/ativos.length)*100);
-    return`<div style="margin-bottom:11px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:17px;">${e[0].split(' ')[0]}</span><span style="font-size:17px;font-family:var(--mono);color:var(--accent)">${e[1]} · ${pct}%</span></div>
+    return`<div style="margin-bottom:11px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:17px;">${esc(e[0].split(' ')[0])}</span><span style="font-size:17px;font-family:var(--mono);color:var(--accent)">${e[1]} · ${pct}%</span></div>
       <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;"><div style="width:${(e[1]/mxGest)*100}%;height:100%;background:${aC[i%aC.length]};border-radius:3px;"></div></div></div>`;}).join('');
 
   // ── TOP SENIORIDADE ──
@@ -1624,7 +1625,7 @@ function render(){
   $('topSenior').innerHTML=sorted.map((r,i)=>{const anos=(parseFloat(r.ANOS_EMPRESA)||0).toFixed(1);const medals=['🥇','🥈','🥉','4°','5°'];
     return`<div style="display:flex;align-items:center;gap:9px;padding:7px 0;${i>0?'border-top:1px solid var(--border)':''}">
       <div style="font-size:17px;width:26px;text-align:center;">${medals[i]}</div>
-      <div style="flex:1;"><div style="font-size:17px;font-weight:500;">${r.NOME?.split(' ').slice(0,2).join(' ')||'—'}</div><div style="font-size:17px;color:var(--muted);">${r.EMPRESA||''}</div></div>
+      <div style="flex:1;"><div style="font-size:17px;font-weight:500;">${esc(r.NOME?.split(' ').slice(0,2).join(' ')||'—')}</div><div style="font-size:17px;color:var(--muted);">${esc(r.EMPRESA||'')}</div></div>
       <div style="font-family:var(--mono);font-size:17px;color:var(--accent2);">${anos}a</div>
     </div>`;}).join('');
 
@@ -1647,7 +1648,7 @@ function render(){
 
   // Bars
   const eE=Object.entries(empM).sort((a,b)=>b[1]-a[1]);const mE=Math.max(...eE.map(e=>e[1]),1);const cols=['#b98af7','#ffd000','#9b66f4','#fb923c'];
-  $('empB').innerHTML=eE.map((e,i)=>`<div class="br"><div class="bl" title="${e[0]}">${e[0].length>13?e[0].slice(0,13)+'…':e[0]}</div><div class="bt"><div class="bf" style="width:${(e[1]/mE)*100}%;background:${cols[i%4]}"></div></div><div class="bc">${e[1]}</div></div>`).join('');
+  $('empB').innerHTML=eE.map((e,i)=>`<div class="br"><div class="bl" title="${esc(e[0])}">${esc(e[0]).length>13?esc(e[0]).slice(0,13)+'…':esc(e[0])}</div><div class="bt"><div class="bf" style="width:${(e[1]/mE)*100}%;background:${cols[i%4]}"></div></div><div class="bc">${e[1]}</div></div>`).join('');
   const tI=[{l:'< 1 ano',v:tFx['<1'],c:'var(--coral)'},{l:'1–3 anos',v:tFx['1-3'],c:'var(--warn)'},{l:'3–5 anos',v:tFx['3-5'],c:'var(--accent2)'},{l:'> 5 anos',v:tFx['>5'],c:'var(--purple)'}];const mT=Math.max(...tI.map(t=>t.v),1);
   $('tempoB').innerHTML=tI.map(t=>`<div class="br"><div class="bl">${t.l}</div><div class="bt"><div class="bf" style="width:${(t.v/mT)*100}%;background:${t.c}"></div></div><div class="bc">${t.v}</div></div>`).join('');$('tMedia').textContent=med+' anos';
   const eI=[{l:'35–44',v:et['35-44'],c:'var(--accent)'},{l:'25–34',v:et['25-34'],c:'var(--accent2)'},{l:'45–54',v:et['45-54'],c:'var(--purple)'},{l:'Até 25',v:et['Até 25'],c:'var(--warn)'},{l:'55+',v:et['55+'],c:'var(--coral)'}];const mEt=Math.max(...eI.map(e=>e.v),1);
@@ -1664,13 +1665,13 @@ function render(){
   const turn=cad.length>0?Math.round((desl.length/cad.length)*100):0;$('pTurn').textContent=turn+'%';$('pTurnS').textContent=`${desl.length} de ${cad.length}`;
   $('pSen').textContent=Math.round(mxA);$('pSenN').textContent='anos · '+mxAN.split(' ')[0];$('qCount').textContent=ativos.length+' registros';
   $('qBody').innerHTML=ativos.map(r=>`<tr>
-    <td>${r.NOME||'—'}</td><td><span class="chip ${chipV(r.TIPO_VINCULO)}">${lblV(r.TIPO_VINCULO)}</span></td>
-    <td>${r.CARGO||'—'}</td><td>${r.AREA||'—'}</td><td>${r.EMPRESA||'—'}</td>
+    <td>${esc(r.NOME||'—')}</td><td><span class="chip ${chipV(r.TIPO_VINCULO)}">${lblV(r.TIPO_VINCULO)}</span></td>
+    <td>${esc(r.CARGO||'—')}</td><td>${esc(r.AREA||'—')}</td><td>${esc(r.EMPRESA||'—')}</td>
     <td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
     <td style="font-family:var(--mono);font-size:17px;color:var(--accent)">${(parseFloat(r.ANOS_EMPRESA)||0).toFixed(1)}a</td>
     <td><div class="acts">
-      <button class="ab" onclick="openEditColabById('${r.ID_COLABORADOR||''}','${r._row||''}')">Editar</button>
-      <button class="ab d" onclick="confirmDeslById('${r.ID_COLABORADOR||''}','${r._row||''}')">Desligar</button>
+      <button class="ab" onclick="openEditColabById('${esc(r.ID_COLABORADOR||'')}','${esc(r._row||'')}')">Editar</button>
+      <button class="ab d" onclick="confirmDeslById('${esc(r.ID_COLABORADOR||'')}','${esc(r._row||'')}')">Desligar</button>
     </div></td></tr>`).join('');
 
   // Aniversários
@@ -1683,8 +1684,8 @@ function render(){
   $('proxEvts').innerHTML=p60.length===0?'<div class="empty">Nenhum evento nos próximos 60 dias.</div>':
     p60.map(r=>{const d=Math.round(parseFloat(r.DIAS_PARA_EVENTO));const emp=String(r.TIPO_EVENTO||'').includes('EMPRESA');const cor=emp?'var(--accent2)':'var(--accent)';const bg=emp?'rgba(56,217,169,.1)':'rgba(79,156,249,.12)';
     const nome=encodeURIComponent(r.NOME||'');const tipo=emp?'empresa':'funcionario';
-    return`<div class="ei" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;"><div class="ed" style="background:${bg}"><div class="edn" style="color:${cor}">${d}</div><div class="edl" style="color:${cor}">dias</div></div><div><div class="en">${r.NOME||'—'}</div><div class="et">${emp?'🏢':'🎂'} ${emp?'Aniversário empresa':'Aniversário pessoal'} · ${fmtD(r.DATA_EVENTO)}</div></div></div><button class="btn btn-g" style="font-size:11px;padding:4px 10px;white-space:nowrap;" onclick="abrirCardAniversario('${nome}','${tipo}','${r.DATA_EVENTO||''}',${d})">🎨 Gerar Card</button></div>`;}).join('');
-  $('logBody').innerHTML=log.slice(-8).reverse().map(r=>`<tr><td>${r.DATA_EVENTO||'—'}</td><td>${r.NOME_EXIBICAO||r.NOME||'—'}</td><td>${r.TIPO_EVENTO||'—'}</td><td>${r.EMPRESA||'—'}</td><td><span class="chip ${r.STATUS_APROVACAO==='APROVADO'?'cok':'cw'}">${r.STATUS_APROVACAO||'Pendente'}</span></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sem registros</td></tr>';
+    return`<div class="ei" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;"><div class="ed" style="background:${bg}"><div class="edn" style="color:${cor}">${d}</div><div class="edl" style="color:${cor}">dias</div></div><div><div class="en">${esc(r.NOME||'—')}</div><div class="et">${emp?'🏢':'🎂'} ${emp?'Aniversário empresa':'Aniversário pessoal'} · ${fmtD(r.DATA_EVENTO)}</div></div></div><button class="btn btn-g" style="font-size:11px;padding:4px 10px;white-space:nowrap;" onclick="abrirCardAniversario('${nome}','${tipo}','${r.DATA_EVENTO||''}',${d})">🎨 Gerar Card</button></div>`;}).join('');
+  $('logBody').innerHTML=log.slice(-8).reverse().map(r=>`<tr><td>${esc(r.DATA_EVENTO||'—')}</td><td>${esc(r.NOME_EXIBICAO||r.NOME||'—')}</td><td>${esc(r.TIPO_EVENTO||'—')}</td><td>${esc(r.EMPRESA||'—')}</td><td><span class="chip ${r.STATUS_APROVACAO==='APROVADO'?'cok':'cw'}">${esc(r.STATUS_APROVACAO||'Pendente')}</span></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sem registros</td></tr>';
 
   // Férias
   const fNa=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_APLICAVEL');
@@ -1694,8 +1695,8 @@ function render(){
   const fAtv=ferias.filter(r=>normStatus(r)==='ATIVO');$('fCount').textContent=fAtv.length+' registros';
   if(ferias.length===0){$('fBody').innerHTML='<tr><td colspan="7" class="empty" style="padding:20px;color:var(--warn);">⚠️ Aba FERIAS_CLT sem dados — preencha a planilha base para visualizar os registros.</td></tr>';}
   else $('fBody').innerHTML=fAtv.map(r=>`<tr>
-    <td>${r.NOME||'—'}</td><td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
-    <td><span class="chip ${r.STATUS_FERIAS==='NAO_PROGRAMADA'?'cw':r.STATUS_FERIAS==='GOZADA'?'cok':r.STATUS_FERIAS==='PROGRAMADA'?'cc':'cd'}">${(r.STATUS_FERIAS||'—').replace('_',' ')}</span></td>
+    <td>${esc(r.NOME||'—')}</td><td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
+    <td><span class="chip ${r.STATUS_FERIAS==='NAO_PROGRAMADA'?'cw':r.STATUS_FERIAS==='GOZADA'?'cok':r.STATUS_FERIAS==='PROGRAMADA'?'cc':'cd'}">${esc((r.STATUS_FERIAS||'—').replace('_',' '))}</span></td>
     <td style="font-size:17px;color:var(--muted)">${fmtD(r.INICIO_PERIODO_AQUISITIVO)||'—'} → ${fmtD(r.FIM_PERIODO_AQUISITIVO)||'—'}</td>
     <td style="font-size:17px;color:var(--muted)">${fmtD(r.FERIAS_PROGRAMADAS_INICIO)||'—'} → ${fmtD(r.FERIAS_PROGRAMADAS_FIM)||'—'}</td>
     <td style="font-size:17px;color:var(--muted)">${fmtD(r.FERIAS_GOZADAS_INICIO)||'—'} → ${fmtD(r.FERIAS_GOZADAS_FIM)||'—'}</td>
@@ -1714,8 +1715,8 @@ function render(){
       :`<span class="chip ${r.STATUS_EXAME==='EM_DIA'?'cok':r.STATUS_EXAME==='VENCIDO'?'cd':'cw'}">${r.STATUS_EXAME||'—'}</span>`;
     const nr7Icon=isDemiss?`<span title="${_nr7tip}" style="cursor:help;margin-left:4px;color:var(--muted);">ℹ️</span>`:'';
     return`<tr>
-    <td>${r.NOME||'—'}</td>
-    <td><span class="chip cok">${r.TIPO_EXAME||'—'}</span>${nr7Icon}</td>
+    <td>${esc(r.NOME||'—')}</td>
+    <td><span class="chip cok">${esc(r.TIPO_EXAME||'—')}</span>${nr7Icon}</td>
     <td style="font-family:var(--mono);font-size:17px">${fmtD(r.ULTIMO_EXAME)}</td>
     <td style="font-family:var(--mono);font-size:17px">${fmtD(r.PROXIMO_EXAME)}</td>
     <td>${statusChip}</td>
@@ -1724,8 +1725,8 @@ function render(){
   // Ausências — ID_COLABORADOR pode ser NaN no Excel; filtra por NOME válido e DATA real
   const ausR=(aus||[]).filter(r=>{const n=String(r.NOME||'').trim();const d=String(r.DATA||'').trim();return n&&n!=='Colaborador (a)'&&n!=='Colaborador'&&d&&d!=='Data';});
   $('ausCount').textContent=ausR.length+' registros';
-  $('ausBody').innerHTML=ausR.map(r=>`<tr><td><span class="chip ce">${r.TIPO||'—'}</span></td><td>${r.NOME||'—'}</td><td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA)}</td><td>${r.DETALHE||'—'}</td><td></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhum registro</td></tr>';
-  $('ausColab').innerHTML=ativos.map(a=>`<option value="${a.ID_COLABORADOR}">${a.NOME}</option>`).join('');
+  $('ausBody').innerHTML=ausR.map(r=>`<tr><td><span class="chip ce">${esc(r.TIPO||'—')}</span></td><td>${esc(r.NOME||'—')}</td><td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA)}</td><td>${esc(r.DETALHE||'—')}</td><td></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhum registro</td></tr>';
+  $('ausColab').innerHTML=ativos.map(a=>`<option value="${esc(a.ID_COLABORADOR)}">${esc(a.NOME)}</option>`).join('');
 
   // Desligados
   renderDesligados(desl);
@@ -1733,8 +1734,8 @@ function render(){
   renderAcoes();
   // Alertas
   $('alC').textContent=cSem.length;$('alE').textContent=exV.length;$('alF').textContent=fNP.length;$('alT').textContent=tAl;$('alCT').textContent=cSem.length;
-  $('alContList').innerHTML=cSem.map(r=>`<div class="ai"><div class="aico" style="background:rgba(248,113,113,.08)">⚠️</div><div class="ainf"><div class="an">${r.NOME||'—'}</div><div class="ad">${r.TIPO_VINCULO||'—'} · desde ${fmt(r.DATA_INICIO_CONTRATO)} · sem data fim</div></div><span class="chip cd">Sem data</span></div>`).join('')||'<div class="empty">Nenhum</div>';
-  $('alExamList').innerHTML=exV.map(r=>`<div class="ai"><div class="aico" style="background:rgba(245,158,11,.1)">🩺</div><div class="ainf"><div class="an">${r.NOME||'—'}</div><div class="ad">Último: ${fmtD(r.ULTIMO_EXAME)} · Venceu: ${fmtD(r.PROXIMO_EXAME)}</div></div><span class="chip cd">Vencido</span></div>`).join('')||'<div class="empty">Nenhum vencido</div>';
+  $('alContList').innerHTML=cSem.map(r=>`<div class="ai"><div class="aico" style="background:rgba(248,113,113,.08)">⚠️</div><div class="ainf"><div class="an">${esc(r.NOME||'—')}</div><div class="ad">${esc(r.TIPO_VINCULO||'—')} · desde ${fmt(r.DATA_INICIO_CONTRATO)} · sem data fim</div></div><span class="chip cd">Sem data</span></div>`).join('')||'<div class="empty">Nenhum</div>';
+  $('alExamList').innerHTML=exV.map(r=>`<div class="ai"><div class="aico" style="background:rgba(245,158,11,.1)">🩺</div><div class="ainf"><div class="an">${esc(r.NOME||'—')}</div><div class="ad">Último: ${fmtD(r.ULTIMO_EXAME)} · Venceu: ${fmtD(r.PROXIMO_EXAME)}</div></div><span class="chip cd">Vencido</span></div>`).join('')||'<div class="empty">Nenhum vencido</div>';
   // Nota NR-7 no rodapé de alertas de exames
   if(socioIds.size>0){const n=socioIds.size;$('alExamList').innerHTML+=`<div style="font-size:11px;color:var(--muted);padding:8px 0 0;">${n} sócio${n!==1?'s':''} isento${n!==1?'s':''} de ASO conforme NR-7</div>`;}
   $('alResume').innerHTML=[{l:'Contratos sem data fim',v:cSem.length,c:'danger'},{l:'Exames vencidos (ativos)',v:exV.length,c:'warn'},{l:'Férias não programadas',v:fNP.length,c:'warn'},{l:'Automação Teams',v:'OK',c:'ok'}].map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 9px;background:${x.c==='ok'?'rgba(56,217,169,.05)':x.c==='danger'?'rgba(248,113,113,.07)':'rgba(245,158,11,.07)'};border-radius:6px;border:1px solid ${x.c==='ok'?'rgba(56,217,169,.15)':x.c==='danger'?'rgba(248,113,113,.2)':'rgba(245,158,11,.2)'};">
@@ -2560,10 +2561,10 @@ function renderDesligados(desl){
 
 function renderDeslTable(desl){
   $('dBody').innerHTML=desl.map(r=>`<tr>
-    <td>${r.NOME||'—'}</td>
+    <td>${esc(r.NOME||'—')}</td>
     <td><span class="chip ${chipV(r.TIPO_VINCULO)}">${lblV(r.TIPO_VINCULO)}</span></td>
-    <td>${r.AREA||'—'}</td>
-    <td>${r.EMPRESA||'—'}</td>
+    <td>${esc(r.AREA||'—')}</td>
+    <td>${esc(r.EMPRESA||'—')}</td>
     <td style="font-family:var(--mono);font-size:13px">${fmt(r.DATA_ADMISSAO)}</td>
     <td style="font-family:var(--mono);font-size:13px;color:var(--danger)">${fmtD(r.DATA_DESLIGAMENTO)||'—'}</td>
     <td style="font-family:var(--mono);font-size:13px">${(parseFloat(r.ANOS_EMPRESA)||0).toFixed(1)}a</td>
@@ -2582,13 +2583,13 @@ function filtrarColab(q){
   const filtrado=q?ativos.filter(r=>(r.NOME||'').toLowerCase().includes(q.toLowerCase())):ativos;
   $('qCount').textContent=filtrado.length+' registros';
   $('qBody').innerHTML=filtrado.map(r=>`<tr>
-    <td>${r.NOME||'—'}</td><td><span class="chip ${chipV(r.TIPO_VINCULO)}">${lblV(r.TIPO_VINCULO)}</span></td>
-    <td>${r.CARGO||'—'}</td><td>${r.AREA||'—'}</td><td>${r.EMPRESA||'—'}</td>
+    <td>${esc(r.NOME||'—')}</td><td><span class="chip ${chipV(r.TIPO_VINCULO)}">${lblV(r.TIPO_VINCULO)}</span></td>
+    <td>${esc(r.CARGO||'—')}</td><td>${esc(r.AREA||'—')}</td><td>${esc(r.EMPRESA||'—')}</td>
     <td style="font-family:var(--mono);font-size:13px">${fmt(r.DATA_ADMISSAO)}</td>
     <td style="font-family:var(--mono);font-size:13px;color:var(--accent)">${(parseFloat(r.ANOS_EMPRESA)||0).toFixed(1)}a</td>
     <td><div class="acts">
-      <button class="ab" onclick="openEditColabById('${r.ID_COLABORADOR||''}','${r._row||''}')">Editar</button>
-      <button class="ab d" onclick="confirmDeslById('${r.ID_COLABORADOR||''}','${r._row||''}')">Desligar</button>
+      <button class="ab" onclick="openEditColabById('${esc(r.ID_COLABORADOR||'')}','${esc(r._row||'')}')">Editar</button>
+      <button class="ab d" onclick="confirmDeslById('${esc(r.ID_COLABORADOR||'')}','${esc(r._row||'')}')">Desligar</button>
     </div></td></tr>`).join('')||'<tr><td colspan="8" class="empty">Nenhum resultado.</td></tr>';
 }
 
@@ -2790,8 +2791,8 @@ function renderAcoes(){
     return`<div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid ${a.status==='ATRASADO'?'var(--danger)':a.status==='CONCLUIDO'?'var(--ok)':a.status==='CANCELADO'?'var(--muted)':'var(--warn)'};">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
         <div style="flex:1;">
-          <div style="font-size:14px;font-weight:500;margin-bottom:4px;">${flag} ${a.alerta}${a.origem==='SISTEMA'?'<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:rgba(155,102,244,.15);color:var(--accent);margin-left:7px;letter-spacing:.4px;">⚡ SISTEMA</span>':''}</div>
-          <div style="font-size:13px;color:var(--muted);white-space:pre-line;">${a.atividade}</div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:4px;">${flag} ${esc(a.alerta)}${a.origem==='SISTEMA'?'<span style="font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:rgba(155,102,244,.15);color:var(--accent);margin-left:7px;letter-spacing:.4px;">⚡ SISTEMA</span>':''}</div>
+          <div style="font-size:13px;color:var(--muted);white-space:pre-line;">${esc(a.atividade)}</div>
         </div>
         <span class="chip ${sc}" style="margin-left:10px;flex-shrink:0;">${slabel}</span>
       </div>
@@ -2800,10 +2801,10 @@ function renderAcoes(){
         ${a.dataConcl?`<span style="color:var(--ok);">✅ Concluído: <strong>${fmtD(a.dataConcl)}</strong></span>`:''}
         <span style="color:var(--muted);">Criado: ${fmtD(a.criadoEm)||'—'}</span>
       </div>
-      ${a.comentario?`<div style="margin-top:8px;padding:8px;background:var(--bg2);border-radius:6px;font-size:12px;color:var(--muted);font-style:italic;">"${a.comentario}"</div>`:''}
+      ${a.comentario?`<div style="margin-top:8px;padding:8px;background:var(--bg2);border-radius:6px;font-size:12px;color:var(--muted);font-style:italic;">"${esc(a.comentario)}"</div>`:''}
       <div style="display:flex;gap:6px;margin-top:10px;">
-        <button class="ab" onclick="openEditAcao('${a.id}')">Editar</button>
-        <button class="ab d" onclick="deleteAcao('${a.id}')">Excluir</button>
+        <button class="ab" onclick="openEditAcao('${esc(a.id)}')">Editar</button>
+        <button class="ab d" onclick="deleteAcao('${esc(a.id)}')">Excluir</button>
       </div>
     </div>`;
   }).join('');
@@ -2901,13 +2902,13 @@ function renderAdmin(){
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:34px;height:34px;border-radius:8px;background:rgba(155,102,244,.12);display:flex;align-items:center;justify-content:center;font-size:16px;">${roleIcon(c.role)}</div>
           <div>
-            <div style="font-size:13px;font-weight:500;">${c.nome}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:1px;">${c.email}</div>
+            <div style="font-size:13px;font-weight:500;">${esc(c.nome)}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px;">${esc(c.email)}</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="chip" style="font-size:11px;background:${roleColor(c.role)};color:${roleText(c.role)};">${roleLabel(c.role)}</span>
-          <button class="btn" style="font-size:11px;padding:3px 10px;color:var(--danger);border-color:var(--danger);" onclick="removeCoord('${c.email}')">Remover</button>
+          <button class="btn" style="font-size:11px;padding:3px 10px;color:var(--danger);border-color:var(--danger);" onclick="removeCoord('${esc(c.email)}')">Remover</button>
         </div>
       </div>`).join('');
   $('admin-list-master').innerHTML=renderList(masters);
@@ -3300,7 +3301,7 @@ function pfRenderPortal(){
   const avisos=$('pf-avisos');avisos.innerHTML='';
   if(isPJ){
     avisos.innerHTML=`<div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:9px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7;">
-      <strong style="color:var(--danger);">⚠ Atenção — Vínculo ${pfColab.vinculo}</strong><br>
+      <strong style="color:var(--danger);">⚠ Atenção — Vínculo ${esc(pfColab.vinculo)}</strong><br>
       Colaboradores PJ/MEI não possuem direito a férias pela CLT. A solicitação será registrada como <strong>recesso contratual</strong>.</div>`;
   }
   if(isAssociado){
@@ -3383,7 +3384,7 @@ function pfGoStep2(){
   pfSetStep(1);
   const gestorNome=pfColab.cad?.GESTOR||pfColab.cad?.gestor||'o gestor';
   $('pf-confirm-body').innerHTML=pfBlocoKPIs(pfFD(pfRS),pfFD(pfRE),pfDiasCorr(pfRS,pfRE),pfDiasUteis(pfRS,pfRE))+
-    `<div style="font-size:13px;color:var(--muted);margin-top:12px;">Ao confirmar, <strong style="color:var(--text);">${gestorNome}</strong> receberá notificação por e-mail para aprovar ou rejeitar.</div>
+    `<div style="font-size:13px;color:var(--muted);margin-top:12px;">Ao confirmar, <strong style="color:var(--text);">${esc(gestorNome)}</strong> receberá notificação por e-mail para aprovar ou rejeitar.</div>
     <div style="margin-top:10px;background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:8px;padding:10px;font-size:12px;color:var(--muted);line-height:1.7;">
       ⏰ Aviso prévio mínimo: <strong style="color:var(--text);">30 dias</strong><br>
       ✂️ Máximo de <strong style="color:var(--text);">3 períodos</strong> · mínimo de <strong style="color:var(--text);">14 dias</strong> no 1º período<br>
@@ -3473,10 +3474,10 @@ function pfRenderHist(){
     return`<div class="hist-row">
       <div class="hist-info">
         <div class="hist-period">${pfFD(s.ini)} → ${pfFD(s.fim)}</div>
-        <div class="hist-meta">${s.dc} dias corridos · ${s.du} úteis · <span style="font-family:var(--mono);font-size:11px;">${s.prot}</span></div>
-        ${s.motivoRej?`<div class="hist-motivo">Motivo da rejeição: ${s.motivoRej}</div>`:''}
+        <div class="hist-meta">${Number(s.dc)} dias corridos · ${Number(s.du)} úteis · <span style="font-family:var(--mono);font-size:11px;">${esc(s.prot)}</span></div>
+        ${s.motivoRej?`<div class="hist-motivo">Motivo da rejeição: ${esc(s.motivoRej)}</div>`:''}
       </div>
-      <span class="chip ${cls}">${s.status}</span>
+      <span class="chip ${cls}">${esc(s.status)}</span>
     </div>`;
   }).join('');
 }
@@ -3501,7 +3502,7 @@ async function pfCheckGestorUrl(){
     }catch(e){console.warn('getSolicitacaoPorProtocolo:',e);}
   }
   if(!sol){$('pf-gest-body').innerHTML='<div style="color:var(--muted)">Solicitação não encontrada.</div>';return;}
-  if(sol.status!=='PENDENTE'){$('pf-gest-body').innerHTML=`<div style="color:var(--muted)">Esta solicitação já foi ${sol.status.toLowerCase()}.</div>`;return;}
+  if(sol.status!=='PENDENTE'){$('pf-gest-body').innerHTML=`<div style="color:var(--muted)">Esta solicitação já foi ${esc(sol.status.toLowerCase())}.</div>`;return;}
   if(acao==='APROVAR')pfRenderGestorAprovar(sol);else pfRenderGestorRejeitar(sol);
 }
 
@@ -3509,27 +3510,27 @@ function pfRenderGestorAprovar(sol){
   $('pf-gest-body').innerHTML=`
     <div style="background:var(--bg3);border-radius:10px;padding:16px;margin-bottom:16px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Colaborador</div><div style="font-size:15px;font-weight:500;">${sol.nome}</div></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Protocolo</div><div style="font-size:12px;font-family:var(--mono);color:var(--accent);">${sol.prot}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Colaborador</div><div style="font-size:15px;font-weight:500;">${esc(sol.nome)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Protocolo</div><div style="font-size:12px;font-family:var(--mono);color:var(--accent);">${esc(sol.prot)}</div></div>
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Início</div><div style="font-size:15px;font-weight:500;">${pfFD(sol.ini)}</div></div>
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Término</div><div style="font-size:15px;font-weight:500;">${pfFD(sol.fim)}</div></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias corridos</div><div style="font-size:26px;font-weight:300;color:var(--ok);">${sol.dc}</div></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias úteis</div><div style="font-size:26px;font-weight:300;">${sol.du}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias corridos</div><div style="font-size:26px;font-weight:300;color:var(--ok);">${Number(sol.dc)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias úteis</div><div style="font-size:26px;font-weight:300;">${Number(sol.du)}</div></div>
       </div>
-      ${sol.obs?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);">Obs: ${sol.obs}</div>`:''}
+      ${sol.obs?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);">Obs: ${esc(sol.obs)}</div>`:''}
     </div>
-    <button class="btn btn-g" style="width:100%;justify-content:center;margin-bottom:8px;" onclick="pfConfirmarAp('${sol.prot}')">✓ Confirmar aprovação</button>
-    <button class="btn" style="width:100%;justify-content:center;" onclick="pfRenderGestorRejeitar(pfSols.find(s=>s.prot==='${sol.prot}'))">Rejeitar em vez disso</button>`;
+    <button class="btn btn-g" style="width:100%;justify-content:center;margin-bottom:8px;" onclick="pfConfirmarAp('${esc(sol.prot)}')">✓ Confirmar aprovação</button>
+    <button class="btn" style="width:100%;justify-content:center;" onclick="pfRenderGestorRejeitar(pfSols.find(s=>s.prot==='${esc(sol.prot)}'))">Rejeitar em vez disso</button>`;
 }
 function pfRenderGestorRejeitar(sol){
   $('pf-gest-body').innerHTML=`
-    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Solicitação de <strong style="color:var(--text);">${sol.nome}</strong> · ${pfFD(sol.ini)} → ${pfFD(sol.fim)} · ${sol.dc} dias</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Solicitação de <strong style="color:var(--text);">${esc(sol.nome)}</strong> · ${pfFD(sol.ini)} → ${pfFD(sol.fim)} · ${Number(sol.dc)} dias</div>
     <div style="margin-bottom:14px;">
       <label class="flbl">Motivo da rejeição <span style="color:var(--danger)">*</span></label>
       <textarea class="fi" id="pf-rej-motivo" rows="4" placeholder="Ex: conflito com audiências programadas..."></textarea>
     </div>
-    <button class="btn" style="width:100%;justify-content:center;background:var(--danger);border-color:var(--danger);color:#fff;font-weight:500;margin-bottom:8px;" onclick="pfConfirmarRej('${sol.prot}')">✗ Confirmar rejeição</button>
-    <button class="btn" style="width:100%;justify-content:center;" onclick="pfRenderGestorAprovar(pfSols.find(s=>s.prot==='${sol.prot}'))">← Aprovar em vez disso</button>`;
+    <button class="btn" style="width:100%;justify-content:center;background:var(--danger);border-color:var(--danger);color:#fff;font-weight:500;margin-bottom:8px;" onclick="pfConfirmarRej('${esc(sol.prot)}')">✗ Confirmar rejeição</button>
+    <button class="btn" style="width:100%;justify-content:center;" onclick="pfRenderGestorAprovar(pfSols.find(s=>s.prot==='${esc(sol.prot)}'))">← Aprovar em vez disso</button>`;
 }
 
 async function pfConfirmarAp(prot){
@@ -3538,7 +3539,7 @@ async function pfConfirmarAp(prot){
   if(window._sbFns&&sol._sbId){
     try{await window._sbFns.atualizarStatusSolicitacao(sol._sbId,'APROVADO',null);}catch(e){console.warn('atualizarStatus:',e);}
   }
-  $('pf-gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">✅</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Aprovado!</div><div style="font-size:14px;color:var(--muted);">Férias de <strong style="color:var(--text);">${sol.nome}</strong> aprovadas.<br>${pfFD(sol.ini)} → ${pfFD(sol.fim)} · ${sol.dc} dias.</div></div>`;
+  $('pf-gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">✅</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Aprovado!</div><div style="font-size:14px;color:var(--muted);">Férias de <strong style="color:var(--text);">${esc(sol.nome)}</strong> aprovadas.<br>${pfFD(sol.ini)} → ${pfFD(sol.fim)} · ${Number(sol.dc)} dias.</div></div>`;
   toast('Férias aprovadas!','success');
   pfSendReturnEmail(sol,true,null);
   pfRenderHist();
@@ -3552,7 +3553,7 @@ async function pfConfirmarRej(prot){
   if(window._sbFns&&sol._sbId){
     try{await window._sbFns.atualizarStatusSolicitacao(sol._sbId,'REJEITADO',motivo);}catch(e){console.warn('atualizarStatus:',e);}
   }
-  $('pf-gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">❌</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Rejeitada</div><div style="font-size:14px;color:var(--muted);">Motivo: ${motivo}</div></div>`;
+  $('pf-gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">❌</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Rejeitada</div><div style="font-size:14px;color:var(--muted);">Motivo: ${esc(motivo)}</div></div>`;
   toast('Solicitação rejeitada','error');
   pfSendReturnEmail(sol,false,motivo);
   pfRenderHist();
@@ -3765,7 +3766,7 @@ async function _renderCardAniv(canvas, imgSrc, nome, texto, tipo, modeloKey) {
       ctx.beginPath(); ctx.arc(950,180,380,0,Math.PI*2); ctx.fill();
       ctx.fillStyle='rgba(255,208,0,0.08)';
       ctx.beginPath(); ctx.arc(130,1780,500,0,Math.PI*2); ctx.fill();
-      drawText(1080, 1920, {...cfg, header:true, textY:0.12});
+      drawText(1080, 1920, {...cfg, textY:0.12});
       resolve();
     };
     img.src=imgSrc;

@@ -276,6 +276,14 @@ let USERS   = []
 window.doLogout = async function() { await logout() }
 
 // ============================================================
+// SEGURANÇA: escape de HTML para prevenir XSS
+// Usar esc() em TODOS os dados vindos do banco antes de inserir em innerHTML
+// ============================================================
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;')
+}
+
+// ============================================================
 // INIT
 // ============================================================
 ;(async () => {
@@ -325,10 +333,10 @@ function renderDashboard() {
   const recent = [...TENANTS].sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em)).slice(0,5)
   document.getElementById('dash-tenants-tbody').innerHTML = recent.map(t => `
     <tr>
-      <td><strong>${t.nome}</strong></td>
+      <td><strong>${esc(t.nome)}</strong></td>
       <td>${chipPlano(t.plano)}</td>
       <td>${chipStatus(t.status)}</td>
-      <td>${new Date(t.criado_em).toLocaleDateString('pt-BR')}</td>
+      <td>${esc(new Date(t.criado_em).toLocaleDateString('pt-BR'))}</td>
     </tr>`).join('')
 }
 
@@ -339,15 +347,15 @@ function renderTenants() {
   document.getElementById('tenants-tbody').innerHTML = TENANTS.map(t => {
     const usersCount = USERS.filter(u => u.tenant_id === t.id).length
     return `<tr>
-      <td><strong>${t.nome}</strong><br><span style="font-size:11px;color:var(--muted);">${t.slug}</span></td>
-      <td><span style="font-size:11px;color:var(--muted);">${t.slug}</span></td>
-      <td style="font-size:12px;color:var(--muted);">${t.email_admin}</td>
+      <td><strong>${esc(t.nome)}</strong><br><span style="font-size:11px;color:var(--muted);">${esc(t.slug)}</span></td>
+      <td><span style="font-size:11px;color:var(--muted);">${esc(t.slug)}</span></td>
+      <td style="font-size:12px;color:var(--muted);">${esc(t.email_admin)}</td>
       <td>${chipPlano(t.plano)}</td>
-      <td style="text-align:center;">${usersCount} / ${t.max_usuarios}</td>
+      <td style="text-align:center;">${esc(usersCount)} / ${esc(t.max_usuarios)}</td>
       <td>${chipStatus(t.status)}</td>
       <td><div style="display:flex;gap:6px;">
-        <button class="btn btn-sm" onclick="editTenant('${t.id}')">Editar</button>
-        <button class="btn btn-sm btn-danger" onclick="toggleTenant('${t.id}','${t.status}')">
+        <button class="btn btn-sm" onclick="editTenant('${esc(t.id)}')">Editar</button>
+        <button class="btn btn-sm btn-danger" onclick="toggleTenant('${esc(t.id)}','${esc(t.status)}')">
           ${t.status === 'ATIVO' ? 'Suspender' : 'Ativar'}
         </button>
       </div></td>
@@ -440,13 +448,13 @@ function renderUsers() {
   document.getElementById('users-tbody').innerHTML = users.map(u => {
     const tenant = TENANTS.find(t => t.id === u.tenant_id)
     return `<tr>
-      <td><strong>${u.nome}</strong></td>
-      <td style="font-size:12px;color:var(--muted);">${u.email}</td>
-      <td style="font-size:12px;">${tenant?.nome || '—'}</td>
+      <td><strong>${esc(u.nome)}</strong></td>
+      <td style="font-size:12px;color:var(--muted);">${esc(u.email)}</td>
+      <td style="font-size:12px;">${esc(tenant?.nome || '—')}</td>
       <td>${chipRole(u.role)}</td>
       <td>${u.status === 'ATIVO' ? '<span class="chip chip-ativo">Ativo</span>' : '<span class="chip chip-inativo">Inativo</span>'}</td>
       <td><div style="display:flex;gap:6px;">
-        <button class="btn btn-sm btn-danger" onclick="toggleUser('${u.id}','${u.status}')">
+        <button class="btn btn-sm btn-danger" onclick="toggleUser('${esc(u.id)}','${esc(u.status)}')">
           ${u.status === 'ATIVO' ? 'Bloquear' : 'Ativar'}
         </button>
       </div></td>
@@ -460,7 +468,7 @@ window.openModalUser = function() {
   document.getElementById('uRole').value  = 'master'
 
   const sel = document.getElementById('uTenant')
-  sel.innerHTML = TENANTS.map(t => `<option value="${t.id}">${t.nome}</option>`).join('')
+  sel.innerHTML = TENANTS.map(t => `<option value="${esc(t.id)}">${esc(t.nome)}</option>`).join('')
 
   openModal('mUser')
 }
@@ -483,15 +491,17 @@ window.saveUser = async function() {
       email,
       password: senha,
       options: {
-        data: { nome, tenant_id: tenantId, role },
+        // SEGURANÇA: não passar role/tenant_id no metadata — a trigger handle_new_user()
+        // ignora esses valores e sempre cria com role='colaborador'. O profile é
+        // atualizado manualmente via upsert abaixo (com permissão de manager_global via RLS).
+        data: { nome },
         emailRedirectTo: window.location.origin + '/login.html'
       }
     })
     if (error) throw error
 
-    // Se confirmação de e-mail estiver DESABILITADA no Supabase, o usuário já está ativo.
-    // Se estiver HABILITADA, o perfil será criado após confirmação via trigger.
-    // Criar profile manualmente para garantir (caso trigger ainda não disparou):
+    // Criar/atualizar profile com role e tenant_id corretos.
+    // Este upsert é permitido pela RLS pois o usuário logado é manager_global.
     if (data.user) {
       await sb.from('profiles').upsert({
         id: data.user.id, tenant_id: tenantId, nome, email, role, status: 'ATIVO'
@@ -526,10 +536,10 @@ async function renderLogs() {
       .limit(100)
     document.getElementById('logs-tbody').innerHTML = (data||[]).map(l => `
       <tr>
-        <td style="font-size:12px;white-space:nowrap;">${new Date(l.criado_em).toLocaleString('pt-BR')}</td>
-        <td><code style="font-size:11px;color:var(--accent2);">${l.tipo}</code></td>
-        <td style="font-size:12px;">${l.tenants?.nome||'—'}</td>
-        <td style="font-size:12px;color:var(--muted);">${l.descricao||''}</td>
+        <td style="font-size:12px;white-space:nowrap;">${esc(new Date(l.criado_em).toLocaleString('pt-BR'))}</td>
+        <td><code style="font-size:11px;color:var(--accent2);">${esc(l.tipo)}</code></td>
+        <td style="font-size:12px;">${esc(l.tenants?.nome||'—')}</td>
+        <td style="font-size:12px;color:var(--muted);">${esc(l.descricao||'')}</td>
       </tr>`).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">Sem logs.</td></tr>'
   } catch (e) { console.warn(e) }
 }

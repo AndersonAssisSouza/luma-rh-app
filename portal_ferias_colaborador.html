@@ -311,6 +311,7 @@ const CK_FERIAS='luma_ferias_v2';
 let msalApp=null,tok=null,CFG=null,UCOLAB=null;
 let _solsColabId=null;  // UUID do colaborador logado (para queries Supabase)
 const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 const fD=d=>{if(!d)return'—';try{const x=new Date(d.toString().length<=5?((Number(d)-25569)*86400*1000):d+'T12:00:00');if(isNaN(x))return'—';return x.toLocaleDateString('pt-BR');}catch{return'—'}};
 const toISO=d=>{if(!d)return'';if(typeof d==='number'||/^\d+$/.test(String(d).trim())){const n=Number(d);const x=new Date((n>59?n-25569:n-25568)*86400*1000);return x.toISOString().split('T')[0];}try{const x=new Date(d+'T12:00:00');return isNaN(x)?'':x.toISOString().split('T')[0];}catch{return''}};
 
@@ -350,7 +351,7 @@ function toast(msg,type='success'){
 }
 
 // ── AUTH (igual painel gestão) ──
-function cfgSave(c){const s=JSON.stringify(c);try{localStorage.setItem(CK,s);}catch(e){}try{sessionStorage.setItem(CK,s);}catch(e){}const exp=new Date();exp.setFullYear(exp.getFullYear()+1);document.cookie=`${CK}=${encodeURIComponent(s)};expires=${exp.toUTCString()};path=/;SameSite=None;Secure`;}
+function cfgSave(c){const s=JSON.stringify(c);try{localStorage.setItem(CK,s);}catch(e){}try{sessionStorage.setItem(CK,s);}catch(e){}const exp=new Date();exp.setFullYear(exp.getFullYear()+1);document.cookie=`${CK}=${encodeURIComponent(s)};expires=${exp.toUTCString()};path=/;SameSite=Strict;Secure`;}
 function cfgLoad(){try{const v=localStorage.getItem(CK);if(v)return JSON.parse(v);}catch(e){}try{const v=sessionStorage.getItem(CK);if(v)return JSON.parse(v);}catch(e){}try{const m=document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(CK+'='));if(m){const v=decodeURIComponent(m.split('=').slice(1).join('='));return JSON.parse(v);}}catch(e){}return null;}
 
 async function initApp(c){
@@ -539,7 +540,7 @@ function renderPortal(){
   if(isPJ){
     const avisoDiv=document.createElement('div');
     avisoDiv.style.cssText='background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:9px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7;';
-    avisoDiv.innerHTML=`<strong style="color:var(--danger);">⚠ Atenção — Vínculo ${UCOLAB.vinculo}</strong><br>
+    avisoDiv.innerHTML=`<strong style="color:var(--danger);">⚠ Atenção — Vínculo ${esc(UCOLAB.vinculo)}</strong><br>
       Colaboradores PJ/MEI não possuem direito a férias pela CLT. A solicitação será registrada como <strong>recesso contratual</strong> e estará sujeita à aprovação do gestor conforme contrato de prestação de serviços.`;
     $('step-cal').insertBefore(avisoDiv,$('step-cal').firstChild);
   }
@@ -554,7 +555,7 @@ function renderPortal(){
   }
 
   if(!isCLT&&!isPJ){
-    $('step-cal').innerHTML=`<div class="empty">Solicitação não disponível para vínculo <strong>${UCOLAB.vinculo}</strong>.</div>`;
+    $('step-cal').innerHTML=`<div class="empty">Solicitação não disponível para vínculo <strong>${esc(UCOLAB.vinculo)}</strong>.</div>`;
   }else{renderCal();}
   renderHist();setStep(0);
 }
@@ -735,9 +736,9 @@ function renderHist(){
       <div class="hist-info">
         <div class="hist-period">${fD(s.ini)} → ${fD(s.fim)}</div>
         <div class="hist-meta">${s.dc} dias corridos · ${s.du} úteis · <span style="font-family:var(--mono);font-size:11px;">${s.prot}</span></div>
-        ${s.motivoRej?`<div class="hist-motivo">Motivo da rejeição: ${s.motivoRej}</div>`:''}
+        ${s.motivoRej?`<div class="hist-motivo">Motivo da rejeição: ${esc(s.motivoRej)}</div>`:''}
       </div>
-      <span class="chip ${cls}">${s.status}</span>
+      <span class="chip ${cls}">${esc(s.status)}</span>
     </div>`;
   }).join('');
 }
@@ -774,7 +775,7 @@ async function checkGestorUrl(){
     }catch(e){console.warn('getSolicitacaoPorProtocolo:',e);}
   }
   if(!sol){$('gest-title').textContent='Não encontrada';$('gest-body').innerHTML='<div style="color:var(--muted)">Solicitação não encontrada.</div>';return true;}
-  if(sol.status!=='PENDENTE'){$('gest-title').textContent=sol.status==='APROVADO'?'✅ Já aprovada':'❌ Já rejeitada';$('gest-body').innerHTML=`<div style="color:var(--muted)">Esta solicitação já foi ${sol.status.toLowerCase()}.</div>`;return true;}
+  if(sol.status!=='PENDENTE'){$('gest-title').textContent=sol.status==='APROVADO'?'✅ Já aprovada':'❌ Já rejeitada';$('gest-body').innerHTML=`<div style="color:var(--muted)">Esta solicitação já foi ${esc(sol.status.toLowerCase())}.</div>`;return true;}
   if(acao==='APROVAR')renderGestorAprovar(sol);else renderGestorRejeitar(sol);
   return true;
 }
@@ -784,28 +785,28 @@ function renderGestorAprovar(sol){
   $('gest-body').innerHTML=`
     <div style="background:var(--bg3);border-radius:10px;padding:16px;margin-bottom:16px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Colaborador</div><div style="font-size:15px;font-weight:500;">${sol.nome}</div></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Protocolo</div><div style="font-size:12px;font-family:var(--mono);color:var(--accent);">${sol.prot}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Colaborador</div><div style="font-size:15px;font-weight:500;">${esc(sol.nome)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Protocolo</div><div style="font-size:12px;font-family:var(--mono);color:var(--accent);">${esc(sol.prot)}</div></div>
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Início</div><div style="font-size:15px;font-weight:500;">${fD(sol.ini)}</div></div>
         <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Término</div><div style="font-size:15px;font-weight:500;">${fD(sol.fim)}</div></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias corridos</div><div style="font-size:26px;font-weight:300;color:var(--ok);">${sol.dc}</div></div>
-        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias úteis</div><div style="font-size:26px;font-weight:300;">${sol.du}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias corridos</div><div style="font-size:26px;font-weight:300;color:var(--ok);">${Number(sol.dc)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias úteis</div><div style="font-size:26px;font-weight:300;">${Number(sol.du)}</div></div>
       </div>
-      ${sol.obs?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);">Obs: ${sol.obs}</div>`:''}
+      ${sol.obs?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);">Obs: ${esc(sol.obs)}</div>`:''}
     </div>
-    <button class="btn btn-gold btn-full" style="margin-bottom:8px;" onclick="confirmarAp('${sol.prot}')">✓ Confirmar aprovação</button>
-    <button class="btn btn-outline btn-full" onclick="renderGestorRejeitar(_sols.find(s=>s.prot==='${sol.prot}'))">Rejeitar em vez disso</button>`;
+    <button class="btn btn-gold btn-full" style="margin-bottom:8px;" onclick="confirmarAp('${esc(sol.prot)}')">✓ Confirmar aprovação</button>
+    <button class="btn btn-outline btn-full" onclick="renderGestorRejeitar(_sols.find(s=>s.prot==='${esc(sol.prot)}'))">Rejeitar em vez disso</button>`;
 }
 function renderGestorRejeitar(sol){
   $('gest-title').textContent='Rejeitar solicitação';
   $('gest-body').innerHTML=`
-    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Solicitação de <strong style="color:var(--text);">${sol.nome}</strong> · ${fD(sol.ini)} → ${fD(sol.fim)} · ${sol.dc} dias</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Solicitação de <strong style="color:var(--text);">${esc(sol.nome)}</strong> · ${fD(sol.ini)} → ${fD(sol.fim)} · ${Number(sol.dc)} dias</div>
     <div style="margin-bottom:14px;">
       <label class="flbl">Motivo da rejeição <span style="color:var(--danger)">*</span></label>
       <textarea class="fi" id="rej-motivo" rows="4" placeholder="Ex: conflito com audiências programadas..."></textarea>
     </div>
-    <button class="btn btn-full" style="background:var(--danger);border-color:var(--danger);color:#fff;font-weight:500;margin-bottom:8px;" onclick="confirmarRej('${sol.prot}')">✗ Confirmar rejeição</button>
-    <button class="btn btn-outline btn-full" onclick="renderGestorAprovar(_sols.find(s=>s.prot==='${sol.prot}'))">← Aprovar em vez disso</button>`;
+    <button class="btn btn-full" style="background:var(--danger);border-color:var(--danger);color:#fff;font-weight:500;margin-bottom:8px;" onclick="confirmarRej('${esc(sol.prot)}')">✗ Confirmar rejeição</button>
+    <button class="btn btn-outline btn-full" onclick="renderGestorAprovar(_sols.find(s=>s.prot==='${esc(sol.prot)}'))">← Aprovar em vez disso</button>`;
 }
 async function _enviarRetornoEmail(sol,aprovado,motivo){
   try{
@@ -864,7 +865,7 @@ async function confirmarAp(prot){
     try{await window._sbFnsPortal.atualizarStatusSolicitacao(sol._sbId,'APROVADO',null);}catch(e){console.warn('atualizarStatus:',e);}
   }
   $('gest-title').textContent='✅ Férias aprovadas';
-  $('gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">✅</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Aprovado!</div><div style="font-size:14px;color:var(--muted);">Férias de <strong style="color:var(--text);">${sol.nome}</strong> aprovadas.<br>${fD(sol.ini)} → ${fD(sol.fim)} · ${sol.dc} dias.</div></div>`;
+  $('gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">✅</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Aprovado!</div><div style="font-size:14px;color:var(--muted);">Férias de <strong style="color:var(--text);">${esc(sol.nome)}</strong> aprovadas.<br>${fD(sol.ini)} → ${fD(sol.fim)} · ${Number(sol.dc)} dias.</div></div>`;
   toast('Férias aprovadas!','success');
   _enviarRetornoEmail(sol,true,null);
 }
@@ -877,7 +878,7 @@ async function confirmarRej(prot){
     try{await window._sbFnsPortal.atualizarStatusSolicitacao(sol._sbId,'REJEITADO',motivo);}catch(e){console.warn('atualizarStatus:',e);}
   }
   $('gest-title').textContent='❌ Rejeitada';
-  $('gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">❌</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Rejeitada</div><div style="font-size:14px;color:var(--muted);">Motivo: ${motivo}</div></div>`;
+  $('gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">❌</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Rejeitada</div><div style="font-size:14px;color:var(--muted);">Motivo: ${esc(motivo)}</div></div>`;
   toast('Solicitação rejeitada','error');
   _enviarRetornoEmail(sol,false,motivo);
 }

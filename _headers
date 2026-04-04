@@ -1,0 +1,38 @@
+/*
+  # Security Headers — LUMA RH
+  # Aplicados a todas as rotas do Cloudflare Pages
+
+  # Impedir clickjacking
+  X-Frame-Options: DENY
+
+  # Impedir MIME sniffing
+  X-Content-Type-Options: nosniff
+
+  # Forçar HTTPS por 2 anos
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+
+  # Controle de referrer
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Desabilitar APIs sensíveis do browser
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
+
+  # Content Security Policy — controla quais origens podem carregar recursos
+  # esm.sh: biblioteca Supabase JS
+  # alcdn.msauth.net + login.microsoftonline.com + login.microsoft.com: MSAL
+  # graph.microsoft.com: Microsoft Graph API (email)
+  # *.supabase.co: Supabase API e Auth
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://esm.sh https://alcdn.msauth.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://ttclcdppifmmdjztfunl.supabase.co https://ttclcdppifmmdjztfunl.supabase.in wss://ttclcdppifmmdjztfunl.supabase.co https://graph.microsoft.com https://login.microsoftonline.com https://login.microsoft.com https://esm.sh; worker-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+
+  # Evitar envio de informações de browser para sites externos
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Cross-Origin-Resource-Policy: same-site
+
+# Headers específicos para arquivos estáticos (cache)
+/msal-browser.min.js
+  Cache-Control: public, max-age=86400
+  X-Content-Type-Options: nosniff
+
+/supabase_client.js
+  Cache-Control: no-store
+  X-Content-Type-Options: nosniff
