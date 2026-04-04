@@ -1,0 +1,899 @@
+import {
+  sb, requireAuth, logout,
+  getColaboradorByEmail, getFeriasSaldo,
+  getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
+  getSolicitacaoPorProtocolo, getProfiles
+} from './supabase_client.js'
+
+window._sbLogout = () => logout()
+window._sb = sb
+
+;(async () => {
+  const profile = await requireAuth(['colaborador','master','gestor','rh','manager_global'])
+  if (!profile) return
+  window._sbProfile = profile
+  window._sbUserEmail = profile.email
+  window._sbFnsPortal = {
+    getColaboradorByEmail, getFeriasSaldo,
+    getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
+    getSolicitacaoPorProtocolo, getProfiles
+  }
+  // Auto-inicia o portal após DOM pronto
+  const doStart = () => {
+    if (typeof loadPortalSb === 'function') { loadPortalSb(); return }
+    setTimeout(doStart, 50)
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(doStart, 0))
+  } else {
+    setTimeout(doStart, 0)
+  }
+})()
+</script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#2a2535;--bg2:#322d42;--bg3:#3c3650;
+  --border:rgba(155,102,244,0.15);--border2:rgba(155,102,244,0.28);
+  --text:#f0ecff;--muted:#8a7faa;
+  --accent:#9b66f4;--gold:#ffd000;--gold-dark:#c9a200;
+  --danger:#f87171;--ok:#38d9a9;
+  --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;--r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;}
+nav{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;border-bottom:1px solid rgba(155,102,244,0.25);background:#2a2535;position:sticky;top:0;z-index:100;}
+.nbrand{display:flex;align-items:center;gap:10px;}
+.ntitle{font-weight:600;font-size:16px;}
+.nsub{font-size:11px;color:var(--accent);font-weight:500;}
+.nright{display:flex;align-items:center;gap:10px;}
+.ndot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
+.ndot.live{background:var(--ok);box-shadow:0 0 5px rgba(56,217,169,.5);}
+.navatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;}
+.nname{font-size:13px;color:var(--muted);}
+.btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border2);background:none;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{background:var(--bg3);}
+.btn-accent{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500;}
+.btn-accent:hover{background:var(--gold-dark);border-color:var(--gold-dark);}
+.btn-gold{background:var(--gold);border-color:var(--gold);color:#1c1826;font-weight:600;}
+.btn-gold:hover{background:#e6bc00;}
+.btn-full{width:100%;justify-content:center;padding:12px;}
+.btn-outline{border-color:var(--border2);color:var(--muted);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn:disabled{opacity:.4;pointer-events:none;}
+.cscr{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:900;padding:16px;}
+.cscr.hidden{display:none;}
+.cbox{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;padding:26px;max-width:420px;width:100%;}
+.lscr{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:800;}
+.lscr.hidden{display:none;}
+.spin{width:30px;height:30px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lmsg{font-size:14px;color:var(--muted);}
+.flbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:5px;display:block;font-weight:500;}
+.fi{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text);font-family:var(--font);font-size:13px;width:100%;transition:border-color .15s;}
+.fi:focus{outline:none;border-color:var(--accent);}
+.fgrp{margin-bottom:12px;}
+/* ── Layout principal: tela cheia sem scroll ── */
+.main{max-width:1280px;margin:0 auto;padding:10px 20px;height:calc(100vh - 64px);display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:0;}
+.ct{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+/* ── KPIs compactos ── */
+.kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;position:relative;overflow:hidden;}
+.kl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px;}
+.kv{font-size:22px;font-weight:300;line-height:1;margin-bottom:1px;}
+.ks{font-size:11px;color:var(--muted);}
+.kbar{position:absolute;bottom:0;left:0;right:0;height:2px;}
+/* ── 2 colunas: esquerda=calendário, direita=solicitações+política ── */
+.portal-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0;}
+.portal-col-left{display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;}
+.portal-col-right{display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;}
+.portal-col-right .card{flex:1;overflow-y:auto;min-height:0;}
+/* ── Calendário compacto ── */
+.cal-wrap{background:var(--bg3);border-radius:10px;padding:10px;}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cal-month{font-size:14px;font-weight:500;}
+.cal-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.cal-btn:hover{background:var(--bg2);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-dname{text-align:center;font-size:10px;color:var(--muted);padding:2px 0;font-weight:500;}
+.cal-day{text-align:center;padding:5px 2px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}
+.cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}
+.cal-day.tod{border-color:var(--accent);color:var(--accent);}
+.cal-day.rs,.cal-day.re{background:var(--accent);color:#fff;}
+.cal-day.ri{background:rgba(155,102,244,.2);}
+.cal-day.dis{opacity:.2;cursor:not-allowed;}
+.cal-day.oth{opacity:.15;cursor:default;}
+.cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}
+.cal-day.fds{color:var(--muted);}
+.cal-legend{display:flex;gap:10px;margin-top:6px;}
+.cal-leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);}
+.cal-dot{width:7px;height:7px;border-radius:3px;}
+.chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500;}
+.c-pend{background:rgba(255,208,0,.15);color:var(--gold);}
+.c-ok{background:rgba(56,217,169,.1);color:var(--ok);}
+.c-rej{background:rgba(248,113,113,.15);color:var(--danger);}
+.steps{display:flex;margin-bottom:10px;}
+.step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}
+.step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:1px;background:var(--border2);}
+.step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--bg);z-index:1;margin-bottom:5px;}
+.step-item.done .step-circle{background:var(--ok);border-color:var(--ok);color:#0d2a1e;}
+.step-item.active .step-circle{background:var(--accent);border-color:var(--accent);color:#fff;}
+.step-label{font-size:10px;color:var(--muted);text-align:center;}
+.step-item.active .step-label{color:var(--accent);}
+.hist-row{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.hist-row:last-child{border-bottom:none;}
+.hist-info{flex:1;}
+.hist-period{font-size:14px;font-weight:500;margin-bottom:3px;}
+.hist-meta{font-size:12px;color:var(--muted);}
+.hist-motivo{font-size:12px;color:var(--danger);margin-top:4px;}
+.empty{text-align:center;padding:28px;color:var(--muted);font-size:13px;}
+.info-box{background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:9px;padding:14px;font-size:13px;color:var(--muted);line-height:1.7;}
+.info-box strong{color:var(--text);}
+.tc{position:fixed;bottom:20px;right:20px;z-index:1000;display:flex;flex-direction:column;gap:6px;}
+.toast{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:9px 14px;font-size:13px;min-width:220px;display:flex;align-items:center;gap:7px;box-shadow:0 6px 20px rgba(0,0,0,.4);}
+.tdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.centerbox{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 63px);padding:20px;}
+</style>
+</head>
+<body>
+
+<!-- CONFIG -->
+<div class="cscr hidden" id="sConfig">
+  <div class="cbox">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <svg width="40" height="40" viewBox="0 0 100 100" fill="none">
+        <rect width="100" height="100" rx="12" fill="#9b66f4"/>
+        <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
+        <polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/>
+      </svg>
+      <div>
+        <div style="font-size:16px;font-weight:500;">Portal de Férias</div>
+        <div style="font-size:12px;color:var(--muted);">Configuração Microsoft 365</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Use os mesmos IDs do Painel Gestão RH.</div>
+    <div class="fgrp"><label class="flbl">Client ID *</label><input class="fi" id="cClientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:var(--mono);font-size:12px;"></div>
+    <div class="fgrp"><label class="flbl">Tenant ID *</label><input class="fi" id="cTenantId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:var(--mono);font-size:12px;"></div>
+    <div class="fgrp"><label class="flbl">Drive ID</label><input class="fi" id="cDriveId" placeholder="b!xxxxxx..." style="font-family:var(--mono);font-size:12px;"></div>
+    <div class="fgrp"><label class="flbl">Item ID do arquivo Excel *</label><input class="fi" id="cItemId" placeholder="01XXXXXXXXXXXXXXXX" style="font-family:var(--mono);font-size:12px;"></div>
+    <div class="fgrp"><label class="flbl">Webhook Power Automate (opcional)</label><input class="fi" id="cWebhook" placeholder="https://prod-XX.westus.logic.azure.com..." style="font-family:var(--mono);font-size:12px;"></div>
+    <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+    <button class="btn btn-gold btn-full" onclick="saveConf()">Conectar ao Microsoft 365</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="lscr hidden" id="sLoad">
+  <svg width="48" height="48" viewBox="0 0 100 100" fill="none" style="margin-bottom:4px;">
+    <rect width="100" height="100" rx="12" fill="#9b66f4"/>
+    <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
+    <polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/>
+  </svg>
+  <div class="spin"></div>
+  <div class="lmsg" id="lMsg">Conectando...</div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+<nav>
+  <div class="nbrand">
+    <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
+      <rect width="100" height="100" rx="12" fill="#9b66f4"/>
+      <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
+      <polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/>
+    </svg>
+    <div>
+      <div class="ntitle">Portal de Férias</div>
+      <div class="nsub">Luma Plataforma · RH</div>
+    </div>
+  </div>
+  <div class="nright">
+    <div class="ndot" id="ndot"></div>
+    <div class="navatar" id="nav-av">?</div>
+    <span class="nname" id="nav-nome"></span>
+    <button class="btn btn-outline" onclick="window._sbLogout&&_sbLogout()" style="font-size:12px;padding:5px 12px;">Sair</button>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="kgrid">
+    <div class="kpi"><div class="kl">Saldo disponível</div><div class="kv" style="color:var(--ok)" id="k-saldo">—</div><div class="ks" id="k-saldo-sub">dias</div><div class="kbar" style="background:var(--ok)"></div></div>
+    <div class="kpi"><div class="kl">Dias já utilizados</div><div class="kv" style="color:var(--accent)" id="k-usados">—</div><div class="ks">de 30 dias de direito</div><div class="kbar" style="background:var(--accent)"></div></div>
+    <div class="kpi"><div class="kl">Prazo concessivo</div><div class="kv" style="font-size:18px;margin-top:2px;color:var(--gold)" id="k-prazo">—</div><div class="ks">último dia para gozar</div><div class="kbar" style="background:var(--gold)"></div></div>
+  </div>
+
+  <div class="portal-cols">
+    <!-- COLUNA ESQUERDA: calendário / solicitar -->
+    <div class="portal-col-left">
+      <div class="card" id="card-ultimo" style="display:none;">
+        <div class="ct">Último período de férias</div>
+        <div id="ultimo-conteudo"></div>
+      </div>
+
+      <div class="card">
+        <div class="ct">Solicitar férias</div>
+    <div class="steps">
+      <div class="step-item active" id="s0"><div class="step-circle">1</div><div class="step-label">Escolher datas</div></div>
+      <div class="step-item" id="s1"><div class="step-circle">2</div><div class="step-label">Confirmar</div></div>
+      <div class="step-item" id="s2"><div class="step-circle">3</div><div class="step-label">Enviado</div></div>
+    </div>
+
+    <div id="step-cal">
+      <div class="cal-wrap">
+        <div class="cal-nav">
+          <button class="cal-btn" id="btn-prev">&#8249;</button>
+          <div class="cal-month" id="cal-month">—</div>
+          <button class="cal-btn" id="btn-next">&#8250;</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-legend">
+          <div class="cal-leg"><div class="cal-dot" style="background:var(--accent)"></div>Selecionado</div>
+          <div class="cal-leg"><div class="cal-dot" style="background:rgba(155,102,244,.25)"></div>Período</div>
+          <div class="cal-leg"><div class="cal-dot" style="background:rgba(248,113,113,.2)"></div>Feriado</div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <div id="sel-msg" style="font-size:13px;color:var(--muted);margin-bottom:12px;">Clique em uma data para iniciar a seleção do período.</div>
+        <button class="btn btn-gold" id="btn-continuar" disabled>Continuar →</button>
+      </div>
+    </div>
+
+    <div id="step-confirm" style="display:none;">
+      <div id="confirm-body" style="margin-bottom:16px;"></div>
+      <div style="margin-bottom:14px;">
+        <label class="flbl">Observação para o gestor (opcional)</label>
+        <textarea class="fi" id="obs" rows="3" placeholder="Ex: prefiro retornar na segunda-feira..."></textarea>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-outline" id="btn-voltar">← Voltar</button>
+        <button class="btn btn-accent" id="btn-enviar">✓ Enviar solicitação para aprovação</button>
+      </div>
+    </div>
+
+    <div id="step-done" style="display:none;text-align:center;padding:20px 16px;">
+      <div style="font-size:36px;margin-bottom:10px;">✅</div>
+      <div style="font-size:18px;font-weight:500;margin-bottom:6px;">Solicitação enviada!</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;" id="done-msg">—</div>
+      <div style="background:var(--bg3);border-radius:10px;padding:12px;text-align:left;margin-bottom:16px;" id="done-resumo"></div>
+      <button class="btn btn-gold" id="btn-nova">Nova solicitação</button>
+    </div>
+      </div><!-- /card solicitar -->
+    </div><!-- /portal-col-left -->
+
+    <!-- COLUNA DIREITA: solicitações + política -->
+    <div class="portal-col-right">
+      <div class="card">
+        <div class="ct">Minhas solicitações <span id="hist-count" style="color:var(--muted);font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;"></span></div>
+        <div id="hist-list"><div class="empty">Nenhuma solicitação ainda.</div></div>
+      </div>
+
+      <div class="info-box" style="flex-shrink:0;">
+        <strong>Política de Férias / Recesso</strong><br>
+        <span style="color:var(--accent);font-weight:500;">CLT:</span> 📅 <strong>30 dias corridos</strong> após 12 meses · aviso prévio <strong>30 dias</strong> · mín. <strong>14 dias</strong> no 1º período · pagamento 2 dias úteis antes.<br>
+        <span style="color:var(--accent);font-weight:500;">Associado OAB:</span> 📅 <strong>30 dias de recesso anual remunerado</strong> conforme Estatuto OAB (Lei 8.906/94) e contrato de associação.<br>
+        <span style="color:var(--danger);font-weight:500;">PJ / MEI:</span> ⚠ Não há férias CLT. Recesso conforme contrato de prestação de serviços.<br>
+        ✅ Todas as solicitações sujeitas à aprovação do gestor.
+      </div>
+    </div><!-- /portal-col-right -->
+  </div><!-- /portal-cols -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- GESTOR -->
+<div id="screen-gestor" style="display:none;">
+  <div class="centerbox">
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:32px;max-width:560px;width:100%;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+        <svg width="36" height="36" viewBox="0 0 100 100" fill="none"><rect width="100" height="100" rx="12" fill="#9b66f4"/><polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/><polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/></svg>
+        <div style="font-size:18px;font-weight:500;" id="gest-title">Aprovação de Férias</div>
+      </div>
+      <div id="gest-body"></div>
+    </div>
+  </div>
+</div>
+
+<div class="tc" id="tc"></div>
+
+<script>
+const CK='pa_v3_cfg';
+const CK_FERIAS='luma_ferias_v2';
+let msalApp=null,tok=null,CFG=null,UCOLAB=null;
+let _solsColabId=null;  // UUID do colaborador logado (para queries Supabase)
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+const fD=d=>{if(!d)return'—';try{const x=new Date(d.toString().length<=5?((Number(d)-25569)*86400*1000):d+'T12:00:00');if(isNaN(x))return'—';return x.toLocaleDateString('pt-BR');}catch{return'—'}};
+const toISO=d=>{if(!d)return'';if(typeof d==='number'||/^\d+$/.test(String(d).trim())){const n=Number(d);const x=new Date((n>59?n-25569:n-25568)*86400*1000);return x.toISOString().split('T')[0];}try{const x=new Date(d+'T12:00:00');return isNaN(x)?'':x.toISOString().split('T')[0];}catch{return''}};
+
+const FERIADOS=['2026-01-01','2026-02-16','2026-02-17','2026-04-03','2026-04-05','2026-04-21','2026-04-30','2026-05-01','2026-09-07','2026-10-12','2026-11-02','2026-11-15','2026-12-25','2027-01-01','2027-04-21','2027-05-01','2027-09-07'];
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const isFer=d=>FERIADOS.includes(d);
+const isFds=d=>{const x=new Date(d+'T12:00:00');return x.getDay()===0||x.getDay()===6;};
+const diasCorr=(a,b)=>Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5)+1;
+const diasUteis=(a,b)=>{let n=0,d=new Date(a+'T12:00:00');const f=new Date(b+'T12:00:00');while(d<=f){const s=d.toISOString().split('T')[0];if(!isFds(s)&&!isFer(s))n++;d.setDate(d.getDate()+1);}return n;};
+
+let calY=new Date().getFullYear(),calM=new Date().getMonth(),rS=null,rE=null,picking=false;
+let _sols=JSON.parse(localStorage.getItem(CK_FERIAS)||'[]');
+const saveSols=()=>localStorage.setItem(CK_FERIAS,JSON.stringify(_sols));
+// Recarrega _sols do Supabase e renderiza
+async function _reloadSols(){
+  if(!_solsColabId||!window._sbFnsPortal)return;
+  try{
+    const data=await window._sbFnsPortal.getSolicitacoesFerias(_solsColabId);
+    _sols=(data||[]).map(s=>({
+      _sbId:s.id, prot:s.protocolo, email:UCOLAB?.email||'',
+      nome:UCOLAB?.nome||'', ini:s.data_inicio, fim:s.data_fim,
+      dc:s.dias_corridos, du:s.dias_uteis, obs:s.observacao||'',
+      status:s.status, em:s.solicitado_em, decisaoEm:s.decisao_em,
+      motivoRej:s.motivo_rejeicao||null
+    }));
+  }catch(e){console.warn('_reloadSols:',e);}
+  renderPortal();
+}
+
+function toast(msg,type='success'){
+  const t=document.createElement('div');t.className='toast';
+  const c=type==='success'?'#38d9a9':type==='error'?'#f87171':'#9b66f4';
+  t.innerHTML=`<div class="tdot" style="background:${c}"></div><span>${msg}</span>`;
+  $('tc').appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .25s';setTimeout(()=>t.remove(),300);},4500);
+}
+
+// ── AUTH (igual painel gestão) ──
+function cfgSave(c){const s=JSON.stringify(c);try{localStorage.setItem(CK,s);}catch(e){}try{sessionStorage.setItem(CK,s);}catch(e){}const exp=new Date();exp.setFullYear(exp.getFullYear()+1);document.cookie=`${CK}=${encodeURIComponent(s)};expires=${exp.toUTCString()};path=/;SameSite=Strict;Secure`;}
+function cfgLoad(){try{const v=localStorage.getItem(CK);if(v)return JSON.parse(v);}catch(e){}try{const v=sessionStorage.getItem(CK);if(v)return JSON.parse(v);}catch(e){}try{const m=document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(CK+'='));if(m){const v=decodeURIComponent(m.split('=').slice(1).join('='));return JSON.parse(v);}}catch(e){}return null;}
+
+async function initApp(c){
+  CFG=c;$('sConfig').classList.add('hidden');$('sLoad').classList.remove('hidden');setL('Inicializando autenticação...');
+  try{
+    msalApp=await msal.createStandardPublicClientApplication({
+      auth:{clientId:c.clientId,authority:`https://login.microsoftonline.com/${c.tenantId}`,redirectUri:'https://ashy-plant-05558780f.2.azurestaticapps.net/portal_ferias_colaborador.html'},
+      cache:{cacheLocation:'localStorage',storeAuthStateInCookie:true}
+    });
+    await msalApp.initialize();
+    const r=await msalApp.handleRedirectPromise();
+    if(r){tok=r.accessToken;await loadPortal();return;}
+    const accounts=msalApp.getAllAccounts();
+    if(accounts.length>0){
+      try{const s=await msalApp.acquireTokenSilent({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],account:accounts[0]});tok=s.accessToken;await loadPortal();return;}catch(e){}
+    }
+    await msalApp.loginRedirect({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All']});
+  }catch(e){$('sLoad').classList.add('hidden');$('sConfig').classList.remove('hidden');toast('Erro: '+e.message,'error');}
+}
+
+async function getT(){
+  if(tok)return tok;
+  const a=msalApp.getAllAccounts();
+  if(!a.length){await msalApp.loginRedirect({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All']});throw new Error('Redirecionando...');}
+  try{const r=await msalApp.acquireTokenSilent({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],account:a[0]});return tok=r.accessToken;}
+  catch(e){await msalApp.acquireTokenRedirect({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],account:a[0]});throw new Error('Renovando token...');}
+}
+function driveB(){return CFG.driveId?`/drives/${CFG.driveId}/items/${CFG.itemId}`:`/me/drive/items/${CFG.itemId}`;}
+async function gGet(url){const t=await getT();const r=await fetch('https://graph.microsoft.com/v1.0'+url,{headers:{Authorization:'Bearer '+t}});if(!r.ok)throw new Error(`Graph ${r.status}`);return r.json();}
+async function gPatch(url,body){const t=await getT();const r=await fetch('https://graph.microsoft.com/v1.0'+url,{method:'PATCH',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error(`PATCH ${r.status}`);return r.json();}
+async function rSheet(sh){const d=await gGet(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/usedRange`);const rows=d.values||[];if(rows.length<2)return[];const hdr=rows[0];return rows.slice(1).map((row,i)=>{const o={_row:i+2};hdr.forEach((h,j)=>o[h]=row[j]??null);return o;});}
+function col2L(n){let s='';n++;while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s;}
+async function patchCell(sh,row,col,val){await gPatch(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/range(address='${col2L(col)}${row}')`,{values:[[val]]});}
+function setL(m){$('lMsg').textContent=m;}
+
+function saveConf(){
+  const c={clientId:$('cClientId').value.trim(),tenantId:$('cTenantId').value.trim(),driveId:$('cDriveId').value.trim(),itemId:$('cItemId').value.trim(),webhook:$('cWebhook').value.trim()};
+  if(!c.clientId||!c.tenantId||!c.itemId){toast('Client ID, Tenant ID e Item ID são obrigatórios','error');return;}
+  cfgSave(c);initApp(c);
+}
+
+// ── PORTAL ──
+async function loadPortal(){
+  setL('Lendo dados do colaborador...');
+  try{
+    const accounts=msalApp.getAllAccounts();
+    const email=accounts.length>0?accounts[0].username:'';
+    const nome=accounts.length>0?(accounts[0].name||email):email;
+    UCOLAB={email,nome};
+
+    setL('Lendo FERIAS_CLT...');
+    const ferias=await rSheet('FERIAS_CLT');
+    setL('Lendo CADASTRO_COLABORADORES...');
+    const cad=await rSheet('CADASTRO_COLABORADORES');
+
+    // Busca colaborador por e-mail ou nome
+    const meuCad=cad.find(r=>
+      String(r.EMAIL_CORPORATIVO||'').toLowerCase()===email.toLowerCase()||
+      String(r.NOME||'').toLowerCase().includes(nome.split(' ')[0].toLowerCase())
+    );
+    const meuFer=ferias.find(r=>
+      String(r.EMAIL_CORPORATIVO||'').toLowerCase()===email.toLowerCase()||
+      String(r.NOME||'').toLowerCase().includes(nome.split(' ')[0].toLowerCase())||
+      (meuCad&&r.ID_COLABORADOR===meuCad.ID_COLABORADOR)
+    );
+
+    UCOLAB.cad=meuCad||null;
+    UCOLAB.fer=meuFer||null;
+    UCOLAB.vinculo=meuCad?String(meuCad.TIPO_VINCULO||'').toUpperCase().trim():'N/A';
+    UCOLAB.ferRow=meuFer?meuFer._row:null;
+
+    $('sLoad').classList.add('hidden');
+    $('app').style.display='block';
+    $('nav-av').textContent=nome[0].toUpperCase();
+    $('nav-nome').textContent=nome.split(' ')[0];
+    $('ndot').classList.add('live');
+
+    renderPortal();
+  }catch(e){
+    $('sLoad').classList.add('hidden');$('app').style.display='block';
+    toast('Erro ao carregar: '+e.message,'error');
+    UCOLAB={email:'',nome:'Colaborador',vinculo:'N/A',cad:null,fer:null};
+    renderPortal();
+  }
+}
+
+// ── Carregamento via Supabase (substitui MSAL + Excel) ──
+async function loadPortalSb(){
+  $('sLoad').classList.remove('hidden');
+  $('app').style.display='none';
+  setL('Carregando seus dados...');
+  try{
+    const email=window._sbUserEmail||window._sbProfile?.email||'';
+    const nome=window._sbProfile?.nome||email;
+    UCOLAB={email,nome};
+
+    // Busca colaborador pelo e-mail corporativo
+    const cad=await window._sbFnsPortal.getColaboradorByEmail(email).catch(()=>null);
+    if(cad){
+      _solsColabId=cad.id;
+      // Mapeia para o formato que o código existente espera
+      UCOLAB.cad={
+        ...cad,
+        ID_COLABORADOR:cad.id_colaborador,
+        NOME:cad.nome,
+        EMAIL_CORPORATIVO:cad.email_corporativo,
+        TIPO_VINCULO:cad.tipo_vinculo,
+        GESTOR:cad.gestor,
+        GESTOR_EMAIL:cad.gestor_email,
+        CARGO:cad.cargo, AREA:cad.area, EMPRESA:cad.empresa
+      };
+      UCOLAB.vinculo=String(cad.tipo_vinculo||'').toUpperCase().trim();
+
+      // Carrega saldo de férias
+      const fer=await window._sbFnsPortal.getFeriasSaldo(cad.id).catch(()=>null);
+      if(fer){
+        UCOLAB.fer={
+          ...fer,
+          _row:fer.id,
+          INICIO_PERIODO_AQUISITIVO:fer.inicio_periodo_aquisitivo,
+          FIM_PERIODO_AQUISITIVO:fer.fim_periodo_aquisitivo,
+          FIM_PERIODO_CONCESSIVO:fer.fim_periodo_concessivo,
+          FERIAS_PROGRAMADAS_INICIO:fer.ferias_programadas_inicio,
+          FERIAS_PROGRAMADAS_FIM:fer.ferias_programadas_fim,
+          STATUS_FERIAS:fer.status_ferias
+        };
+      }
+
+      // Carrega solicitações de férias do Supabase
+      const sols=await window._sbFnsPortal.getSolicitacoesFerias(cad.id).catch(()=>[]);
+      _sols=(sols||[]).map(s=>({
+        _sbId:s.id, prot:s.protocolo, email,
+        nome, ini:s.data_inicio, fim:s.data_fim,
+        dc:s.dias_corridos, du:s.dias_uteis, obs:s.observacao||'',
+        status:s.status, em:s.solicitado_em, decisaoEm:s.decisao_em,
+        motivoRej:s.motivo_rejeicao||null
+      }));
+      // Salva em localStorage como cache
+      localStorage.setItem(CK_FERIAS,JSON.stringify(_sols));
+    } else {
+      UCOLAB.cad=null; UCOLAB.fer=null; UCOLAB.vinculo='N/A';
+    }
+    $('sLoad').classList.add('hidden');
+    $('app').style.display='block';
+    $('nav-av').textContent=nome[0]?.toUpperCase()||'U';
+    $('nav-nome').textContent=nome.split(' ')[0];
+    $('ndot').classList.add('live');
+    renderPortal();
+  }catch(e){
+    $('sLoad').classList.add('hidden');$('app').style.display='block';
+    toast('Erro ao carregar: '+e.message,'error');
+    UCOLAB={email:window._sbUserEmail||'',nome:'Colaborador',vinculo:'N/A',cad:null,fer:null};
+    renderPortal();
+  }
+}
+
+function renderPortal(){
+  const isSocio=UCOLAB.vinculo==='SOCIO';
+  const isCLT=UCOLAB.vinculo==='CLT'||UCOLAB.vinculo==='ASSOCIADO'||isSocio;
+  const isAssociado=UCOLAB.vinculo==='ASSOCIADO';
+  const isPJ=UCOLAB.vinculo==='PJ'||UCOLAB.vinculo==='MEI';
+  const fer=UCOLAB.fer;
+  const usados=_sols.filter(s=>s.email===UCOLAB.email&&s.status!=='REJEITADO').reduce((a,s)=>a+s.dc,0);
+  const saldo=isCLT?Math.max(0,30-usados):0;
+
+  $('k-saldo').textContent=(isCLT||isPJ)?saldo:'N/A';
+  $('k-saldo-sub').textContent=isAssociado?'de 30 dias de recesso OAB':isSocio?'de 30 dias — recesso sócio':isCLT?'de 30 dias de direito CLT':isPJ?'recesso contratual':'Não aplicável — '+UCOLAB.vinculo;
+  $('k-usados').textContent=(isCLT||isPJ)?usados:'—';
+  $('k-prazo').textContent=fer&&fer.FIM_PERIODO_CONCESSIVO?fD(fer.FIM_PERIODO_CONCESSIVO):'N/A';
+
+  // Último período gozado
+  const gi=fer?toISO(fer.FERIAS_GOZADAS_INICIO):null;
+  const gf=fer?toISO(fer.FERIAS_GOZADAS_FIM):null;
+  const aprovadas=_sols.filter(s=>s.email===UCOLAB.email&&s.status==='APROVADO').sort((a,b)=>new Date(b.ini)-new Date(a.ini));
+  if(gi&&gf){
+    $('card-ultimo').style.display='';
+    const dc=diasCorr(gi,gf),du=diasUteis(gi,gf);
+    $('ultimo-conteudo').innerHTML=blocoKPIs(fD(gi),fD(gf),dc,du);
+  }else if(aprovadas.length>0){
+    const u=aprovadas[0];
+    $('card-ultimo').style.display='';
+    $('ultimo-conteudo').innerHTML=blocoKPIs(fD(u.ini),fD(u.fim),u.dc,u.du);
+  }
+
+  // Aviso PJ/MEI
+  if(isPJ){
+    const avisoDiv=document.createElement('div');
+    avisoDiv.style.cssText='background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:9px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7;';
+    avisoDiv.innerHTML=`<strong style="color:var(--danger);">⚠ Atenção — Vínculo ${esc(UCOLAB.vinculo)}</strong><br>
+      Colaboradores PJ/MEI não possuem direito a férias pela CLT. A solicitação será registrada como <strong>recesso contratual</strong> e estará sujeita à aprovação do gestor conforme contrato de prestação de serviços.`;
+    $('step-cal').insertBefore(avisoDiv,$('step-cal').firstChild);
+  }
+
+  // Aviso Associado
+  if(isAssociado){
+    const avisoDiv=document.createElement('div');
+    avisoDiv.style.cssText='background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:9px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7;';
+    avisoDiv.innerHTML=`<strong style="color:var(--accent);">ℹ Advogado Associado</strong><br>
+      Seu recesso anual de 30 dias é garantido pelo Estatuto da OAB (Lei 8.906/94) e pelo seu contrato de associação. A solicitação será tratada como <strong>recesso contratual remunerado</strong>.`;
+    $('step-cal').insertBefore(avisoDiv,$('step-cal').firstChild);
+  }
+
+  if(!isCLT&&!isPJ){
+    $('step-cal').innerHTML=`<div class="empty">Solicitação não disponível para vínculo <strong>${esc(UCOLAB.vinculo)}</strong>.</div>`;
+  }else{renderCal();}
+  renderHist();setStep(0);
+}
+
+function blocoKPIs(ini,fim,dc,du){
+  return`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Início</div><div style="font-size:15px;font-weight:500;">${ini}</div></div>
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Término</div><div style="font-size:15px;font-weight:500;">${fim}</div></div>
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Dias corridos</div><div style="font-size:26px;font-weight:300;color:var(--ok);">${dc}</div></div>
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Dias úteis</div><div style="font-size:26px;font-weight:300;">${du}</div></div>
+  </div>`;
+}
+
+// ── CALENDÁRIO ──
+function renderCal(){
+  $('cal-month').textContent=`${MESES[calM]} ${calY}`;
+  const g=$('cal-grid');g.innerHTML='';
+  DS.forEach(d=>{const el=document.createElement('div');el.className='cal-dname';el.textContent=d;g.appendChild(el);});
+  const first=new Date(calY,calM,1),last=new Date(calY,calM+1,0);
+  const today=new Date().toISOString().split('T')[0];
+  for(let i=0;i<first.getDay();i++){const el=document.createElement('div');el.className='cal-day oth';g.appendChild(el);}
+  for(let d=1;d<=last.getDate();d++){
+    const iso=`${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let cls='cal-day';
+    if(iso<today)cls+=' dis';
+    else if(isFer(iso))cls+=' fer';
+    else if(isFds(iso))cls+=' fds';
+    if(iso===today)cls+=' tod';
+    if(rS&&rE){if(iso===rS)cls+=' rs';else if(iso===rE)cls+=' re';else if(iso>rS&&iso<rE)cls+=' ri';}
+    else if(iso===rS)cls+=' rs';
+    const el=document.createElement('div');el.className=cls;el.textContent=d;
+    if(!cls.includes('dis')&&!cls.includes('oth')){const _i=iso;el.onclick=()=>clickD(_i);}
+    g.appendChild(el);
+  }
+}
+function clickD(iso){if(!rS||rE){rS=iso;rE=null;picking=true;}else if(picking&&iso>rS){rE=iso;picking=false;}else{rS=iso;rE=null;picking=true;}updMsg();renderCal();}
+function updMsg(){
+  const btn=$('btn-continuar');
+  if(!rS){$('sel-msg').textContent='Clique em uma data para iniciar a seleção.';btn.disabled=true;return;}
+  if(!rE){$('sel-msg').textContent=`Início: ${fD(rS)} — agora clique na data de término.`;btn.disabled=true;return;}
+  const dc=diasCorr(rS,rE),du=diasUteis(rS,rE);
+  $('sel-msg').innerHTML=`<strong>${fD(rS)}</strong> → <strong>${fD(rE)}</strong> · <span style="color:var(--ok)">${dc} dias corridos</span> · ${du} úteis`;
+  btn.disabled=false;
+}
+
+function setStep(i){
+  ['s0','s1','s2'].forEach((id,j)=>{const el=$(id);el.classList.remove('active','done');if(j<i)el.classList.add('done');else if(j===i)el.classList.add('active');});
+  $('step-cal').style.display=i===0?'':'none';
+  $('step-confirm').style.display=i===1?'':'none';
+  $('step-done').style.display=i===2?'':'none';
+}
+
+function goStep2(){
+  if(!rS||!rE){toast('Selecione o período completo','error');return;}
+  const dc=diasCorr(rS,rE);
+  const hoje=new Date().toISOString().split('T')[0];
+
+  // ── Regra 1: Aviso prévio mínimo de 30 dias ──
+  const diffInicio=Math.round((new Date(rS+'T12:00:00')-new Date(hoje+'T12:00:00'))/864e5);
+  if(diffInicio<30){toast('Aviso prévio mínimo de 30 dias antes do início. Selecione uma data a partir de '+fD(new Date(new Date().getTime()+30*864e5).toISOString().split('T')[0]),'error');return;}
+
+  // ── Regra 2: Saldo disponível ──
+  const isSocioVal=UCOLAB.vinculo==='SOCIO';
+  const isPJVal=UCOLAB.vinculo==='PJ'||UCOLAB.vinculo==='MEI';
+  const usados=_sols.filter(s=>s.email===UCOLAB.email&&s.status!=='REJEITADO').reduce((a,s)=>a+s.dc,0);
+  const saldo=isPJVal?999:Math.max(0,30-usados);
+  if(!isPJVal&&dc>saldo){toast(`Saldo insuficiente. Disponível: ${saldo} dias`,'error');return;}
+
+  // ── Regra 3: Mínimo de 14 dias no primeiro período ──
+  const solsAprov=_sols.filter(s=>s.email===UCOLAB.email&&s.status!=='REJEITADO');
+  if(solsAprov.length===0&&dc<14){toast('O primeiro período deve ter no mínimo 14 dias corridos.','error');return;}
+
+  // ── Regra 4: Máximo de 3 fracionamentos ──
+  if(solsAprov.length>=3){toast('Limite de 3 períodos de férias atingido.','error');return;}
+
+  // ── Regra 5: Período mínimo de 5 dias ──
+  if(dc<5){toast('O período mínimo é de 5 dias corridos.','error');return;}
+  setStep(1);
+  $('confirm-body').innerHTML=blocoKPIs(fD(rS),fD(rE),diasCorr(rS,rE),diasUteis(rS,rE))+
+    `<div style="font-size:13px;color:var(--muted);margin-top:12px;">Ao confirmar, <strong style="color:var(--text);">Anderson de Assis de Souza</strong> receberá notificação no Teams e e-mail para aprovar ou rejeitar.</div>
+    <div style="margin-top:10px;background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:8px;padding:10px;font-size:12px;color:var(--muted);line-height:1.7;">
+      ⏰ Aviso prévio mínimo: <strong style="color:var(--text);">30 dias</strong><br>
+      ✂️ Máximo de <strong style="color:var(--text);">3 períodos</strong> · mínimo de <strong style="color:var(--text);">14 dias</strong> no 1º período<br>
+      💰 Pagamento <strong style="color:var(--text);">2 dias úteis antes</strong> do início
+    </div>`;
+}
+
+async function enviarSolicitar(){
+  const dc=diasCorr(rS,rE),du=diasUteis(rS,rE);
+  const obs=$('obs').value.trim();
+  const prot='SOL-'+Date.now();
+  const baseUrl=window.location.href.split('?')[0];
+  const sol={prot,email:UCOLAB.email,nome:UCOLAB.nome,ini:rS,fim:rE,dc,du,obs,
+    status:'PENDENTE',em:new Date().toISOString(),decisaoEm:null,motivoRej:null,
+    linkAprovar:`${baseUrl}?acao=APROVAR&prot=${prot}`,
+    linkRejeitar:`${baseUrl}?acao=REJEITAR&prot=${prot}`};
+  // Salvar no Supabase
+  if(window._sbFnsPortal && _solsColabId){
+    try{
+      const sbSol=await window._sbFnsPortal.criarSolicitacaoFerias({
+        tenant_id:window._sbProfile?.tenant_id,
+        colaborador_id:_solsColabId,
+        protocolo:prot,
+        data_inicio:rS,data_fim:rE,
+        dias_corridos:dc,dias_uteis:du,
+        observacao:obs||null
+      });
+      sol._sbId=sbSol?.id;
+    }catch(e){console.warn('criarSolicitacaoFerias:',e);}
+  }
+  _sols.push(sol);saveSols();
+
+  try{
+    const mailR=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:msalApp.getAllAccounts()[0]});
+    const emailBody=`<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0f0f0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:24px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e0e0e0;">
+<!-- HEADER -->
+<tr><td style="background:#7c3aed;padding:28px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><span style="font-size:24px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">🌴 Solicitação de Férias</span><br>
+    <span style="font-size:12px;color:#d8b4fe;font-family:Arial,sans-serif;">Portal RH · Luma Plataforma</span></td>
+    <td align="right"><span style="font-size:32px;">🏖️</span></td>
+  </tr></table>
+</td></tr>
+<!-- BODY -->
+<tr><td style="padding:32px;">
+  <p style="font-size:15px;color:#374151;font-family:Arial,sans-serif;margin:0 0 24px;line-height:1.6;">Olá,<br>Uma nova solicitação de férias foi registrada e <strong>aguarda sua análise</strong>.</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;border:1px solid #e5e7eb;">
+    <tr style="background:#ede9fe;"><td style="padding:11px 16px;color:#6b21a8;font-weight:700;border-bottom:1px solid #e5e7eb;width:38%;">Colaborador</td><td style="padding:11px 16px;font-weight:700;color:#111;border-bottom:1px solid #e5e7eb;">${UCOLAB.nome}</td></tr>
+    <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Período</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${fD(rS)} &rarr; ${fD(rE)}</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias corridos</td><td style="padding:11px 16px;color:#111;font-weight:700;border-bottom:1px solid #e5e7eb;">${dc} dias</td></tr>
+    <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias úteis</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${du} dias</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Observação</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${obs||'—'}</td></tr>
+    <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;">Protocolo</td><td style="padding:11px 16px;color:#7c3aed;font-family:monospace;font-size:12px;">${prot}</td></tr>
+  </table>
+  <p style="font-size:13px;color:#6b7280;font-family:Arial,sans-serif;margin:28px 0 14px;">Clique em uma das opções abaixo para registrar sua decisão:</p>
+  <table cellpadding="0" cellspacing="0"><tr>
+    <td style="padding-right:12px;"><a href="${sol.linkAprovar}" style="display:inline-block;background:#16a34a;color:#ffffff;padding:14px 32px;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border:2px solid #15803d;">&#10003; Aprovar</a></td>
+    <td><a href="${sol.linkRejeitar}" style="display:inline-block;background:#dc2626;color:#ffffff;padding:14px 32px;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border:2px solid #b91c1c;">&#10007; Rejeitar</a></td>
+  </tr></table>
+</td></tr>
+<!-- FOOTER -->
+<tr><td style="background:#f3f4f6;padding:14px 32px;border-top:1px solid #e5e7eb;">
+  <span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal de Férias &middot; Luma Plataforma &middot; Mensagem automática</span>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+    const gestorEmail=UCOLAB.cad?.GESTOR_EMAIL||'luisa@luisamoraesadvogados.com.br';
+    const emailPayload={message:{
+      subject:`[Férias] ${UCOLAB.nome} · ${fD(rS)} a ${fD(rE)} · Aguarda aprovação`,
+      body:{contentType:'HTML',content:emailBody},
+      toRecipients:[{emailAddress:{address:gestorEmail}}]
+    },saveToSentItems:true};
+    await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',headers:{Authorization:'Bearer '+mailR.accessToken,'Content-Type':'application/json'},body:JSON.stringify(emailPayload)});
+    toast('Gestor notificado por e-mail!','success');
+  }catch(e){toast('Solicitação registrada!','success');}
+
+  setStep(2);
+  $('done-msg').textContent=`Protocolo ${prot} — aguarde a decisão do gestor.`;
+  $('done-resumo').innerHTML=`<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">Resumo</div>
+    <div style="font-size:13px;margin-bottom:3px;"><strong>Período:</strong> ${fD(rS)} → ${fD(rE)} · ${dc} dias corridos · ${du} úteis</div>
+    <div style="font-size:12px;color:var(--muted);">Status aparecerá em "Minhas solicitações".</div>`;
+  rS=null;rE=null;picking=false;renderHist();updMsg();
+}
+
+function novaSol(){$('obs').value='';setStep(0);renderCal();updMsg();}
+
+function renderHist(){
+  const meus=_sols.filter(s=>s.email===UCOLAB.email).reverse();
+  $('hist-count').textContent=meus.length?`${meus.length} registros`:'';
+  if(!meus.length){$('hist-list').innerHTML='<div class="empty">Nenhuma solicitação ainda.</div>';return;}
+  $('hist-list').innerHTML=meus.map(s=>{
+    const cls=s.status==='APROVADO'?'c-ok':s.status==='REJEITADO'?'c-rej':'c-pend';
+    return`<div class="hist-row">
+      <div class="hist-info">
+        <div class="hist-period">${fD(s.ini)} → ${fD(s.fim)}</div>
+        <div class="hist-meta">${s.dc} dias corridos · ${s.du} úteis · <span style="font-family:var(--mono);font-size:11px;">${s.prot}</span></div>
+        ${s.motivoRej?`<div class="hist-motivo">Motivo da rejeição: ${esc(s.motivoRej)}</div>`:''}
+      </div>
+      <span class="chip ${cls}">${esc(s.status)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── GESTOR ──
+async function checkGestorUrl(){
+  const p=new URLSearchParams(window.location.search);
+  const acao=p.get('acao'),prot=p.get('prot');
+  if(!acao||!prot)return false;
+  $('sConfig').classList.add('hidden');$('sLoad').classList.add('hidden');
+  $('app').style.display='none';$('screen-gestor').style.display='block';
+  // Busca local primeiro; se não encontrar, tenta Supabase
+  let sol=_sols.find(s=>s.prot===prot);
+  if(!sol&&window._sbFnsPortal){
+    try{
+      const sbSol=await window._sbFnsPortal.getSolicitacaoPorProtocolo(prot);
+      if(sbSol){
+        const c=sbSol.colaboradores||{};
+        sol={
+          _sbId:sbSol.id,
+          prot:sbSol.protocolo,
+          email:c.email_corporativo||'',
+          nome:c.nome||'',
+          ini:sbSol.data_inicio,fim:sbSol.data_fim,
+          dc:sbSol.dias_corridos,du:sbSol.dias_uteis||0,
+          obs:sbSol.observacao||'',
+          status:sbSol.status,
+          motivoRej:sbSol.motivo_rejeicao||null,
+          decisaoEm:sbSol.decisao_em||null
+        };
+        // Garante que esteja em _sols para que confirmarAp/Rej funcione
+        if(!_sols.find(s=>s.prot===prot)){_sols.push(sol);saveSols();}
+      }
+    }catch(e){console.warn('getSolicitacaoPorProtocolo:',e);}
+  }
+  if(!sol){$('gest-title').textContent='Não encontrada';$('gest-body').innerHTML='<div style="color:var(--muted)">Solicitação não encontrada.</div>';return true;}
+  if(sol.status!=='PENDENTE'){$('gest-title').textContent=sol.status==='APROVADO'?'✅ Já aprovada':'❌ Já rejeitada';$('gest-body').innerHTML=`<div style="color:var(--muted)">Esta solicitação já foi ${esc(sol.status.toLowerCase())}.</div>`;return true;}
+  if(acao==='APROVAR')renderGestorAprovar(sol);else renderGestorRejeitar(sol);
+  return true;
+}
+
+function renderGestorAprovar(sol){
+  $('gest-title').textContent='Aprovar solicitação';
+  $('gest-body').innerHTML=`
+    <div style="background:var(--bg3);border-radius:10px;padding:16px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Colaborador</div><div style="font-size:15px;font-weight:500;">${esc(sol.nome)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Protocolo</div><div style="font-size:12px;font-family:var(--mono);color:var(--accent);">${esc(sol.prot)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Início</div><div style="font-size:15px;font-weight:500;">${fD(sol.ini)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Término</div><div style="font-size:15px;font-weight:500;">${fD(sol.fim)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias corridos</div><div style="font-size:26px;font-weight:300;color:var(--ok);">${Number(sol.dc)}</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px;">Dias úteis</div><div style="font-size:26px;font-weight:300;">${Number(sol.du)}</div></div>
+      </div>
+      ${sol.obs?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);">Obs: ${esc(sol.obs)}</div>`:''}
+    </div>
+    <button class="btn btn-gold btn-full" style="margin-bottom:8px;" onclick="confirmarAp('${esc(sol.prot)}')">✓ Confirmar aprovação</button>
+    <button class="btn btn-outline btn-full" onclick="renderGestorRejeitar(_sols.find(s=>s.prot==='${esc(sol.prot)}'))">Rejeitar em vez disso</button>`;
+}
+function renderGestorRejeitar(sol){
+  $('gest-title').textContent='Rejeitar solicitação';
+  $('gest-body').innerHTML=`
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Solicitação de <strong style="color:var(--text);">${esc(sol.nome)}</strong> · ${fD(sol.ini)} → ${fD(sol.fim)} · ${Number(sol.dc)} dias</div>
+    <div style="margin-bottom:14px;">
+      <label class="flbl">Motivo da rejeição <span style="color:var(--danger)">*</span></label>
+      <textarea class="fi" id="rej-motivo" rows="4" placeholder="Ex: conflito com audiências programadas..."></textarea>
+    </div>
+    <button class="btn btn-full" style="background:var(--danger);border-color:var(--danger);color:#fff;font-weight:500;margin-bottom:8px;" onclick="confirmarRej('${esc(sol.prot)}')">✗ Confirmar rejeição</button>
+    <button class="btn btn-outline btn-full" onclick="renderGestorAprovar(_sols.find(s=>s.prot==='${esc(sol.prot)}'))">← Aprovar em vez disso</button>`;
+}
+async function _enviarRetornoEmail(sol,aprovado,motivo){
+  try{
+    const acc=msalApp?.getAllAccounts()[0];if(!acc)return;
+    const mailR=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:acc});
+    const headerBg=aprovado?'#16a34a':'#dc2626';
+    const headerBorder=aprovado?'#15803d':'#b91c1c';
+    const icon=aprovado?'✅':'❌';
+    const titulo=aprovado?'Férias Aprovadas':'Solicitação Rejeitada';
+    const msgPrincipal=aprovado
+      ?`Suas férias foram <strong style="color:#16a34a;">aprovadas</strong> pelo gestor. As datas estão confirmadas conforme abaixo.`
+      :`Sua solicitação de férias foi <strong style="color:#dc2626;">rejeitada</strong> pelo gestor.<br><br><strong>Motivo informado:</strong><br><span style="background:#fef2f2;display:inline-block;padding:8px 12px;border-left:3px solid #dc2626;color:#374151;">${motivo}</span>`;
+    const emailBody=`<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0f0f0;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:24px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e0e0e0;">
+<!-- HEADER -->
+<tr><td style="background:${headerBg};padding:28px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><span style="font-size:24px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">${icon} ${titulo}</span><br>
+    <span style="font-size:12px;color:#ffffff;opacity:.8;font-family:Arial,sans-serif;">Portal RH · Luma Plataforma</span></td>
+  </tr></table>
+</td></tr>
+<!-- STATUS BANNER -->
+<tr><td style="background:${aprovado?'#f0fdf4':'#fef2f2'};padding:16px 32px;border-bottom:3px solid ${headerBorder};">
+  <span style="font-size:14px;color:${aprovado?'#166534':'#991b1b'};font-family:Arial,sans-serif;">${msgPrincipal}</span>
+</td></tr>
+<!-- BODY -->
+<tr><td style="padding:32px;">
+  <p style="font-size:15px;color:#374151;font-family:Arial,sans-serif;margin:0 0 20px;">Olá, <strong>${sol.nome}</strong>,<br>Segue o resumo da sua solicitação:</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;border:1px solid #e5e7eb;">
+    <tr style="background:#f3f4f6;"><td style="padding:11px 16px;color:#374151;font-weight:700;border-bottom:1px solid #e5e7eb;width:38%;">Período</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${fD(sol.ini)} &rarr; ${fD(sol.fim)}</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias corridos</td><td style="padding:11px 16px;font-weight:700;color:#111;border-bottom:1px solid #e5e7eb;">${sol.dc} dias</td></tr>
+    <tr style="background:#f3f4f6;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias úteis</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${sol.du} dias</td></tr>
+    <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Status</td><td style="padding:11px 16px;font-weight:700;color:${headerBg};border-bottom:1px solid #e5e7eb;">${aprovado?'APROVADO':'REJEITADO'}</td></tr>
+    <tr style="background:#f3f4f6;"><td style="padding:11px 16px;color:#6b7280;">Protocolo</td><td style="padding:11px 16px;color:#7c3aed;font-family:monospace;font-size:12px;">${sol.prot}</td></tr>
+  </table>
+</td></tr>
+<!-- FOOTER -->
+<tr><td style="background:#f3f4f6;padding:14px 32px;border-top:1px solid #e5e7eb;">
+  <span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal de Férias &middot; Luma Plataforma &middot; Mensagem automática</span>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+    await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',
+      headers:{Authorization:'Bearer '+mailR.accessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({message:{subject:`${icon} [Férias ${aprovado?'Aprovadas':'Rejeitadas'}] ${sol.prot} · ${fD(sol.ini)} a ${fD(sol.fim)}`,body:{contentType:'HTML',content:emailBody},toRecipients:[{emailAddress:{address:sol.email}}]},saveToSentItems:true})
+    });
+  }catch(e){}
+}
+async function confirmarAp(prot){
+  const sol=_sols.find(s=>s.prot===prot);if(!sol)return;
+  sol.status='APROVADO';sol.decisaoEm=new Date().toISOString();saveSols();
+  if(window._sbFnsPortal&&sol._sbId){
+    try{await window._sbFnsPortal.atualizarStatusSolicitacao(sol._sbId,'APROVADO',null);}catch(e){console.warn('atualizarStatus:',e);}
+  }
+  $('gest-title').textContent='✅ Férias aprovadas';
+  $('gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">✅</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Aprovado!</div><div style="font-size:14px;color:var(--muted);">Férias de <strong style="color:var(--text);">${esc(sol.nome)}</strong> aprovadas.<br>${fD(sol.ini)} → ${fD(sol.fim)} · ${Number(sol.dc)} dias.</div></div>`;
+  toast('Férias aprovadas!','success');
+  _enviarRetornoEmail(sol,true,null);
+}
+async function confirmarRej(prot){
+  const motivo=$('rej-motivo')?.value?.trim();
+  if(!motivo){toast('Informe o motivo','error');return;}
+  const sol=_sols.find(s=>s.prot===prot);if(!sol)return;
+  sol.status='REJEITADO';sol.motivoRej=motivo;sol.decisaoEm=new Date().toISOString();saveSols();
+  if(window._sbFnsPortal&&sol._sbId){
+    try{await window._sbFnsPortal.atualizarStatusSolicitacao(sol._sbId,'REJEITADO',motivo);}catch(e){console.warn('atualizarStatus:',e);}
+  }
+  $('gest-title').textContent='❌ Rejeitada';
+  $('gest-body').innerHTML=`<div style="text-align:center;padding:20px;"><div style="font-size:44px;margin-bottom:12px;">❌</div><div style="font-size:16px;font-weight:500;margin-bottom:8px;">Rejeitada</div><div style="font-size:14px;color:var(--muted);">Motivo: ${esc(motivo)}</div></div>`;
+  toast('Solicitação rejeitada','error');
+  _enviarRetornoEmail(sol,false,motivo);
+}
+function logout(){tok=null;try{msalApp.logoutRedirect();}catch(e){window.location.reload();}}
+
+// ── EVENT LISTENERS ──
+document.addEventListener('DOMContentLoaded',function(){
+  $('btn-prev').addEventListener('click',()=>{if(calM===0){calM=11;calY--;}else calM--;renderCal();});
+  $('btn-next').addEventListener('click',()=>{if(calM===11){calM=0;calY++;}else calM++;renderCal();});
+  $('btn-continuar').addEventListener('click',goStep2);
+  $('btn-voltar').addEventListener('click',()=>setStep(0));
+  $('btn-enviar').addEventListener('click',enviarSolicitar);
+  $('btn-nova').addEventListener('click',novaSol);
+});
+
+// ── INIT ──
+const _CFG_FIXED={
+  clientId:'6d43cab3-e4b8-471e-ab64-8eec4d3bd538',
+  tenantId:'aadb5cad-6c69-4d6d-a942-e027203a4675',
+  driveId:'b!SYzrfr_-hkupnbeS1zKsZmB6CS4c97VMpJmz3oLVkalAzuB5sMOLR7djv69Vlty9',
+  itemId:'01O2PYW3EQZTMNB4MN4BB363SUCCHGX7HV',
+  webhook:cfgLoad()?.webhook||'https://defaultaadb5cad6c694d6da942e027203a46.75.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1c3d4b1363bf424bbf0cbdbf9c301a2c/triggers/manual/paths/invoke?api-version=1'
+};
+;(async()=>{
+  if(!(await checkGestorUrl())){
+    initApp(_CFG_FIXED);
+  }
+})()
