@@ -678,7 +678,15 @@ async function enviarSolicitar(){
 </table>
 </td></tr></table>
 </body></html>`;
-    const gestorEmail=UCOLAB.cad?.GESTOR_EMAIL||'luisa@luisamoraesadvogados.com.br';
+    // Rota para o gestor do colaborador; fallback para o primeiro usuário master
+    let gestorEmail=UCOLAB.cad?.GESTOR_EMAIL||'';
+    if(!gestorEmail){
+      try{
+        const _profiles=await window._sbFnsPortal.getProfiles();
+        const _master=(_profiles||[]).find(p=>p.role==='master'||p.role==='manager_global');
+        gestorEmail=_master?.email||'';
+      }catch(_){}
+    }
     const emailPayload={message:{
       subject:`[Férias] ${UCOLAB.nome} · ${fD(rS)} a ${fD(rE)} · Aguarda aprovação`,
       body:{contentType:'HTML',content:emailBody},

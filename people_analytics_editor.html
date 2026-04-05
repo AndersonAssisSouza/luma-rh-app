@@ -2812,10 +2812,23 @@ function detectRole(){
     USER_ROLE='rh';
     return;
   }
-  // Gestor: filtra por subordinados
+  // Gestor: filtra por subordinados + visibilidade restrita
   if(sbRole==='gestor'){
     USER_ROLE='gestor';
     filterDataForCoord(sbNome);
+    // Tabs visíveis: vg, ps, aniv, fer, ex, aus, pf — oculta: alert, desl, acoes
+    const _tabsOcultas=["'alert'","'desl'","'acoes'"];
+    document.querySelectorAll('.tab').forEach(t=>{
+      const oc=t.getAttribute('onclick')||'';
+      if(_tabsOcultas.some(id=>oc.includes(id))) t.style.display='none';
+    });
+    // Botões ocultos: Mensagens e Configurações
+    document.querySelectorAll('.nright .btn-nav').forEach(b=>{
+      const oc=b.getAttribute('onclick')||'';
+      if(oc.includes('mensagens_aniversario')||oc.includes('configuracoes')) b.style.display='none';
+    });
+    // Oculta botão de Administração
+    const _btnAdm=$('btn-admin'); if(_btnAdm) _btnAdm.style.display='none';
     return;
   }
   // Colaborador: só vê Portal Férias
