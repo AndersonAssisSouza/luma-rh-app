@@ -340,6 +340,16 @@ export async function updateProfile(id, campos) {
   return data
 }
 
+/** Atualiza o role de um usuário pelo email (usado ao cadastrar colaborador no admin) */
+export async function updateProfileRoleByEmail(email, role) {
+  if (!email) return
+  const { error } = await sb
+    .from('profiles')
+    .update({ role })
+    .eq('email', email)
+  if (error) throw error
+}
+
 // ============================================================
 // TENANTS (manager_global apenas)
 // ============================================================

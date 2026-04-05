@@ -413,12 +413,16 @@ async function loadPortalSb(){
   setL('Carregando seus dados...');
   try{
     const email=window._sbUserEmail||window._sbProfile?.email||'';
-    const nome=window._sbProfile?.nome||email;
+    // Nunca usar profiles.nome como fallback pois pode ter nome de outro usuário
+    let nome=email;
     UCOLAB={email,nome};
 
     // Busca colaborador pelo e-mail corporativo
     const cad=await window._sbFnsPortal.getColaboradorByEmail(email).catch(()=>null);
     if(cad){
+      // Usa sempre o nome da tabela colaboradores como fonte de verdade
+      nome=cad.nome||nome;
+      UCOLAB.nome=nome;
       _solsColabId=cad.id;
       // Mapeia para o formato que o código existente espera
       UCOLAB.cad={

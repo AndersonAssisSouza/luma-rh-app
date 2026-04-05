@@ -1246,6 +1246,8 @@ const ADMIN_EMAIL='anderson.assis@lumaplataforma.com.br';
 const CK_COORD='luma_coordenadores_v1';
 let D={},DEMO=false;
 let USER_EMAIL='',USER_ROLE='none',USER_NOME='';
+// Cache de coordenadores carregado do Supabase (fonte de verdade)
+window._sbCoords = null;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 const parseDate=d=>{if(!d)return null;if(typeof d==='number'||(/^\d+$/.test(String(d).trim()))){const n=Number(d);if(n>59)return new Date((n-25569)*86400*1000);if(n>0)return new Date((n-25568)*86400*1000);}const x=new Date(d);return isNaN(x)?null:x;};
@@ -1384,6 +1386,8 @@ async function loadAll(){
     D.LOG_AUTOMACAO_RH=D.LOG_AUTOMACAO_RH||[];
     D.PARAM_AUTOMACAO_RH=D.PARAM_AUTOMACAO_RH||[];
 
+    // Sincroniza coordenadores do Supabase (fonte de verdade para roles)
+    await syncCoordsFromSb().catch(()=>{});
     detectRole();
     render();
     $('sLoad').classList.add('hidden');$('app').style.display='block';
@@ -1791,6 +1795,12 @@ async function saveEditColab(){
   try{
     if(DEMO){fakeS('CADASTRO_COLABORADORES',colabId,campos);return;}
     await window._sbFns.updateColaborador(colabId,campos);
+    // Atualiza o role respeitando coordenadores (master/gestor/rh)
+    const _editEmail=campos.email_corporativo||$('eEmail').value.trim();
+    if(_editEmail){
+      const _coord=loadCoords().find(c=>c.email===_editEmail.toLowerCase());
+      await window._sbFns.updateProfileRoleByEmail(_editEmail,_coord?_coord.role:'colaborador').catch(()=>{});
+    }
     toast('Colaborador atualizado','success');await loadAll();
   }catch(e){toast('Erro ao salvar: '+e.message,'error');}
 }
@@ -2208,6 +2218,11 @@ async function saveNewColab(){
       dados_complementares:_nDc,
     };
     await window._sbFns.upsertColaborador(sbRow);
+    // Atualiza o role respeitando coordenadores (master/gestor/rh)
+    if(sbRow.email_corporativo){
+      const _coord=loadCoords().find(c=>c.email===sbRow.email_corporativo.toLowerCase());
+      await window._sbFns.updateProfileRoleByEmail(sbRow.email_corporativo,_coord?_coord.role:'colaborador').catch(()=>{});
+    }
     toast(`${nome} admitido! ID: ${newId}`,'success');await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
 }
@@ -2743,8 +2758,26 @@ function renderAcoes(){
 function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');if(el)el.classList.add('active');else{document.querySelectorAll('.tab').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'"))t.classList.add('active');});}if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();if(id==='admin')renderAdmin();if(id==='pf')pfInit();}
 
 // ── CONTROLE DE ACESSO ──
-function loadCoords(){try{const arr=JSON.parse(localStorage.getItem(CK_COORD)||'[]');return arr.map(c=>({...c,role:c.role||'gestor'}));}catch{return[];}}
-function saveCoords(arr){localStorage.setItem(CK_COORD,JSON.stringify(arr));}
+function loadCoords(){
+  // Usa cache do Supabase se já carregado, senão localStorage como fallback temporário
+  if(window._sbCoords!==null)return window._sbCoords;
+  try{const arr=JSON.parse(localStorage.getItem(CK_COORD)||'[]');return arr.map(c=>({...c,role:c.role||'gestor'}));}catch{return[];}
+}
+function saveCoords(arr){
+  window._sbCoords=arr;
+  localStorage.setItem(CK_COORD,JSON.stringify(arr));
+}
+async function syncCoordsFromSb(){
+  try{
+    const profiles=await window._sbFns.getProfiles();
+    const adminRoles=['master','gestor','rh'];
+    window._sbCoords=(profiles||[])
+      .filter(p=>adminRoles.includes(p.role))
+      .map(p=>({email:p.email,nome:p.nome||p.email,role:p.role}));
+    // Sincroniza localStorage como backup
+    localStorage.setItem(CK_COORD,JSON.stringify(window._sbCoords));
+  }catch(e){console.warn('syncCoordsFromSb erro:',e);}
+}
 
 // Repara linha 54 (Caio) corrompida pelo patchRow com mapeamento antigo
 // Col C=EMAIL, col D=TIPO_VINCULO, col E=STATUS (índices 0-based: 2,3,4)
@@ -2860,6 +2893,7 @@ function addCoord(){
   saveCoords(coords);
   $('coord-email').value='';$('coord-nome').value='';
   renderAdmin();
+  window._sbFns.updateProfileRoleByEmail(email,role).catch(e=>toast('Erro ao salvar acesso: '+e.message,'error'));
   const roleLabel=role==='master'?'Master':role==='rh'?'RH':'Gestor';
   toast(`${nome} adicionado como ${roleLabel}`,'success');
 }
@@ -2868,7 +2902,8 @@ function removeCoord(email){
   const coords=loadCoords().filter(c=>c.email!==email);
   saveCoords(coords);
   renderAdmin();
-  toast('Coordenador removido','error');
+  window._sbFns.updateProfileRoleByEmail(email,'colaborador').catch(e=>toast('Erro ao remover acesso: '+e.message,'error'));
+  toast('Coordenador removido','info');
 }
 // --- Formatação de moeda (R$) ---
 function _parseBRL(s){if(!s&&s!==0)return null;const n=parseFloat(String(s).replace(/[R$\s.]/g,'').replace(',','.'));return isNaN(n)?null:n;}

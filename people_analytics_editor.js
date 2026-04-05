@@ -1,12 +1,12 @@
 import {
-  sb, requireAuth, logout,
+  sb, requireAuth, logout, getProfileCached,
   getColaboradores, getAllFeriasSaldo, getExames, getAusencias,
   getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
   getColaboradorByEmail, getFeriasSaldo, getSolicitacaoPorProtocolo,
   getDesligamentosAgendados, agendarDesligamento, marcarLembreteEnviado,
   updateColaborador, upsertColaborador, gerarIdColaborador,
   updateFeriasSaldo, updateExame, inserirAusencia,
-  getProfiles, updateProfile, logEvento,
+  getProfiles, updateProfile, updateProfileRoleByEmail, logEvento,
   getMensagensAniversario, seedMensagensDefault,
   getTenantConfig, applyTenantTheme
 } from './supabase_client.js'
@@ -15,6 +15,13 @@ window._sbLogout = () => logout()
 window._sb = sb
 
 ;(async () => {
+  // colaborador → Portal de Férias (acesso direto à URL do admin bloqueado)
+  const _pre = await getProfileCached()
+  if (_pre?.role === 'colaborador') {
+    window.location.href = './portal_ferias_colaborador.html'
+    return
+  }
+
   const profile = await requireAuth(['master','gestor','rh','manager_global'])
   if (!profile) return
 
@@ -32,7 +39,7 @@ window._sb = sb
     getDesligamentosAgendados, agendarDesligamento, marcarLembreteEnviado,
     updateColaborador, upsertColaborador, gerarIdColaborador,
     updateFeriasSaldo, updateExame, inserirAusencia,
-    getProfiles, updateProfile, logEvento,
+    getProfiles, updateProfile, updateProfileRoleByEmail, logEvento,
     getMensagensAniversario, seedMensagensDefault
   }
 

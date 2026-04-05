@@ -1,5 +1,5 @@
 import {
-  sb, requireAuth, logout,
+  sb, requireAuth, logout, clearProfileCache,
   getColaboradorByEmail, getFeriasSaldo,
   getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
   getSolicitacaoPorProtocolo, getProfiles
@@ -9,6 +9,8 @@ window._sbLogout = () => logout()
 window._sb = sb
 
 ;(async () => {
+  // Limpa cache para garantir que carrega o perfil do usuário atual, não de sessão anterior
+  clearProfileCache()
   const profile = await requireAuth(['colaborador','master','gestor','rh','manager_global'])
   if (!profile) return
   window._sbProfile = profile
