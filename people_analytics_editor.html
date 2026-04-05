@@ -1418,14 +1418,18 @@ const normStatus=r=>{const s=String(r.STATUS||'').trim().toUpperCase();if(s==='A
 
 function render(){
   const cad=D.CADASTRO_COLABORADORES||[];
+  // Para gestor: usa subordinados nas abas específicas, dados completos na Visão Geral
+  const cadSub=(USER_ROLE==='gestor'&&window._subordinados)?window._subordinados:cad;
   const ferias=D.FERIAS_CLT||[];
   const exames=D.EXAMES_OCUPACIONAIS||[];
   const log=D.CONTROLE_COMUNICACAO_RH||[];
   const aus=D.AUSENCIAS_OCORRENCIAS||[];
   const msgs=D.BIBLIOTECA_MENSAGENS_ANIV||[];
 
-  const ativos=cad.filter(r=>normStatus(r)==='ATIVO');
+  const ativos=cad.filter(r=>normStatus(r)==='ATIVO');   // dados completos (Visão Geral)
   const desl=cad.filter(r=>normStatus(r)==='DESLIGADO');
+  const ativosSub=cadSub.filter(r=>normStatus(r)==='ATIVO'); // subordinados (tabs específicas)
+  const deslSub=cadSub.filter(r=>normStatus(r)==='DESLIGADO');
   // Set de IDs de Sócios — isentos de ASO conforme NR-7
   const socioIds=new Set(ativos.filter(r=>String(r.TIPO_VINCULO||'').toUpperCase()==='SOCIO').map(r=>r.ID_COLABORADOR));
   // Mapa global de colaboradores por ID (evita JSON.stringify em onclick)
@@ -1594,11 +1598,11 @@ function render(){
 
 
 
-  // Pessoal
-  $('pAtivos').textContent=ativos.length;$('pEmpr').textContent=Object.keys(empM).length+' empresas';$('pDesl').textContent=desl.length;
-  const turn=cad.length>0?Math.round((desl.length/cad.length)*100):0;$('pTurn').textContent=turn+'%';$('pTurnS').textContent=`${desl.length} de ${cad.length}`;
-  $('pSen').textContent=Math.round(mxA);$('pSenN').textContent='anos · '+mxAN.split(' ')[0];$('qCount').textContent=ativos.length+' registros';
-  $('qBody').innerHTML=ativos.map(r=>`<tr>
+  // Pessoal (usa subordinados para gestor)
+  $('pAtivos').textContent=ativosSub.length;$('pEmpr').textContent=Object.keys(empM).length+' empresas';$('pDesl').textContent=deslSub.length;
+  const turn=cadSub.length>0?Math.round((deslSub.length/cadSub.length)*100):0;$('pTurn').textContent=turn+'%';$('pTurnS').textContent=`${deslSub.length} de ${cadSub.length}`;
+  $('pSen').textContent=Math.round(mxA);$('pSenN').textContent='anos · '+mxAN.split(' ')[0];$('qCount').textContent=ativosSub.length+' registros';
+  $('qBody').innerHTML=ativosSub.map(r=>`<tr>
     <td>${esc(r.NOME||'—')}</td><td><span class="chip ${chipV(r.TIPO_VINCULO)}">${lblV(r.TIPO_VINCULO)}</span></td>
     <td>${esc(r.CARGO||'—')}</td><td>${esc(r.AREA||'—')}</td><td>${esc(r.EMPRESA||'—')}</td>
     <td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
@@ -1660,7 +1664,7 @@ function render(){
   const ausR=(aus||[]).filter(r=>{const n=String(r.NOME||'').trim();const d=String(r.DATA||'').trim();return n&&n!=='Colaborador (a)'&&n!=='Colaborador'&&d&&d!=='Data';});
   $('ausCount').textContent=ausR.length+' registros';
   $('ausBody').innerHTML=ausR.map(r=>`<tr><td><span class="chip ce">${esc(r.TIPO||'—')}</span></td><td>${esc(r.NOME||'—')}</td><td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA)}</td><td>${esc(r.DETALHE||'—')}</td><td></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhum registro</td></tr>';
-  $('ausColab').innerHTML=ativos.map(a=>`<option value="${esc(a.ID_COLABORADOR)}">${esc(a.NOME)}</option>`).join('');
+  $('ausColab').innerHTML=ativosSub.map(a=>`<option value="${esc(a.ID_COLABORADOR)}">${esc(a.NOME)}</option>`).join('');
 
   // Desligados
   renderDesligados(desl);
@@ -2815,7 +2819,7 @@ function detectRole(){
   // Gestor: filtra por subordinados + visibilidade restrita
   if(sbRole==='gestor'){
     USER_ROLE='gestor';
-    filterDataForCoord(sbNome);
+    filterDataForCoord(sbNome, sbEmail);
     // Tabs visíveis: vg, ps, aniv, fer, ex, aus, pf — oculta: alert, desl, acoes
     const _tabsOcultas=["'alert'","'desl'","'acoes'"];
     document.querySelectorAll('.tab').forEach(t=>{
@@ -2827,8 +2831,9 @@ function detectRole(){
       const oc=b.getAttribute('onclick')||'';
       if(oc.includes('mensagens_aniversario')||oc.includes('configuracoes')) b.style.display='none';
     });
-    // Oculta botão de Administração
+    // Oculta botão de Administração e Férias Coletivas
     const _btnAdm=$('btn-admin'); if(_btnAdm) _btnAdm.style.display='none';
+    document.querySelectorAll('[onclick*="mFeriasColetivas"]').forEach(b=>b.style.display='none');
     return;
   }
   // Colaborador: só vê Portal Férias
@@ -2852,11 +2857,19 @@ function detectRole(){
   const sd=$('screen-denied');if(sd)sd.style.display='flex';
 }
 
-function filterDataForCoord(nome){
-  const nomeLow=nome.toLowerCase();
-  const subordinados=(D.CADASTRO_COLABORADORES||[]).filter(r=>String(r.GESTOR||'').toLowerCase()===nomeLow);
+function filterDataForCoord(nome,email){
+  const nomeLow=(nome||'').toLowerCase();
+  const emailLow=(email||'').toLowerCase();
+  // Match por nome do gestor OU email do gestor — mais robusto
+  const subordinados=(D.CADASTRO_COLABORADORES||[]).filter(r=>
+    (nomeLow&&String(r.GESTOR||'').toLowerCase()===nomeLow)||
+    (emailLow&&String(r.GESTOR_EMAIL||'').toLowerCase()===emailLow)
+  );
   const ids=new Set(subordinados.map(r=>r.ID_COLABORADOR));
-  D.CADASTRO_COLABORADORES=subordinados;
+  // Salva subordinados separadamente; NÃO modifica D.CADASTRO_COLABORADORES
+  // (Visão Geral precisa dos dados completos da empresa)
+  window._subordinados=subordinados;
+  window._subordinadosIds=ids;
   ['FERIAS_CLT','AUSENCIAS_OCORRENCIAS','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH'].forEach(sh=>{
     if(D[sh])D[sh]=D[sh].filter(r=>ids.has(r.ID_COLABORADOR));
   });
@@ -3153,8 +3166,9 @@ async function pfInit(){
   if(pfInited&&pfColab)return;
   pfInited=true;
   const role=USER_ROLE||window._sbRole||'none';
-  // Gestor/Master/RH: mostra seletor de colaborador
-  if(role!=='colaborador'){
+  // Gestor: usa portal próprio (agenda as próprias férias, aprova subordinados via painel)
+  // Master/RH: seletor para ver qualquer colaborador
+  if(role==='master'||role==='rh'||role==='manager_global'){
     $('pf-gestor-selector').style.display='';
     await pfLoadColabSelect();
   } else {
