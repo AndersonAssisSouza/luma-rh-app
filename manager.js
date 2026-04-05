@@ -198,7 +198,6 @@ function renderUsers() {
 window.openModalUser = function() {
   document.getElementById('uNome').value  = ''
   document.getElementById('uEmail').value = ''
-  document.getElementById('uSenha').value = ''
   document.getElementById('uRole').value  = 'master'
 
   const sel = document.getElementById('uTenant')
@@ -211,38 +210,28 @@ window.saveUser = async function() {
   const tenantId = document.getElementById('uTenant').value
   const nome     = document.getElementById('uNome').value.trim()
   const email    = document.getElementById('uEmail').value.trim().toLowerCase()
-  const senha    = document.getElementById('uSenha').value
   const role     = document.getElementById('uRole').value
 
-  if (!tenantId || !nome || !email || !senha) { toast('Preencha todos os campos','error'); return }
-  if (senha.length < 8) { toast('Senha deve ter mínimo 8 caracteres','error'); return }
+  if (!tenantId || !nome || !email) { toast('Preencha todos os campos','error'); return }
 
   try {
-    // signUp com anon key — seguro no browser.
-    // O trigger handle_new_user() cria o profile automaticamente com os metadados.
-    // O usuário recebe e-mail de confirmação (configurável em Auth → Settings no Supabase).
     const { data, error } = await sb.auth.signUp({
       email,
-      password: senha,
+      password: 'lumarh',
       options: {
-        // SEGURANÇA: não passar role/tenant_id no metadata — a trigger handle_new_user()
-        // ignora esses valores e sempre cria com role='colaborador'. O profile é
-        // atualizado manualmente via upsert abaixo (com permissão de manager_global via RLS).
         data: { nome },
         emailRedirectTo: window.location.origin + '/login.html'
       }
     })
     if (error) throw error
 
-    // Criar/atualizar profile com role e tenant_id corretos.
-    // Este upsert é permitido pela RLS pois o usuário logado é manager_global.
     if (data.user) {
       await sb.from('profiles').upsert({
         id: data.user.id, tenant_id: tenantId, nome, email, role, status: 'ATIVO'
       }, { onConflict: 'id' })
     }
 
-    toast(`Usuário ${nome} criado. E-mail de confirmação enviado para ${email}.`, 'success')
+    toast(`Usuário ${nome} criado com senha padrão lumarh.`, 'success')
     closeModal('mUser')
     await loadAll(); renderUsers()
   } catch (e) {

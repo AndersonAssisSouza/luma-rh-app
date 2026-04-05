@@ -239,19 +239,16 @@ tr:hover td{background:var(--bg3);}
       <div class="fgrp"><div class="flbl">Nome completo *</div><input class="fi" id="uNome" placeholder="Ex: Luisa Moraes"></div>
       <div class="fgrp"><div class="flbl">E-mail corporativo *</div><input class="fi" id="uEmail" type="email" placeholder="luisa@empresa.com"></div>
     </div>
-    <div class="fgrid">
-      <div class="fgrp"><div class="flbl">Perfil *</div>
-        <select class="fsel" id="uRole">
-          <option value="master">Master</option>
-          <option value="gestor">Gestor</option>
-          <option value="rh">RH</option>
-          <option value="colaborador">Colaborador</option>
-        </select>
-      </div>
-      <div class="fgrp"><div class="flbl">Senha temporária *</div><input class="fi" id="uSenha" type="password" placeholder="Mínimo 8 caracteres"></div>
+    <div class="fgrp"><div class="flbl">Perfil *</div>
+      <select class="fsel" id="uRole">
+        <option value="master">Master</option>
+        <option value="gestor">Gestor</option>
+        <option value="rh">RH</option>
+        <option value="colaborador">Colaborador</option>
+      </select>
     </div>
     <div style="background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:8px;padding:12px;font-size:12px;color:var(--muted);margin-top:4px;">
-      💡 O usuário receberá um e-mail de confirmação. Após confirmar, pode alterar a senha em <em>Esqueci minha senha</em> na tela de login.
+      🔒 A senha inicial será <strong style="color:var(--text);">lumarh</strong>. No primeiro acesso, o usuário será obrigado a criar uma senha pessoal.
     </div>
     <div class="mf">
       <button class="btn" onclick="closeModal('mUser')">Cancelar</button>
