@@ -346,6 +346,14 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 3
     </div>
   </div>
 
+  <!-- LINHA 6: Turnover por setor -->
+  <div style="margin-top:14px;">
+    <div class="card" style="margin-bottom:0;">
+      <div class="ct">Turnover por setor <span id="turnSetorPeriodo" style="font-size:11px;color:var(--muted);margin-left:6px;"></span></div>
+      <div id="turnSetorChart" style="display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:4px;"></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- PESSOAL -->
@@ -1564,6 +1572,40 @@ function render(){
   $('gestorChart').innerHTML=gestE.map((e,i)=>{const pct=Math.round((e[1]/ativos.length)*100);
     return`<div style="margin-bottom:11px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:17px;">${esc(e[0].split(' ')[0])}</span><span style="font-size:17px;font-family:var(--mono);color:var(--accent)">${e[1]} · ${pct}%</span></div>
       <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;"><div style="width:${(e[1]/mxGest)*100}%;height:100%;background:${aC[i%aC.length]};border-radius:3px;"></div></div></div>`;}).join('');
+
+  // ── TURNOVER POR SETOR ──
+  (()=>{
+    const setorMap={};
+    cad.forEach(r=>{
+      const s=r.SETOR||r.AREA||'N/D';
+      if(!setorMap[s]) setorMap[s]={total:0,desl:0};
+      setorMap[s].total++;
+      if(normStatus(r)!=='ATIVO') setorMap[s].desl++;
+    });
+    const setorE=Object.entries(setorMap)
+      .filter(([,v])=>v.total>0)
+      .map(([s,v])=>({s,total:v.total,desl:v.desl,pct:Math.round((v.desl/v.total)*100)}))
+      .sort((a,b)=>b.pct-a.pct);
+    const mxPct=Math.max(...setorE.map(e=>e.pct),1);
+    const tColors=['#f87171','#fb923c','#fbbf24','#a3e635','#34d399','#60a5fa','#818cf8','#c084fc','#fb7185','#38bdf8'];
+    if(setorE.length===0){
+      $('turnSetorChart').innerHTML='<div style="color:var(--muted);font-size:12px;padding:12px 0;">Sem dados de setor</div>';
+    } else {
+      $('turnSetorChart').innerHTML=setorE.map((e,i)=>{
+        const cor=e.pct>=30?'#f87171':e.pct>=15?'#fb923c':'#34d399';
+        return`<div style="flex:1;min-width:140px;max-width:220px;">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+            <span style="font-size:11px;color:var(--text);font-weight:500;" title="${esc(e.s)}">${esc(e.s).length>16?esc(e.s).slice(0,16)+'…':esc(e.s)}</span>
+            <span style="font-size:11px;font-family:var(--mono);color:${cor};font-weight:600;">${e.pct}%</span>
+          </div>
+          <div style="height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;">
+            <div style="width:${(e.pct/mxPct)*100}%;height:100%;background:${cor};border-radius:3px;transition:width .4s;"></div>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:3px;">${e.desl} deslig. / ${e.total} total</div>
+        </div>`;
+      }).join('');
+    }
+  })();
 
   // ── TOP SENIORIDADE ──
   const sorted=[...ativos].sort((a,b)=>(parseFloat(b.ANOS_EMPRESA)||0)-(parseFloat(a.ANOS_EMPRESA)||0)).slice(0,5);
