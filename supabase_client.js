@@ -343,11 +343,15 @@ export async function updateProfile(id, campos) {
 /** Atualiza o role de um usuário pelo email (usado ao cadastrar colaborador no admin) */
 export async function updateProfileRoleByEmail(email, role) {
   if (!email) return
-  const { error } = await sb
+  const { data, error } = await sb
     .from('profiles')
     .update({ role })
     .eq('email', email)
+    .select()
   if (error) throw error
+  if (!data || data.length === 0) {
+    throw new Error(`Sem permissão para alterar o perfil de ${email}. Execute o SQL de RLS no Supabase.`)
+  }
 }
 
 // ============================================================
