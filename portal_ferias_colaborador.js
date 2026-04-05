@@ -2,7 +2,7 @@ import {
   sb, requireAuth, logout, clearProfileCache,
   getColaboradorByEmail, getFeriasSaldo,
   getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
-  getSolicitacaoPorProtocolo, getProfiles
+  getSolicitacaoPorProtocolo, getProfiles, sendEmail
 } from './supabase_client.js'
 
 window._sbLogout = () => logout()
@@ -18,7 +18,7 @@ window._sb = sb
   window._sbFnsPortal = {
     getColaboradorByEmail, getFeriasSaldo,
     getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
-    getSolicitacaoPorProtocolo, getProfiles
+    getSolicitacaoPorProtocolo, getProfiles, sendEmail
   }
   // Auto-inicia o portal após DOM pronto
   const doStart = () => {

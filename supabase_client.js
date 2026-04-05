@@ -546,3 +546,25 @@ function _lighten(hex, amount) {
     return '#' + [r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('')
   } catch { return hex }
 }
+
+// ============================================================
+// E-MAIL (via Supabase Edge Function → Resend)
+// From fixo: LUMA RH <lumarh@lumaplataforma.com.br>
+// ============================================================
+
+/**
+ * Envia e-mail pelo sistema LUMA RH.
+ * @param {string|string[]} to       - Destinatário(s)
+ * @param {string}          subject  - Assunto
+ * @param {string}          html     - Corpo HTML
+ * @param {string[]}        [cc]     - Cópia
+ * @param {Array}           [attachments] - Anexos: [{filename, content (base64)}]
+ */
+export async function sendEmail(to, subject, html, cc = [], attachments = []) {
+  const body = { to, subject, html }
+  if (cc?.filter(Boolean).length)    body.cc          = cc.filter(Boolean)
+  if (attachments?.length)           body.attachments = attachments
+  const { data, error } = await sb.functions.invoke('send-email', { body })
+  if (error) throw error
+  return data
+}

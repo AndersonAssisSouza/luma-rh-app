@@ -2994,32 +2994,8 @@ function _setupCurInput(el){
 }
 function setupCurrencyInputs(){document.querySelectorAll('.cur-input').forEach(_setupCurInput);}
 
-// --- E-mail via Microsoft Graph (Mail.Send) ---
-// Autenticação MSAL usada exclusivamente para envio de e-mail (não para login)
-let msalApp=null;
-const _MSAL_MAIL_CFG={
-  auth:{
-    clientId:'6d43cab3-e4b8-471e-ab64-8eec4d3bd538',
-    authority:'https://login.microsoftonline.com/aadb5cad-6c69-4d6d-a942-e027203a4675',
-    redirectUri:window.location.origin+window.location.pathname
-  },
-  cache:{cacheLocation:'localStorage',storeAuthStateInCookie:true}
-};
-async function _getMailToken(){
-  try{
-    if(!msalApp&&typeof msal!=='undefined'){
-      msalApp=await msal.createStandardPublicClientApplication(_MSAL_MAIL_CFG);
-    }
-    if(!msalApp)return null;
-    const accounts=msalApp.getAllAccounts();
-    const scopes=['https://graph.microsoft.com/Mail.Send'];
-    if(accounts.length){
-      try{const r=await msalApp.acquireTokenSilent({scopes,account:accounts[0]});return r.accessToken;}catch(_){}
-    }
-    const r=await msalApp.acquireTokenPopup({scopes});
-    return r.accessToken;
-  }catch(e){console.warn('_getMailToken:',e.message);return null;}
-}
+// --- E-mail via Supabase Edge Function (Resend) ---
+// From fixo: LUMA RH <lumarh@lumaplataforma.com.br>
 function _getRHEmails(){return loadCoords().filter(c=>c.role==='rh').map(c=>c.email);}
 function _getGestorEmail(gestorNome){
   if(!gestorNome)return null;
@@ -3028,22 +3004,11 @@ function _getGestorEmail(gestorNome){
   return g?g.EMAIL_CORPORATIVO:null;
 }
 async function _emailLumaRH(subject,htmlBody,toEmail,ccEmails,attachments){
-  const tok=await _getMailToken();
-  if(!tok){console.warn('_emailLumaRH: token não disponível');return false;}
-  const msg={
-    subject,
-    body:{contentType:'HTML',content:htmlBody},
-    toRecipients:[{emailAddress:{address:toEmail}}]
-  };
-  if(ccEmails&&ccEmails.length)msg.ccRecipients=ccEmails.map(e=>({emailAddress:{address:e}}));
-  if(attachments&&attachments.length)msg.attachments=attachments;
   try{
-    const res=await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},
-      body:JSON.stringify({message:msg,saveToSentItems:true})
-    });
-    if(!res.ok){console.error('_emailLumaRH Graph error:',res.status,await res.text());return false;}
+    const cc=(ccEmails||[]).filter(Boolean);
+    // Converte formato Graph (contentBytes) para formato Resend (content)
+    const att=(attachments||[]).map(a=>({filename:a.name||'attachment',content:a.contentBytes}));
+    await window._sbFns.sendEmail(toEmail,subject,htmlBody,cc,att);
     return true;
   }catch(e){console.error('_emailLumaRH:',e.message);return false;}
 }
@@ -3458,18 +3423,20 @@ async function pfEnviarSolicitar(){
     }catch(e){console.warn('criarSolicitacaoFerias:',e);}
   }
   pfSols.push(sol);
-  // Enviar email ao gestor via Graph API
+  // Enviar email ao gestor via Resend (LUMA RH <lumarh@lumaplataforma.com.br>)
   try{
     const gestorEmail=pfColab.cad?.GESTOR_EMAIL||pfColab.cad?.gestor_email||'';
-    if(gestorEmail&&msalApp){
-      const mailR=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:msalApp.getAllAccounts()[0]});
+    if(gestorEmail){
       const emailBody=`<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0f0f0;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:24px 0;">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e0e0e0;">
 <tr><td style="background:#7c3aed;padding:28px 32px;">
-  <span style="font-size:24px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">🌴 Solicitação de Férias</span><br>
-  <span style="font-size:12px;color:#d8b4fe;font-family:Arial,sans-serif;">Portal RH · Luma Plataforma</span>
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><span style="font-size:24px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">🌴 Solicitação de Férias</span><br>
+    <span style="font-size:12px;color:#d8b4fe;font-family:Arial,sans-serif;">Portal RH · Luma Plataforma</span></td>
+    <td align="right"><span style="font-size:32px;">🏖️</span></td>
+  </tr></table>
 </td></tr>
 <tr><td style="padding:32px;">
   <p style="font-size:15px;color:#374151;font-family:Arial,sans-serif;margin:0 0 24px;line-height:1.6;">Olá,<br>Uma nova solicitação de férias foi registrada e <strong>aguarda sua análise</strong>.</p>
@@ -3481,19 +3448,19 @@ async function pfEnviarSolicitar(){
     <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Observação</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${obs||'—'}</td></tr>
     <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;">Protocolo</td><td style="padding:11px 16px;color:#7c3aed;font-family:monospace;font-size:12px;">${prot}</td></tr>
   </table>
-  <p style="font-size:13px;color:#6b7280;font-family:Arial,sans-serif;margin:28px 0 14px;">Clique em uma das opções abaixo:</p>
+  <p style="font-size:13px;color:#6b7280;font-family:Arial,sans-serif;margin:28px 0 14px;">Clique em uma das opções abaixo para registrar sua decisão:</p>
   <table cellpadding="0" cellspacing="0"><tr>
     <td style="padding-right:12px;"><a href="${sol.linkAprovar}" style="display:inline-block;background:#16a34a;color:#ffffff;padding:14px 32px;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border:2px solid #15803d;">&#10003; Aprovar</a></td>
     <td><a href="${sol.linkRejeitar}" style="display:inline-block;background:#dc2626;color:#ffffff;padding:14px 32px;font-family:Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;border:2px solid #b91c1c;">&#10007; Rejeitar</a></td>
   </tr></table>
 </td></tr>
 <tr><td style="background:#f3f4f6;padding:14px 32px;border-top:1px solid #e5e7eb;">
-  <span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal de Férias · Luma Plataforma · Mensagem automática</span>
+  <span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal de Férias &middot; Luma Plataforma &middot; Mensagem automática</span>
 </td></tr>
 </table>
 </td></tr></table>
 </body></html>`;
-      await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',headers:{Authorization:'Bearer '+mailR.accessToken,'Content-Type':'application/json'},body:JSON.stringify({message:{subject:`[Férias] ${pfColab.nome} · ${pfFD(pfRS)} a ${pfFD(pfRE)} · Aguarda aprovação`,body:{contentType:'HTML',content:emailBody},toRecipients:[{emailAddress:{address:gestorEmail}}]},saveToSentItems:true})});
+      await window._sbFns.sendEmail(gestorEmail,`[Férias] ${pfColab.nome} · ${pfFD(pfRS)} a ${pfFD(pfRE)} · Aguarda aprovação`,emailBody);
       toast('Gestor notificado por e-mail!','success');
     } else {
       toast('Solicitação registrada!','success');
@@ -3605,10 +3572,8 @@ async function pfConfirmarRej(prot){
 }
 
 async function pfSendReturnEmail(sol,aprovado,motivo){
+  if(!sol.email)return;
   try{
-    if(!msalApp)return;
-    const acc=msalApp.getAllAccounts()[0];if(!acc)return;
-    const mailR=await msalApp.acquireTokenSilent({scopes:['https://graph.microsoft.com/Mail.Send'],account:acc});
     const headerBg=aprovado?'#16a34a':'#dc2626';
     const icon=aprovado?'✅':'❌';
     const titulo=aprovado?'Férias Aprovadas':'Solicitação Rejeitada';
@@ -3618,24 +3583,31 @@ async function pfSendReturnEmail(sol,aprovado,motivo){
     const emailBody=`<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0f0f0;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f0f0;padding:24px 0;"><tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e0e0e0;">
-<tr><td style="background:${headerBg};padding:28px 32px;"><span style="font-size:24px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">${icon} ${titulo}</span><br><span style="font-size:12px;color:#ffffff;opacity:.8;font-family:Arial,sans-serif;">Portal RH · Luma Plataforma</span></td></tr>
-<tr><td style="background:${aprovado?'#f0fdf4':'#fef2f2'};padding:16px 32px;border-bottom:3px solid ${headerBg};"><span style="font-size:14px;color:${aprovado?'#166534':'#991b1b'};font-family:Arial,sans-serif;">${msgP}</span></td></tr>
+<tr><td style="background:${headerBg};padding:28px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><span style="font-size:24px;font-weight:700;color:#ffffff;font-family:Arial,sans-serif;">${icon} ${titulo}</span><br>
+    <span style="font-size:12px;color:#ffffff;opacity:.8;font-family:Arial,sans-serif;">Portal RH · Luma Plataforma</span></td>
+  </tr></table>
+</td></tr>
+<tr><td style="background:${aprovado?'#f0fdf4':'#fef2f2'};padding:16px 32px;border-bottom:3px solid ${headerBg};">
+  <span style="font-size:14px;color:${aprovado?'#166534':'#991b1b'};font-family:Arial,sans-serif;">${msgP}</span>
+</td></tr>
 <tr><td style="padding:32px;">
-  <p style="font-size:15px;color:#374151;font-family:Arial,sans-serif;margin:0 0 20px;">Olá, <strong>${sol.nome}</strong>,<br>Resumo:</p>
+  <p style="font-size:15px;color:#374151;font-family:Arial,sans-serif;margin:0 0 20px;">Olá, <strong>${sol.nome}</strong>,<br>Segue o resumo da sua solicitação:</p>
   <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-family:Arial,sans-serif;font-size:14px;border:1px solid #e5e7eb;">
-    <tr style="background:#f3f4f6;"><td style="padding:11px 16px;color:#374151;font-weight:700;border-bottom:1px solid #e5e7eb;width:38%;">Período</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${pfFD(sol.ini)} → ${pfFD(sol.fim)}</td></tr>
+    <tr style="background:#ede9fe;"><td style="padding:11px 16px;color:#6b21a8;font-weight:700;border-bottom:1px solid #e5e7eb;width:38%;">Colaborador</td><td style="padding:11px 16px;font-weight:700;color:#111;border-bottom:1px solid #e5e7eb;">${sol.nome}</td></tr>
+    <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Período</td><td style="padding:11px 16px;color:#111;border-bottom:1px solid #e5e7eb;">${pfFD(sol.ini)} &rarr; ${pfFD(sol.fim)}</td></tr>
     <tr><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Dias corridos</td><td style="padding:11px 16px;font-weight:700;color:#111;border-bottom:1px solid #e5e7eb;">${sol.dc} dias</td></tr>
-    <tr style="background:#f3f4f6;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Status</td><td style="padding:11px 16px;font-weight:700;color:${headerBg};border-bottom:1px solid #e5e7eb;">${aprovado?'APROVADO':'REJEITADO'}</td></tr>
+    <tr style="background:#fafafa;"><td style="padding:11px 16px;color:#6b7280;border-bottom:1px solid #e5e7eb;">Status</td><td style="padding:11px 16px;font-weight:700;color:${headerBg};border-bottom:1px solid #e5e7eb;">${aprovado?'APROVADO':'REJEITADO'}</td></tr>
     <tr><td style="padding:11px 16px;color:#6b7280;">Protocolo</td><td style="padding:11px 16px;color:#7c3aed;font-family:monospace;font-size:12px;">${sol.prot}</td></tr>
   </table>
 </td></tr>
-<tr><td style="background:#f3f4f6;padding:14px 32px;border-top:1px solid #e5e7eb;"><span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal de Férias · Luma Plataforma</span></td></tr>
+<tr><td style="background:#f3f4f6;padding:14px 32px;border-top:1px solid #e5e7eb;">
+  <span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal de Férias &middot; Luma Plataforma &middot; Mensagem automática</span>
+</td></tr>
 </table></td></tr></table></body></html>`;
-    await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{method:'POST',
-      headers:{Authorization:'Bearer '+mailR.accessToken,'Content-Type':'application/json'},
-      body:JSON.stringify({message:{subject:`${icon} [Férias ${aprovado?'Aprovadas':'Rejeitadas'}] ${sol.prot} · ${pfFD(sol.ini)} a ${pfFD(sol.fim)}`,body:{contentType:'HTML',content:emailBody},toRecipients:[{emailAddress:{address:sol.email}}]},saveToSentItems:true})
-    });
-  }catch(e){}
+    await window._sbFns.sendEmail(sol.email,`${icon} [Férias ${aprovado?'Aprovadas':'Rejeitadas'}] ${sol.prot} · ${pfFD(sol.ini)} a ${pfFD(sol.fim)}`,emailBody);
+  }catch(e){console.warn('pfSendReturnEmail:',e.message);}
 }
 </script>
 
