@@ -39,8 +39,15 @@ window.doLogin = async function() {
   hideAlert(alert)
 
   try {
+    const senhaDigitada = senha
     await login(email, senha)
     _rfClear(email)
+
+    // Senha padrão → forçar troca antes de entrar
+    if (senhaDigitada === 'lumarh') {
+      window.location.href = './trocar-senha.html'
+      return
+    }
 
     // Redirecionar conforme o role
     const profile = await getProfileCached()

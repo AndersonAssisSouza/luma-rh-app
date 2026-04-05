@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LUMA RH · Definir Nova Senha</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3C/svg%3E">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#0f0e17;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;}
+.card{background:#18162a;border:1px solid #2d2b45;border-radius:16px;padding:40px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center;}
+.logo-icon{width:44px;height:44px;background:#9b66f4;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#ffd000;flex-shrink:0;font-family:monospace;}
+.logo-text{font-size:22px;font-weight:700;color:#fff;}
+.logo-sub{font-size:12px;color:#a78bfa;margin-top:1px;letter-spacing:.04em;text-transform:uppercase;}
+.banner{background:#1e1a35;border:1px solid #4a3b8c;border-radius:10px;padding:14px 16px;margin-bottom:24px;display:flex;align-items:flex-start;gap:12px;}
+.banner-icon{font-size:20px;flex-shrink:0;margin-top:1px;}
+.banner-text{font-size:13px;color:#c4b5fd;line-height:1.55;}
+.banner-text strong{color:#e2d9ff;display:block;margin-bottom:3px;}
+h2{font-size:18px;font-weight:600;color:#f0eeff;margin-bottom:6px;text-align:center;}
+.sub{font-size:13px;color:#7c7a9e;text-align:center;margin-bottom:28px;}
+.fgrp{margin-bottom:18px;}
+label{display:block;font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase;}
+input{width:100%;background:#0f0e17;border:1px solid #2d2b45;border-radius:8px;padding:11px 14px;font-size:14px;color:#f0eeff;outline:none;transition:border-color .2s;}
+input:focus{border-color:#9b66f4;}
+input::placeholder{color:#4a4868;}
+.btn{width:100%;background:#9b66f4;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;transition:background .2s;margin-top:4px;}
+.btn:hover{background:#8b5cf6;}
+.btn:disabled{background:#3d3660;color:#6b69a3;cursor:not-allowed;}
+.alert{padding:12px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none;}
+.alert.error{background:#2d1c1c;border:1px solid #7f1d1d;color:#fca5a5;}
+.alert.success{background:#1c2d1c;border:1px solid #14532d;color:#86efac;}
+.req{font-size:11px;color:#6b69a3;margin-top:20px;line-height:1.7;}
+.req ul{padding-left:14px;margin-top:4px;}
+.strength-wrap{height:4px;border-radius:2px;margin-top:6px;background:#2d2b45;}
+.strength-bar{height:4px;border-radius:2px;width:0;transition:width .3s,background .3s;}
+.loading-ring{width:32px;height:32px;border:3px solid #2d2b45;border-top-color:#9b66f4;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">L</div>
+    <div>
+      <div class="logo-text">LUMA RH</div>
+      <div class="logo-sub">Gestão de Pessoas</div>
+    </div>
+  </div>
+
+  <!-- VERIFICANDO SESSÃO -->
+  <div id="screen-loading" style="text-align:center;padding:16px 0;">
+    <div class="loading-ring"></div>
+    <p style="font-size:13px;color:#7c7a9e;">Carregando...</p>
+  </div>
+
+  <!-- FORMULÁRIO -->
+  <div id="screen-form" style="display:none;">
+    <div class="banner">
+      <div class="banner-icon">🔒</div>
+      <div class="banner-text">
+        <strong>Redefinição de senha obrigatória</strong>
+        Por segurança, você precisa criar uma senha pessoal antes de continuar.
+      </div>
+    </div>
+    <div class="alert" id="alert-form"></div>
+    <div class="fgrp">
+      <label for="nova-senha">Nova senha</label>
+      <input type="password" id="nova-senha" placeholder="Mínimo 8 caracteres" oninput="checkStrength(this.value)" autocomplete="new-password">
+      <div class="strength-wrap"><div class="strength-bar" id="strength-bar"></div></div>
+    </div>
+    <div class="fgrp">
+      <label for="conf-senha">Confirmar senha</label>
+      <input type="password" id="conf-senha" placeholder="Repita a nova senha" autocomplete="new-password">
+    </div>
+    <button class="btn" id="btn-salvar" onclick="salvarSenha()">Definir senha e continuar</button>
+    <div class="req">
+      <strong style="color:#7c7a9e;">Requisitos:</strong>
+      <ul>
+        <li>Mínimo de 8 caracteres</li>
+        <li>Pelo menos 1 número</li>
+        <li>Pelo menos 1 letra maiúscula</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SUCESSO -->
+  <div id="screen-success" style="display:none;text-align:center;">
+    <div style="font-size:48px;margin-bottom:16px;">✅</div>
+    <h2>Senha definida!</h2>
+    <p class="sub" style="margin-top:8px;">Sua senha foi criada com sucesso.<br>Redirecionando para o sistema...</p>
+    <div style="margin-top:20px;font-size:13px;color:#7c7a9e;">Redirecionando em <span id="countdown">3</span>s...</div>
+  </div>
+</div>
+
+<script type="module" src="./trocar-senha.js"></script>
+</body>
+</html>
