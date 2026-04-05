@@ -1424,6 +1424,11 @@ function render(){
   const exames=D.EXAMES_OCUPACIONAIS||[];
   const log=D.CONTROLE_COMUNICACAO_RH||[];
   const aus=D.AUSENCIAS_OCORRENCIAS||[];
+  // Para gestor: abas específicas usam dados filtrados por subordinados; Visão Geral usa dados completos
+  const feriasSub=(USER_ROLE==='gestor'&&window._feriasSub!=null)?window._feriasSub:ferias;
+  const examesSub=(USER_ROLE==='gestor'&&window._examesSub!=null)?window._examesSub:exames;
+  const ausSub=(USER_ROLE==='gestor'&&window._ausenciasSub!=null)?window._ausenciasSub:aus;
+  const logSub=(USER_ROLE==='gestor'&&window._logSub!=null)?window._logSub:log;
   const msgs=D.BIBLIOTECA_MENSAGENS_ANIV||[];
 
   const ativos=cad.filter(r=>normStatus(r)==='ATIVO');   // dados completos (Visão Geral)
@@ -1456,6 +1461,8 @@ function render(){
     if(r.DATA_ADMISSAO){const adm=parseDate(r.DATA_ADMISSAO);if(adm){let prox=new Date(hojeEvt.getFullYear(),adm.getMonth(),adm.getDate());if(prox<hojeEvt)prox.setFullYear(hojeEvt.getFullYear()+1);const dias=Math.round((prox-hojeEvt)/864e5);evA.push({ID_COLABORADOR:r.ID_COLABORADOR,NOME:r.NOME,TIPO_EVENTO:'ANIVERSARIO_EMPRESA',DATA_EVENTO:prox.toISOString().split('T')[0],DIAS_PARA_EVENTO:dias});}}
   });
   evA.sort((a,b)=>a.DIAS_PARA_EVENTO-b.DIAS_PARA_EVENTO);
+  // Para gestor: aba Aniversários mostra apenas subordinados
+  const evASub=(USER_ROLE==='gestor'&&window._subordinadosIds)?evA.filter(e=>window._subordinadosIds.has(e.ID_COLABORADOR)):evA;
   const prD=evA.length>0?evA[0].DIAS_PARA_EVENTO:null;
   // cSem: PJ/MEI/Associado sem flag CONTRATO_INDETERMINADO='SIM'
   const cSem=ativos.filter(r=>{const v=String(r.TIPO_VINCULO||'').toUpperCase();return['PJ','MEI','ASSOCIADO'].includes(v)&&String(r.CONTRATO_INDETERMINADO||'').toUpperCase()!=='SIM';});
@@ -1612,26 +1619,27 @@ function render(){
       <button class="ab d" onclick="confirmDeslById('${esc(r.ID_COLABORADOR||'')}','${esc(r._row||'')}')">Desligar</button>
     </div></td></tr>`).join('');
 
-  // Aniversários
-  $('aTotal').textContent=evA.length;if(prD!==null){$('aProx').textContent=prD;$('aProxS').textContent='dias · '+fmtD(evA[0].DATA_EVENTO);}
+  // Aniversários (gestor: apenas subordinados; demais: todos)
+  $('aTotal').textContent=evASub.length;if(evASub.length>0){$('aProx').textContent=evASub[0].DIAS_PARA_EVENTO;$('aProxS').textContent='dias · '+fmtD(evASub[0].DATA_EVENTO);}
   // Conta mensagens de aniversário ativas do Supabase
   if(window._sbFns?.getMensagensAniversario){
     window._sbFns.getMensagensAniversario().then(ms=>$('aMsgs').textContent=(ms||[]).filter(m=>m.ativo).length).catch(()=>{});
   }
-  const p60=evA.filter(r=>parseFloat(r.DIAS_PARA_EVENTO)<=60);
+  const p60=evASub.filter(r=>parseFloat(r.DIAS_PARA_EVENTO)<=60);
   $('proxEvts').innerHTML=p60.length===0?'<div class="empty">Nenhum evento nos próximos 60 dias.</div>':
     p60.map(r=>{const d=Math.round(parseFloat(r.DIAS_PARA_EVENTO));const emp=String(r.TIPO_EVENTO||'').includes('EMPRESA');const cor=emp?'var(--accent2)':'var(--accent)';const bg=emp?'rgba(56,217,169,.1)':'rgba(79,156,249,.12)';
     const nome=encodeURIComponent(r.NOME||'');const tipo=emp?'empresa':'funcionario';
     return`<div class="ei" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;"><div class="ed" style="background:${bg}"><div class="edn" style="color:${cor}">${d}</div><div class="edl" style="color:${cor}">dias</div></div><div><div class="en">${esc(r.NOME||'—')}</div><div class="et">${emp?'🏢':'🎂'} ${emp?'Aniversário empresa':'Aniversário pessoal'} · ${fmtD(r.DATA_EVENTO)}</div></div></div><button class="btn btn-g" style="font-size:11px;padding:4px 10px;white-space:nowrap;" onclick="abrirCardAniversario('${nome}','${tipo}','${r.DATA_EVENTO||''}',${d})">🎨 Gerar Card</button></div>`;}).join('');
   $('logBody').innerHTML=log.slice(-8).reverse().map(r=>`<tr><td>${esc(r.DATA_EVENTO||'—')}</td><td>${esc(r.NOME_EXIBICAO||r.NOME||'—')}</td><td>${esc(r.TIPO_EVENTO||'—')}</td><td>${esc(r.EMPRESA||'—')}</td><td><span class="chip ${r.STATUS_APROVACAO==='APROVADO'?'cok':'cw'}">${esc(r.STATUS_APROVACAO||'Pendente')}</span></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sem registros</td></tr>';
 
-  // Férias
-  const fNa=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_APLICAVEL');
-  const fIn=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='INATIVO');
-  const fClt=ativos.filter(r=>String(r.TIPO_VINCULO||'').toUpperCase().trim()==='CLT');
-  $('fNp').textContent=fNP.length;$('fNa').textContent=fNa.length;$('fIn').textContent=fIn.length;$('fClt').textContent=fClt.length;
-  const fAtv=ferias.filter(r=>normStatus(r)==='ATIVO');$('fCount').textContent=fAtv.length+' registros';
-  if(ferias.length===0){$('fBody').innerHTML='<tr><td colspan="7" class="empty" style="padding:20px;color:var(--warn);">⚠️ Aba FERIAS_CLT sem dados — preencha a planilha base para visualizar os registros.</td></tr>';}
+  // Férias (gestor: apenas subordinados; demais: todos)
+  const fNa=feriasSub.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_APLICAVEL');
+  const fIn=feriasSub.filter(r=>String(r.STATUS_FERIAS||'').trim()==='INATIVO');
+  const fNpSub=feriasSub.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_PROGRAMADA');
+  const fClt=ativosSub.filter(r=>String(r.TIPO_VINCULO||'').toUpperCase().trim()==='CLT');
+  $('fNp').textContent=fNpSub.length;$('fNa').textContent=fNa.length;$('fIn').textContent=fIn.length;$('fClt').textContent=fClt.length;
+  const fAtv=feriasSub.filter(r=>normStatus(r)==='ATIVO');$('fCount').textContent=fAtv.length+' registros';
+  if(feriasSub.length===0){$('fBody').innerHTML='<tr><td colspan="7" class="empty" style="padding:20px;color:var(--warn);">⚠️ Aba FERIAS_CLT sem dados — preencha a planilha base para visualizar os registros.</td></tr>';}
   else $('fBody').innerHTML=fAtv.map(r=>`<tr>
     <td>${esc(r.NOME||'—')}</td><td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
     <td><span class="chip ${r.STATUS_FERIAS==='NAO_PROGRAMADA'?'cw':r.STATUS_FERIAS==='GOZADA'?'cok':r.STATUS_FERIAS==='PROGRAMADA'?'cc':'cd'}">${esc((r.STATUS_FERIAS||'—').replace('_',' '))}</span></td>
@@ -1640,10 +1648,12 @@ function render(){
     <td style="font-size:17px;color:var(--muted)">${fmtD(r.FERIAS_GOZADAS_INICIO)||'—'} → ${fmtD(r.FERIAS_GOZADAS_FIM)||'—'}</td>
     <td><div class="acts"><button class="ab" onclick='openEditFer(${JSON.stringify(r)})'>Editar</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum</td></tr>';
 
-  // Exames — exibir todos os registros (ATIVO primeiro); STATUS_EXAME='INATIVO' = desligado
-  const exAtvList=[...exames].filter(r=>normStatus(r)==='ATIVO').sort((a,b)=>(a.NOME||'').localeCompare(b.NOME||'','pt-BR'));
-  const exSem=ativos.filter(a=>!socioIds.has(a.ID_COLABORADOR)&&!exames.find(e=>e.ID_COLABORADOR===a.ID_COLABORADOR));
-  $('exV').textContent=exV.length;$('exT').textContent=exames.length;$('exA').textContent=exAtvList.length;$('exS').textContent=exSem.length;$('exCount').textContent=exAtvList.length+' registros';
+  // Exames (gestor: apenas subordinados; demais: todos)
+  const exAtvList=[...examesSub].filter(r=>normStatus(r)==='ATIVO').sort((a,b)=>(a.NOME||'').localeCompare(b.NOME||'','pt-BR'));
+  const exBase=USER_ROLE==='gestor'?ativosSub:ativos;
+  const exSem=exBase.filter(a=>!socioIds.has(a.ID_COLABORADOR)&&!examesSub.find(e=>e.ID_COLABORADOR===a.ID_COLABORADOR));
+  const exVSub=examesSub.filter(r=>String(r.STATUS_EXAME||'').toUpperCase()==='VENCIDO'&&(normStatus(r)==='ATIVO'||!r.STATUS)&&!socioIds.has(r.ID_COLABORADOR));
+  $('exV').textContent=exVSub.length;$('exT').textContent=examesSub.length;$('exA').textContent=exAtvList.length;$('exS').textContent=exSem.length;$('exCount').textContent=exAtvList.length+' registros';
   const _nr7tip='NR-7: Exame clínico isento na demissão se ≤135 dias. Audiométrico isento se ≤120 dias (risco I e II).';
   $('exBody').innerHTML=exAtvList.map(r=>{
     const isSocio=socioIds.has(r.ID_COLABORADOR);
@@ -1660,8 +1670,8 @@ function render(){
     <td>${statusChip}</td>
     <td><div class="acts"><button class="ab" onclick='openEditEx(${JSON.stringify(r)})'>Editar</button></div></td></tr>`;}).join('')||'<tr><td colspan="6" class="empty">Nenhum</td></tr>';
 
-  // Ausências — ID_COLABORADOR pode ser NaN no Excel; filtra por NOME válido e DATA real
-  const ausR=(aus||[]).filter(r=>{const n=String(r.NOME||'').trim();const d=String(r.DATA||'').trim();return n&&n!=='Colaborador (a)'&&n!=='Colaborador'&&d&&d!=='Data';});
+  // Ausências (gestor: apenas subordinados; demais: todos)
+  const ausR=(ausSub||[]).filter(r=>{const n=String(r.NOME||'').trim();const d=String(r.DATA||'').trim();return n&&n!=='Colaborador (a)'&&n!=='Colaborador'&&d&&d!=='Data';});
   $('ausCount').textContent=ausR.length+' registros';
   $('ausBody').innerHTML=ausR.map(r=>`<tr><td><span class="chip ce">${esc(r.TIPO||'—')}</span></td><td>${esc(r.NOME||'—')}</td><td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA)}</td><td>${esc(r.DETALHE||'—')}</td><td></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhum registro</td></tr>';
   $('ausColab').innerHTML=ativosSub.map(a=>`<option value="${esc(a.ID_COLABORADOR)}">${esc(a.NOME)}</option>`).join('');
@@ -2866,13 +2876,14 @@ function filterDataForCoord(nome,email){
     (emailLow&&String(r.GESTOR_EMAIL||'').toLowerCase()===emailLow)
   );
   const ids=new Set(subordinados.map(r=>r.ID_COLABORADOR));
-  // Salva subordinados separadamente; NÃO modifica D.CADASTRO_COLABORADORES
-  // (Visão Geral precisa dos dados completos da empresa)
+  // Salva subordinados separadamente; NÃO modifica D.* (Visão Geral precisa de dados completos)
   window._subordinados=subordinados;
   window._subordinadosIds=ids;
-  ['FERIAS_CLT','AUSENCIAS_OCORRENCIAS','EXAMES_OCUPACIONAIS','CONTROLE_COMUNICACAO_RH'].forEach(sh=>{
-    if(D[sh])D[sh]=D[sh].filter(r=>ids.has(r.ID_COLABORADOR));
-  });
+  // Versões filtradas para abas específicas (Férias, Exames, Ausências, Log)
+  window._feriasSub=(D.FERIAS_CLT||[]).filter(r=>ids.has(r.ID_COLABORADOR));
+  window._examesSub=(D.EXAMES_OCUPACIONAIS||[]).filter(r=>ids.has(r.ID_COLABORADOR));
+  window._ausenciasSub=(D.AUSENCIAS_OCORRENCIAS||[]).filter(r=>ids.has(r.ID_COLABORADOR));
+  window._logSub=(D.CONTROLE_COMUNICACAO_RH||[]).filter(r=>ids.has(r.ID_COLABORADOR));
 }
 
 function openAdminModal(){renderAdmin();openModal('mAdmin');}
@@ -2929,7 +2940,7 @@ function removeCoord(email){
   saveCoords(coords);
   renderAdmin();
   window._sbFns.updateProfileRoleByEmail(email,'colaborador').catch(e=>toast('Erro ao remover acesso: '+e.message,'error'));
-  toast('Coordenador removido','info');
+  toast('Gestor removido','info');
 }
 // --- Formatação de moeda (R$) ---
 function _parseBRL(s){if(!s&&s!==0)return null;const n=parseFloat(String(s).replace(/[R$\s.]/g,'').replace(',','.'));return isNaN(n)?null:n;}
