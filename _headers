@@ -33,6 +33,6 @@
   Cache-Control: public, max-age=86400
   X-Content-Type-Options: nosniff
 
-/supabase_client.js
+/*.js
   Cache-Control: no-store
   X-Content-Type-Options: nosniff
