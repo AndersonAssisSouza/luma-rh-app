@@ -15,7 +15,7 @@ window._sbLogout = () => logout()
 window._sb = sb
 
 ;(async () => {
-  const profile = await requireAuth(['master','gestor','rh','manager_global','colaborador'])
+  const profile = await requireAuth(['master','gestor','rh','manager_global'])
   if (!profile) return
 
   window._sbProfile = profile
