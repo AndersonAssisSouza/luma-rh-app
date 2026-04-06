@@ -50,6 +50,22 @@ window._sb = sb
     if (Array.isArray(tenantData.config?.modelos)) {
       window._tenantModelos = tenantData.config.modelos
     }
+    // Popula topbar e sidebar com dados do tenant
+    const nomeEmpresa = tenantData.nome || 'LUMA RH'
+    const planoTxt = tenantData.plano || 'Pro'
+    const el = id => document.getElementById(id)
+    if (el('tb-empresa')) el('tb-empresa').textContent = nomeEmpresa
+    if (el('tb-plano'))   el('tb-plano').textContent   = 'Plano ' + planoTxt
+    if (el('sb-empresa')) el('sb-empresa').textContent = nomeEmpresa
+  } catch (_) {}
+
+  // Popula nome e avatar do usuário no topbar
+  try {
+    const nome = profile.nome || profile.email || 'Usuário'
+    const iniciais = nome.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase()
+    const el = id => document.getElementById(id)
+    if (el('tb-nome'))   el('tb-nome').textContent   = nome.split(' ')[0]
+    if (el('tb-avatar')) el('tb-avatar').textContent = iniciais
   } catch (_) {}
 
   // Oculta tela de config — não é mais necessária
