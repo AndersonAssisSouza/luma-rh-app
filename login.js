@@ -130,6 +130,18 @@ document.addEventListener('keydown', e => {
 
 // Se já logado, redirecionar
 ;(async () => {
+  // Mostrar mensagem de sucesso após troca de senha
+  if (new URLSearchParams(location.search).get('senha_redefinida') === '1') {
+    const alrt = document.getElementById('alert-login')
+    if (alrt) {
+      alrt.className = 'alert success'
+      alrt.textContent = '✓ Senha redefinida com sucesso! Faça login com sua nova senha.'
+      alrt.style.display = 'block'
+    }
+    // Limpar o parâmetro da URL sem recarregar
+    history.replaceState(null, '', location.pathname)
+  }
+
   const { data: { session } } = await sb.auth.getSession()
   if (session) {
     const profile = await getProfileCached()

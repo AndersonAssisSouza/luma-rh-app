@@ -48,22 +48,24 @@ window.salvarSenha = async function() {
 
   try {
     await redefinirSenha(nova)
+
+    // Supabase invalida a sessão após updateUser — fazer logout limpo
+    // e redirecionar para login com flag de sucesso, evitando sessão morta
+    await sb.auth.signOut()
+
     show('screen-success')
-    const profile = await getProfileCached()
-    const dest = profile?.role === 'manager_global'
-      ? './manager.html'
-      : profile?.role === 'colaborador'
-        ? './portal_ferias_colaborador.html'
-        : './people_analytics_editor.html'
 
     let c = 3
     const cd = document.getElementById('countdown')
     const t = setInterval(() => {
-      c--; cd.textContent = c
-      if (c <= 0) { clearInterval(t); window.location.href = dest }
+      c--; if (cd) cd.textContent = c
+      if (c <= 0) {
+        clearInterval(t)
+        window.location.href = './login.html?senha_redefinida=1'
+      }
     }, 1000)
   } catch (e) {
-    showAlert(alrt, 'error', e.message || 'Erro ao salvar senha.')
+    showAlert(alrt, 'error', e.message || 'Erro ao salvar senha. Tente novamente.')
     btn.disabled = false
     btn.textContent = 'Definir senha e continuar'
   }
