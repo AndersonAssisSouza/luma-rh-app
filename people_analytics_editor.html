@@ -1397,6 +1397,7 @@ function _sbExToExcel(e){
     ID_COLABORADOR:c.id_colaborador||'', NOME:c.nome||'',
     EMAIL_CORPORATIVO:c.email_corporativo||'',
     STATUS:c.status||'ATIVO',
+    TIPO_VINCULO:(c.tipo_vinculo||'').toUpperCase(),
     TIPO_EXAME:e.tipo_exame, ULTIMO_EXAME:e.ultimo_exame,
     PROXIMO_EXAME:e.proximo_exame, STATUS_EXAME:e.status_exame,
     FONTE_BASE_ANTIGA:e.fonte_base_antiga||'', OBSERVACAO:e.observacao||'',
@@ -1767,10 +1768,11 @@ function render(){
     <td><div class="acts"><button class="ab" onclick='openEditFer(${JSON.stringify(r)})'>Editar</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum</td></tr>';
 
   // Exames (gestor: apenas subordinados; demais: todos)
-  const exAtvList=[...examesSub].filter(r=>normStatus(r)==='ATIVO').sort((a,b)=>(a.NOME||'').localeCompare(b.NOME||'','pt-BR'));
-  const exBase=USER_ROLE==='gestor'?ativosSub:ativos;
-  const exSem=exBase.filter(a=>!socioIds.has(a.ID_COLABORADOR)&&!examesSub.find(e=>e.ID_COLABORADOR===a.ID_COLABORADOR));
-  const exVSub=examesSub.filter(r=>String(r.STATUS_EXAME||'').toUpperCase()==='VENCIDO'&&(normStatus(r)==='ATIVO'||!r.STATUS)&&!socioIds.has(r.ID_COLABORADOR));
+  const _exVinculos=v=>{const s=String(v||'').toUpperCase();return s==='CLT'||s==='ESTAGIARIO';};
+  const exAtvList=[...examesSub].filter(r=>normStatus(r)==='ATIVO'&&_exVinculos(r.TIPO_VINCULO)).sort((a,b)=>(a.NOME||'').localeCompare(b.NOME||'','pt-BR'));
+  const exBase=(USER_ROLE==='gestor'?ativosSub:ativos).filter(a=>_exVinculos(a.TIPO_VINCULO));
+  const exSem=exBase.filter(a=>!examesSub.find(e=>e.ID_COLABORADOR===a.ID_COLABORADOR));
+  const exVSub=examesSub.filter(r=>String(r.STATUS_EXAME||'').toUpperCase()==='VENCIDO'&&normStatus(r)==='ATIVO'&&_exVinculos(r.TIPO_VINCULO));
   $('exV').textContent=exVSub.length;$('exT').textContent=examesSub.length;$('exA').textContent=exAtvList.length;$('exS').textContent=exSem.length;$('exCount').textContent=exAtvList.length+' registros';
   const _nr7tip='NR-7: Exame clínico isento na demissão se ≤135 dias. Audiométrico isento se ≤120 dias (risco I e II).';
   $('exBody').innerHTML=exAtvList.map(r=>{
