@@ -169,10 +169,12 @@ export async function getFeriasSaldo(colaboradorId) {
   return data
 }
 
-export async function updateFeriasSaldo(colaboradorId, campos) {
+export async function updateFeriasSaldo(colaboradorId, campos, tenantId) {
+  const payload = { colaborador_id: colaboradorId, ...campos }
+  if (tenantId) payload.tenant_id = tenantId
   const { data, error } = await sb
     .from('ferias_saldo')
-    .upsert({ colaborador_id: colaboradorId, ...campos }, { onConflict: 'colaborador_id' })
+    .upsert(payload, { onConflict: 'tenant_id,colaborador_id' })
     .select()
     .single()
   if (error) throw error
@@ -302,7 +304,7 @@ export async function agendarDesligamento(colab, dataDesl) {
 export async function getAllFeriasSaldo() {
   const { data, error } = await sb
     .from('ferias_saldo')
-    .select('*, colaboradores(id, id_colaborador, nome, email_corporativo, tipo_vinculo, status, gestor, gestor_email, tenant_id)')
+    .select('*, colaboradores(id, id_colaborador, nome, email_corporativo, tipo_vinculo, status, data_admissao, gestor, gestor_email, tenant_id)')
     .order('criado_em')
   if (error) throw error
   return data

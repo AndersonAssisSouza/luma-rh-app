@@ -1,3 +1,4 @@
+<!-- v2026-04-07 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -491,7 +492,7 @@ nav.legacy{display:none!important;}
       <input type="text" id="ferSearch" placeholder="Buscar por nome ou status..." oninput="filterTable('fBody',this.value)"
         style="flex:1;min-width:220px;max-width:340px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:13px;color:var(--text);outline:none;margin-left:auto;">
     </div>
-    <div class="sy"><table class="tbl"><thead><tr><th onclick="sortTable('fBody',0,this)">Colaborador</th><th onclick="sortTable('fBody',1,this)">Admissão</th><th onclick="sortTable('fBody',2,this)">Status</th><th>Período aquisitivo</th><th>Programadas</th><th>Gozadas</th><th></th></tr></thead><tbody id="fBody"></tbody></table></div>
+    <div class="sy"><table class="tbl"><thead><tr><th onclick="sortTable('fBody',0,this)">Colaborador</th><th onclick="sortTable('fBody',1,this)">Admissão</th><th onclick="sortTable('fBody',2,this)">Status</th><th>Período aquisitivo</th><th>Limite concessão</th><th>Limite p/ agendar</th><th>Programadas</th><th>Gozadas</th><th>Dias restantes</th><th></th></tr></thead><tbody id="fBody"></tbody></table></div>
   </div>
 </div>
 
@@ -591,7 +592,7 @@ nav.legacy{display:none!important;}
     <div class="kpi"><div class="kl">Canceladas</div><div class="kv" style="color:var(--muted)" id="ac_canc">—</div><div class="ks">descartadas</div><div class="kbar" style="background:var(--muted)"></div></div>
   </div>
   <div class="card">
-    <div class="ct">Lista de ações <span id="ac_count">—</span>
+    <div class="ct">Alertas Pendentes tratamento <span id="ac_count">—</span>
       <div style="display:flex;gap:6px;align-items:center;">
         <select id="ac_filtroStatus" onchange="renderAcoes()" style="padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:13px;font-family:var(--font);outline:none;">
           <option value="">Todos os status</option>
@@ -650,7 +651,7 @@ nav.legacy{display:none!important;}
           <div class="pf-cal-leg"><div class="pf-cal-dot" style="background:rgba(248,113,113,.2)"></div>Feriado</div>
         </div>
       </div>
-      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+      <div id="pf-cal-actions" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
         <div id="pf-sel-msg" style="font-size:13px;color:var(--muted);margin-bottom:12px;">Clique em uma data para iniciar a seleção do período.</div>
         <button class="btn btn-g" id="pf-btn-continuar" disabled>Continuar →</button>
       </div>
@@ -1201,7 +1202,7 @@ nav.legacy{display:none!important;}
     <div class="mb">
       <div class="fg">
         <div class="fgrp"><div class="flbl">Tipo <span class="rq">*</span></div>
-          <select class="fsel" id="ausTipo"><option value="ATESTADO">Atestado médico</option><option value="FALTA">Falta</option><option value="AFASTAMENTO">Afastamento</option><option value="LICENCA">Licença</option></select>
+          <select class="fsel" id="ausTipo"><option value="ATESTADO">Atestado médico</option><option value="FALTA">Falta</option><option value="AFASTAMENTO">Afastamento</option><option value="LICENCA">Licença</option><option value="DAYOFF">Day Off</option></select>
         </div>
         <div class="fgrp"><div class="flbl">Colaborador <span class="rq">*</span></div><select class="fsel" id="ausColab" style="font-size:17px;"></select></div>
         <div class="fgrp"><div class="flbl">Data <span class="rq">*</span></div><input class="fi" id="ausData" type="date"></div>
@@ -1335,8 +1336,9 @@ const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 const parseDate=d=>{if(!d)return null;if(typeof d==='number'||(/^\d+$/.test(String(d).trim()))){const n=Number(d);if(n>59)return new Date((n-25569)*86400*1000);if(n>0)return new Date((n-25568)*86400*1000);}const x=new Date(d);return isNaN(x)?null:x;};
 const validDate=d=>{const x=parseDate(d);if(!x)return false;const y=x.getFullYear();return y>=1970&&y<=2100;};
-const fmt=d=>{const x=parseDate(d);if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'—';try{return x.toLocaleDateString('pt-BR',{month:'2-digit',year:'numeric'})}catch{return'—'}};
-const fmtD=d=>{const x=parseDate(d);if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'—';try{return x.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}catch{return'—'}};
+const _fxDate=d=>typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d)?d+'T12:00:00':d;
+const fmt=d=>{const x=parseDate(_fxDate(d));if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'—';try{return x.toLocaleDateString('pt-BR',{month:'2-digit',year:'numeric'})}catch{return'—'}};
+const fmtD=d=>{const x=parseDate(_fxDate(d));if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'—';try{return x.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'})}catch{return'—'}};
 const iso=d=>{const x=parseDate(d);if(!x||x.getFullYear()<1970||x.getFullYear()>2100)return'';try{return x.toISOString().split('T')[0]}catch{return''}};
 const chipV=v=>({PJ:'cp',CLT:'cc',SOCIO:'cs',ESTAGIARIO:'ce',ASSOCIADO:'ca'})[String(v||'').toUpperCase()]||'cp';
 const lblV=v=>({PJ:'PJ',CLT:'CLT',SOCIO:'Sócio',ESTAGIARIO:'Estag.',ASSOCIADO:'Assoc.'})[String(v||'').toUpperCase()]||v;
@@ -1380,7 +1382,7 @@ function _sbFerToExcel(f){
     _row:f.id, _id:f.id,
     ID_COLABORADOR:c.id_colaborador||'', NOME:c.nome||'',
     EMAIL_CORPORATIVO:c.email_corporativo||'', TIPO_VINCULO:c.tipo_vinculo||'',
-    STATUS:c.status||'ATIVO',
+    STATUS:c.status||'ATIVO', DATA_ADMISSAO:c.data_admissao||'',
     INICIO_PERIODO_AQUISITIVO:f.inicio_periodo_aquisitivo,
     FIM_PERIODO_AQUISITIVO:f.fim_periodo_aquisitivo,
     FIM_PERIODO_CONCESSIVO:f.fim_periodo_concessivo,
@@ -1482,6 +1484,12 @@ async function loadAll(){
     else toast('Dados atualizados','success');
     // Verificar e enviar e-mails de aniversário/tempo de casa (silencioso)
     setTimeout(()=>enviarEmailsAniversario().catch(()=>{}),3000);
+    // Verificar e enviar alertas de limite de agendamento de férias
+    setTimeout(()=>enviarEmailsAlertaFerias().catch(()=>{}),5000);
+    // Verificar ASO vencendo em 30 dias
+    setTimeout(()=>enviarEmailsAlertaASO().catch(()=>{}),6000);
+    // Auto-gerar ações sugeridas baseadas nos alertas
+    setTimeout(_gerarAcoesAuto,4000);
   }catch(e){
     // Só chega aqui se falha fora do loop (ex: token/auth)
     $('sLoad').classList.add('hidden');$('app').style.display='block';
@@ -1543,8 +1551,8 @@ function render(){
   const hojeEvt=new Date();hojeEvt.setHours(0,0,0,0);
   const evA=[];
   ativos.forEach(r=>{
-    if(r.DATA_NASCIMENTO){const nasc=parseDate(r.DATA_NASCIMENTO);if(nasc){let prox=new Date(hojeEvt.getFullYear(),nasc.getMonth(),nasc.getDate());if(prox<hojeEvt)prox.setFullYear(hojeEvt.getFullYear()+1);const dias=Math.round((prox-hojeEvt)/864e5);evA.push({ID_COLABORADOR:r.ID_COLABORADOR,NOME:r.NOME,TIPO_EVENTO:'ANIVERSARIO',DATA_EVENTO:prox.toISOString().split('T')[0],DIAS_PARA_EVENTO:dias});}}
-    if(r.DATA_ADMISSAO){const adm=parseDate(r.DATA_ADMISSAO);if(adm){let prox=new Date(hojeEvt.getFullYear(),adm.getMonth(),adm.getDate());if(prox<hojeEvt)prox.setFullYear(hojeEvt.getFullYear()+1);const dias=Math.round((prox-hojeEvt)/864e5);evA.push({ID_COLABORADOR:r.ID_COLABORADOR,NOME:r.NOME,TIPO_EVENTO:'ANIVERSARIO_EMPRESA',DATA_EVENTO:prox.toISOString().split('T')[0],DIAS_PARA_EVENTO:dias});}}
+    if(r.DATA_NASCIMENTO){const nasc=parseDate(_fxDate(r.DATA_NASCIMENTO));if(nasc){let prox=new Date(hojeEvt.getFullYear(),nasc.getMonth(),nasc.getDate());if(prox<hojeEvt)prox.setFullYear(hojeEvt.getFullYear()+1);const dias=Math.round((prox-hojeEvt)/864e5);const _evDt=`${prox.getFullYear()}-${String(prox.getMonth()+1).padStart(2,'0')}-${String(prox.getDate()).padStart(2,'0')}`;evA.push({ID_COLABORADOR:r.ID_COLABORADOR,NOME:r.NOME,TIPO_EVENTO:'ANIVERSARIO',DATA_EVENTO:_evDt,DATA_ORIGINAL:r.DATA_NASCIMENTO,DIAS_PARA_EVENTO:dias});}}
+    if(r.DATA_ADMISSAO){const adm=parseDate(_fxDate(r.DATA_ADMISSAO));if(adm){let prox=new Date(hojeEvt.getFullYear(),adm.getMonth(),adm.getDate());if(prox<hojeEvt)prox.setFullYear(hojeEvt.getFullYear()+1);const dias=Math.round((prox-hojeEvt)/864e5);const _evDt=`${prox.getFullYear()}-${String(prox.getMonth()+1).padStart(2,'0')}-${String(prox.getDate()).padStart(2,'0')}`;evA.push({ID_COLABORADOR:r.ID_COLABORADOR,NOME:r.NOME,TIPO_EVENTO:'ANIVERSARIO_EMPRESA',DATA_EVENTO:_evDt,DATA_ORIGINAL:r.DATA_ADMISSAO,DIAS_PARA_EVENTO:dias});}}
   });
   evA.sort((a,b)=>a.DIAS_PARA_EVENTO-b.DIAS_PARA_EVENTO);
   // Para gestor: aba Aniversários mostra apenas subordinados
@@ -1635,7 +1643,7 @@ function render(){
           <div style="font-size:17px;color:${cor};opacity:.8;">dias</div>
         </div>
         <div><div style="font-size:17px;font-weight:500;">${esc(r.NOME?.split(' ')[0]||'—')}</div>
-        <div style="font-size:17px;color:var(--muted);">${emp?'🏢':'🎂'} ${fmtD(r.DATA_EVENTO)}</div></div>
+        <div style="font-size:17px;color:var(--muted);">${emp?'🏢':'🎂'} ${fmtD(r.DATA_ORIGINAL||r.DATA_EVENTO)}</div></div>
       </div>`}).join('');
 
     // ── ÁREA CHART ──
@@ -1749,24 +1757,53 @@ function render(){
   $('proxEvts').innerHTML=p60.length===0?'<div class="empty">Nenhum evento nos próximos 60 dias.</div>':
     p60.map(r=>{const d=Math.round(parseFloat(r.DIAS_PARA_EVENTO));const emp=String(r.TIPO_EVENTO||'').includes('EMPRESA');const cor=emp?'var(--accent2)':'var(--accent)';const bg=emp?'rgba(56,217,169,.1)':'rgba(79,156,249,.12)';
     const nome=encodeURIComponent(r.NOME||'');const tipo=emp?'empresa':'funcionario';
-    return`<div class="ei" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;"><div class="ed" style="background:${bg}"><div class="edn" style="color:${cor}">${d}</div><div class="edl" style="color:${cor}">dias</div></div><div><div class="en">${esc(r.NOME||'—')}</div><div class="et">${emp?'🏢':'🎂'} ${emp?'Aniversário empresa':'Aniversário pessoal'} · ${fmtD(r.DATA_EVENTO)}</div></div></div><button class="btn btn-g" style="font-size:11px;padding:4px 10px;white-space:nowrap;" onclick="abrirCardAniversario('${nome}','${tipo}','${r.DATA_EVENTO||''}',${d})">🎨 Gerar Card</button></div>`;}).join('');
+    return`<div class="ei" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;"><div class="ed" style="background:${bg}"><div class="edn" style="color:${cor}">${d}</div><div class="edl" style="color:${cor}">dias</div></div><div><div class="en">${esc(r.NOME||'—')}</div><div class="et">${emp?'🏢':'🎂'} ${emp?'Aniversário empresa':'Aniversário pessoal'} · ${fmtD(r.DATA_ORIGINAL||r.DATA_EVENTO)}</div></div></div><button class="btn btn-g" style="font-size:11px;padding:4px 10px;white-space:nowrap;" onclick="abrirCardAniversario('${nome}','${tipo}','${r.DATA_EVENTO||''}',${d})">🎨 Gerar Card</button></div>`;}).join('');
   $('logBody').innerHTML=log.slice(-8).reverse().map(r=>`<tr><td>${esc(r.DATA_EVENTO||'—')}</td><td>${esc(r.NOME_EXIBICAO||r.NOME||'—')}</td><td>${esc(r.TIPO_EVENTO||'—')}</td><td>${esc(r.EMPRESA||'—')}</td><td><span class="chip ${r.STATUS_APROVACAO==='APROVADO'?'cok':'cw'}">${esc(r.STATUS_APROVACAO||'Pendente')}</span></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sem registros</td></tr>';
 
   // Férias (gestor: apenas subordinados; demais: todos)
-  const fNa=feriasSub.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_APLICAVEL');
-  const fIn=feriasSub.filter(r=>String(r.STATUS_FERIAS||'').trim()==='INATIVO');
-  const fNpSub=feriasSub.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_PROGRAMADA');
+  const fAtvBase=feriasSub.filter(r=>normStatus(r)==='ATIVO');
+  const fNa=fAtvBase.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_APLICAVEL');
+  const fIn=fAtvBase.filter(r=>String(r.STATUS_FERIAS||'').trim()==='INATIVO');
+  const fNpSub=fAtvBase.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_PROGRAMADA');
   const fClt=ativosSub.filter(r=>String(r.TIPO_VINCULO||'').toUpperCase().trim()==='CLT');
   $('fNp').textContent=fNpSub.length;$('fNa').textContent=fNa.length;$('fIn').textContent=fIn.length;$('fClt').textContent=fClt.length;
   const fAtv=feriasSub.filter(r=>normStatus(r)==='ATIVO');$('fCount').textContent=fAtv.length+' registros';
-  if(feriasSub.length===0){$('fBody').innerHTML='<tr><td colspan="7" class="empty" style="padding:20px;color:var(--warn);">⚠️ Aba FERIAS_CLT sem dados — preencha a planilha base para visualizar os registros.</td></tr>';}
-  else $('fBody').innerHTML=fAtv.map(r=>`<tr>
-    <td>${esc(r.NOME||'—')}</td><td style="font-family:var(--mono);font-size:17px">${fmt(r.DATA_ADMISSAO)}</td>
+  const _ferDiasRestantes=r=>{
+    const ini=parseDate(_fxDate(r.INICIO_PERIODO_AQUISITIVO));const fim=parseDate(_fxDate(r.FIM_PERIODO_AQUISITIVO));
+    if(!ini||!fim)return null;
+    const meses=Math.max(0,Math.round((fim-ini)/(864e5*30.44)));
+    const diasDir=Math.min(30,Math.max(1,Math.round(meses*2.5)));
+    const gi=parseDate(_fxDate(r.FERIAS_GOZADAS_INICIO));const gf=parseDate(_fxDate(r.FERIAS_GOZADAS_FIM));
+    const diasGoz=(gi&&gf)?Math.round((gf-gi)/864e5)+1:0;
+    const pi=parseDate(_fxDate(r.FERIAS_PROGRAMADAS_INICIO));const pf=parseDate(_fxDate(r.FERIAS_PROGRAMADAS_FIM));
+    const diasProg=(pi&&pf)?Math.round((pf-pi)/864e5)+1:0;
+    return Math.max(0,diasDir-diasGoz-diasProg);
+  };
+  const _ferLimiteAgendar=r=>{const c=parseDate(_fxDate(r.FIM_PERIODO_CONCESSIVO));return c?new Date(c.getTime()-35*864e5):null;};
+  const hojeF=new Date();hojeF.setHours(0,0,0,0);
+  const _dateToStr=d=>d?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`:null;
+  if(feriasSub.length===0){$('fBody').innerHTML='<tr><td colspan="10" class="empty" style="padding:20px;color:var(--warn);">⚠️ Aba FERIAS_CLT sem dados — preencha a planilha base para visualizar os registros.</td></tr>';}
+  else $('fBody').innerHTML=fAtv.map(r=>{
+    const dr=_ferDiasRestantes(r);const drCor=dr===null?'var(--muted)':dr<=5?'var(--danger)':dr<=10?'var(--warn)':'var(--accent)';
+    // Limite concessão
+    const limConc=parseDate(_fxDate(r.FIM_PERIODO_CONCESSIVO));const diasConc=limConc?Math.round((limConc-hojeF)/864e5):null;
+    const limConcCor=diasConc===null?'var(--muted)':diasConc<0?'var(--danger)':diasConc<=30?'var(--warn)':'var(--text)';
+    // Limite agendamento = concessão - 35 dias
+    const lim=_ferLimiteAgendar(r);const diasLim=lim?Math.round((lim-hojeF)/864e5):null;
+    const limCor=diasLim===null?'var(--muted)':diasLim<0?'var(--danger)':diasLim<=15?'var(--warn)':'var(--text)';
+    const limTxt=lim?fmtD(_dateToStr(lim)):'—';
+    const _mc='font-family:var(--mono);font-size:12px';
+    return`<tr>
+    <td style="font-size:12px">${esc(r.NOME||'—')}</td>
+    <td style="${_mc};color:var(--muted)">${fmt(r.DATA_ADMISSAO)}</td>
     <td><span class="chip ${r.STATUS_FERIAS==='NAO_PROGRAMADA'?'cw':r.STATUS_FERIAS==='GOZADA'?'cok':r.STATUS_FERIAS==='PROGRAMADA'?'cc':'cd'}">${esc((r.STATUS_FERIAS||'—').replace('_',' '))}</span></td>
-    <td style="font-size:17px;color:var(--muted)">${fmtD(r.INICIO_PERIODO_AQUISITIVO)||'—'} → ${fmtD(r.FIM_PERIODO_AQUISITIVO)||'—'}</td>
-    <td style="font-size:17px;color:var(--muted)">${fmtD(r.FERIAS_PROGRAMADAS_INICIO)||'—'} → ${fmtD(r.FERIAS_PROGRAMADAS_FIM)||'—'}</td>
-    <td style="font-size:17px;color:var(--muted)">${fmtD(r.FERIAS_GOZADAS_INICIO)||'—'} → ${fmtD(r.FERIAS_GOZADAS_FIM)||'—'}</td>
-    <td><div class="acts"><button class="ab" onclick='openEditFer(${JSON.stringify(r)})'>Editar</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">Nenhum</td></tr>';
+    <td style="${_mc};color:var(--muted)">${fmtD(r.INICIO_PERIODO_AQUISITIVO)||'—'} → ${fmtD(r.FIM_PERIODO_AQUISITIVO)||'—'}</td>
+    <td style="${_mc};font-weight:600;color:${limConcCor}">${fmtD(r.FIM_PERIODO_CONCESSIVO)||'—'}${diasConc!==null?`<div style="font-size:10px;font-weight:400;color:${limConcCor}">${diasConc<0?'Vencido':diasConc===0?'Hoje':diasConc+'d'}</div>`:''}</td>
+    <td style="${_mc};font-weight:600;color:${limCor}">${limTxt}${diasLim!==null?`<div style="font-size:10px;font-weight:400;color:${limCor}">${diasLim<0?'Vencido':diasLim===0?'Hoje':diasLim+'d'}</div>`:''}</td>
+    <td style="${_mc};color:var(--muted)">${fmtD(r.FERIAS_PROGRAMADAS_INICIO)||'—'} → ${fmtD(r.FERIAS_PROGRAMADAS_FIM)||'—'}</td>
+    <td style="${_mc};color:var(--muted)">${fmtD(r.FERIAS_GOZADAS_INICIO)||'—'} → ${fmtD(r.FERIAS_GOZADAS_FIM)||'—'}</td>
+    <td style="${_mc};font-weight:700;color:${drCor}">${dr!==null?dr+'d':'—'}</td>
+    <td><div class="acts"><button class="ab" onclick='openEditFer(${JSON.stringify(r)})'>Editar</button></div></td></tr>`;}).join('')||'<tr><td colspan="10" class="empty">Nenhum</td></tr>';
 
   // Exames (gestor: apenas subordinados; demais: todos)
   const _cadMap=new Map((D.CADASTRO_COLABORADORES||[]).map(c=>[c.ID_COLABORADOR,c]));
@@ -1796,7 +1833,7 @@ function render(){
   const ausR=(ausSub||[]).filter(r=>{const n=String(r.NOME||'').trim();const d=String(r.DATA||'').trim();return n&&n!=='Colaborador (a)'&&n!=='Colaborador'&&d&&d!=='Data';});
   $('ausCount').textContent=ausR.length+' registros';
   $('ausBody').innerHTML=ausR.map(r=>`<tr><td><span class="chip ce">${esc(r.TIPO||'—')}</span></td><td>${esc(r.NOME||'—')}</td><td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA)}</td><td>${esc(r.DETALHE||'—')}</td><td></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhum registro</td></tr>';
-  $('ausColab').innerHTML=ativosSub.map(a=>`<option value="${esc(a.ID_COLABORADOR)}">${esc(a.NOME)}</option>`).join('');
+  $('ausColab').innerHTML=ativosSub.map(a=>`<option value="${esc(a._id||a.ID_COLABORADOR)}">${esc(a.NOME)}</option>`).join('');
 
   // Desligados
   renderDesligados(desl);
@@ -1808,8 +1845,8 @@ function render(){
   $('alExamList').innerHTML=exV.map(r=>`<div class="ai"><div class="aico" style="background:rgba(245,158,11,.1)">🩺</div><div class="ainf"><div class="an">${esc(r.NOME||'—')}</div><div class="ad">Último: ${fmtD(r.ULTIMO_EXAME)} · Venceu: ${fmtD(r.PROXIMO_EXAME)}</div></div><span class="chip cd">Vencido</span></div>`).join('')||'<div class="empty">Nenhum vencido</div>';
   // Nota NR-7 no rodapé de alertas de exames
   if(socioIds.size>0){const n=socioIds.size;$('alExamList').innerHTML+=`<div style="font-size:11px;color:var(--muted);padding:8px 0 0;">${n} sócio${n!==1?'s':''} isento${n!==1?'s':''} de ASO conforme NR-7</div>`;}
-  $('alResume').innerHTML=[{l:'Contratos sem data fim',v:cSem.length,c:'danger'},{l:'Exames vencidos (ativos)',v:exV.length,c:'warn'},{l:'Férias não programadas',v:fNP.length,c:'warn'},{l:'Automação Teams',v:'OK',c:'ok'}].map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 9px;background:${x.c==='ok'?'rgba(56,217,169,.05)':x.c==='danger'?'rgba(248,113,113,.07)':'rgba(245,158,11,.07)'};border-radius:6px;border:1px solid ${x.c==='ok'?'rgba(56,217,169,.15)':x.c==='danger'?'rgba(248,113,113,.2)':'rgba(245,158,11,.2)'};">
-    <span style="font-size:17px;">${x.l}</span><span style="font-size:17px;font-family:var(--mono);color:var(--${x.c==='ok'?'accent2':x.c==='danger'?'danger':'warn'})">${x.v}</span></div>`).join('');
+  $('alResume').innerHTML=[{l:'Contratos sem data fim',v:cSem.length,c:'danger'},{l:'Exames vencidos (ativos)',v:exV.length,c:'warn'},{l:'Férias não programadas',v:fNP.length,c:'warn'}].map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 9px;background:${x.c==='danger'?'rgba(248,113,113,.07)':'rgba(245,158,11,.07)'};border-radius:6px;border:1px solid ${x.c==='danger'?'rgba(248,113,113,.2)':'rgba(245,158,11,.2)'};">
+    <span style="font-size:13px;">${x.l}</span><span style="font-size:13px;font-family:var(--mono);color:var(--${x.c==='danger'?'danger':'warn'})">${x.v}</span></div>`).join('');
 }
 
 // ══════════════════════════════
@@ -2394,7 +2431,7 @@ async function saveEditFer(){
     const colabRec=(D.CADASTRO_COLABORADORES||[]).find(r=>r.ID_COLABORADOR===colabId||r._id===colabId);
     const colabUUID=colabRec?colabRec._id:null;
     if(colabUUID){
-      await window._sbFns.updateFeriasSaldo(colabUUID,campos);
+      await window._sbFns.updateFeriasSaldo(colabUUID,campos,window._sbTenantId);
     } else {
       // ferId é o UUID da ferias_saldo — atualiza diretamente
       await window._sb.from('ferias_saldo').update(campos).eq('id',ferId);
@@ -2637,7 +2674,7 @@ function renderDesligados(desl){
     $('dUltimoNome').textContent=ultimo.NOME?.split(' ')[0]||'—';
   }
   $('dCount').textContent=tot+' registros';
-  renderDeslTable(desl);
+  renderDeslTable(sorted);
 }
 
 function renderDeslTable(desl){
@@ -3018,9 +3055,11 @@ function renderAdmin(){
   const roleLabel=r=>r==='master'?'Master':r==='rh'?'RH':'Gestor';
   const roleColor=r=>r==='master'?'rgba(155,102,244,.15)':r==='rh'?'rgba(37,99,235,.12)':'rgba(255,208,0,.12)';
   const roleText=r=>r==='master'?'var(--accent)':r==='rh'?'#2563eb':'var(--accent2)';
+  const extraRoles=_loadExtraRoles();
+  const getExtras=email=>(extraRoles.find(e=>e.email===email)?.extras||[]);
   const renderList=list=>list.length===0
     ?`<div style="color:var(--muted);font-size:12px;padding:12px 0;text-align:center;">Nenhum cadastrado.</div>`
-    :list.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+    :list.map(c=>{const extras=getExtras(c.email);return`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
         <div style="display:flex;align-items:center;gap:10px;">
           <div style="width:34px;height:34px;border-radius:8px;background:rgba(155,102,244,.12);display:flex;align-items:center;justify-content:center;font-size:16px;">${roleIcon(c.role)}</div>
           <div>
@@ -3028,11 +3067,12 @@ function renderAdmin(){
             <div style="font-size:11px;color:var(--muted);margin-top:1px;">${esc(c.email)}</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <span class="chip" style="font-size:11px;background:${roleColor(c.role)};color:${roleText(c.role)};">${roleLabel(c.role)}</span>
+          ${extras.map(r=>`<span class="chip" style="font-size:11px;background:${roleColor(r)};color:${roleText(r)};">${roleLabel(r)}</span>`).join('')}
           <button class="btn" style="font-size:11px;padding:3px 10px;color:var(--danger);border-color:var(--danger);" onclick="removeCoord('${esc(c.email)}')">Remover</button>
         </div>
-      </div>`).join('');
+      </div>`}).join('');
   $('admin-list-master').innerHTML=renderList(masters);
   $('admin-list-gestor').innerHTML=renderList(gestores);
   $('admin-list-rh').innerHTML=renderList(rhs);
@@ -3047,14 +3087,25 @@ function addCoord(){
   if(!nome){toast('Nome não encontrado no cadastro — preencha o campo Nome','error');return;}
   const role=$('coord-role')?$('coord-role').value:'gestor';
   const coords=loadCoords();
-  if(coords.find(c=>c.email===email)){toast('Este e-mail já está cadastrado','error');return;}
+  const rlbl=role==='master'?'Master':role==='rh'?'RH':'Gestor';
+  if(coords.find(c=>c.email===email)){
+    // Email já existe: adicionar como papel extra
+    const extra=_loadExtraRoles();
+    const idx=extra.findIndex(e=>e.email===email);
+    if(idx>=0){if(!(extra[idx].extras||[]).includes(role))extra[idx].extras.push(role);}
+    else extra.push({email,extras:[role]});
+    _saveExtraRoles(extra);
+    $('coord-email').value='';$('coord-nome').value='';
+    renderAdmin();
+    toast(`Papel ${rlbl} adicionado a ${email}`,'success');
+    return;
+  }
   coords.push({email,nome,role});
   saveCoords(coords);
   $('coord-email').value='';$('coord-nome').value='';
   renderAdmin();
   window._sbFns.updateProfileRoleByEmail(email,role).catch(e=>toast('Erro ao salvar acesso: '+e.message,'error'));
-  const roleLabel=role==='master'?'Master':role==='rh'?'RH':'Gestor';
-  toast(`${nome} adicionado como ${roleLabel}`,'success');
+  toast(`${nome} adicionado como ${rlbl}`,'success');
 }
 
 function removeCoord(email){
@@ -3074,9 +3125,21 @@ function _setupCurInput(el){
 }
 function setupCurrencyInputs(){document.querySelectorAll('.cur-input').forEach(_setupCurInput);}
 
+// --- Perfis extras (acúmulo de papéis, ex: master+RH) ---
+const CK_EXTRA_ROLES='_lumaExtraRoles_v1';
+const _loadExtraRoles=()=>{try{return JSON.parse(localStorage.getItem(CK_EXTRA_ROLES)||'[]');}catch{return[];}};
+const _saveExtraRoles=a=>localStorage.setItem(CK_EXTRA_ROLES,JSON.stringify(a));
+
 // --- E-mail via Supabase Edge Function (Resend) ---
 // From fixo: LUMA RH <lumarh@lumaplataforma.com.br>
-function _getRHEmails(){return loadCoords().filter(c=>c.role==='rh').map(c=>c.email);}
+function _getRHEmails(){
+  const extra=_loadExtraRoles();
+  return loadCoords().filter(c=>{
+    if(c.role==='rh')return true;
+    const ex=extra.find(e=>e.email===c.email);
+    return ex&&(ex.extras||[]).includes('rh');
+  }).map(c=>c.email);
+}
 function _getGestorEmail(gestorNome){
   if(!gestorNome)return null;
   const cad=D&&D.CADASTRO_COLABORADORES||[];
@@ -3136,12 +3199,111 @@ async function _enviarEmailDesl(a,tipo){
   if(ok)toast(`E-mail de ${tipo==='lembrete'?'lembrete':'confirmação'} enviado ao gestor`,'success');
 }
 
+// --- Auto-gerar ações sugeridas silenciosamente ---
+function _gerarAcoesAuto(){
+  try{
+    const hoje=new Date().toISOString().split('T')[0];
+    const jaExiste=al=>_acoes.some(a=>a.alerta===al&&a.status!=='CANCELADO'&&a.status!=='CONCLUIDO');
+    let novos=0;
+    _alertasCont.forEach(r=>{const al=`Contrato sem data fim — ${r.NOME||'—'}`;if(jaExiste(al))return;_acoes.push({id:'AC-'+Date.now()+'-'+Math.floor(Math.random()*9999),alerta:al,atividade:`Regularizar contrato ${r.TIPO_VINCULO||'PJ'} de ${r.NOME||'—'}: inserir data de encerramento ou marcar como tempo indeterminado.`,venc:addDias(hoje,15),status:'EM_ANDAMENTO',comentario:'',dataConcl:'',criadoEm:hoje,atualizadoEm:hoje,origem:'SISTEMA'});novos++;});
+    _alertasEx.forEach(r=>{const al=`Exame ocupacional vencido — ${r.NOME||'—'}`;if(jaExiste(al))return;_acoes.push({id:'AC-'+Date.now()+'-'+Math.floor(Math.random()*9999),alerta:al,atividade:`Agendar exame periódico de ${r.NOME||'—'}. Último: ${r.ULTIMO_EXAME||'—'}. Vencimento: ${r.PROXIMO_EXAME||'—'}.`,venc:addDias(hoje,30),status:'EM_ANDAMENTO',comentario:'',dataConcl:'',criadoEm:hoje,atualizadoEm:hoje,origem:'SISTEMA'});novos++;});
+    _alertasFer.forEach(r=>{const al=`Férias não programadas — ${r.NOME||'—'}`;if(jaExiste(al))return;_acoes.push({id:'AC-'+Date.now()+'-'+Math.floor(Math.random()*9999),alerta:al,atividade:`Programar férias de ${r.NOME||'—'} (admissão: ${r.DATA_ADMISSAO||'—'}).`,venc:addDias(hoje,30),status:'EM_ANDAMENTO',comentario:'',dataConcl:'',criadoEm:hoje,atualizadoEm:hoje,origem:'SISTEMA'});novos++;});
+    if(novos>0){saveAcoes();renderAcoes();}
+  }catch(e){console.warn('_gerarAcoesAuto:',e);}
+}
+
+// --- E-mail de alerta: ASO vencendo em 30 dias ---
+async function enviarEmailsAlertaASO(){
+  try{
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    const yyyymmdd=hoje.toISOString().split('T')[0];
+    const ck='_asoAlertaEmail_'+yyyymmdd;
+    const jaEnviados=JSON.parse(localStorage.getItem(ck)||'[]');
+    const exames=D&&D.EXAMES_OCUPACIONAIS||[];
+    const rhEmails=_getRHEmails();
+    if(!rhEmails.length)return;
+    for(const r of exames){
+      if(normStatus(r)!=='ATIVO')continue;
+      if(!r.PROXIMO_EXAME)continue;
+      const prox=parseDate(_fxDate(r.PROXIMO_EXAME));if(!prox)continue;
+      const diasAte=Math.round((prox-hoje)/864e5);
+      if(diasAte>30||diasAte<0)continue;
+      const ckId=r.ID_COLABORADOR||r._row;
+      if(jaEnviados.includes('aso_'+ckId))continue;
+      const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f5f3ff;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff;padding:24px 0;"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #e2e8f0;"><tr><td style="background:#7c3aed;padding:24px 32px;"><div style="color:#fff;font-size:18px;font-weight:bold;">🩺 Alerta de Vencimento de ASO</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:4px;">LUMA RH · Sistema de Gestão de Pessoas</div></td></tr><tr><td style="padding:24px 32px;"><p style="font-size:14px;color:#334155;margin:0 0 16px;">O exame ocupacional (ASO) de <strong>${r.NOME}</strong> vence em <strong>${diasAte} dia${diasAte!==1?'s':''}</strong>.</p><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;"><tr style="background:#f8fafc;"><td style="padding:8px 14px;font-size:12px;font-weight:600;color:#64748b;width:40%;">Colaborador</td><td style="padding:8px 14px;font-size:13px;color:#1e293b;font-weight:600;">${r.NOME}</td></tr><tr><td style="padding:8px 14px;font-size:12px;font-weight:600;color:#64748b;border-top:1px solid #e2e8f0;">Último exame</td><td style="padding:8px 14px;font-size:13px;color:#1e293b;border-top:1px solid #e2e8f0;">${fmtD(r.ULTIMO_EXAME)||'—'}</td></tr><tr style="background:#fef3c7;"><td style="padding:8px 14px;font-size:12px;font-weight:600;color:#92400e;border-top:1px solid #e2e8f0;">Vencimento</td><td style="padding:8px 14px;font-size:13px;font-weight:700;color:#b45309;border-top:1px solid #e2e8f0;">${fmtD(r.PROXIMO_EXAME)} (em ${diasAte} dia${diasAte!==1?'s':''})</td></tr></table></td></tr><tr><td style="background:#f1f5f9;padding:12px 32px;text-align:center;border-top:1px solid #e2e8f0;"><p style="font-size:11px;color:#94a3b8;margin:0;">Gerado automaticamente pelo sistema LUMA RH. Base legal: NR-7 (PCMSO).</p></td></tr></table></td></tr></table></body></html>`;
+      const subj=`[LUMA RH] 🩺 ASO de ${r.NOME} vence em ${diasAte} dia${diasAte!==1?'s':''}`;
+      const ok=await _emailLumaRH(subj,html,rhEmails[0],rhEmails.slice(1));
+      if(ok)jaEnviados.push('aso_'+ckId);
+    }
+    if(jaEnviados.length)localStorage.setItem(ck,JSON.stringify(jaEnviados));
+  }catch(e){console.warn('enviarEmailsAlertaASO:',e);}
+}
+
+// --- E-mail de alerta: limite de agendamento de férias (15 dias antes) ---
+async function enviarEmailsAlertaFerias(){
+  try{
+    const hoje=new Date();hoje.setHours(0,0,0,0);
+    const yyyymmdd=hoje.toISOString().split('T')[0];
+    const ck='_ferAlertaEmail_'+yyyymmdd;
+    const jaEnviados=JSON.parse(localStorage.getItem(ck)||'[]');
+    const ferias=D&&D.FERIAS_CLT||[];
+    const rhEmails=_getRHEmails();
+    for(const r of ferias){
+      if(normStatus(r)!=='ATIVO')continue;
+      if(!r.FIM_PERIODO_CONCESSIVO)continue;
+      const conc=parseDate(_fxDate(r.FIM_PERIODO_CONCESSIVO));if(!conc)continue;
+      const limAgen=new Date(conc.getTime()-35*864e5);
+      const diasAte=Math.round((limAgen-hoje)/864e5);
+      if(diasAte>15||diasAte<0)continue; // só alerta se faltam 15 dias ou menos (e não venceu)
+      const ckId=r.ID_COLABORADOR||r._row;
+      if(jaEnviados.includes('fer_'+ckId))continue;
+      const empEmail=r.EMAIL_CORPORATIVO;
+      const limAgenStr=`${limAgen.getFullYear()}-${String(limAgen.getMonth()+1).padStart(2,'0')}-${String(limAgen.getDate()).padStart(2,'0')}`;
+      const html=_buildAlertaFeriasEmail(r,fmtD(limAgenStr),fmtD(r.FIM_PERIODO_CONCESSIVO),diasAte);
+      const subj=`[LUMA RH] ⚠️ Férias de ${r.NOME} — limite de agendamento em ${diasAte} dia${diasAte!==1?'s':''}`;
+      // Envia ao funcionário (se tiver email) e copia RH
+      const destEmail=empEmail||rhEmails[0];
+      if(!destEmail)continue;
+      const cc=empEmail?rhEmails:rhEmails.slice(1);
+      const ok=await _emailLumaRH(subj,html,destEmail,cc);
+      if(ok)jaEnviados.push('fer_'+ckId);
+    }
+    if(jaEnviados.length)localStorage.setItem(ck,JSON.stringify(jaEnviados));
+  }catch(e){console.warn('enviarEmailsAlertaFerias:',e);}
+}
+function _buildAlertaFeriasEmail(r,limAgenFmt,limConcFmt,diasAte){
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f5f3ff;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff;padding:24px 0;"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;">
+<tr><td style="background:#b45309;padding:28px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><div style="width:40px;height:40px;background:rgba(255,255,255,0.2);text-align:center;line-height:40px;font-size:22px;font-weight:bold;color:#fff;display:inline-block;">L</div></td>
+    <td style="padding-left:12px;vertical-align:middle;"><div style="color:#fff;font-size:18px;font-weight:bold;">⚠️ Alerta de Férias</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px;">LUMA RH · Sistema de Gestão de Pessoas</div></td>
+  </tr></table>
+</td></tr>
+<tr><td style="padding:28px 32px;">
+  <p style="font-size:15px;color:#334155;margin:0 0 16px 0;">O prazo para agendamento das férias de <strong>${r.NOME}</strong> vence em <strong>${diasAte} dia${diasAte!==1?'s':''}</strong>. É necessário programar o período de gozo antes desta data.</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;">
+    <tr style="background:#f8fafc;"><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;width:45%;">Colaborador</td><td style="padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600;">${r.NOME}</td></tr>
+    <tr><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Limite para agendar</td><td style="padding:10px 16px;font-size:14px;color:#b45309;font-weight:700;border-top:1px solid #e2e8f0;">${limAgenFmt} (em ${diasAte} dia${diasAte!==1?'s':''})</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Limite concessão</td><td style="padding:10px 16px;font-size:14px;color:#64748b;border-top:1px solid #e2e8f0;">${limConcFmt}</td></tr>
+  </table>
+  <p style="font-size:13px;color:#64748b;margin:16px 0 0 0;">⚖️ <strong>Base legal:</strong> Art. 134 e 137 CLT — as férias devem ser concedidas dentro do período concessivo. O não cumprimento sujeita a empresa ao pagamento em dobro.</p>
+</td></tr>
+<tr><td style="background:#f1f5f9;padding:16px 32px;text-align:center;border-top:1px solid #e2e8f0;">
+  <p style="font-size:11px;color:#94a3b8;margin:0;">Este e-mail foi gerado automaticamente pelo sistema LUMA RH.</p>
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
 // --- E-mail de aniversário e tempo de casa ---
 async function enviarEmailsAniversario(){
   try{
     const hoje=new Date();hoje.setHours(0,0,0,0);
-    const dd=String(hoje.getDate()).padStart(2,'0');
-    const mm=String(hoje.getMonth()+1).padStart(2,'0');
+    // Aviso enviado 2 dias antes do evento
+    const alvo=new Date(hoje.getTime()+2*864e5);
+    const dd=String(alvo.getDate()).padStart(2,'0');
+    const mm=String(alvo.getMonth()+1).padStart(2,'0');
     const yyyymmdd=hoje.toISOString().split('T')[0];
     const ckAniv='_anivEmail_'+yyyymmdd;
     const jaEnviados=JSON.parse(localStorage.getItem(ckAniv)||'[]');
@@ -3150,29 +3312,33 @@ async function enviarEmailsAniversario(){
     for(const r of cad){
       if(r.STATUS==='DESLIGADO')continue;
       const ckId=r.ID_COLABORADOR||r._row;
-      // Aniversário de nascimento
+      // Aniversário de nascimento — avisa 2 dias antes
       if(r.DATA_NASCIMENTO){
-        const [,m,d]=r.DATA_NASCIMENTO.split('-');
-        if(d===dd&&m===mm&&!jaEnviados.includes('nasc_'+ckId)){
+        const nasc=parseDate(_fxDate(r.DATA_NASCIMENTO));
+        const nd=nasc?String(nasc.getDate()).padStart(2,'0'):null;
+        const nm=nasc?String(nasc.getMonth()+1).padStart(2,'0'):null;
+        if(nd===dd&&nm===mm&&!jaEnviados.includes('nasc_'+ckId)){
           const gestorEmail=_getGestorEmail(r.GESTOR);
           if(gestorEmail){
-            const idade=hoje.getFullYear()-parseInt(r.DATA_NASCIMENTO.split('-')[0]);
+            const idade=alvo.getFullYear()-parseInt(r.DATA_NASCIMENTO.split('-')[0]);
             const html=_buildAnivEmail(r,'nasc',idade);
-            const ok=await _emailLumaRH(`[LUMA RH] 🎂 Aniversário de ${r.NOME} hoje!`,html,gestorEmail,rhEmails);
+            const ok=await _emailLumaRH(`[LUMA RH] 🎂 Aniversário de ${r.NOME} em 2 dias!`,html,gestorEmail,rhEmails);
             if(ok)jaEnviados.push('nasc_'+ckId);
           }
         }
       }
-      // Aniversário de tempo de casa
+      // Aniversário de tempo de casa — avisa 2 dias antes
       if(r.DATA_ADMISSAO){
-        const [,am,ad]=r.DATA_ADMISSAO.split('-');
+        const adm=parseDate(_fxDate(r.DATA_ADMISSAO));
+        const ad=adm?String(adm.getDate()).padStart(2,'0'):null;
+        const am=adm?String(adm.getMonth()+1).padStart(2,'0'):null;
         if(ad===dd&&am===mm&&!jaEnviados.includes('casa_'+ckId)){
           const gestorEmail=_getGestorEmail(r.GESTOR);
           if(gestorEmail){
-            const anos=hoje.getFullYear()-parseInt(r.DATA_ADMISSAO.split('-')[0]);
+            const anos=alvo.getFullYear()-parseInt(r.DATA_ADMISSAO.split('-')[0]);
             if(anos>0){
               const html=_buildAnivEmail(r,'casa',anos);
-              const ok=await _emailLumaRH(`[LUMA RH] 🏆 ${anos} ano${anos>1?'s':''} de casa — ${r.NOME}`,html,gestorEmail,rhEmails);
+              const ok=await _emailLumaRH(`[LUMA RH] 🏆 ${anos} ano${anos>1?'s':''} de casa — ${r.NOME} (em 2 dias)`,html,gestorEmail,rhEmails);
               if(ok)jaEnviados.push('casa_'+ckId);
             }
           }
@@ -3186,7 +3352,7 @@ function _buildAnivEmail(r,tipo,numero){
   const isNasc=tipo==='nasc';
   const corHeader=isNasc?'#be185d':'#0369a1';
   const titulo=isNasc?`🎂 Aniversário de ${r.NOME}`:`🏆 Aniversário de Tempo de Casa`;
-  const subtitulo=isNasc?`Hoje, <strong>${r.NOME}</strong> está completando <strong>${numero} anos</strong>! Um ótimo dia para parabenizá-lo(a).`:`Hoje, <strong>${r.NOME}</strong> completa <strong>${numero} ano${numero>1?'s':''}</strong> na empresa. Uma data especial para reconhecer essa trajetória!`;
+  const subtitulo=isNasc?`Em 2 dias, <strong>${r.NOME}</strong> estará completando <strong>${numero} anos</strong>! Uma ótima oportunidade para se preparar e parabenizá-lo(a).`:`Em 2 dias, <strong>${r.NOME}</strong> completa <strong>${numero} ano${numero>1?'s':''}</strong> na empresa. Uma data especial para reconhecer essa trajetória!`;
   return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f5f3ff;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff;padding:24px 0;"><tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;">
@@ -3452,7 +3618,8 @@ function pfUpdMsg(){
 
 function pfSetStep(i){
   ['pf-s0','pf-s1','pf-s2'].forEach((id,j)=>{const el=$(id);el.classList.remove('active','done');if(j<i)el.classList.add('done');else if(j===i)el.classList.add('active');});
-  $('pf-step-cal').style.display=i===0?'':'none';
+  $('pf-step-cal').style.display=''; // calendário sempre visível
+  if($('pf-cal-actions'))$('pf-cal-actions').style.display=i===0?'':'none';
   $('pf-step-confirm').style.display=i===1?'':'none';
   $('pf-step-done').style.display=i===2?'':'none';
 }
@@ -3770,7 +3937,8 @@ function abrirCardAniversario(nomeEnc, tipo, data, dias) {
 async function gerarCardAniversario() {
   const empresa = document.getElementById('cardEmpresa').value;
   const tipo    = _cardData.tipo;
-  const nome    = _cardData.nome;
+  const _np=(_cardData.nome||'').split(' ').filter(Boolean);
+  const nome    = _np.length>1?_np[0]+' '+_np[_np.length-1]:_cardData.nome;
   const anos    = _cardData.dias > 0 ? Math.floor(_cardData.dias/365)||1 : 0;
 
   // Mensagem

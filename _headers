@@ -33,6 +33,10 @@
   Cache-Control: public, max-age=86400
   X-Content-Type-Options: nosniff
 
+/*.html
+  Cache-Control: no-store, no-cache, must-revalidate
+  Pragma: no-cache
+
 /*.js
-  Cache-Control: no-store
+  Cache-Control: no-store, no-cache, must-revalidate
   X-Content-Type-Options: nosniff
