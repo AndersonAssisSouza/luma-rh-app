@@ -537,7 +537,7 @@ nav.legacy{display:none!important;}
     <div class="kpi"><div class="kl">Total alertas</div><div class="kv" style="color:var(--danger)" id="alT">—</div><div class="ks">requerem ação</div><div class="kbar" style="background:var(--danger)"></div></div>
   </div>
   <div class="g2">
-    <div class="card"><div class="ct">Contratos sem data <span id="alCT" style="color:var(--danger)">—</span></div><div class="sy" id="alContList"></div></div>
+    <div class="card"><div class="ct">Todos os Alertas <span id="alCT" style="color:var(--danger)">—</span></div><div class="sy" id="alContList"></div></div>
     <div class="card">
       <div class="ct">Exames vencidos</div>
       <div id="alExamList"></div>
@@ -1840,12 +1840,19 @@ function render(){
   // Ações
   renderAcoes();
   // Alertas
-  $('alC').textContent=cSem.length;$('alE').textContent=exV.length;$('alF').textContent=fNP.length;$('alT').textContent=tAl;$('alCT').textContent=cSem.length;
-  $('alContList').innerHTML=cSem.map(r=>`<div class="ai"><div class="aico" style="background:rgba(248,113,113,.08)">⚠️</div><div class="ainf"><div class="an">${esc(r.NOME||'—')}</div><div class="ad">${esc(r.TIPO_VINCULO||'—')} · desde ${fmt(r.DATA_INICIO_CONTRATO)} · sem data fim</div></div><span class="chip cd">Sem data</span></div>`).join('')||'<div class="empty">Nenhum</div>';
+  $('alC').textContent=cSem.length;$('alE').textContent=exV.length;$('alF').textContent=fNP.length;$('alT').textContent=tAl;$('alCT').textContent=tAl;
+  // Todos os alertas unificados no card principal
+  const _todosAlertas=[
+    ...cSem.map(r=>({ico:'⚠️',bg:'rgba(248,113,113,.08)',nome:r.NOME||'—',desc:`${r.TIPO_VINCULO||'—'} · contrato sem data fim`,chip:'Sem data fim',chipCls:'cd'})),
+    ...exV.map(r=>({ico:'🩺',bg:'rgba(245,158,11,.1)',nome:r.NOME||'—',desc:`ASO vencido · último: ${fmtD(r.ULTIMO_EXAME)} · venceu: ${fmtD(r.PROXIMO_EXAME)}`,chip:'Exame vencido',chipCls:'cd'})),
+    ...fNP.map(r=>({ico:'🏖️',bg:'rgba(79,156,249,.1)',nome:r.NOME||'—',desc:`Férias CLT não programadas · admissão: ${fmt(r.DATA_ADMISSAO)}`,chip:'Férias pendentes',chipCls:'cw'})),
+    ...expAlerts.map(r=>{const admD=new Date(String(r.DATA_ADMISSAO)+'T12:00:00');const fimExp=new Date(admD.getTime()+(parseInt(r.TEMPO_EXPERIENCIA)||0)*864e5);const dias=Math.ceil((fimExp-new Date())/864e5);return{ico:'📋',bg:'rgba(168,85,247,.08)',nome:r.NOME||'—',desc:`Período de experiência ${dias<=0?'vencido':'vence em '+dias+' dias'} · ${fmtD(fimExp.toISOString().split('T')[0])}`,chip:dias<=0?'Exp. vencido':'Exp. vencendo',chipCls:'cw'};})
+  ];
+  $('alContList').innerHTML=_todosAlertas.length===0?'<div class="empty">Nenhum alerta detectado ✓</div>':_todosAlertas.map(a=>`<div class="ai"><div class="aico" style="background:${a.bg}">${a.ico}</div><div class="ainf"><div class="an">${esc(a.nome)}</div><div class="ad">${esc(a.desc)}</div></div><span class="chip ${a.chipCls}">${a.chip}</span></div>`).join('');
   $('alExamList').innerHTML=exV.map(r=>`<div class="ai"><div class="aico" style="background:rgba(245,158,11,.1)">🩺</div><div class="ainf"><div class="an">${esc(r.NOME||'—')}</div><div class="ad">Último: ${fmtD(r.ULTIMO_EXAME)} · Venceu: ${fmtD(r.PROXIMO_EXAME)}</div></div><span class="chip cd">Vencido</span></div>`).join('')||'<div class="empty">Nenhum vencido</div>';
   // Nota NR-7 no rodapé de alertas de exames
   if(socioIds.size>0){const n=socioIds.size;$('alExamList').innerHTML+=`<div style="font-size:11px;color:var(--muted);padding:8px 0 0;">${n} sócio${n!==1?'s':''} isento${n!==1?'s':''} de ASO conforme NR-7</div>`;}
-  $('alResume').innerHTML=[{l:'Contratos sem data fim',v:cSem.length,c:'danger'},{l:'Exames vencidos (ativos)',v:exV.length,c:'warn'},{l:'Férias não programadas',v:fNP.length,c:'warn'}].map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 9px;background:${x.c==='danger'?'rgba(248,113,113,.07)':'rgba(245,158,11,.07)'};border-radius:6px;border:1px solid ${x.c==='danger'?'rgba(248,113,113,.2)':'rgba(245,158,11,.2)'};">
+  $('alResume').innerHTML=[{l:'Contratos sem data fim',v:cSem.length,c:'danger'},{l:'Exames vencidos (ativos)',v:exV.length,c:'warn'},{l:'Férias não programadas',v:fNP.length,c:'warn'},{l:'Período experiência vencendo',v:expAlerts.length,c:'warn'}].map(x=>`<div style="display:flex;justify-content:space-between;padding:7px 9px;background:${x.c==='danger'?'rgba(248,113,113,.07)':'rgba(245,158,11,.07)'};border-radius:6px;border:1px solid ${x.c==='danger'?'rgba(248,113,113,.2)':'rgba(245,158,11,.2)'};">
     <span style="font-size:13px;">${x.l}</span><span style="font-size:13px;font-family:var(--mono);color:var(--${x.c==='danger'?'danger':'warn'})">${x.v}</span></div>`).join('');
 }
 
