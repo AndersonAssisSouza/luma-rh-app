@@ -302,7 +302,7 @@ export async function agendarDesligamento(colab, dataDesl) {
 export async function getAllFeriasSaldo() {
   const { data, error } = await sb
     .from('ferias_saldo')
-    .select('*, colaboradores(id, id_colaborador, nome, email_corporativo, tipo_vinculo, gestor, gestor_email, tenant_id)')
+    .select('*, colaboradores(id, id_colaborador, nome, email_corporativo, tipo_vinculo, status, gestor, gestor_email, tenant_id)')
     .order('criado_em')
   if (error) throw error
   return data
