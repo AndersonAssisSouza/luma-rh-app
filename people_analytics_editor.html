@@ -1,4 +1,4 @@
-<!-- v2026-04-08f -->
+<!-- v2026-04-08g -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2722,7 +2722,11 @@ function _parseDocText(raw){
   // Padrão CNH: "16/01/1978, JOAO MONLEVADE, MG" — cidade vem APÓS a data e ANTES da UF
   const nascLocalRe=/\d{2}[\/\.\-]\d{2}[\/\.\-]\d{4}\s*,\s*([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\s]{2,40})\s*,\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i;
   const nlm=f.match(nascLocalRe);
-  if(nlm){r.cidade_natal=nlm[1].trim().replace(/\s+/g,' ');r.uf_natal=nlm[2].toUpperCase();}
+  if(nlm){
+    r.cidade_natal=nlm[1].trim().replace(/\s+/g,' ');r.uf_natal=nlm[2].toUpperCase();
+    // CNH: cidade natal ≠ residência — descarta campos de endereço (vêm do comprovante)
+    delete r.cidade;delete r.uf;delete r.cep;delete r.endereco;delete r.numero;delete r.bairro;
+  }
 
   // ── Filiação (CNH: label "FILIAÇÃO" seguido de dois nomes em linhas/sequência) ──
   const filRe=/filia[çc][aã]o[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,50}?)(?:\s{2,}|\n)([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,50})/i;
@@ -2733,12 +2737,18 @@ function _parseDocText(raw){
   const pisM=f.match(/\b(\d{3}[\.\s]?\d{5}[\.\s]?\d{2}[\-\s]?\d)\b/);
   if(pisM){const p=pisM[1].replace(/\D/g,'');if(p.length===11)r.pis_pasep=p.replace(/(\d{3})(\d{5})(\d{2})(\d)/,'$1.$2.$3-$4');}
 
-  // ── RG — prefere contexto explícito para evitar números de conta/instalação ──
-  const rgLabel=f.match(/\b(?:rg|r\.g\.|identidade|doc[\.\s]identidade|ident\.?)[:\s\.\/nNº°]*(\d{1,2}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?[\dXx]?)\b/i);
-  const rgAny=f.match(/\b(\d{1,2}[\.\s]\d{3}[\.\s]\d{3}[\-\s]?[\dXx]?)\b/);
-  const rgM=rgLabel||(rgAny&&!rgLabel?rgAny:null);
-  // Valida: se não há label, só aceita se não for igual a número de conta/instalação da área do CEP
-  if(rgM)r.rg=rgM[1].trim();
+  // ── RG — suporta formatos: 0.000.000, 00.000.000-X e formato MG: M0000000 ──
+  // Prefere contexto explícito (label "RG", "Identidade", "Doc. Identidade") para evitar
+  // capturar números de conta/instalação de concessionárias
+  const rgCtx=/\b(?:rg|r\.g\.|identidade|doc\.?\s*ident\w*|ident\.?)\s*[:\s\.\/nNº°]*([A-Z]?\d[\d\.\s]{5,14}[\dXx]?)\b/i;
+  const rgLabelM=f.match(rgCtx);
+  // Formato MG sem pontuação: letra + 7 dígitos (ex: M7657898)
+  const rgMGM=f.match(/\b([A-Z]\d{7})\b/);
+  // Formato numérico com pontos (ex: 7.657.898 ou 32.456.789-0)
+  const rgNumM=f.match(/\b(\d{1,2}[\.\s]\d{3}[\.\s]\d{3}[\-\s]?[\dXx]?)\b/);
+  if(rgLabelM)r.rg=rgLabelM[1].trim().replace(/\s+/g,'');
+  else if(rgMGM)r.rg=rgMGM[1].trim();
+  else if(rgNumM)r.rg=rgNumM[1].trim();
 
   // ── CTPS ──
   const ctpsM=f.match(/CTPS[:\s#Nº°]*(\d{5,7})[\/\s\-]+(\d{3,5})/i);
