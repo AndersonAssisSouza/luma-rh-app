@@ -199,6 +199,16 @@ nav.legacy{display:none!important;}
 .mtab{padding:9px 12px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font);}
 .mtab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .mtab:hover:not(.active){color:var(--text);}
+.doc-upload-area{border:2px dashed var(--border2);border-radius:10px;padding:28px 16px;text-align:center;cursor:pointer;color:var(--muted);font-size:13px;transition:all .2s;background:var(--bg2);}
+.doc-upload-area:hover,.doc-upload-area.drag{border-color:var(--accent);color:var(--text);background:rgba(155,102,244,.05);}
+.doc-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);margin-bottom:6px;}
+.doc-item-ico{font-size:20px;flex-shrink:0;}
+.doc-item-info{flex:1;min-width:0;}
+.doc-item-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.doc-item-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.doc-status{margin-top:10px;padding:10px 14px;border-radius:8px;font-size:13px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.2);}
+.doc-key-row{display:flex;gap:8px;align-items:center;margin-bottom:12px;}
+.doc-key-row input{flex:1;padding:8px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-size:12px;font-family:var(--mono);outline:none;}
 .mtpane{display:none;}.mtpane.active{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 
 /* ── CONFIG ── */
@@ -917,6 +927,7 @@ nav.legacy{display:none!important;}
         <button class="mtab" onclick="switchColabTab(1,'e')">📋 Vínculo</button>
         <button class="mtab" onclick="switchColabTab(2,'e')">💰 Financeiro</button>
         <button class="mtab" onclick="switchColabTab(3,'e')">📊 RH Estratégico</button>
+        <button class="mtab" onclick="switchColabTab(4,'e')">📎 Documentos</button>
       </div>
 
       <!-- TAB 0: DADOS PESSOAIS -->
@@ -1025,6 +1036,32 @@ nav.legacy{display:none!important;}
         <div class="fgrp s2"><div class="flbl">Observações gerais</div><textarea class="fi fta" id="eObsGerais" rows="3" placeholder="Notas adicionais sobre o colaborador..."></textarea></div>
       </div>
     </div>
+      <!-- TAB 4: DOCUMENTOS (edit) -->
+      <div class="mtpane" id="eTab4" style="display:none;grid-template-columns:1fr!important;">
+        <div style="grid-column:1/-1;">
+          <div class="fsec" style="margin-bottom:8px;">Chave API Claude (Anthropic)</div>
+          <div class="doc-key-row">
+            <input type="password" id="eDocApiKey" placeholder="sk-ant-..." oninput="_saveAnthropicKey(this.value)">
+            <span id="eDocKeyStatus" style="font-size:12px;color:var(--muted);white-space:nowrap;">—</span>
+          </div>
+          <div class="fsec" style="margin-bottom:8px;">Upload de documento</div>
+          <div class="doc-upload-area" id="eDocDropZone" onclick="$('eDocFile').click()"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="_onDocDrop(event,'e')">
+            <div style="font-size:28px;margin-bottom:8px;">📄</div>
+            <div style="font-weight:600;margin-bottom:4px;">Arraste ou clique para selecionar</div>
+            <div style="font-size:12px;">PDF, JPG ou PNG · RG, CPF, CTPS, CNH, comprovante de endereço</div>
+            <input type="file" id="eDocFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="readDocumentoIA('e')">
+          </div>
+          <div id="eDocStatus" class="doc-status" style="display:none;"></div>
+        </div>
+        <div style="grid-column:1/-1;margin-top:4px;">
+          <div class="fsec" style="margin-bottom:8px;">Documentos salvos</div>
+          <div id="eDocList"><div class="empty">Nenhum documento carregado.</div></div>
+        </div>
+      </div>
+    </div>
     <div class="mf"><button class="btn" onclick="closeModal('mEditColab')">Cancelar</button><button class="btn btn-g" onclick="saveEditColab()">Salvar</button></div>
   </div>
 </div>
@@ -1040,6 +1077,7 @@ nav.legacy{display:none!important;}
         <button class="mtab" onclick="switchColabTab(1,'n')">📋 Vínculo</button>
         <button class="mtab" onclick="switchColabTab(2,'n')">💰 Financeiro</button>
         <button class="mtab" onclick="switchColabTab(3,'n')">📊 RH Estratégico</button>
+        <button class="mtab" onclick="switchColabTab(4,'n')">📎 Documentos</button>
       </div>
 
       <!-- TAB 0: DADOS PESSOAIS -->
@@ -1143,6 +1181,32 @@ nav.legacy{display:none!important;}
         <div class="fgrp s2"><div class="flbl">Observações gerais</div><textarea class="fi fta" id="nObsGerais" rows="3" placeholder="Notas adicionais sobre o colaborador..."></textarea></div>
       </div>
     </div>
+      <!-- TAB 4: DOCUMENTOS (new) -->
+      <div class="mtpane" id="nTab4" style="display:none;grid-template-columns:1fr!important;">
+        <div style="grid-column:1/-1;">
+          <div class="fsec" style="margin-bottom:8px;">Chave API Claude (Anthropic)</div>
+          <div class="doc-key-row">
+            <input type="password" id="nDocApiKey" placeholder="sk-ant-..." oninput="_saveAnthropicKey(this.value)">
+            <span id="nDocKeyStatus" style="font-size:12px;color:var(--muted);white-space:nowrap;">—</span>
+          </div>
+          <div class="fsec" style="margin-bottom:8px;">Upload de documento</div>
+          <div class="doc-upload-area" id="nDocDropZone" onclick="$('nDocFile').click()"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="_onDocDrop(event,'n')">
+            <div style="font-size:28px;margin-bottom:8px;">📄</div>
+            <div style="font-weight:600;margin-bottom:4px;">Arraste ou clique para selecionar</div>
+            <div style="font-size:12px;">PDF, JPG ou PNG · RG, CPF, CTPS, CNH, comprovante de endereço</div>
+            <input type="file" id="nDocFile" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="readDocumentoIA('n')">
+          </div>
+          <div id="nDocStatus" class="doc-status" style="display:none;"></div>
+        </div>
+        <div style="grid-column:1/-1;margin-top:4px;">
+          <div class="fsec" style="margin-bottom:8px;">Documentos salvos</div>
+          <div id="nDocList"><div class="empty">Salve o colaborador primeiro para anexar documentos.</div></div>
+        </div>
+      </div>
+    </div>
     <div class="mf"><button class="btn" onclick="closeModal('mNewColab')">Cancelar</button><button class="btn btn-g" onclick="saveNewColab()">Registrar admissão</button></div>
   </div>
 </div>
@@ -1152,7 +1216,7 @@ nav.legacy{display:none!important;}
   <div class="modal">
     <div class="mh"><div><div class="mt">Editar férias</div><div class="ms" id="mEditFerSub">—</div></div><button class="mc" onclick="closeModal('mEditFer')">×</button></div>
     <div class="mb">
-      <input type="hidden" id="eFerId"><input type="hidden" id="eFerRow">
+      <input type="hidden" id="eFerId"><input type="hidden" id="eFerRow"><input type="hidden" id="eFerNome"><input type="hidden" id="eFerPrevStatus">
       <div class="fg">
         <div class="fsec">Período aquisitivo</div>
         <div class="fgrp"><div class="flbl">Início</div><input class="fi" id="fAqI" type="date"></div>
@@ -1865,7 +1929,13 @@ document.querySelectorAll('.ov').forEach(o=>o.addEventListener('click',e=>{if(e.
 function switchColabTab(idx, prefix) {
   const tabsEl = document.getElementById(prefix==='e'?'eColabTabs':'nColabTabs');
   if(tabsEl) tabsEl.querySelectorAll('.mtab').forEach((t,i)=>t.classList.toggle('active',i===idx));
-  for(let i=0;i<4;i++){const p=document.getElementById(prefix+'Tab'+i);if(p)p.style.display=i===idx?'grid':'none';}
+  for(let i=0;i<5;i++){const p=document.getElementById(prefix+'Tab'+i);if(p)p.style.display=i===idx?'grid':'none';}
+  // Ao entrar na aba de documentos, sincroniza a chave e carrega lista
+  if(idx===4){
+    const keyEl=$(prefix+'DocApiKey');
+    if(keyEl){keyEl.value=_getAnthropicKey();_updateKeyStatus(prefix);}
+    if(prefix==='e'){const uuid=$(prefix+'ColabRow')?.value;if(uuid)_renderDocsList('e',uuid);}
+  }
 }
 
 // EDITAR COLABORADOR
@@ -1918,6 +1988,8 @@ function openEditColab(r){
   $('eAvaliObs').value=dc.avali_obs||'';
   $('eTreinamentos').value=dc.treinamentos||''; $('eCertificacoes').value=dc.certificacoes||'';
   setS('eEngajamento',dc.engajamento||''); $('eObsGerais').value=dc.obs_gerais||'';
+  // Pré-carrega lista de documentos
+  _renderDocsList('e',r._row||r.ID_COLABORADOR);
   openModal('mEditColab');
 }
 function toggleIndetGrp(){
@@ -2410,6 +2482,7 @@ async function saveNewColab(){
 // EDITAR FÉRIAS
 function openEditFer(r){
   $('eFerId').value=r.ID_COLABORADOR||'';$('eFerRow').value=r._row||'';
+  $('eFerNome').value=r.NOME||'';$('eFerPrevStatus').value=r.STATUS_FERIAS||'NAO_PROGRAMADA';
   $('mEditFerSub').textContent=(r.NOME||'—')+' · '+(r.ID_COLABORADOR||'—');
   $('fAqI').value=iso(r.INICIO_PERIODO_AQUISITIVO)||'';$('fAqF').value=iso(r.FIM_PERIODO_AQUISITIVO)||'';
   $('fConc').value=iso(r.FIM_PERIODO_CONCESSIVO)||'';$('fPI').value=iso(r.FERIAS_PROGRAMADAS_INICIO)||'';
@@ -2443,8 +2516,215 @@ async function saveEditFer(){
       // ferId é o UUID da ferias_saldo — atualiza diretamente
       await window._sb.from('ferias_saldo').update(campos).eq('id',ferId);
     }
-    toast('Férias atualizadas','success');await loadAll();
+    toast('Férias atualizadas','success');
+    // Emitir aviso de férias quando status muda para PROGRAMADA
+    const novoStatus=$('fSt').value;
+    const prevStatus=$('eFerPrevStatus').value||'';
+    if(novoStatus==='PROGRAMADA'&&prevStatus!=='PROGRAMADA'){
+      await _enviarAvisoFerias($('eFerId').value,campos);
+    }
+    await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+// ─── DOCUMENTOS: IA + UPLOAD ───────────────────────────────────────────────
+const _LUMA_ANT_KEY='_lumAnthropicKey';
+function _getAnthropicKey(){return localStorage.getItem(_LUMA_ANT_KEY)||'';}
+function _saveAnthropicKey(k){if(k)localStorage.setItem(_LUMA_ANT_KEY,k.trim());}
+function _updateKeyStatus(prefix){
+  const k=_getAnthropicKey();
+  const el=$(prefix+'DocKeyStatus');
+  if(el)el.textContent=k?'✅ Chave configurada':'⚠️ Chave não informada';
+  if(el)el.style.color=k?'var(--ok)':'var(--warn)';
+}
+function _onDocDrop(ev,prefix){
+  ev.preventDefault();
+  $(prefix+'DocDropZone')?.classList.remove('drag');
+  const file=ev.dataTransfer?.files?.[0];
+  if(!file)return;
+  const inp=$(prefix+'DocFile');
+  // Assign to file input via DataTransfer
+  try{const dt=new DataTransfer();dt.items.add(file);inp.files=dt.files;}catch(e){/*Firefox fallback*/}
+  readDocumentoIA(prefix,file);
+}
+async function readDocumentoIA(prefix,fileOverride){
+  const inp=$(prefix+'DocFile');
+  const file=fileOverride||inp?.files?.[0];
+  if(!file){toast('Selecione um arquivo','warn');return;}
+  let key=_getAnthropicKey();
+  if(!key){
+    key=window.prompt('Informe sua chave API da Anthropic (Claude):\n(Será salva localmente para uso futuro)');
+    if(!key)return;
+    _saveAnthropicKey(key);
+    _updateKeyStatus(prefix);
+  }
+  const stEl=$(prefix+'DocStatus');
+  stEl.style.display='';stEl.style.color='var(--text)';
+  stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Lendo documento com Claude AI…';
+  try{
+    const base64=await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=e=>res(e.target.result.split(',')[1]);
+      r.onerror=rej;
+      r.readAsDataURL(file);
+    });
+    const mediaType=file.type||'application/pdf';
+    const data=await _callAnthropicExtract(base64,mediaType,key);
+    const filled=_fillFormFromDoc(data,prefix);
+    stEl.style.color='var(--ok)';
+    stEl.innerHTML=`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário.`;
+    // Guarda na lista de docs locais
+    _addDocLocal(prefix,{nome:file.name,tipo:_tipoDocLabel(file.name),data:new Date().toLocaleDateString('pt-BR'),campos:filled});
+    _renderDocsList(prefix,$(prefix+'ColabRow')?.value||$(prefix+'ColabId')?.value);
+    switchColabTab(0,prefix);
+  }catch(e){
+    stEl.style.color='var(--danger)';
+    stEl.innerHTML='❌ Erro: '+esc(e.message)+'. Verifique a chave API e tente novamente.';
+    if(e.message?.includes('401'))localStorage.removeItem(_LUMA_ANT_KEY);
+  }
+}
+async function _callAnthropicExtract(base64,mediaType,key){
+  const isImg=!mediaType.includes('pdf');
+  const docPart=isImg
+    ?{type:'image',source:{type:'base64',media_type:mediaType,data:base64}}
+    :{type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}};
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true','content-type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-haiku-4-5-20251001',max_tokens:1024,
+      messages:[{role:'user',content:[
+        docPart,
+        {type:'text',text:'Extraia os dados pessoais deste documento brasileiro e retorne APENAS um JSON com os campos disponíveis (use null para campos não encontrados): {"nome":null,"cpf":null,"rg":null,"pis_pasep":null,"ctps":null,"titulo_eleitor":null,"data_nascimento":null,"email":null,"telefone":null,"cep":null,"endereco":null,"numero":null,"bairro":null,"cidade":null,"uf":null,"genero":null}. data_nascimento deve estar no formato YYYY-MM-DD. genero: "M" ou "F".'}
+      ]}]
+    })
+  });
+  if(!resp.ok){const t=await resp.text();throw new Error(`API ${resp.status}: ${t.slice(0,120)}`);}
+  const res=await resp.json();
+  const txt=res.content?.[0]?.text||'{}';
+  const m=txt.match(/\{[\s\S]*\}/);
+  return m?JSON.parse(m[0]):{};
+}
+function _fillFormFromDoc(data,p){
+  if(!data)return 0;
+  let n=0;
+  const s=(id,v)=>{if(v&&$(id)&&!$(id).value){$(id).value=v;n++;}};
+  const ss=(id,v)=>{if(v&&$(id)&&$(id).value===''){setS(id,v);n++;}};
+  s(p+'Nome',data.nome);s(p+'Nasc',data.data_nascimento);
+  s(p+'Cpf',data.cpf);s(p+'Rg',data.rg);s(p+'Pis',data.pis_pasep);
+  s(p+'Ctps',data.ctps);s(p+'Titulo',data.titulo_eleitor);
+  s(p+'EmailPes',data.email);s(p+'Telefone',data.telefone);
+  s(p+'Cep',data.cep);s(p+'Endereco',data.endereco);
+  s(p+'Numero',data.numero);s(p+'Bairro',data.bairro);s(p+'Cidade',data.cidade);
+  ss(p+'Uf',data.uf);ss(p+'Genero',data.genero);
+  return n;
+}
+function _tipoDocLabel(name){
+  const n=(name||'').toLowerCase();
+  if(n.includes('rg')||n.includes('identidade'))return'RG';
+  if(n.includes('cpf'))return'CPF';
+  if(n.includes('ctps')||n.includes('trabalho'))return'CTPS';
+  if(n.includes('cnh'))return'CNH';
+  if(n.includes('pis')||n.includes('pasep'))return'PIS/PASEP';
+  if(n.includes('titulo')||n.includes('eleitor'))return'Título de Eleitor';
+  if(n.includes('comprova')||n.includes('residencia')||n.includes('endereco'))return'Comprov. Endereço';
+  return'Documento';
+}
+const _DOCS_KEY='_lumaDocsColab_v1';
+function _getDocsLocal(uuid){try{return JSON.parse(localStorage.getItem(_DOCS_KEY+'_'+uuid)||'[]');}catch{return[];}}
+function _saveDocsLocal(uuid,arr){if(uuid)localStorage.setItem(_DOCS_KEY+'_'+uuid,JSON.stringify(arr));}
+function _addDocLocal(prefix,doc){
+  const uuid=$(prefix+'ColabRow')?.value||$(prefix+'ColabId')?.value;
+  if(!uuid)return;
+  const arr=_getDocsLocal(uuid);
+  arr.unshift({...doc,id:'doc_'+Date.now()});
+  _saveDocsLocal(uuid,arr);
+}
+function _renderDocsList(prefix,uuid){
+  const el=$(prefix+'DocList');
+  if(!el)return;
+  if(!uuid){el.innerHTML='<div class="empty">Salve o colaborador para ver documentos.</div>';return;}
+  const arr=_getDocsLocal(uuid);
+  if(!arr.length){el.innerHTML='<div class="empty">Nenhum documento carregado.</div>';return;}
+  el.innerHTML=arr.map(d=>`<div class="doc-item">
+    <div class="doc-item-ico">${_docIco(d.tipo)}</div>
+    <div class="doc-item-info"><div class="doc-item-name">${esc(d.nome||'—')}</div>
+    <div class="doc-item-meta">${esc(d.tipo||'—')} · ${esc(d.data||'—')}${d.campos?' · '+d.campos+' campos extraídos':''}</div></div>
+    <button class="ab d" style="font-size:11px;padding:3px 8px;" onclick="_removeDocLocal('${prefix}','${uuid}','${d.id||''}')">×</button>
+  </div>`).join('');
+}
+function _docIco(tipo){
+  const t=(tipo||'').toUpperCase();
+  if(t==='RG'||t==='CNH')return'🪪';
+  if(t==='CPF')return'🔢';
+  if(t==='CTPS')return'📘';
+  if(t.includes('ENDEREÇO')||t.includes('COMPROVA'))return'🏠';
+  if(t.includes('AVISO')||t.includes('FÉRIAS'))return'🏖️';
+  return'📄';
+}
+function _removeDocLocal(prefix,uuid,docId){
+  const arr=_getDocsLocal(uuid).filter(d=>d.id!==docId);
+  _saveDocsLocal(uuid,arr);
+  _renderDocsList(prefix,uuid);
+}
+
+// ─── AVISO DE FÉRIAS ────────────────────────────────────────────────────────
+async function _enviarAvisoFerias(colabId,fer){
+  try{
+    const colab=(D.CADASTRO_COLABORADORES||[]).find(r=>r.ID_COLABORADOR===colabId||r._id===colabId);
+    if(!colab)return;
+    const destEmail=colab.EMAIL_CORPORATIVO||colab.EMAIL_PESSOAL;
+    const rhEmails=_getRHEmails();
+    const html=_buildAvisoFeriasHTML(colab,fer);
+    const ini=fer.ferias_programadas_inicio?fmtD(fer.ferias_programadas_inicio):'—';
+    const fim=fer.ferias_programadas_fim?fmtD(fer.ferias_programadas_fim):'—';
+    if(destEmail){
+      await _emailLumaRH(`[LUMA RH] 🏖️ Aviso de Férias — ${colab.NOME} (${ini} a ${fim})`,html,destEmail,rhEmails);
+      toast('Aviso de férias enviado para '+destEmail,'success');
+    }
+    // Salva documento localmente para o colaborador
+    const uuid=colab._id||colab.ID_COLABORADOR;
+    const docsArr=_getDocsLocal(uuid);
+    docsArr.unshift({id:'doc_'+Date.now(),nome:`Aviso de Férias ${ini} a ${fim}`,tipo:'Aviso de Férias',data:new Date().toLocaleDateString('pt-BR'),campos:0});
+    _saveDocsLocal(uuid,docsArr);
+  }catch(e){console.warn('_enviarAvisoFerias:',e.message);}
+}
+function _buildAvisoFeriasHTML(colab,fer){
+  const nome=colab.NOME||'—';const cargo=colab.CARGO||'—';const empresa=colab.EMPRESA||'—';
+  const ini=fmtD(fer.ferias_programadas_inicio||fer.inicio_periodo_aquisitivo);
+  const fim=fmtD(fer.ferias_programadas_fim||fer.fim_periodo_aquisitivo);
+  const iniIso=fer.ferias_programadas_inicio||'';
+  const fimIso=fer.ferias_programadas_fim||'';
+  const retDate=fimIso?new Date(fimIso+'T12:00:00'):null;
+  if(retDate)retDate.setDate(retDate.getDate()+1);
+  const retorno=retDate?retDate.toLocaleDateString('pt-BR'):'—';
+  const hoje=new Date().toLocaleDateString('pt-BR');
+  const dias=iniIso&&fimIso?Math.round((new Date(fimIso+'T12:00:00')-new Date(iniIso+'T12:00:00'))/864e5)+1:30;
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f5f3ff;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff;padding:24px 0;"><tr><td align="center">
+<table width="620" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;">
+<tr><td style="background:#0369a1;padding:28px 32px;border-radius:8px 8px 0 0;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><div style="width:40px;height:40px;background:rgba(255,255,255,0.2);text-align:center;line-height:40px;font-size:22px;font-weight:bold;color:#fff;display:inline-block;border-radius:6px;">L</div></td>
+    <td style="padding-left:12px;vertical-align:middle;"><div style="color:#fff;font-size:18px;font-weight:bold;">🏖️ Aviso de Férias</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px;">LUMA RH · ${empresa}</div></td>
+  </tr></table>
+</td></tr>
+<tr><td style="padding:28px 32px;">
+  <p style="font-size:15px;color:#334155;margin:0 0 20px;">Comunicamos que as férias de <strong>${nome}</strong> foram aprovadas conforme informações abaixo.</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;">
+    <tr style="background:#f8fafc;"><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;width:40%;">Colaborador</td><td style="padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600;">${nome}</td></tr>
+    <tr><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Cargo</td><td style="padding:10px 16px;font-size:14px;color:#475569;border-top:1px solid #e2e8f0;">${cargo}</td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Empresa</td><td style="padding:10px 16px;font-size:14px;color:#475569;border-top:1px solid #e2e8f0;">${empresa}</td></tr>
+    <tr><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Período de férias</td><td style="padding:10px 16px;font-size:14px;color:#1e293b;font-weight:600;border-top:1px solid #e2e8f0;">${ini} a ${fim} <span style="color:#64748b;font-weight:400;">(${dias} dias)</span></td></tr>
+    <tr style="background:#f8fafc;"><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Retorno previsto</td><td style="padding:10px 16px;font-size:14px;color:#0369a1;font-weight:600;border-top:1px solid #e2e8f0;">${retorno}</td></tr>
+    <tr><td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;border-top:1px solid #e2e8f0;">Data de emissão</td><td style="padding:10px 16px;font-size:14px;color:#475569;border-top:1px solid #e2e8f0;">${hoje}</td></tr>
+  </table>
+  <p style="font-size:12px;color:#94a3b8;margin:20px 0 0;">⚖️ Art. 135 CLT — O colaborador deverá ser avisado com antecedência mínima de 30 dias.</p>
+</td></tr>
+<tr><td style="padding:16px 32px;background:#f8fafc;border-top:1px solid #e2e8f0;border-radius:0 0 8px 8px;">
+  <div style="font-size:11px;color:#94a3b8;text-align:center;">LUMA RH · Sistema de Gestão de Pessoas · Gerado em ${hoje}</div>
+</td></tr>
+</table></td></tr></table></body></html>`;
 }
 
 // EDITAR EXAME
