@@ -1,4 +1,4 @@
-<!-- v2026-04-08b -->
+<!-- v2026-04-08d -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2528,12 +2528,22 @@ async function readDocumentoIA(prefix,fileOverride){
       text=await _ocrImage(file);
     }
     if(!text||text.trim().length<10) throw new Error('Não foi possível extrair texto do documento. Verifique se é legível.');
+    console.log('[LUMA-DOC] Texto extraído (primeiros 800 chars):\n', text.slice(0,800));
     const data=_parseDocText(text);
+    const parsedKeys=Object.keys(data).filter(k=>data[k]);
+    console.log('[LUMA-DOC] Campos detectados pelo parser:', data);
     const filled=_fillFormFromDoc(data,prefix);
-    stEl.style.color=filled>0?'var(--ok)':'var(--warn)';
-    stEl.innerHTML=filled>0
-      ?`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário.`
-      :'⚠️ Texto extraído mas nenhum campo reconhecido. Preencha manualmente.';
+    if(filled>0){
+      stEl.style.color='var(--ok)';
+      stEl.innerHTML=`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário.`;
+    } else if(parsedKeys.length>0){
+      stEl.style.color='var(--warn)';
+      const resumo=parsedKeys.map(k=>`<b>${k}</b>: ${esc(String(data[k]).slice(0,30))}`).join(' · ');
+      stEl.innerHTML=`⚠️ Documento lido (${parsedKeys.length} campos detectados), mas os campos já estavam preenchidos.<br><small style="color:var(--muted)">${resumo}</small>`;
+    } else {
+      stEl.style.color='var(--warn)';
+      stEl.innerHTML='⚠️ Texto extraído mas nenhum campo reconhecido. Verifique o console (F12) para ver o texto bruto.';
+    }
     _addDocLocal(prefix,{nome:file.name,tipo:_tipoDocLabel(file.name),data:new Date().toLocaleDateString('pt-BR'),campos:filled});
     _renderDocsList(prefix,$(prefix+'ColabRow')?.value||$(prefix+'ColabId')?.value);
     if(filled>0) switchColabTab(0,prefix);
@@ -2565,8 +2575,8 @@ async function _extractPdfText(file,stEl){
   // Detecta ausência de dados de identidade no texto extraído → aciona OCR
   const hasCpf=/\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2}/.test(text);
   const hasDate=/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(text);
-  const hasName=/\b[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{3,}\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{3,}/.test(text);
-  if(!hasCpf&&!hasDate&&!hasName){
+  // Nota: não usa hasName — textos institucionais como "REPÚBLICA FEDERATIVA" causam falso positivo
+  if(!hasCpf&&!hasDate){
     if(stEl) stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — aplicando OCR… aguarde.';
     const page=await pdf.getPage(1);
     const viewport=page.getViewport({scale:2.5});
@@ -2606,7 +2616,8 @@ function _parseDocText(raw){
   // ── MRZ (Machine Readable Zone) — CNH digital, Passaporte, RNE ──
   // PDF.js une linhas com espaço → busca no texto plano (f) e também linha a linha (raw)
   // TD1 (CNH/RNE): linha1[30] linha2[30] linha3[30] — unidas por espaço no texto plano
-  const mrzTD1=f.match(/[IPV][<A-Z][A-Z]{3}[A-Z0-9<]{24}\s+(\d{6})[MF]\d{7}[A-Z]{3}[A-Z0-9<]{11}\d\s+([A-Z]{2,}<<[A-Z0-9<]{4,})/);
+  // TD1 texto plano: linha2 tem estrutura YYMMDD + dígito_verificador + M/F + YYMMDD...
+  const mrzTD1=f.match(/[IPV][<A-Z][A-Z]{3}[A-Z0-9<]{24}\s+(\d{6})\d[MF<]\d{6}\d[A-Z]{3}[A-Z0-9<]{11}\d\s+([A-Z]{2,}<<[A-Z0-9<]{4,})/);
   if(mrzTD1){
     const bStr=mrzTD1[1];
     const bY=parseInt(bStr.slice(0,2));const bM=bStr.slice(2,4);const bD=bStr.slice(4,6);
@@ -2615,9 +2626,9 @@ function _parseDocText(raw){
     const surN=(np[0]||'').replace(/</g,' ').trim();const givN=(np[1]||'').replace(/</g,' ').trim();
     if(surN&&!r.nome)r.nome=(surN+(givN?' '+givN:'')).replace(/\s+/g,' ');
   }
-  // Fallback: linhas MRZ separadas por \n (quando há quebras de linha no texto)
+  // Fallback: linhas MRZ separadas por \n (OCR preserva quebras de linha)
   if(!r.nome||!r.data_nascimento){
-    const mrzLines=(raw.match(/^[A-Z0-9<]{28,44}$/mg)||[]).filter(l=>/[A-Z]{3}/.test(l)&&l.includes('<'));
+    const mrzLines=(raw.match(/^[A-Z0-9<]{28,44}$/mg)||[]).filter(l=>l.includes('<')&&/[A-Z]{3}/.test(l));
     const td1=mrzLines.filter(l=>l.length===30);
     if(td1.length>=3){
       const l2=td1[1];const l3=td1[2];
@@ -2716,12 +2727,19 @@ function _parseDocText(raw){
   if(emailM)r.email=emailM[0];
 
   // ── Nome ──
-  const nomeL=f.match(/\bnom[e]?[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][^\d,;:]{3,50}?)(?=\s{2,}|\bCPF|\bRG|\bdat)/i);
-  if(nomeL)r.nome=nomeL[1].trim().replace(/\s+/g,' ');
+  // Palavras institucionais que NÃO são nomes de pessoas
+  const _nomeStop=/^(REPÚBLICA|FEDERATIVA|MINISTÉRIO|SECRETARIA|DEPARTAMENTO|PREFEITURA|ESTADO|GOVERNO|NACIONAL|MUNICIPAL|ESTADUAL|BRASIL|BRASILEIRA|CARTEIRA|HABILITAÇÃO|DRIVER|LICENSE|PERMISO|QR|CODE|SERPRO|SENATRAN|DOCUMENTO|DIGITAL|ASSINADO)\b/i;
+  // CNH: label "NOME E SOBRENOME" ou "NOME SOBRENOME" antes do valor
+  const nomeCnh=f.match(/nome\s+e\s+sobren\w*\s*[:\-]?\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõç\s]{3,50}?)(?=\s{2,}|\d|\bCPF|\bRG|\bDAT)/i);
+  if(nomeCnh&&!_nomeStop.test(nomeCnh[1]))r.nome=nomeCnh[1].trim().replace(/\s+/g,' ');
+  // Rótulo genérico "nome:"
+  if(!r.nome){const nomeL=f.match(/\bnom[e]?[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][^\d,;:]{3,50}?)(?=\s{2,}|\bCPF|\bRG|\bdat)/i);if(nomeL&&!_nomeStop.test(nomeL[1]))r.nome=nomeL[1].trim().replace(/\s+/g,' ');}
   if(!r.nome){
-    // Procura linha de nome antes do CPF no bloco pré-CPF
-    const nomeBlk=pre.match(/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}){1,6})\b/);
-    if(nomeBlk)r.nome=nomeBlk[1].trim();
+    // Varredura: primeiro bloco de 2-7 palavras todas maiúsculas, excluindo institucionais
+    const allCapsRe=/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}){1,6})\b/g;
+    let m;while((m=allCapsRe.exec(pre))!==null){
+      if(!_nomeStop.test(m[1])&&m[1].split(' ').length>=2){r.nome=m[1].trim();break;}
+    }
   }
 
   return r;
