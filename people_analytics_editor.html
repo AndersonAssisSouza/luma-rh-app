@@ -2519,13 +2519,12 @@ async function readDocumentoIA(prefix,fileOverride){
   const stEl=$(prefix+'DocStatus');
   stEl.style.display='';stEl.style.color='var(--text)';
   const isPdf=file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf');
-  stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> ${isPdf?'Extraindo texto do PDF…':'Lendo imagem com OCR…'} aguarde.`;
+  stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> ${isPdf?'Processando PDF… aguarde.':'Carregando OCR… (pode levar alguns segundos na primeira vez)'}`;
   try{
     let text='';
     if(isPdf){
-      text=await _extractPdfText(file);
+      text=await _extractPdfText(file,stEl);
     } else {
-      stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Carregando OCR… (pode levar alguns segundos na primeira vez)';
       text=await _ocrImage(file);
     }
     if(!text||text.trim().length<10) throw new Error('Não foi possível extrair texto do documento. Verifique se é legível.');
@@ -2544,8 +2543,8 @@ async function readDocumentoIA(prefix,fileOverride){
   }
 }
 
-// ── Extração de texto de PDF via PDF.js ──
-async function _extractPdfText(file){
+// ── Extração de texto de PDF via PDF.js (com fallback OCR para PDFs baseados em imagem) ──
+async function _extractPdfText(file,stEl){
   if(!window.pdfjsLib){
     await new Promise((res,rej)=>{
       const s=document.createElement('script');
@@ -2561,6 +2560,20 @@ async function _extractPdfText(file){
     const page=await pdf.getPage(i);
     const content=await page.getTextContent();
     text+=content.items.map(it=>it.str).join(' ')+'\n';
+  }
+  // PDF baseado em imagem (ex: CNH digital, RG escaneado): pouco texto útil extraído
+  // Renderiza a primeira página em canvas e aplica OCR
+  const useful=text.replace(/[\s\W]/g,'');
+  if(useful.length<120){
+    if(stEl) stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF baseado em imagem — aplicando OCR… aguarde.';
+    const page=await pdf.getPage(1);
+    const viewport=page.getViewport({scale:2.5});
+    const canvas=document.createElement('canvas');
+    canvas.width=viewport.width;canvas.height=viewport.height;
+    await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+    const ocrText=await _ocrImage(blob);
+    return (text+'\n'+ocrText).trim();
   }
   return text;
 }
@@ -2587,6 +2600,38 @@ function _parseDocText(raw){
   const r={};
 
   const _ufs='AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO';
+
+  // ── MRZ (Machine Readable Zone) — CNH digital, Passaporte, RNE ──
+  // TD1: 3 linhas de 30 chars | TD3: 2 linhas de 44 chars
+  const mrzLines=(raw.match(/^[A-Z0-9<]{25,44}$/mg)||[]).filter(l=>/[A-Z]{3}/.test(l));
+  if(mrzLines.length>=2){
+    // TD1 (CNH / RNE): linhas de 30 chars
+    const td1=mrzLines.filter(l=>l.length===30);
+    if(td1.length>=3){
+      const l2=td1[1];const l3=td1[2];
+      // Data de nascimento: pos 0-5 YYMMDD
+      const bY=parseInt(l2.slice(0,2));const bM=l2.slice(2,4);const bD=l2.slice(4,6);
+      if(bM>='01'&&bM<='12'&&bD>='01'&&bD<='31'){
+        const fy=bY>30?1900+bY:2000+bY;
+        r.data_nascimento=`${fy}-${bM}-${bD}`;
+      }
+      // Nome: surname<<givennames
+      const nameParts=l3.replace(/<+$/,'').split('<<');
+      const surN=(nameParts[0]||'').replace(/</g,' ').trim();
+      const givN=(nameParts[1]||'').replace(/</g,' ').trim();
+      if(surN) r.nome=(surN+(givN?' '+givN:'')).replace(/\s+/g,' ');
+    }
+    // TD3 (Passaporte): linhas de 44 chars
+    const td3=mrzLines.filter(l=>l.length===44);
+    if(!r.data_nascimento&&td3.length>=2){
+      const l2=td3[1];
+      const bY=parseInt(l2.slice(13,15));const bM=l2.slice(15,17);const bD=l2.slice(17,19);
+      if(bM>='01'&&bM<='12'){const fy=bY>30?1900+bY:2000+bY;r.data_nascimento=`${fy}-${bM}-${bD}`;}
+      if(!r.nome){const np=td3[0].slice(5).replace(/<+$/,'').split('<<');
+        const s=(np[0]||'').replace(/</g,' ').trim();const g=(np[1]||'').replace(/</g,' ').trim();
+        if(s)r.nome=(s+(g?' '+g:'')).replace(/\s+/g,' ');}
+    }
+  }
 
   // ── CPF (âncora de posição para extração do bloco do cliente) ──
   const cpfM=f.match(/\b(\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2})\b/);
