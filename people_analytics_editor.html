@@ -1,4 +1,4 @@
-<!-- v2026-04-08d -->
+<!-- v2026-04-08e -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -955,6 +955,11 @@ nav.legacy{display:none!important;}
         <div class="fgrp"><div class="flbl">UF</div>
           <select class="fsel" id="eUf"><option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select>
         </div>
+        <div class="fdiv"></div><div class="fsec">Naturalidade e Filiação</div>
+        <div class="fgrp"><div class="flbl">Município natal</div><input class="fi" id="eNascLocal" placeholder="Ex: Belo Horizonte"></div>
+        <div class="fgrp"><div class="flbl">UF natal</div><select class="fsel" id="eNascUf"><option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></div>
+        <div class="fgrp s2"><div class="flbl">Nome do pai</div><input class="fi" id="eFiliacao1" placeholder="Nome completo do pai"></div>
+        <div class="fgrp s2"><div class="flbl">Nome da mãe</div><input class="fi" id="eFiliacao2" placeholder="Nome completo da mãe"></div>
         <div class="fdiv"></div><div class="fsec">Contato de Emergência</div>
         <div class="fgrp s2"><div class="flbl">Nome do contato</div><input class="fi" id="eEmergNome" placeholder="Nome completo"></div>
         <div class="fgrp"><div class="flbl">Telefone</div><input class="fi" id="eEmergTel" placeholder="(00) 00000-0000"></div>
@@ -1099,6 +1104,11 @@ nav.legacy{display:none!important;}
         <div class="fgrp"><div class="flbl">UF</div>
           <select class="fsel" id="nUf"><option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select>
         </div>
+        <div class="fdiv"></div><div class="fsec">Naturalidade e Filiação</div>
+        <div class="fgrp"><div class="flbl">Município natal</div><input class="fi" id="nNascLocal" placeholder="Ex: Belo Horizonte"></div>
+        <div class="fgrp"><div class="flbl">UF natal</div><select class="fsel" id="nNascUf"><option value="">—</option><option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option>SP</option><option>SE</option><option>TO</option></select></div>
+        <div class="fgrp s2"><div class="flbl">Nome do pai</div><input class="fi" id="nFiliacao1" placeholder="Nome completo do pai"></div>
+        <div class="fgrp s2"><div class="flbl">Nome da mãe</div><input class="fi" id="nFiliacao2" placeholder="Nome completo da mãe"></div>
         <div class="fdiv"></div><div class="fsec">Contato de Emergência</div>
         <div class="fgrp s2"><div class="flbl">Nome do contato</div><input class="fi" id="nEmergNome" placeholder="Nome completo"></div>
         <div class="fgrp"><div class="flbl">Telefone</div><input class="fi" id="nEmergTel" placeholder="(00) 00000-0000"></div>
@@ -1412,6 +1422,8 @@ function _sbToExcel(r){
     EMAIL_PESSOAL:r.email_pessoal, TELEFONE:r.telefone,
     CEP:r.cep, ENDERECO:r.endereco, NUMERO:r.numero, BAIRRO:r.bairro, CIDADE:r.cidade, UF:r.uf,
     EMERGENCIA_NOME:r.emergencia_nome, EMERGENCIA_TELEFONE:r.emergencia_telefone, EMERGENCIA_PARENTESCO:r.emergencia_parentesco,
+    NASC_LOCAL:dc.nasc_local||'', NASC_UF:dc.nasc_uf||'',
+    FILIACAO_PAI:dc.filiacao_pai||'', FILIACAO_MAE:dc.filiacao_mae||'',
     MATRICULA:r.matricula, JORNADA_TRABALHO:r.jornada_trabalho, DESCRICAO_FUNCAO:r.descricao_funcao,
     BANCO:r.banco, AGENCIA:r.agencia, CONTA_BANCARIA:r.conta_bancaria, TIPO_CONTA:r.tipo_conta, SEGURO_VIDA:r.seguro_vida,
     DADOS_COMPLEMENTARES:dc,
@@ -1930,6 +1942,8 @@ function openEditColab(r){
   $('eCep').value=r.CEP||''; $('eEndereco').value=r.ENDERECO||'';
   $('eNumero').value=r.NUMERO||''; $('eBairro').value=r.BAIRRO||'';
   $('eCidade').value=r.CIDADE||''; setS('eUf',r.UF||'');
+  $('eNascLocal').value=r.NASC_LOCAL||''; setS('eNascUf',r.NASC_UF||'');
+  $('eFiliacao1').value=r.FILIACAO_PAI||''; $('eFiliacao2').value=r.FILIACAO_MAE||'';
   $('eEmergNome').value=r.EMERGENCIA_NOME||'';
   $('eEmergTel').value=r.EMERGENCIA_TELEFONE||'';
   $('eEmergPar').value=r.EMERGENCIA_PARENTESCO||'';
@@ -1990,6 +2004,8 @@ async function saveEditColab(){
     avali_obs:$('eAvaliObs').value||null,
     treinamentos:$('eTreinamentos').value||null, certificacoes:$('eCertificacoes').value||null,
     engajamento:$('eEngajamento').value||null, obs_gerais:$('eObsGerais').value||null,
+    nasc_local:$('eNascLocal').value||null, nasc_uf:$('eNascUf').value||null,
+    filiacao_pai:$('eFiliacao1').value||null, filiacao_mae:$('eFiliacao2').value||null,
   };
   const campos=_excelToSb({
     NOME:$('eNome').value, EMAIL_CORPORATIVO:$('eEmail').value.trim()||null,
@@ -2405,6 +2421,8 @@ async function saveNewColab(){
       avali_obs:$('nAvaliObs').value||null,
       treinamentos:$('nTreinamentos').value||null, certificacoes:$('nCertificacoes').value||null,
       engajamento:$('nEngajamento').value||null, obs_gerais:$('nObsGerais').value||null,
+      nasc_local:$('nNascLocal').value||null, nasc_uf:$('nNascUf').value||null,
+      filiacao_pai:$('nFiliacao1').value||null, filiacao_mae:$('nFiliacao2').value||null,
     };
     const sbRow={
       tenant_id:tenantId,
@@ -2528,21 +2546,25 @@ async function readDocumentoIA(prefix,fileOverride){
       text=await _ocrImage(file);
     }
     if(!text||text.trim().length<10) throw new Error('Não foi possível extrair texto do documento. Verifique se é legível.');
-    console.log('[LUMA-DOC] Texto extraído (primeiros 800 chars):\n', text.slice(0,800));
+    console.log('[LUMA-DOC] Texto extraído:\n', text.slice(0,1000));
     const data=_parseDocText(text);
-    const parsedKeys=Object.keys(data).filter(k=>data[k]);
-    console.log('[LUMA-DOC] Campos detectados pelo parser:', data);
-    const filled=_fillFormFromDoc(data,prefix);
-    if(filled>0){
+    console.log('[LUMA-DOC] Campos detectados:', data);
+    const {filled,conflicts}=_fillFormFromDoc(data,prefix);
+    if(filled>0&&conflicts.length===0){
       stEl.style.color='var(--ok)';
       stEl.innerHTML=`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário.`;
-    } else if(parsedKeys.length>0){
+    } else if(filled>0&&conflicts.length>0){
+      stEl.style.color='var(--ok)';
+      stEl.innerHTML=`✅ ${filled} campo(s) preenchido(s). ${_renderConflictUI(conflicts,data,prefix)}`;
+    } else if(conflicts.length>0){
       stEl.style.color='var(--warn)';
-      const resumo=parsedKeys.map(k=>`<b>${k}</b>: ${esc(String(data[k]).slice(0,30))}`).join(' · ');
-      stEl.innerHTML=`⚠️ Documento lido (${parsedKeys.length} campos detectados), mas os campos já estavam preenchidos.<br><small style="color:var(--muted)">${resumo}</small>`;
+      stEl.innerHTML=_renderConflictUI(conflicts,data,prefix);
+    } else if(Object.keys(data).filter(k=>data[k]).length>0){
+      stEl.style.color='var(--muted)';
+      stEl.innerHTML='ℹ️ Todos os campos detectados já estavam preenchidos com os mesmos valores.';
     } else {
       stEl.style.color='var(--warn)';
-      stEl.innerHTML='⚠️ Texto extraído mas nenhum campo reconhecido. Verifique o console (F12) para ver o texto bruto.';
+      stEl.innerHTML='⚠️ Texto extraído mas nenhum campo reconhecido. Verifique o console (F12).';
     }
     _addDocLocal(prefix,{nome:file.name,tipo:_tipoDocLabel(file.name),data:new Date().toLocaleDateString('pt-BR'),campos:filled});
     _renderDocsList(prefix,$(prefix+'ColabRow')?.value||$(prefix+'ColabId')?.value);
@@ -2694,6 +2716,17 @@ function _parseDocText(raw){
     if(cu2){r.cidade=cu2[1].trim();r.uf=cu2[2].toUpperCase();}
   }
 
+  // ── Cidade natal + UF natal (CNH: "DATA, LOCAL E UF DE NASCIMENTO: DD/MM/YYYY, CIDADE, UF") ──
+  // Padrão CNH: "16/01/1978, JOAO MONLEVADE, MG" — cidade vem APÓS a data e ANTES da UF
+  const nascLocalRe=/\d{2}[\/\.\-]\d{2}[\/\.\-]\d{4}\s*,\s*([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\s]{2,40})\s*,\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i;
+  const nlm=f.match(nascLocalRe);
+  if(nlm){r.cidade_natal=nlm[1].trim().replace(/\s+/g,' ');r.uf_natal=nlm[2].toUpperCase();}
+
+  // ── Filiação (CNH: label "FILIAÇÃO" seguido de dois nomes em linhas/sequência) ──
+  const filRe=/filia[çc][aã]o[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,50}?)(?:\s{2,}|\n)([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,50})/i;
+  const fm=f.match(filRe)||raw.match(filRe);
+  if(fm){r.filiacao1=fm[1].trim().replace(/\s+/g,' ');r.filiacao2=fm[2].trim().replace(/\s+/g,' ');}
+
   // ── PIS/PASEP: 000.00000.00-0 ──
   const pisM=f.match(/\b(\d{3}[\.\s]?\d{5}[\.\s]?\d{2}[\-\s]?\d)\b/);
   if(pisM){const p=pisM[1].replace(/\D/g,'');if(p.length===11)r.pis_pasep=p.replace(/(\d{3})(\d{5})(\d{2})(\d)/,'$1.$2.$3-$4');}
@@ -2744,19 +2777,94 @@ function _parseDocText(raw){
 
   return r;
 }
-function _fillFormFromDoc(data,p){
-  if(!data)return 0;
-  let n=0;
-  const s=(id,v)=>{if(v&&$(id)&&!$(id).value){$(id).value=v;n++;}};
-  const ss=(id,v)=>{if(v&&$(id)&&$(id).value===''){setS(id,v);n++;}};
-  s(p+'Nome',data.nome);s(p+'Nasc',data.data_nascimento);
-  s(p+'Cpf',data.cpf);s(p+'Rg',data.rg);s(p+'Pis',data.pis_pasep);
-  s(p+'Ctps',data.ctps);s(p+'Titulo',data.titulo_eleitor);
-  s(p+'EmailPes',data.email);s(p+'Telefone',data.telefone);
-  s(p+'Cep',data.cep);s(p+'Endereco',data.endereco);
-  s(p+'Numero',data.numero);s(p+'Bairro',data.bairro);s(p+'Cidade',data.cidade);
-  ss(p+'Uf',data.uf);ss(p+'Genero',data.genero);
-  return n;
+// UI de resolução de conflito entre documentos
+function _renderConflictUI(conflicts,data,prefix){
+  if(!conflicts.length)return'';
+  // Armazena temporariamente para uso pelo botão aplicar
+  window._docConflict={data,prefix};
+  const rows=conflicts.map(c=>`
+    <tr>
+      <td style="padding:4px 8px;font-size:12px;color:var(--muted)">${esc(c.lbl)}</td>
+      <td style="padding:4px 8px;font-size:12px;color:var(--text)">${esc(c.cur)}</td>
+      <td style="padding:4px 8px;font-size:12px;color:var(--accent)">${esc(c.novo)}</td>
+      <td style="padding:4px;text-align:center"><input type="checkbox" data-k="${esc(c.k)}" style="width:16px;height:16px;" title="Usar valor do documento"></td>
+    </tr>`).join('');
+  return`<div style="margin-top:8px;background:var(--bg3);border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+    <div style="padding:8px 12px;font-size:12px;font-weight:600;background:var(--bg2);border-bottom:1px solid var(--border);">
+      ⚠️ ${conflicts.length} campo(s) com valores diferentes — marque os que deseja substituir:
+    </div>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr style="background:var(--bg2);">
+        <th style="padding:4px 8px;font-size:11px;color:var(--muted);text-align:left">Campo</th>
+        <th style="padding:4px 8px;font-size:11px;color:var(--muted);text-align:left">Valor atual</th>
+        <th style="padding:4px 8px;font-size:11px;color:var(--accent);text-align:left">Valor no documento</th>
+        <th style="padding:4px 8px;font-size:11px;color:var(--muted);text-align:center">Usar?</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="padding:8px 12px;text-align:right;border-top:1px solid var(--border);">
+      <button class="btn btn-g" style="font-size:12px;padding:5px 14px;" onclick="_applySelectedConflicts('${prefix}')">✅ Aplicar selecionados</button>
+    </div>
+  </div>`;
+}
+function _applySelectedConflicts(prefix){
+  const {data}=window._docConflict||{};
+  if(!data)return;
+  const checks=document.querySelectorAll(`#${prefix}DocStatus input[type=checkbox]:checked`);
+  const keys=[...checks].map(c=>c.dataset.k);
+  if(!keys.length){toast('Nenhum campo selecionado','warn');return;}
+  _applyDocConflicts(prefix,data,keys);
+}
+
+// Mapeamento campo parser → {id sufixo, label, tipo}
+const _DOC_FIELD_MAP=[
+  {k:'nome',       s:'Nome',      lbl:'Nome completo',    t:'text'},
+  {k:'data_nascimento',s:'Nasc',  lbl:'Data nascimento',  t:'text'},
+  {k:'cpf',        s:'Cpf',       lbl:'CPF',              t:'text'},
+  {k:'rg',         s:'Rg',        lbl:'RG',               t:'text'},
+  {k:'pis_pasep',  s:'Pis',       lbl:'PIS/PASEP',        t:'text'},
+  {k:'ctps',       s:'Ctps',      lbl:'CTPS',             t:'text'},
+  {k:'titulo_eleitor',s:'Titulo', lbl:'Título eleitor',   t:'text'},
+  {k:'email',      s:'EmailPes',  lbl:'E-mail pessoal',   t:'text'},
+  {k:'telefone',   s:'Telefone',  lbl:'Telefone',         t:'text'},
+  {k:'cep',        s:'Cep',       lbl:'CEP',              t:'text'},
+  {k:'endereco',   s:'Endereco',  lbl:'Endereço',         t:'text'},
+  {k:'numero',     s:'Numero',    lbl:'Número',           t:'text'},
+  {k:'bairro',     s:'Bairro',    lbl:'Bairro',           t:'text'},
+  {k:'cidade',     s:'Cidade',    lbl:'Cidade residência',t:'text'},
+  {k:'uf',         s:'Uf',        lbl:'UF residência',    t:'sel'},
+  {k:'genero',     s:'Genero',    lbl:'Gênero',           t:'sel'},
+  {k:'cidade_natal',s:'NascLocal',lbl:'Município natal',  t:'text'},
+  {k:'uf_natal',   s:'NascUf',    lbl:'UF natal',         t:'sel'},
+  {k:'filiacao1',  s:'Filiacao1', lbl:'Nome do pai',      t:'text'},
+  {k:'filiacao2',  s:'Filiacao2', lbl:'Nome da mãe',      t:'text'},
+];
+function _fillFormFromDoc(data,p,forceKeys){
+  // forceKeys: array de chaves a forçar sobrescrita (resolução de conflito)
+  if(!data)return{filled:0,conflicts:[]};
+  let filled=0;const conflicts=[];
+  for(const f of _DOC_FIELD_MAP){
+    const val=data[f.k];if(!val)continue;
+    const el=$(p+f.s);if(!el)continue;
+    const cur=el.value||'';
+    const force=forceKeys&&forceKeys.includes(f.k);
+    if(!cur){
+      // Campo vazio → preenche sempre
+      if(f.t==='sel')setS(p+f.s,val);else el.value=val;
+      filled++;
+    } else if(cur.trim().toLowerCase()!==String(val).trim().toLowerCase()){
+      // Campo preenchido com valor diferente → conflito
+      if(force){if(f.t==='sel')setS(p+f.s,val);else el.value=val;filled++;}
+      else conflicts.push({k:f.k,lbl:f.l||f.lbl,cur,novo:String(val)});
+    }
+    // cur === val → já correto, ignora
+  }
+  return{filled,conflicts};
+}
+function _applyDocConflicts(p,data,keys){
+  const {filled}=_fillFormFromDoc(data,p,keys);
+  const stEl=$(p+'DocStatus');
+  if(stEl)stEl.innerHTML=`✅ <strong>${filled} campo(s) atualizado(s)</strong> com os dados selecionados.`;
 }
 function _tipoDocLabel(name){
   const n=(name||'').toLowerCase();
