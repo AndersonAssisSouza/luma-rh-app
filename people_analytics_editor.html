@@ -1,4 +1,4 @@
-<!-- v2026-04-08i -->
+<!-- v2026-04-08j -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2804,11 +2804,12 @@ function _parseDocText(raw){
     if(sexoM){const s=sexoM[1][0].toUpperCase();r.genero=s==='M'?'M':'F';}
   }
   if(_isComprEnd){
-    // Comprovante de endereço: não deve popular nome, CPF, RG, data nascimento
-    // (esses campos vêm de documentos de identidade)
-    delete r.nome; delete r.rg; delete r.data_nascimento;
+    // Comprovante de endereço: só popula CEP, endereço, bairro, cidade, UF
+    // CPF/RG/nome/data nascimento vêm de documentos de identidade (CNH, RG, CTPS)
+    delete r.nome; delete r.cpf; delete r.rg; delete r.data_nascimento;
     delete r.cidade_natal; delete r.uf_natal;
     delete r.filiacao1; delete r.filiacao2;
+    delete r.telefone; delete r.email; delete r.pis_pasep;
   }
 
   // ── Nome — só para documentos de identidade ──
