@@ -2561,11 +2561,13 @@ async function _extractPdfText(file,stEl){
     const content=await page.getTextContent();
     text+=content.items.map(it=>it.str).join(' ')+'\n';
   }
-  // PDF baseado em imagem (ex: CNH digital, RG escaneado): pouco texto útil extraído
-  // Renderiza a primeira página em canvas e aplica OCR
-  const useful=text.replace(/[\s\W]/g,'');
-  if(useful.length<120){
-    if(stEl) stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF baseado em imagem — aplicando OCR… aguarde.';
+  // PDF baseado em imagem (ex: CNH digital, RG escaneado):
+  // Detecta ausência de dados de identidade no texto extraído → aciona OCR
+  const hasCpf=/\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2}/.test(text);
+  const hasDate=/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(text);
+  const hasName=/\b[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{3,}\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{3,}/.test(text);
+  if(!hasCpf&&!hasDate&&!hasName){
+    if(stEl) stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — aplicando OCR… aguarde.';
     const page=await pdf.getPage(1);
     const viewport=page.getViewport({scale:2.5});
     const canvas=document.createElement('canvas');
@@ -2602,34 +2604,28 @@ function _parseDocText(raw){
   const _ufs='AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO';
 
   // ── MRZ (Machine Readable Zone) — CNH digital, Passaporte, RNE ──
-  // TD1: 3 linhas de 30 chars | TD3: 2 linhas de 44 chars
-  const mrzLines=(raw.match(/^[A-Z0-9<]{25,44}$/mg)||[]).filter(l=>/[A-Z]{3}/.test(l));
-  if(mrzLines.length>=2){
-    // TD1 (CNH / RNE): linhas de 30 chars
+  // PDF.js une linhas com espaço → busca no texto plano (f) e também linha a linha (raw)
+  // TD1 (CNH/RNE): linha1[30] linha2[30] linha3[30] — unidas por espaço no texto plano
+  const mrzTD1=f.match(/[IPV][<A-Z][A-Z]{3}[A-Z0-9<]{24}\s+(\d{6})[MF]\d{7}[A-Z]{3}[A-Z0-9<]{11}\d\s+([A-Z]{2,}<<[A-Z0-9<]{4,})/);
+  if(mrzTD1){
+    const bStr=mrzTD1[1];
+    const bY=parseInt(bStr.slice(0,2));const bM=bStr.slice(2,4);const bD=bStr.slice(4,6);
+    if(bM>='01'&&bM<='12'&&bD>='01'&&bD<='31'){const fy=bY>30?1900+bY:2000+bY;if(!r.data_nascimento)r.data_nascimento=`${fy}-${bM}-${bD}`;}
+    const np=mrzTD1[2].replace(/<+$/,'').split('<<');
+    const surN=(np[0]||'').replace(/</g,' ').trim();const givN=(np[1]||'').replace(/</g,' ').trim();
+    if(surN&&!r.nome)r.nome=(surN+(givN?' '+givN:'')).replace(/\s+/g,' ');
+  }
+  // Fallback: linhas MRZ separadas por \n (quando há quebras de linha no texto)
+  if(!r.nome||!r.data_nascimento){
+    const mrzLines=(raw.match(/^[A-Z0-9<]{28,44}$/mg)||[]).filter(l=>/[A-Z]{3}/.test(l)&&l.includes('<'));
     const td1=mrzLines.filter(l=>l.length===30);
     if(td1.length>=3){
       const l2=td1[1];const l3=td1[2];
-      // Data de nascimento: pos 0-5 YYMMDD
       const bY=parseInt(l2.slice(0,2));const bM=l2.slice(2,4);const bD=l2.slice(4,6);
-      if(bM>='01'&&bM<='12'&&bD>='01'&&bD<='31'){
-        const fy=bY>30?1900+bY:2000+bY;
-        r.data_nascimento=`${fy}-${bM}-${bD}`;
-      }
-      // Nome: surname<<givennames
-      const nameParts=l3.replace(/<+$/,'').split('<<');
-      const surN=(nameParts[0]||'').replace(/</g,' ').trim();
-      const givN=(nameParts[1]||'').replace(/</g,' ').trim();
-      if(surN) r.nome=(surN+(givN?' '+givN:'')).replace(/\s+/g,' ');
-    }
-    // TD3 (Passaporte): linhas de 44 chars
-    const td3=mrzLines.filter(l=>l.length===44);
-    if(!r.data_nascimento&&td3.length>=2){
-      const l2=td3[1];
-      const bY=parseInt(l2.slice(13,15));const bM=l2.slice(15,17);const bD=l2.slice(17,19);
-      if(bM>='01'&&bM<='12'){const fy=bY>30?1900+bY:2000+bY;r.data_nascimento=`${fy}-${bM}-${bD}`;}
-      if(!r.nome){const np=td3[0].slice(5).replace(/<+$/,'').split('<<');
-        const s=(np[0]||'').replace(/</g,' ').trim();const g=(np[1]||'').replace(/</g,' ').trim();
-        if(s)r.nome=(s+(g?' '+g:'')).replace(/\s+/g,' ');}
+      if(bM>='01'&&bM<='12'&&bD>='01'&&bD<='31'){const fy=bY>30?1900+bY:2000+bY;if(!r.data_nascimento)r.data_nascimento=`${fy}-${bM}-${bD}`;}
+      const np=l3.replace(/<+$/,'').split('<<');
+      const surN=(np[0]||'').replace(/</g,' ').trim();const givN=(np[1]||'').replace(/</g,' ').trim();
+      if(surN&&!r.nome)r.nome=(surN+(givN?' '+givN:'')).replace(/\s+/g,' ');
     }
   }
 
