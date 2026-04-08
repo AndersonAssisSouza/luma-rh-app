@@ -1,4 +1,4 @@
-<!-- v2026-04-07 -->
+<!-- v2026-04-08b -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2645,15 +2645,30 @@ function _parseDocText(raw){
   const endM=t.match(/(?:rua|av\.|avenida|alameda|travessa|estrada|rodovia)[,\s]+([^\d,;]{3,60}),?\s*(\d{1,5})/i);
   if(endM){r.endereco=endM[1].trim();r.numero=endM[2];}
 
-  // Bairro
-  const bairM=t.match(/bairro[:\s]+([A-Za-zÀ-ú\s]{3,40})(?=\s{2,}|cep|cidade)/i);
+  // Bairro — com ou sem rótulo
+  const bairM=t.match(/bairro[:\s]+([A-Za-zÀ-ú][A-Za-zÀ-ú\s]{2,39})(?=\s{2,}|\d|cep|cidade|,)/i);
   if(bairM) r.bairro=bairM[1].trim();
 
-  // Cidade + UF
-  const cidM=t.match(/([A-Za-zÀ-ú\s]{3,30})[\/\-,\s]+([A-Z]{2})\b/);
-  if(cidM&&cidM[2].match(/^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/)){
-    r.cidade=cidM[1].trim();r.uf=cidM[2];
+  // Cidade + UF — múltiplas estratégias
+  const _ufs='AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO';
+  const _ufRe=new RegExp(`\\b(${_ufs})\\b`);
+  // 1) Rótulo "cidade:" ou "município:"
+  const cidLabel=t.match(/(?:cidade|munic[íi]pio)[:\s]+([A-Za-zÀ-ú][A-Za-zÀ-ú\s]{2,40})(?=\s{2,}|[,\/\-]|\d|uf|estado)/i);
+  if(cidLabel){r.cidade=cidLabel[1].trim();}
+  // 2) Padrão "Cidade - UF" ou "Cidade/UF" ou "Cidade,UF"
+  if(!r.cidade){
+    const cidUf=t.match(new RegExp(`([A-Za-zÀ-ú][A-Za-zÀ-ú\\s]{2,35}?)\\s*[\\-\\/,]\\s*(${_ufs})\\b`));
+    if(cidUf){r.cidade=cidUf[1].trim();r.uf=cidUf[2];}
   }
+  // 3) UF isolada após cidade conhecida (ex: "Belo Horizonte MG")
+  if(!r.cidade){
+    const cidUf2=t.match(new RegExp(`([A-Za-zÀ-ú][A-Za-zÀ-ú\\s]{2,35})\\s+(${_ufs})\\b`));
+    if(cidUf2){r.cidade=cidUf2[1].trim();r.uf=cidUf2[2];}
+  }
+  // 4) Extrai UF sozinha se cidade já encontrada
+  if(r.cidade&&!r.uf){const ufM=t.match(_ufRe);if(ufM)r.uf=ufM[1];}
+  // 5) Rótulo "UF:" ou "Estado:"
+  if(!r.uf){const ufL=t.match(/(?:uf|estado)[:\s]+([A-Z]{2})\b/i);if(ufL&&ufL[1].match(_ufRe))r.uf=ufL[1].toUpperCase();}
 
   return r;
 }
