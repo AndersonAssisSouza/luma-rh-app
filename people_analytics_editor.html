@@ -1039,11 +1039,6 @@ nav.legacy{display:none!important;}
       <!-- TAB 4: DOCUMENTOS (edit) -->
       <div class="mtpane" id="eTab4" style="display:none;grid-template-columns:1fr!important;">
         <div style="grid-column:1/-1;">
-          <div class="fsec" style="margin-bottom:8px;">Chave API Claude (Anthropic)</div>
-          <div class="doc-key-row">
-            <input type="password" id="eDocApiKey" placeholder="sk-ant-..." oninput="_saveAnthropicKey(this.value)">
-            <span id="eDocKeyStatus" style="font-size:12px;color:var(--muted);white-space:nowrap;">—</span>
-          </div>
           <div class="fsec" style="margin-bottom:8px;">Upload de documento</div>
           <div class="doc-upload-area" id="eDocDropZone" onclick="$('eDocFile').click()"
                ondragover="event.preventDefault();this.classList.add('drag')"
@@ -1184,11 +1179,6 @@ nav.legacy{display:none!important;}
       <!-- TAB 4: DOCUMENTOS (new) -->
       <div class="mtpane" id="nTab4" style="display:none;grid-template-columns:1fr!important;">
         <div style="grid-column:1/-1;">
-          <div class="fsec" style="margin-bottom:8px;">Chave API Claude (Anthropic)</div>
-          <div class="doc-key-row">
-            <input type="password" id="nDocApiKey" placeholder="sk-ant-..." oninput="_saveAnthropicKey(this.value)">
-            <span id="nDocKeyStatus" style="font-size:12px;color:var(--muted);white-space:nowrap;">—</span>
-          </div>
           <div class="fsec" style="margin-bottom:8px;">Upload de documento</div>
           <div class="doc-upload-area" id="nDocDropZone" onclick="$('nDocFile').click()"
                ondragover="event.preventDefault();this.classList.add('drag')"
@@ -1932,8 +1922,6 @@ function switchColabTab(idx, prefix) {
   for(let i=0;i<5;i++){const p=document.getElementById(prefix+'Tab'+i);if(p)p.style.display=i===idx?'grid':'none';}
   // Ao entrar na aba de documentos, sincroniza a chave e carrega lista
   if(idx===4){
-    const keyEl=$(prefix+'DocApiKey');
-    if(keyEl){keyEl.value=_getAnthropicKey();_updateKeyStatus(prefix);}
     if(prefix==='e'){const uuid=$(prefix+'ColabRow')?.value;if(uuid)_renderDocsList('e',uuid);}
   }
 }
@@ -2528,22 +2516,12 @@ async function saveEditFer(){
 }
 
 // ─── DOCUMENTOS: IA + UPLOAD ───────────────────────────────────────────────
-const _LUMA_ANT_KEY='_lumAnthropicKey';
-function _getAnthropicKey(){return localStorage.getItem(_LUMA_ANT_KEY)||'';}
-function _saveAnthropicKey(k){if(k)localStorage.setItem(_LUMA_ANT_KEY,k.trim());}
-function _updateKeyStatus(prefix){
-  const k=_getAnthropicKey();
-  const el=$(prefix+'DocKeyStatus');
-  if(el)el.textContent=k?'✅ Chave configurada':'⚠️ Chave não informada';
-  if(el)el.style.color=k?'var(--ok)':'var(--warn)';
-}
 function _onDocDrop(ev,prefix){
   ev.preventDefault();
   $(prefix+'DocDropZone')?.classList.remove('drag');
   const file=ev.dataTransfer?.files?.[0];
   if(!file)return;
   const inp=$(prefix+'DocFile');
-  // Assign to file input via DataTransfer
   try{const dt=new DataTransfer();dt.items.add(file);inp.files=dt.files;}catch(e){/*Firefox fallback*/}
   readDocumentoIA(prefix,file);
 }
@@ -2551,13 +2529,6 @@ async function readDocumentoIA(prefix,fileOverride){
   const inp=$(prefix+'DocFile');
   const file=fileOverride||inp?.files?.[0];
   if(!file){toast('Selecione um arquivo','warn');return;}
-  let key=_getAnthropicKey();
-  if(!key){
-    key=window.prompt('Informe sua chave API da Anthropic (Claude):\n(Será salva localmente para uso futuro)');
-    if(!key)return;
-    _saveAnthropicKey(key);
-    _updateKeyStatus(prefix);
-  }
   const stEl=$(prefix+'DocStatus');
   stEl.style.display='';stEl.style.color='var(--text)';
   stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Lendo documento com Claude AI…';
@@ -2569,41 +2540,18 @@ async function readDocumentoIA(prefix,fileOverride){
       r.readAsDataURL(file);
     });
     const mediaType=file.type||'application/pdf';
-    const data=await _callAnthropicExtract(base64,mediaType,key);
+    // Chama via Supabase Edge Function — chave nunca exposta ao cliente
+    const data=await window._sbFns.extractDocument(base64,mediaType);
     const filled=_fillFormFromDoc(data,prefix);
     stEl.style.color='var(--ok)';
     stEl.innerHTML=`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário.`;
-    // Guarda na lista de docs locais
     _addDocLocal(prefix,{nome:file.name,tipo:_tipoDocLabel(file.name),data:new Date().toLocaleDateString('pt-BR'),campos:filled});
     _renderDocsList(prefix,$(prefix+'ColabRow')?.value||$(prefix+'ColabId')?.value);
     switchColabTab(0,prefix);
   }catch(e){
     stEl.style.color='var(--danger)';
-    stEl.innerHTML='❌ Erro: '+esc(e.message)+'. Verifique a chave API e tente novamente.';
-    if(e.message?.includes('401'))localStorage.removeItem(_LUMA_ANT_KEY);
+    stEl.innerHTML='❌ Erro ao ler documento: '+esc(e.message);
   }
-}
-async function _callAnthropicExtract(base64,mediaType,key){
-  const isImg=!mediaType.includes('pdf');
-  const docPart=isImg
-    ?{type:'image',source:{type:'base64',media_type:mediaType,data:base64}}
-    :{type:'document',source:{type:'base64',media_type:'application/pdf',data:base64}};
-  const resp=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true','content-type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-haiku-4-5-20251001',max_tokens:1024,
-      messages:[{role:'user',content:[
-        docPart,
-        {type:'text',text:'Extraia os dados pessoais deste documento brasileiro e retorne APENAS um JSON com os campos disponíveis (use null para campos não encontrados): {"nome":null,"cpf":null,"rg":null,"pis_pasep":null,"ctps":null,"titulo_eleitor":null,"data_nascimento":null,"email":null,"telefone":null,"cep":null,"endereco":null,"numero":null,"bairro":null,"cidade":null,"uf":null,"genero":null}. data_nascimento deve estar no formato YYYY-MM-DD. genero: "M" ou "F".'}
-      ]}]
-    })
-  });
-  if(!resp.ok){const t=await resp.text();throw new Error(`API ${resp.status}: ${t.slice(0,120)}`);}
-  const res=await resp.json();
-  const txt=res.content?.[0]?.text||'{}';
-  const m=txt.match(/\{[\s\S]*\}/);
-  return m?JSON.parse(m[0]):{};
 }
 function _fillFormFromDoc(data,p){
   if(!data)return 0;

@@ -570,3 +570,18 @@ export async function sendEmail(to, subject, html, cc = [], attachments = []) {
   if (error) throw error
   return data
 }
+
+/**
+ * Extrai dados de um documento (PDF/imagem) via Claude AI (Anthropic).
+ * A chave da API fica armazenada nos secrets do Supabase — nunca exposta ao cliente.
+ * @param {string} base64    - Conteúdo do arquivo em base64
+ * @param {string} mediaType - MIME type: 'application/pdf', 'image/jpeg', etc.
+ * @returns {Object} dados extraídos: { nome, cpf, rg, data_nascimento, ... }
+ */
+export async function extractDocument(base64, mediaType) {
+  const { data, error } = await sb.functions.invoke('extract-document', {
+    body: { base64, mediaType },
+  })
+  if (error) throw error
+  return data?.data ?? {}
+}
