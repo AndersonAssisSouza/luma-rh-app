@@ -2531,27 +2531,131 @@ async function readDocumentoIA(prefix,fileOverride){
   if(!file){toast('Selecione um arquivo','warn');return;}
   const stEl=$(prefix+'DocStatus');
   stEl.style.display='';stEl.style.color='var(--text)';
-  stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Lendo documento com Claude AI…';
+  const isPdf=file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf');
+  stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> ${isPdf?'Extraindo texto do PDF…':'Lendo imagem com OCR…'} aguarde.`;
   try{
-    const base64=await new Promise((res,rej)=>{
-      const r=new FileReader();
-      r.onload=e=>res(e.target.result.split(',')[1]);
-      r.onerror=rej;
-      r.readAsDataURL(file);
-    });
-    const mediaType=file.type||'application/pdf';
-    // Chama via Supabase Edge Function — chave nunca exposta ao cliente
-    const data=await window._sbFns.extractDocument(base64,mediaType);
+    let text='';
+    if(isPdf){
+      text=await _extractPdfText(file);
+    } else {
+      stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Carregando OCR… (pode levar alguns segundos na primeira vez)';
+      text=await _ocrImage(file);
+    }
+    if(!text||text.trim().length<10) throw new Error('Não foi possível extrair texto do documento. Verifique se é legível.');
+    const data=_parseDocText(text);
     const filled=_fillFormFromDoc(data,prefix);
-    stEl.style.color='var(--ok)';
-    stEl.innerHTML=`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário.`;
+    stEl.style.color=filled>0?'var(--ok)':'var(--warn)';
+    stEl.innerHTML=filled>0
+      ?`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário.`
+      :'⚠️ Texto extraído mas nenhum campo reconhecido. Preencha manualmente.';
     _addDocLocal(prefix,{nome:file.name,tipo:_tipoDocLabel(file.name),data:new Date().toLocaleDateString('pt-BR'),campos:filled});
     _renderDocsList(prefix,$(prefix+'ColabRow')?.value||$(prefix+'ColabId')?.value);
-    switchColabTab(0,prefix);
+    if(filled>0) switchColabTab(0,prefix);
   }catch(e){
     stEl.style.color='var(--danger)';
-    stEl.innerHTML='❌ Erro ao ler documento: '+esc(e.message);
+    stEl.innerHTML='❌ '+esc(e.message);
   }
+}
+
+// ── Extração de texto de PDF via PDF.js ──
+async function _extractPdfText(file){
+  if(!window.pdfjsLib){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload=res;s.onerror=rej;document.head.appendChild(s);
+    });
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+  const ab=await file.arrayBuffer();
+  const pdf=await window.pdfjsLib.getDocument({data:ab}).promise;
+  let text='';
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i);
+    const content=await page.getTextContent();
+    text+=content.items.map(it=>it.str).join(' ')+'\n';
+  }
+  return text;
+}
+
+// ── OCR de imagem via Tesseract.js ──
+async function _ocrImage(file){
+  if(!window.Tesseract){
+    await new Promise((res,rej)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+      s.onload=res;s.onerror=rej;document.head.appendChild(s);
+    });
+  }
+  const result=await window.Tesseract.recognize(file,'por',{logger:()=>{}});
+  return result.data.text||'';
+}
+
+// ── Parser de texto para campos de documentos brasileiros ──
+function _parseDocText(raw){
+  const t=raw.replace(/\r/g,' ').replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+  const r={};
+
+  // CPF: 000.000.000-00
+  const cpfM=t.match(/\b(\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2})\b/);
+  if(cpfM){const c=cpfM[1].replace(/\D/g,'');if(c.length===11)r.cpf=c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');}
+
+  // PIS/PASEP: 000.00000.00-0
+  const pisM=t.match(/\b(\d{3}[\.\s]?\d{5}[\.\s]?\d{2}[\-\s]?\d)\b/);
+  if(pisM){const p=pisM[1].replace(/\D/g,'');if(p.length===11)r.pis_pasep=p.replace(/(\d{3})(\d{5})(\d{2})(\d)/,'$1.$2.$3-$4');}
+
+  // RG: 0.000.000 ou 00.000.000-0/X
+  const rgM=t.match(/\b(\d{1,2}[\.\s]\d{3}[\.\s]\d{3}[\-\s]?[\dXx]?)\b/);
+  if(rgM) r.rg=rgM[1].trim();
+
+  // CTPS: número e série
+  const ctpsM=t.match(/CTPS[:\s#Nº°]*(\d{5,7})[\/\s\-]+(\d{3,5})/i);
+  if(ctpsM) r.ctps=ctpsM[1]+' / '+ctpsM[2];
+
+  // Título de eleitor: 12 dígitos
+  const titM=t.match(/\b(\d{4}\s?\d{4}\s?\d{4})\b/);
+  if(titM&&!r.cpf) r.titulo_eleitor=titM[1];
+
+  // Data de nascimento — procura contexto "nasc"
+  const nascCtx=t.match(/nasc\w*[:\s]*(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/i);
+  if(nascCtx) r.data_nascimento=`${nascCtx[3]}-${nascCtx[2]}-${nascCtx[1]}`;
+  else {
+    // Fallback: primeira data no formato DD/MM/YYYY com ano razoável
+    const dM=[...t.matchAll(/\b(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})\b/g)];
+    for(const d of dM){const y=parseInt(d[3]);if(y>=1940&&y<=2010){r.data_nascimento=`${d[3]}-${d[2]}-${d[1]}`;break;}}
+  }
+
+  // CEP: 00000-000
+  const cepM=t.match(/\b(\d{5})[\-\s](\d{3})\b/);
+  if(cepM) r.cep=cepM[1]+'-'+cepM[2];
+
+  // Telefone: (00) 00000-0000
+  const telM=t.match(/\(?(\d{2})\)?[\s\-]?(\d{4,5})[\s\-]?(\d{4})/);
+  if(telM) r.telefone=`(${telM[1]}) ${telM[2]}-${telM[3]}`;
+
+  // Email
+  const emailM=t.match(/\b[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}\b/);
+  if(emailM) r.email=emailM[0];
+
+  // Nome — busca após rótulo "nome:" ou primeira linha com letras maiúsculas
+  const nomeL=t.match(/\bnom[e]?[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][^\d,;:]{3,50}?)(?=\s{2,}|\bCPF|\bRG|\bdat)/i);
+  if(nomeL) r.nome=nomeL[1].trim().replace(/\s+/g,' ');
+
+  // Endereço
+  const endM=t.match(/(?:rua|av\.|avenida|alameda|travessa|estrada|rodovia)[,\s]+([^\d,;]{3,60}),?\s*(\d{1,5})/i);
+  if(endM){r.endereco=endM[1].trim();r.numero=endM[2];}
+
+  // Bairro
+  const bairM=t.match(/bairro[:\s]+([A-Za-zÀ-ú\s]{3,40})(?=\s{2,}|cep|cidade)/i);
+  if(bairM) r.bairro=bairM[1].trim();
+
+  // Cidade + UF
+  const cidM=t.match(/([A-Za-zÀ-ú\s]{3,30})[\/\-,\s]+([A-Z]{2})\b/);
+  if(cidM&&cidM[2].match(/^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/)){
+    r.cidade=cidM[1].trim();r.uf=cidM[2];
+  }
+
+  return r;
 }
 function _fillFormFromDoc(data,p){
   if(!data)return 0;
