@@ -1,4 +1,4 @@
-<!-- v2026-04-08j -->
+<!-- v2026-04-08k -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2546,25 +2546,29 @@ async function readDocumentoIA(prefix,fileOverride){
       text=await _ocrImage(file);
     }
     if(!text||text.trim().length<10) throw new Error('Não foi possível extrair texto do documento. Verifique se é legível.');
-    console.log('[LUMA-DOC] Texto extraído:\n', text.slice(0,1000));
-    const data=_parseDocText(text);
-    console.log('[LUMA-DOC] Campos detectados:', data);
+    console.log('[LUMA-DOC] Arquivo:', file.name);
+    console.log('[LUMA-DOC] Texto extraído:\n', text.slice(0,3000));
+    const data=_parseDocText(text,file.name);
+    console.log('[LUMA-DOC] Campos detectados:', JSON.stringify(data,null,2));
+    // Armazena texto bruto para diagnóstico (botão "Ver texto")
+    window._docRawText=text;
     const {filled,conflicts}=_fillFormFromDoc(data,prefix);
+    const _diagBtn=`<button onclick="alert('[LUMA diagnóstico]\\n\\nArquivo: ${esc(file.name)}\\n\\nTexto extraído (primeiros 1500 chars):\\n'+window._docRawText?.slice(0,1500))" style="margin-top:4px;font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);cursor:pointer;color:var(--muted)">🔍 Ver texto extraído</button>`;
     if(filled>0&&conflicts.length===0){
       stEl.style.color='var(--ok)';
-      stEl.innerHTML=`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário.`;
+      stEl.innerHTML=`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário. ${_diagBtn}`;
     } else if(filled>0&&conflicts.length>0){
       stEl.style.color='var(--ok)';
-      stEl.innerHTML=`✅ ${filled} campo(s) preenchido(s). ${_renderConflictUI(conflicts,data,prefix)}`;
+      stEl.innerHTML=`✅ ${filled} campo(s) preenchido(s). ${_renderConflictUI(conflicts,data,prefix)} ${_diagBtn}`;
     } else if(conflicts.length>0){
       stEl.style.color='var(--warn)';
-      stEl.innerHTML=_renderConflictUI(conflicts,data,prefix);
+      stEl.innerHTML=_renderConflictUI(conflicts,data,prefix)+_diagBtn;
     } else if(Object.keys(data).filter(k=>data[k]).length>0){
       stEl.style.color='var(--muted)';
-      stEl.innerHTML='ℹ️ Todos os campos detectados já estavam preenchidos com os mesmos valores.';
+      stEl.innerHTML='ℹ️ Todos os campos detectados já estavam preenchidos com os mesmos valores. '+_diagBtn;
     } else {
       stEl.style.color='var(--warn)';
-      stEl.innerHTML='⚠️ Texto extraído mas nenhum campo reconhecido. Verifique o console (F12).';
+      stEl.innerHTML='⚠️ Texto extraído mas nenhum campo reconhecido. '+_diagBtn;
     }
     _addDocLocal(prefix,{nome:file.name,tipo:_tipoDocLabel(file.name),data:new Date().toLocaleDateString('pt-BR'),campos:filled});
     _renderDocsList(prefix,$(prefix+'ColabRow')?.value||$(prefix+'ColabId')?.value);
@@ -2626,7 +2630,7 @@ async function _ocrImage(file){
 }
 
 // ── Parser de texto para campos de documentos brasileiros ──
-function _parseDocText(raw){
+function _parseDocText(raw,filename){
   // Normaliza espaços mas preserva quebras de linha como separadores de bloco
   const t=raw.replace(/\r/g,'\n').replace(/\t/g,' ').replace(/[ \t]{2,}/g,' ').replace(/\n{3,}/g,'\n\n').trim();
   // Versão flat (sem quebras) para regexes que buscam em linha única
@@ -2781,10 +2785,14 @@ function _parseDocText(raw){
   const emailM=f.match(/\b[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}\b/);
   if(emailM)r.email=emailM[0];
 
-  // ── Detecção de tipo de documento ──
-  const _isCnh=!!r.cidade_natal;
-  const _isCtps=/\bcarteira\s+de\s+trabalho\b|\bprev[iê]d[eê]ncia\s+social\b|\bCTPS\b/i.test(f);
-  const _isComprEnd=!_isCnh&&!_isCtps&&(!!r.cep||/\bcomprovante\b|\bconta\s+de\s+(energia|água|luz|gás)\b|\bcemig\b|\bsabesp\b|\bcopasa\b/i.test(f));
+  // ── Detecção de tipo de documento — texto + nome do arquivo ──
+  const _fn=(filename||'').toLowerCase();
+  const _fnCtps=/ctps|carteira.trab|trab.cart/i.test(_fn);
+  const _fnCnh=/cnh|habilitacao|habilitação|motorista/i.test(_fn);
+  const _fnCompr=/cemig|sabesp|copasa|comprovante|conta.luz|conta.agua|conta.energia|residencia|endereco/i.test(_fn);
+  const _isCnh=!!r.cidade_natal||_fnCnh;
+  const _isCtps=!_isCnh&&(_fnCtps||/\bcarteira\s+de\s+trabalho\b|\bprev[iê]d[eê]ncia\s+social\b|\bCTPS\b/i.test(f));
+  const _isComprEnd=!_isCnh&&!_isCtps&&(_fnCompr||!!r.cep||/\bcomprovante\b|\bconta\s+de\s+(energia|água|luz|gás)\b|\bcemig\b|\bsabesp\b|\bcopasa\b/i.test(f));
 
   // ── Regras por tipo de documento ──
   if(_isCnh){
