@@ -1,4 +1,4 @@
-<!-- v2026-04-08k -->
+<!-- v2026-04-08l -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2552,8 +2552,9 @@ async function readDocumentoIA(prefix,fileOverride){
     console.log('[LUMA-DOC] Campos detectados:', JSON.stringify(data,null,2));
     // Armazena texto bruto para diagnóstico (botão "Ver texto")
     window._docRawText=text;
+    window._docRawFile=file.name;
     const {filled,conflicts}=_fillFormFromDoc(data,prefix);
-    const _diagBtn=`<button onclick="alert('[LUMA diagnóstico]\\n\\nArquivo: ${esc(file.name)}\\n\\nTexto extraído (primeiros 1500 chars):\\n'+window._docRawText?.slice(0,1500))" style="margin-top:4px;font-size:11px;padding:2px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);cursor:pointer;color:var(--muted)">🔍 Ver texto extraído</button>`;
+    const _diagBtn='<button onclick="_showDocDiag()" style="display:inline-block;margin-top:6px;font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);cursor:pointer;color:var(--muted)">🔍 Ver texto extraído</button>';
     if(filled>0&&conflicts.length===0){
       stEl.style.color='var(--ok)';
       stEl.innerHTML=`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário. ${_diagBtn}`;
@@ -2932,6 +2933,18 @@ function _applyDocConflicts(p,data,keys){
   const {filled}=_fillFormFromDoc(data,p,keys);
   const stEl=$(p+'DocStatus');
   if(stEl)stEl.innerHTML=`✅ <strong>${filled} campo(s) atualizado(s)</strong> com os dados selecionados.`;
+}
+function _showDocDiag(){
+  const txt=window._docRawText||'(sem texto)';
+  const fn=window._docRawFile||'';
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  el.innerHTML='<div style="background:var(--bg);border-radius:10px;padding:20px;max-width:700px;width:95vw;max-height:80vh;display:flex;flex-direction:column;gap:10px;">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;"><b>Texto extraído — '+esc(fn)+'</b><button onclick="this.closest(\'div[style*=fixed]\').remove()" style="font-size:18px;background:none;border:none;cursor:pointer;color:var(--muted)">×</button></div>'
+    +'<textarea readonly style="flex:1;min-height:50vh;font-family:monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);resize:none;">'+esc(txt.slice(0,4000))+'</textarea>'
+    +'<p style="font-size:11px;color:var(--muted);margin:0">Copie o texto acima e envie para o desenvolvedor diagnosticar o parser.</p>'
+    +'</div>';
+  document.body.appendChild(el);
 }
 function _tipoDocLabel(name){
   const n=(name||'').toLowerCase();
