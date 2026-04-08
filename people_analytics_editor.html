@@ -1,4 +1,4 @@
-<!-- v2026-04-08g -->
+<!-- v2026-04-08h -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2774,19 +2774,55 @@ function _parseDocText(raw){
   const emailM=f.match(/\b[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}\b/);
   if(emailM)r.email=emailM[0];
 
-  // ── Nome ──
-  // Palavras institucionais que NÃO são nomes de pessoas
-  const _nomeStop=/^(REPÚBLICA|FEDERATIVA|MINISTÉRIO|SECRETARIA|DEPARTAMENTO|PREFEITURA|ESTADO|GOVERNO|NACIONAL|MUNICIPAL|ESTADUAL|BRASIL|BRASILEIRA|CARTEIRA|HABILITAÇÃO|DRIVER|LICENSE|PERMISO|QR|CODE|SERPRO|SENATRAN|DOCUMENTO|DIGITAL|ASSINADO|DÉBITO|CRÉDITO|AUTOMÁTICO|MANUAL|FATURA|CONTA|VENCIMENTO|REFERÊNCIA|REFERENCIA|PAGAMENTO|FORNECIMENTO|SERVIÇO|SERVIÇO|INSTALAÇÃO|INSTALACAO|CLIENTE|CÓDIGO|CODIGO|AGÊNCIA|AGENCIA|BANCO|CONCESSIONÁRIA|CONCESSIONARIA|ENERGIA|ELÉTRICA|ELETRICA|AGUA|SANEAMENTO|TELEFONIA|INTERNET|GAS|NOTA|FISCAL|EMISSÃO|EMISSAO|LEITURA|MEDIDOR|CONSUMO|FILIAÇÃO|FILIACAO|NATURALIDADE|ENDEREÇO|ENDERECO)\b/i;
-  // CNH: label "NOME E SOBRENOME" ou "NOME SOBRENOME" antes do valor
-  const nomeCnh=f.match(/nome\s+e\s+sobren\w*\s*[:\-]?\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõç\s]{3,50}?)(?=\s{2,}|\d|\bCPF|\bRG|\bDAT)/i);
-  if(nomeCnh&&!_nomeStop.test(nomeCnh[1]))r.nome=nomeCnh[1].trim().replace(/\s+/g,' ');
-  // Rótulo genérico "nome:"
-  if(!r.nome){const nomeL=f.match(/\bnom[e]?[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][^\d,;:]{3,50}?)(?=\s{2,}|\bCPF|\bRG|\bdat)/i);if(nomeL&&!_nomeStop.test(nomeL[1]))r.nome=nomeL[1].trim().replace(/\s+/g,' ');}
-  if(!r.nome){
-    // Varredura: primeiro bloco de 2-7 palavras todas maiúsculas, excluindo institucionais
-    const allCapsRe=/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}){1,6})\b/g;
-    let m;while((m=allCapsRe.exec(pre))!==null){
-      if(!_nomeStop.test(m[1])&&m[1].split(' ').length>=2){r.nome=m[1].trim();break;}
+  // ── Detecção de tipo de documento ──
+  const _isCnh=!!r.cidade_natal;
+  const _isCtps=/\bcarteira\s+de\s+trabalho\b|\bprev[iê]d[eê]ncia\s+social\b/i.test(f)&&(!!r.ctps||/\bsérie\b|\bserie\b/i.test(f));
+  const _isComprEnd=!_isCnh&&!_isCtps&&(!!r.cep||/\bcomprovante\b|\bconta\s+de\s+(energia|água|luz|gás)\b|\bcemig\b|\bsabesp\b|\bcopasa\b/i.test(f));
+
+  // ── Regras por tipo de documento ──
+  if(_isCnh){
+    // CNH: já tratado acima (delete endereço). Não popular genero/telefone
+    delete r.telefone;
+  }
+  if(_isCtps){
+    // CTPS: só extrai CTPS número/série, PIS, sexo/gênero
+    // Não deve sobrescrever nome, RG, endereço — valores geralmente são labels ou leituras erradas
+    delete r.nome; delete r.rg; delete r.data_nascimento;
+    delete r.cidade; delete r.uf; delete r.cep;
+    delete r.endereco; delete r.numero; delete r.bairro;
+    delete r.cidade_natal; delete r.uf_natal;
+    delete r.telefone; delete r.email;
+    // Extrair sexo/gênero da CTPS
+    const sexoM=f.match(/\bsexo\s*[:\s]\s*(M(?:asculino)?|F(?:eminino)?)\b/i);
+    if(sexoM){const s=sexoM[1][0].toUpperCase();r.genero=s==='M'?'M':'F';}
+  }
+  if(_isComprEnd){
+    // Comprovante de endereço: não deve popular nome, CPF, RG, data nascimento
+    // (esses campos vêm de documentos de identidade)
+    delete r.nome; delete r.rg; delete r.data_nascimento;
+    delete r.cidade_natal; delete r.uf_natal;
+    delete r.filiacao1; delete r.filiacao2;
+  }
+
+  // ── Nome — só para documentos de identidade ──
+  if(!_isCtps&&!_isComprEnd){
+    // Palavras que NÃO são nomes de pessoas
+    const _nomeStop=/^(REPÚBLICA|FEDERATIVA|MINISTÉRIO|SECRETARIA|DEPARTAMENTO|PREFEITURA|ESTADO|CIVIL|SOLTEIRO|CASADO|DIVORCIADO|VIÚVO|VIUVO|SEPARADO|GOVERNO|NACIONAL|MUNICIPAL|ESTADUAL|BRASIL|BRASILEIRA|CARTEIRA|HABILITAÇÃO|DRIVER|LICENSE|PERMISO|QR|CODE|SERPRO|SENATRAN|DOCUMENTO|DIGITAL|ASSINADO|DÉBITO|CRÉDITO|AUTOMÁTICO|MANUAL|FATURA|CONTA|VENCIMENTO|REFERÊNCIA|PAGAMENTO|FORNECIMENTO|SERVIÇO|INSTALAÇÃO|CLIENTE|CÓDIGO|AGÊNCIA|BANCO|CONCESSIONÁRIA|ENERGIA|ELÉTRICA|AGUA|SANEAMENTO|TELEFONIA|INTERNET|NOTA|FISCAL|EMISSÃO|LEITURA|MEDIDOR|CONSUMO|FILIAÇÃO|NATURALIDADE|ENDEREÇO|TRABALHO|PREVIDÊNCIA|SÉRIE|REGISTRO|ÓRGÃO|EMISSOR)\b/i;
+    // CNH: label "NOME E SOBRENOME"
+    const nomeCnh=f.match(/nome\s+e\s+sobren\w*\s*[:\-]?\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõç\s]{3,50}?)(?=\s{2,}|\d|\bCPF|\bRG|\bDAT)/i);
+    if(nomeCnh&&!_nomeStop.test(nomeCnh[1]))r.nome=nomeCnh[1].trim().replace(/\s+/g,' ');
+    // Rótulo "nome:" — lookahead para parar em "data", "CPF", "RG" ou double-space
+    if(!r.nome){
+      const nomeL=f.match(/\bnom[e]?\s*[:\-]\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõç\s]{5,50}?)(?=\s{2,}|\bCPF\b|\bRG\b|\bdat|\bsexo|\bestado\s+civ)/i);
+      if(nomeL&&!_nomeStop.test(nomeL[1]))r.nome=nomeL[1].trim().replace(/\s+/g,' ');
+    }
+    // Varredura: 2-7 palavras todas maiúsculas no bloco pré-CPF, excluindo stops
+    if(!r.nome){
+      const allCapsRe=/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{3,}(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}){1,6})\b/g;
+      let m;while((m=allCapsRe.exec(pre))!==null){
+        const words=m[1].split(' ');
+        if(words.length>=2&&!_nomeStop.test(m[1])&&m[1].length>8){r.nome=m[1].trim();break;}
+      }
     }
   }
 
