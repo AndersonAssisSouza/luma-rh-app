@@ -918,7 +918,7 @@ nav.legacy{display:none!important;}
 
 <div class="ov" id="mEditColab">
   <div class="modal" style="max-width:680px;">
-    <div class="mh"><div><div class="mt">Editar colaborador</div><div class="ms" id="mEditColabSub">—</div></div><button class="mc" onclick="closeModal('mEditColab')">×</button></div>
+    <div class="mh"><div><div class="mt">Editar colaborador</div><div class="ms" id="mEditColabSub">—</div></div><div style="display:flex;align-items:center;gap:6px;flex-shrink:0;"><button class="btn" onclick="closeModal('mEditColab')">Cancelar</button><button class="btn btn-g" onclick="saveEditColab()">Salvar</button><button class="mc" onclick="closeModal('mEditColab')">×</button></div></div>
     <div class="mb">
       <input type="hidden" id="eColabId"><input type="hidden" id="eColabRow">
       <!-- TABS -->
@@ -1057,14 +1057,13 @@ nav.legacy{display:none!important;}
         </div>
       </div>
     </div>
-    <div class="mf"><button class="btn" onclick="closeModal('mEditColab')">Cancelar</button><button class="btn btn-g" onclick="saveEditColab()">Salvar</button></div>
   </div>
 </div>
 
 <!-- Novo colaborador -->
 <div class="ov" id="mNewColab">
   <div class="modal" style="max-width:680px;">
-    <div class="mh"><div><div class="mt">Novo colaborador</div><div class="ms">Registrar admissão</div></div><button class="mc" onclick="closeModal('mNewColab')">×</button></div>
+    <div class="mh"><div><div class="mt">Novo colaborador</div><div class="ms">Registrar admissão</div></div><div style="display:flex;align-items:center;gap:6px;flex-shrink:0;"><button class="btn" onclick="closeModal('mNewColab')">Cancelar</button><button class="btn btn-g" onclick="saveNewColab()">Registrar admissão</button><button class="mc" onclick="closeModal('mNewColab')">×</button></div></div>
     <div class="mb">
       <!-- TABS -->
       <div class="mtabs" id="nColabTabs">
@@ -1197,14 +1196,13 @@ nav.legacy{display:none!important;}
         </div>
       </div>
     </div>
-    <div class="mf"><button class="btn" onclick="closeModal('mNewColab')">Cancelar</button><button class="btn btn-g" onclick="saveNewColab()">Registrar admissão</button></div>
   </div>
 </div>
 
 <!-- Editar férias -->
 <div class="ov" id="mEditFer">
   <div class="modal">
-    <div class="mh"><div><div class="mt">Editar férias</div><div class="ms" id="mEditFerSub">—</div></div><button class="mc" onclick="closeModal('mEditFer')">×</button></div>
+    <div class="mh"><div><div class="mt">Editar férias</div><div class="ms" id="mEditFerSub">—</div></div><div style="display:flex;align-items:center;gap:6px;flex-shrink:0;"><button class="btn" onclick="closeModal('mEditFer')">Cancelar</button><button class="btn btn-g" onclick="saveEditFer()">Salvar férias</button><button class="mc" onclick="closeModal('mEditFer')">×</button></div></div>
     <div class="mb">
       <input type="hidden" id="eFerId"><input type="hidden" id="eFerRow"><input type="hidden" id="eFerNome"><input type="hidden" id="eFerPrevStatus">
       <div class="fg">
@@ -1225,14 +1223,13 @@ nav.legacy{display:none!important;}
         </div>
       </div>
     </div>
-    <div class="mf"><button class="btn" onclick="closeModal('mEditFer')">Cancelar</button><button class="btn btn-g" onclick="saveEditFer()">Salvar férias</button></div>
   </div>
 </div>
 
 <!-- Editar exame -->
 <div class="ov" id="mEditEx">
   <div class="modal">
-    <div class="mh"><div><div class="mt">Editar exame ocupacional</div><div class="ms" id="mEditExSub">—</div></div><button class="mc" onclick="closeModal('mEditEx')">×</button></div>
+    <div class="mh"><div><div class="mt">Editar exame ocupacional</div><div class="ms" id="mEditExSub">—</div></div><div style="display:flex;align-items:center;gap:6px;flex-shrink:0;"><button class="btn" onclick="closeModal('mEditEx')">Cancelar</button><button class="btn btn-g" onclick="saveEditEx()">Salvar exame</button><button class="mc" onclick="closeModal('mEditEx')">×</button></div></div>
     <div class="mb">
       <input type="hidden" id="eExId"><input type="hidden" id="eExRow">
       <div class="fg">
@@ -1245,14 +1242,13 @@ nav.legacy{display:none!important;}
         <div class="fgrp s2"><div class="flbl">Observação</div><textarea class="fta" id="exObs"></textarea></div>
       </div>
     </div>
-    <div class="mf"><button class="btn" onclick="closeModal('mEditEx')">Cancelar</button><button class="btn btn-g" onclick="saveEditEx()">Salvar exame</button></div>
   </div>
 </div>
 
 <!-- Nova ausência -->
 <div class="ov" id="mNewAus">
   <div class="modal">
-    <div class="mh"><div><div class="mt">Registrar ausência</div><div class="ms">Atestado, falta ou ocorrência</div></div><button class="mc" onclick="closeModal('mNewAus')">×</button></div>
+    <div class="mh"><div><div class="mt">Registrar ausência</div><div class="ms">Atestado, falta ou ocorrência</div></div><div style="display:flex;align-items:center;gap:6px;flex-shrink:0;"><button class="btn" onclick="closeModal('mNewAus')">Cancelar</button><button class="btn btn-g" onclick="saveNewAus()">Registrar</button><button class="mc" onclick="closeModal('mNewAus')">×</button></div></div>
     <div class="mb">
       <div class="fg">
         <div class="fgrp"><div class="flbl">Tipo <span class="rq">*</span></div>
@@ -1263,7 +1259,6 @@ nav.legacy{display:none!important;}
         <div class="fgrp"><div class="flbl">Detalhe / CID</div><input class="fi" id="ausDetail" placeholder="Ex: K01, J00"></div>
       </div>
     </div>
-    <div class="mf"><button class="btn" onclick="closeModal('mNewAus')">Cancelar</button><button class="btn btn-g" onclick="saveNewAus()">Registrar</button></div>
   </div>
 </div>
 
@@ -1274,7 +1269,7 @@ nav.legacy{display:none!important;}
   <div class="modal" style="max-width:680px;">
     <div class="mh">
       <div><div class="mt">🏖 Férias Coletivas</div><div class="ms">CLT · mínimo 10 dias · Art. 139 CLT</div></div>
-      <button class="mc" onclick="closeModal('mFeriasColetivas')">×</button>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;"><button class="btn" onclick="closeModal('mFeriasColetivas')">Cancelar</button><button class="btn btn-g" onclick="saveFeriasColetivas()">🏖 Lançar</button><button class="mc" onclick="closeModal('mFeriasColetivas')">×</button></div>
     </div>
     <div class="mb">
 
@@ -1321,10 +1316,6 @@ nav.legacy{display:none!important;}
 
       <div id="fcErro" style="font-size:12px;color:var(--danger);margin-top:6px;display:none;"></div>
     </div>
-    <div class="mf">
-      <button class="btn" onclick="closeModal('mFeriasColetivas')">Cancelar</button>
-      <button class="btn btn-g" onclick="saveFeriasColetivas()">🏖 Lançar férias coletivas</button>
-    </div>
   </div>
 </div>
 
@@ -1334,7 +1325,7 @@ nav.legacy{display:none!important;}
   <div class="modal" style="max-width:560px;">
     <div class="mh">
       <div><div class="mt">Nova ação de tratativa</div><div class="ms" id="mNovaAcaoSub">Alerta pendente</div></div>
-      <button class="mc" onclick="closeModal('mNovaAcao')">×</button>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;"><button class="btn" onclick="closeModal('mNovaAcao')">Cancelar</button><button class="btn btn-g" onclick="saveAcao()">Salvar ação</button><button class="mc" onclick="closeModal('mNovaAcao')">×</button></div>
     </div>
     <div class="mb">
       <input type="hidden" id="acId">
@@ -1365,10 +1356,6 @@ nav.legacy{display:none!important;}
           <textarea class="fi" id="acComent" rows="3" placeholder="Descreva o que foi feito ou o motivo do cancelamento..."></textarea>
         </div>
       </div>
-    </div>
-    <div class="mf">
-      <button class="btn" onclick="closeModal('mNovaAcao')">Cancelar</button>
-      <button class="btn btn-g" onclick="saveAcao()">Salvar ação</button>
     </div>
   </div>
 </div>
@@ -2593,80 +2580,108 @@ async function _ocrImage(file){
 
 // ── Parser de texto para campos de documentos brasileiros ──
 function _parseDocText(raw){
-  const t=raw.replace(/\r/g,' ').replace(/\n/g,' ').replace(/\s{2,}/g,' ');
+  // Normaliza espaços mas preserva quebras de linha como separadores de bloco
+  const t=raw.replace(/\r/g,'\n').replace(/\t/g,' ').replace(/[ \t]{2,}/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+  // Versão flat (sem quebras) para regexes que buscam em linha única
+  const f=t.replace(/\n/g,' ').replace(/\s{2,}/g,' ');
   const r={};
 
-  // CPF: 000.000.000-00
-  const cpfM=t.match(/\b(\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2})\b/);
+  const _ufs='AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO';
+
+  // ── CPF (âncora de posição para extração do bloco do cliente) ──
+  const cpfM=f.match(/\b(\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2})\b/);
   if(cpfM){const c=cpfM[1].replace(/\D/g,'');if(c.length===11)r.cpf=c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');}
 
-  // PIS/PASEP: 000.00000.00-0
-  const pisM=t.match(/\b(\d{3}[\.\s]?\d{5}[\.\s]?\d{2}[\-\s]?\d)\b/);
+  // Bloco do cliente: até 500 chars ANTES do CPF (evita pegar dados da empresa emissora)
+  const cpfIdx=f.search(/\bCPF\b/i);
+  const pre=cpfIdx>30 ? f.slice(Math.max(0,cpfIdx-500),cpfIdx+20) : f;
+
+  // ── CEP + Cidade + UF (busca primeiro no bloco do cliente) ──
+  // Aceita: "30170-084 BELO HORIZONTE, MG" / "30170-084 - BH - MG" / "30170 084 BELO HORIZONTE MG"
+  const cepRe=/\b(\d{5})[-\s](\d{3})\s*[-,]?\s*([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\s]{1,38?})\s*[-,]\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i;
+  const cm=pre.match(cepRe)||f.match(cepRe);
+  if(cm){r.cep=cm[1]+'-'+cm[2];r.cidade=cm[3].trim().replace(/\s+/g,' ');r.uf=cm[4].toUpperCase();}
+  if(!r.cep){
+    const c2=pre.match(/\b(\d{5})[-\s](\d{3})\b/)||f.match(/\b(\d{5})[-\s](\d{3})\b/);
+    if(c2)r.cep=c2[1]+'-'+c2[2];
+  }
+
+  // ── Endereço + Número (busca no bloco do cliente) ──
+  // Padrão: "RUA SANTA CATARINA 908 AP 1001" — logradouro sem vírgula até o número
+  const endRe=/\b(rua|av\.?|avenida|alameda|travessa|estrada|rod\.?|rodovia|pca\.?|pra[cç]a)\s+([A-Za-z\u00C0-\u00FF][^,;\n\d]{2,48}?)\s+n?[°º]?\s*(\d{1,5}(?:\s*(?:ap|apto|apto\.|bloco|bl|casa|cj|lote)\s*[\w\-]{0,20})?)/i;
+  const em=pre.match(endRe)||f.match(endRe);
+  if(em){r.endereco=(em[1]+' '+em[2]).trim().replace(/\s+/g,' ');r.numero=em[3].trim();}
+
+  // ── Bairro: texto entre o fim do endereço e o CEP no bloco do cliente ──
+  if(em&&r.cep){
+    const aIdx=pre.indexOf(em[0]);
+    if(aIdx>=0){
+      const after=pre.slice(aIdx+em[0].length);
+      const cIdx=after.search(/\b\d{5}[-\s]\d{3}\b/);
+      if(cIdx>0){
+        const between=after.slice(0,cIdx).replace(/^[\s,\-]+/,'').replace(/[\s,\-]+$/,'').trim();
+        if(between.length>=2&&between.length<=50&&!/^\d/.test(between)){
+          r.bairro=between.replace(/\s+/g,' ');
+        }
+      }
+    }
+  }
+  if(!r.bairro){
+    const bm=pre.match(/bairro[:\s]+([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\s]{1,39})/i)
+           ||f.match(/bairro[:\s]+([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\s]{1,39})/i);
+    if(bm)r.bairro=bm[1].trim().replace(/\s+/g,' ');
+  }
+
+  // ── Cidade + UF — fallbacks se não detectados via CEP ──
+  if(!r.cidade){
+    const cu=f.match(new RegExp('([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\\s]{2,35})\\s*[\\-\\/,]\\s*('+_ufs+')\\b','i'));
+    if(cu){r.cidade=cu[1].trim();r.uf=cu[2].toUpperCase();}
+  }
+  if(!r.cidade){
+    const cu2=f.match(new RegExp('([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\\s]{2,35})\\s+('+_ufs+')\\b','i'));
+    if(cu2){r.cidade=cu2[1].trim();r.uf=cu2[2].toUpperCase();}
+  }
+
+  // ── PIS/PASEP: 000.00000.00-0 ──
+  const pisM=f.match(/\b(\d{3}[\.\s]?\d{5}[\.\s]?\d{2}[\-\s]?\d)\b/);
   if(pisM){const p=pisM[1].replace(/\D/g,'');if(p.length===11)r.pis_pasep=p.replace(/(\d{3})(\d{5})(\d{2})(\d)/,'$1.$2.$3-$4');}
 
-  // RG: 0.000.000 ou 00.000.000-0/X
-  const rgM=t.match(/\b(\d{1,2}[\.\s]\d{3}[\.\s]\d{3}[\-\s]?[\dXx]?)\b/);
-  if(rgM) r.rg=rgM[1].trim();
+  // ── RG: 0.000.000 ou 00.000.000-0/X ──
+  const rgM=f.match(/\b(\d{1,2}[\.\s]\d{3}[\.\s]\d{3}[\-\s]?[\dXx]?)\b/);
+  if(rgM)r.rg=rgM[1].trim();
 
-  // CTPS: número e série
-  const ctpsM=t.match(/CTPS[:\s#Nº°]*(\d{5,7})[\/\s\-]+(\d{3,5})/i);
-  if(ctpsM) r.ctps=ctpsM[1]+' / '+ctpsM[2];
+  // ── CTPS ──
+  const ctpsM=f.match(/CTPS[:\s#Nº°]*(\d{5,7})[\/\s\-]+(\d{3,5})/i);
+  if(ctpsM)r.ctps=ctpsM[1]+' / '+ctpsM[2];
 
-  // Título de eleitor: 12 dígitos
-  const titM=t.match(/\b(\d{4}\s?\d{4}\s?\d{4})\b/);
-  if(titM&&!r.cpf) r.titulo_eleitor=titM[1];
+  // ── Título de eleitor: 12 dígitos (apenas se não tiver CPF) ──
+  const titM=f.match(/\b(\d{4}\s?\d{4}\s?\d{4})\b/);
+  if(titM&&!r.cpf)r.titulo_eleitor=titM[1];
 
-  // Data de nascimento — procura contexto "nasc"
-  const nascCtx=t.match(/nasc\w*[:\s]*(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/i);
-  if(nascCtx) r.data_nascimento=`${nascCtx[3]}-${nascCtx[2]}-${nascCtx[1]}`;
-  else {
-    // Fallback: primeira data no formato DD/MM/YYYY com ano razoável
-    const dM=[...t.matchAll(/\b(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})\b/g)];
+  // ── Data de nascimento ──
+  const nascCtx=f.match(/nasc\w*[:\s]*(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/i);
+  if(nascCtx)r.data_nascimento=`${nascCtx[3]}-${nascCtx[2]}-${nascCtx[1]}`;
+  else{
+    const dM=[...f.matchAll(/\b(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})\b/g)];
     for(const d of dM){const y=parseInt(d[3]);if(y>=1940&&y<=2010){r.data_nascimento=`${d[3]}-${d[2]}-${d[1]}`;break;}}
   }
 
-  // CEP + Cidade + UF na mesma linha (padrão mais comum no Brasil)
-  // Ex: "30170-084 BELO HORIZONTE, MG" ou "30170-084 - BELO HORIZONTE - MG"
-  const _ufs='AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO';
-  const _ufRe=new RegExp(`\\b(${_ufs})\\b`);
-  const cepCidUf=t.match(/(\d{5})[-\s](\d{3})[-\s,]+([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\s]{2,40})[-,\s]+\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i);
-  if(cepCidUf){r.cep=cepCidUf[1]+'-'+cepCidUf[2];r.cidade=cepCidUf[3].trim();r.uf=cepCidUf[4].toUpperCase();}
+  // ── Telefone ──
+  const telM=f.match(/\(?(\d{2})\)?\s*(\d{4,5})[\s\-]?(\d{4})/);
+  if(telM)r.telefone=`(${telM[1]}) ${telM[2]}-${telM[3]}`;
 
-  // CEP isolado (se não encontrado acima)
-  if(!r.cep){const cepM=t.match(/\b(\d{5})[\-\s](\d{3})\b/);if(cepM)r.cep=cepM[1]+'-'+cepM[2];}
+  // ── Email ──
+  const emailM=f.match(/\b[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}\b/);
+  if(emailM)r.email=emailM[0];
 
-  // Telefone: (00) 00000-0000
-  const telM=t.match(/\(?(\d{2})\)?[\s\-]?(\d{4,5})[\s\-]?(\d{4})/);
-  if(telM) r.telefone=`(${telM[1]}) ${telM[2]}-${telM[3]}`;
-
-  // Email
-  const emailM=t.match(/\b[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}\b/);
-  if(emailM) r.email=emailM[0];
-
-  // Nome — rótulo "nome:" ou primeira linha toda em maiúsculas com 2+ palavras
-  const nomeL=t.match(/\bnom[e]?[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][^\d,;:]{3,50}?)(?=\s{2,}|\bCPF|\bRG|\bdat)/i);
-  if(nomeL) r.nome=nomeL[1].trim().replace(/\s+/g,' ');
-  if(!r.nome){const nomeALL=t.match(/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}){1,6})\b/);if(nomeALL)r.nome=nomeALL[1].trim();}
-
-  // Endereço — aceita "RUA SANTA CATARINA 908" (sem vírgula antes do número)
-  const endM=t.match(/\b(rua|av\b|avenida|alameda|travessa|estrada|rodovia|trav\.?|r\.\s)\s*([^,;\d\n]{3,60?})\s+(\d{1,5}(?:\s*(?:ap|apto|casa|cj|lote)\s*[\w\-]+)?)/i);
-  if(endM){r.endereco=(endM[1]+' '+endM[2]).trim();r.numero=endM[3].trim();}
-
-  // Bairro — rótulo ou linha antes do CEP
-  const bairM=t.match(/bairro[:\s]+([A-Za-zÀ-ú][A-Za-zÀ-ú\s]{2,39})(?=\s{2,}|\d|cep|cidade|,)/i);
-  if(bairM) r.bairro=bairM[1].trim();
-
-  // Cidade + UF — estratégias adicionais se não detectadas acima
-  if(!r.cidade){
-    const cidUf=t.match(new RegExp(`([A-Za-zÀ-ú][A-Za-zÀ-ú\\s]{2,35})\\s*[\\-\\/,]\\s*(${_ufs})\\b`,'i'));
-    if(cidUf){r.cidade=cidUf[1].trim();r.uf=cidUf[2].toUpperCase();}
+  // ── Nome ──
+  const nomeL=f.match(/\bnom[e]?[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][^\d,;:]{3,50}?)(?=\s{2,}|\bCPF|\bRG|\bdat)/i);
+  if(nomeL)r.nome=nomeL[1].trim().replace(/\s+/g,' ');
+  if(!r.nome){
+    // Procura linha de nome antes do CPF no bloco pré-CPF
+    const nomeBlk=pre.match(/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}){1,6})\b/);
+    if(nomeBlk)r.nome=nomeBlk[1].trim();
   }
-  if(!r.cidade){
-    const cidUf2=t.match(new RegExp(`([A-Za-zÀ-ú][A-Za-zÀ-ú\\s]{2,35})\\s+(${_ufs})\\b`,'i'));
-    if(cidUf2){r.cidade=cidUf2[1].trim();r.uf=cidUf2[2].toUpperCase();}
-  }
-  if(r.cidade&&!r.uf){const ufM=t.match(_ufRe);if(ufM)r.uf=ufM[1];}
-  if(!r.uf){const ufL=t.match(/(?:uf|estado)[:\s]+([A-Z]{2})\b/i);if(ufL&&ufL[1].match(_ufRe))r.uf=ufL[1].toUpperCase();}
 
   return r;
 }
