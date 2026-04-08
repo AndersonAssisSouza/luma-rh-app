@@ -174,14 +174,14 @@ nav.legacy{display:none!important;}
 /* ── MODAL ── */
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
 .ov.open{display:flex;}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.5);animation:mi .18s ease;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:13px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.5);animation:mi .18s ease;display:flex;flex-direction:column;}
 @keyframes mi{from{opacity:0;transform:scale(.96) translateY(7px)}to{opacity:1;transform:none}}
 .mh{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border);}
 .mt{font-size:17px;font-weight:500;}.ms{font-size:17px;color:var(--muted);margin-top:1px;}
 .mc{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .mc:hover{color:var(--text);border-color:var(--border2);}
-.mb{padding:18px;}
-.mf{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:7px;}
+.mb{padding:18px;overflow-y:auto;flex:1;}
+.mf{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:7px;flex-shrink:0;background:var(--bg2);position:sticky;bottom:0;z-index:1;}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .fg.one{grid-template-columns:1fr;}
 .fgrp{display:flex;flex-direction:column;gap:4px;}
@@ -2625,9 +2625,15 @@ function _parseDocText(raw){
     for(const d of dM){const y=parseInt(d[3]);if(y>=1940&&y<=2010){r.data_nascimento=`${d[3]}-${d[2]}-${d[1]}`;break;}}
   }
 
-  // CEP: 00000-000
-  const cepM=t.match(/\b(\d{5})[\-\s](\d{3})\b/);
-  if(cepM) r.cep=cepM[1]+'-'+cepM[2];
+  // CEP + Cidade + UF na mesma linha (padrão mais comum no Brasil)
+  // Ex: "30170-084 BELO HORIZONTE, MG" ou "30170-084 - BELO HORIZONTE - MG"
+  const _ufs='AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO';
+  const _ufRe=new RegExp(`\\b(${_ufs})\\b`);
+  const cepCidUf=t.match(/(\d{5})[-\s](\d{3})[-\s,]+([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\s]{2,40})[-,\s]+\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i);
+  if(cepCidUf){r.cep=cepCidUf[1]+'-'+cepCidUf[2];r.cidade=cepCidUf[3].trim();r.uf=cepCidUf[4].toUpperCase();}
+
+  // CEP isolado (se não encontrado acima)
+  if(!r.cep){const cepM=t.match(/\b(\d{5})[\-\s](\d{3})\b/);if(cepM)r.cep=cepM[1]+'-'+cepM[2];}
 
   // Telefone: (00) 00000-0000
   const telM=t.match(/\(?(\d{2})\)?[\s\-]?(\d{4,5})[\s\-]?(\d{4})/);
@@ -2637,37 +2643,29 @@ function _parseDocText(raw){
   const emailM=t.match(/\b[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}\b/);
   if(emailM) r.email=emailM[0];
 
-  // Nome — busca após rótulo "nome:" ou primeira linha com letras maiúsculas
+  // Nome — rótulo "nome:" ou primeira linha toda em maiúsculas com 2+ palavras
   const nomeL=t.match(/\bnom[e]?[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][^\d,;:]{3,50}?)(?=\s{2,}|\bCPF|\bRG|\bdat)/i);
   if(nomeL) r.nome=nomeL[1].trim().replace(/\s+/g,' ');
+  if(!r.nome){const nomeALL=t.match(/\b([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}(?:\s+[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{2,}){1,6})\b/);if(nomeALL)r.nome=nomeALL[1].trim();}
 
-  // Endereço
-  const endM=t.match(/(?:rua|av\.|avenida|alameda|travessa|estrada|rodovia)[,\s]+([^\d,;]{3,60}),?\s*(\d{1,5})/i);
-  if(endM){r.endereco=endM[1].trim();r.numero=endM[2];}
+  // Endereço — aceita "RUA SANTA CATARINA 908" (sem vírgula antes do número)
+  const endM=t.match(/\b(rua|av\b|avenida|alameda|travessa|estrada|rodovia|trav\.?|r\.\s)\s*([^,;\d\n]{3,60?})\s+(\d{1,5}(?:\s*(?:ap|apto|casa|cj|lote)\s*[\w\-]+)?)/i);
+  if(endM){r.endereco=(endM[1]+' '+endM[2]).trim();r.numero=endM[3].trim();}
 
-  // Bairro — com ou sem rótulo
+  // Bairro — rótulo ou linha antes do CEP
   const bairM=t.match(/bairro[:\s]+([A-Za-zÀ-ú][A-Za-zÀ-ú\s]{2,39})(?=\s{2,}|\d|cep|cidade|,)/i);
   if(bairM) r.bairro=bairM[1].trim();
 
-  // Cidade + UF — múltiplas estratégias
-  const _ufs='AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO';
-  const _ufRe=new RegExp(`\\b(${_ufs})\\b`);
-  // 1) Rótulo "cidade:" ou "município:"
-  const cidLabel=t.match(/(?:cidade|munic[íi]pio)[:\s]+([A-Za-zÀ-ú][A-Za-zÀ-ú\s]{2,40})(?=\s{2,}|[,\/\-]|\d|uf|estado)/i);
-  if(cidLabel){r.cidade=cidLabel[1].trim();}
-  // 2) Padrão "Cidade - UF" ou "Cidade/UF" ou "Cidade,UF"
+  // Cidade + UF — estratégias adicionais se não detectadas acima
   if(!r.cidade){
-    const cidUf=t.match(new RegExp(`([A-Za-zÀ-ú][A-Za-zÀ-ú\\s]{2,35}?)\\s*[\\-\\/,]\\s*(${_ufs})\\b`));
-    if(cidUf){r.cidade=cidUf[1].trim();r.uf=cidUf[2];}
+    const cidUf=t.match(new RegExp(`([A-Za-zÀ-ú][A-Za-zÀ-ú\\s]{2,35})\\s*[\\-\\/,]\\s*(${_ufs})\\b`,'i'));
+    if(cidUf){r.cidade=cidUf[1].trim();r.uf=cidUf[2].toUpperCase();}
   }
-  // 3) UF isolada após cidade conhecida (ex: "Belo Horizonte MG")
   if(!r.cidade){
-    const cidUf2=t.match(new RegExp(`([A-Za-zÀ-ú][A-Za-zÀ-ú\\s]{2,35})\\s+(${_ufs})\\b`));
-    if(cidUf2){r.cidade=cidUf2[1].trim();r.uf=cidUf2[2];}
+    const cidUf2=t.match(new RegExp(`([A-Za-zÀ-ú][A-Za-zÀ-ú\\s]{2,35})\\s+(${_ufs})\\b`,'i'));
+    if(cidUf2){r.cidade=cidUf2[1].trim();r.uf=cidUf2[2].toUpperCase();}
   }
-  // 4) Extrai UF sozinha se cidade já encontrada
   if(r.cidade&&!r.uf){const ufM=t.match(_ufRe);if(ufM)r.uf=ufM[1];}
-  // 5) Rótulo "UF:" ou "Estado:"
   if(!r.uf){const ufL=t.match(/(?:uf|estado)[:\s]+([A-Z]{2})\b/i);if(ufL&&ufL[1].match(_ufRe))r.uf=ufL[1].toUpperCase();}
 
   return r;
