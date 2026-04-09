@@ -1,4 +1,4 @@
-<!-- v2026-04-09q -->
+<!-- v2026-04-09r -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2863,12 +2863,13 @@ function _parseDocText(raw,filename){
     if(cu2){r.cidade=cu2[1].trim();r.uf=cu2[2].toUpperCase();}
   }
 
-  // ── Cidade natal + UF natal (CNH: "DATA, LOCAL E UF DE NASCIMENTO: DD/MM/YYYY, CIDADE, UF") ──
-  // Padrão CNH: "16/01/1978, JOAO MONLEVADE, MG" — cidade vem APÓS a data e ANTES da UF
-  const nascLocalRe=/\d{2}[\/\.\-]\d{2}[\/\.\-]\d{4}\s*,\s*([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\s]{2,40})\s*,\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i;
+  // ── Cidade natal + UF natal + data nascimento (CNH: "DD/MM/YYYY, CIDADE, UF") ──
+  // Padrão CNH: "16/01/1978, JOAO MONLEVADE, MG"
+  const nascLocalRe=/(\d{2})[\/\.\-](\d{2})[\/\.\-](\d{4})\s*,\s*([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\s]{2,40})\s*,\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i;
   const nlm=f.match(nascLocalRe);
   if(nlm){
-    r.cidade_natal=nlm[1].trim().replace(/\s+/g,' ');r.uf_natal=nlm[2].toUpperCase();
+    r.data_nascimento=`${nlm[3]}-${nlm[2]}-${nlm[1]}`;
+    r.cidade_natal=nlm[4].trim().replace(/\s+/g,' ');r.uf_natal=nlm[5].toUpperCase();
     // CNH: cidade natal ≠ residência — descarta campos de endereço (vêm do comprovante)
     delete r.cidade;delete r.uf;delete r.cep;delete r.endereco;delete r.numero;delete r.bairro;
   }
