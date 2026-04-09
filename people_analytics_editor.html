@@ -1,4 +1,4 @@
-<!-- v2026-04-09s -->
+<!-- v2026-04-09t -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2959,7 +2959,8 @@ function _parseDocText(raw,filename){
 
   // ── Regras por tipo de documento ──
   if(_isCnh){
-    // CNH: já tratado acima (delete endereço). Não popular genero/telefone
+    // CNH: nº registro (11 dígitos) é capturado como PIS — remover
+    delete r.pis_pasep;
     delete r.telefone;
   }
   if(_isCtps){
