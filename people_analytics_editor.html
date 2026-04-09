@@ -1,4 +1,4 @@
-<!-- v2026-04-08l -->
+<!-- v2026-04-08m -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2644,7 +2644,8 @@ function _parseDocText(raw,filename){
   // PDF.js une linhas com espaço → busca no texto plano (f) e também linha a linha (raw)
   // TD1 (CNH/RNE): linha1[30] linha2[30] linha3[30] — unidas por espaço no texto plano
   // TD1 texto plano: linha2 tem estrutura YYMMDD + dígito_verificador + M/F + YYMMDD...
-  const mrzTD1=f.match(/[IPV][<A-Z][A-Z]{3}[A-Z0-9<]{24}\s+(\d{6})\d[MF<]\d{6}\d[A-Z]{3}[A-Z0-9<]{11}\d\s+([A-Z]{2,}<<[A-Z0-9<]{4,})/);
+  // TD1 = 30 chars/linha: [IPV](1)+[<A-Z](1)+[A-Z]{3}(3)+[A-Z0-9<]{25}(25) = 30
+  const mrzTD1=f.match(/[IPV][<A-Z][A-Z]{3}[A-Z0-9<]{25}\s+(\d{6})\d[MF<]\d{6}\d[A-Z]{3}[A-Z0-9<]{11}\d\s+([A-Z]{2,}<<[A-Z0-9<]{4,})/);
   if(mrzTD1){
     const bStr=mrzTD1[1];
     const bY=parseInt(bStr.slice(0,2));const bM=bStr.slice(2,4);const bD=bStr.slice(4,6);
@@ -2685,10 +2686,12 @@ function _parseDocText(raw,filename){
   // ── CEP + Cidade + UF (busca primeiro no bloco do cliente) ──
   // Aceita: "30170-084 BELO HORIZONTE, MG" / "30170-084 - BH - MG" / "30170 084 BELO HORIZONTE MG"
   const cepRe=/\b(\d{5})[-\s](\d{3})\s*[-,]?\s*([A-Za-z\u00C0-\u00FF][A-Za-z\u00C0-\u00FF\s]{1,38?})\s*[-,]\s*(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)\b/i;
-  const cm=pre.match(cepRe)||f.match(cepRe);
+  // Usa o ÚLTIMO CEP encontrado em pre (o mais próximo do CPF = cliente; empresa fica antes)
+  function _lastMatch(src,re){const all=[...src.matchAll(re)];return all.length?all[all.length-1]:null;}
+  const cm=_lastMatch(pre,new RegExp(cepRe.source,'gi'))||_lastMatch(f,new RegExp(cepRe.source,'gi'));
   if(cm){r.cep=cm[1]+'-'+cm[2];r.cidade=cm[3].trim().replace(/\s+/g,' ');r.uf=cm[4].toUpperCase();}
   if(!r.cep){
-    const c2=pre.match(/\b(\d{5})[-\s](\d{3})\b/)||f.match(/\b(\d{5})[-\s](\d{3})\b/);
+    const c2=_lastMatch(pre,/\b(\d{5})[-\s](\d{3})\b/g)||_lastMatch(f,/\b(\d{5})[-\s](\d{3})\b/g);
     if(c2)r.cep=c2[1]+'-'+c2[2];
   }
 
@@ -2825,9 +2828,12 @@ function _parseDocText(raw,filename){
   if(!_isCtps&&!_isComprEnd){
     // Palavras que NÃO são nomes de pessoas
     const _nomeStop=/^(REPÚBLICA|FEDERATIVA|MINISTÉRIO|SECRETARIA|DEPARTAMENTO|PREFEITURA|ESTADO|CIVIL|SOLTEIRO|CASADO|DIVORCIADO|VIÚVO|VIUVO|SEPARADO|GOVERNO|NACIONAL|MUNICIPAL|ESTADUAL|BRASIL|BRASILEIRA|CARTEIRA|HABILITAÇÃO|DRIVER|LICENSE|PERMISO|QR|CODE|SERPRO|SENATRAN|DOCUMENTO|DIGITAL|ASSINADO|DÉBITO|CRÉDITO|AUTOMÁTICO|MANUAL|FATURA|CONTA|VENCIMENTO|REFERÊNCIA|PAGAMENTO|FORNECIMENTO|SERVIÇO|INSTALAÇÃO|CLIENTE|CÓDIGO|AGÊNCIA|BANCO|CONCESSIONÁRIA|ENERGIA|ELÉTRICA|AGUA|SANEAMENTO|TELEFONIA|INTERNET|NOTA|FISCAL|EMISSÃO|LEITURA|MEDIDOR|CONSUMO|FILIAÇÃO|NATURALIDADE|ENDEREÇO|TRABALHO|PREVIDÊNCIA|SÉRIE|REGISTRO|ÓRGÃO|EMISSOR)\b/i;
-    // CNH: label "NOME E SOBRENOME"
-    const nomeCnh=f.match(/nome\s+e\s+sobren\w*\s*[:\-]?\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõç\s]{3,50}?)(?=\s{2,}|\d|\bCPF|\bRG|\bDAT)/i);
-    if(nomeCnh&&!_nomeStop.test(nomeCnh[1]))r.nome=nomeCnh[1].trim().replace(/\s+/g,' ');
+    // CNH: label "NOME E SOBRENOME" — para antes de "Primeira", "First", "Primera", "Data", etc.
+    // Não sobrescreve nome já definido pelo MRZ
+    if(!r.nome){
+      const nomeCnh=f.match(/nome\s+e\s+sobren\w*\s*[:\-]?\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõç\s]{3,50}?)(?=\s{2,}|\d|\bCPF\b|\bRG\b|\bDAT|\bPrimeira\b|\bFirst\b|\bPrimera\b|\bData\b|\bLocal\b)/i);
+      if(nomeCnh&&!_nomeStop.test(nomeCnh[1]))r.nome=nomeCnh[1].trim().replace(/\s+/g,' ');
+    }
     // Rótulo "nome:" — lookahead para parar em "data", "CPF", "RG" ou double-space
     if(!r.nome){
       const nomeL=f.match(/\bnom[e]?\s*[:\-]\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõç\s]{5,50}?)(?=\s{2,}|\bCPF\b|\bRG\b|\bdat|\bsexo|\bestado\s+civ)/i);
