@@ -2645,12 +2645,12 @@ async function _extractPdfText(file,stEl){
       // Renderiza a página do PDF para canvas → JPEG → OCR via _ocrImage
       // NÃO envia o PDF direto (OCR.space bloqueia PDF base64 via CORS no browser)
       const pg=await pdf.getPage(1);
-      const vp=pg.getViewport({scale:2});
+      const vp=pg.getViewport({scale:3});
       const cv=document.createElement('canvas');
       cv.width=vp.width;cv.height=vp.height;
       window._docOcrDebug.canvas=`${cv.width}x${cv.height}`;
       await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
-      const blob=await new Promise(res=>cv.toBlob(res,'image/jpeg',0.8));
+      const blob=await new Promise(res=>cv.toBlob(res,'image/jpeg',0.92));
       const blobKB=blob?Math.round(blob.size/1024):0;
       window._docOcrDebug.step='enviando_ocr';window._docOcrDebug.imgKB=blobKB;
       console.log(`[LUMA-DOC] Canvas ${cv.width}x${cv.height} → JPEG ${blobKB}KB`);
