@@ -1,4 +1,4 @@
-<!-- v2026-04-09u -->
+<!-- v2026-04-09v -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2875,9 +2875,9 @@ function _parseDocText(raw,filename){
   }
 
   // ── Filiação ──
-  // CNH OCR: "FILIAÇÃO\nGERALDO MAGELA DE SOUZA\nGILDA NATIVIDADE ASSIS SOUZA"
-  // Busca no raw (com \n) primeiro — mais confiável que flat
-  const _filRawM=raw.match(/filia[çc][aã]o[:\s*]*\n\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,60}?)\s*\n\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,60})$/im);
+  // CNH OCR: "* FILIAÇÃO\nGERALDO MAGELA DE SOUZA\nGILDA NATIVIDADE ASSIS SOUZA"
+  // Busca no raw (com \n) — [: *]* NÃO inclui \s (que consome \n)
+  const _filRawM=raw.match(/filia[çc][aã]o[: *]*\n\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,60}?)\s*\n\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,60})/im);
   if(_filRawM){
     r.filiacao1=_filRawM[1].trim().replace(/\s+/g,' ');
     r.filiacao2=_filRawM[2].trim().replace(/\s+/g,' ');
