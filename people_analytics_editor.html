@@ -1,4 +1,4 @@
-<!-- v2026-04-09f -->
+<!-- v2026-04-09g -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2626,11 +2626,14 @@ async function _extractPdfText(file,stEl){
       }
     }catch(e){/* ignora */}
   }
-  // Se não encontrou CPF nem data: PDF com imagem → OCR automático
-  // CNH digital SERPRO tem texto extraível — só usa OCR se texto não tem CPF/data
+  // CNH-e (SERPRO): texto contém apenas metadados de cert digital (sem CPF/dados biométricos)
+  // → Para CNH: OCR obrigatório se não há CPF no texto (datas do cert não contam)
+  // → Para outros docs: OCR só se não há CPF nem data
   const hasCpf=/\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2}/.test(text);
   const hasDate=/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(text);
-  if(!hasCpf&&!hasDate){
+  const _isCnhFile=file?.name&&/cnh|habilitacao|habilitação|motorista/i.test(file.name.toLowerCase());
+  const _needsOcr=_isCnhFile?!hasCpf:(!hasCpf&&!hasDate);
+  if(_needsOcr){
     if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — aplicando OCR… aguarde.';
     const page=await pdf.getPage(1);
     const viewport=page.getViewport({scale:2.5});
@@ -2930,34 +2933,36 @@ function _parseDocText(raw,filename){
     // CTPS Digital: layout 2 colunas → "Data de nascimento Nacionalidade\n16/01/1978 Brasileiro"
     // A data e o sexo ficam na LINHA SEGUINTE ao label, possivelmente junto com outros valores
     if(!r.data_nascimento){
-      // 1) Label e data na mesma linha (qualquer texto entre eles, ex: "Data de nascimento Nacionalidade 16/01/1978")
-      const _ddFlat=f.match(/Data\s+de\s+nascimento\b.{0,120}?(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/i);
-      if(_ddFlat)r.data_nascimento=`${_ddFlat[3]}-${_ddFlat[2]}-${_ddFlat[1]}`;
-      else{
-        // 2) Data na linha seguinte ao label (raw com quebras de linha)
-        const _ddR=raw.match(/Data\s+de\s+nascimento[^\n]*\n[^\n]*?(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/im);
-        if(_ddR)r.data_nascimento=`${_ddR[3]}-${_ddR[2]}-${_ddR[1]}`;
-        else{
-          // 3) Fallback: qualquer data de nascimento no texto (ano entre 1940-2010)
-          const _ddAll=[...f.matchAll(/\b(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})\b/g)];
-          for(const _d of _ddAll){const y=parseInt(_d[3]);if(y>=1940&&y<=2010){r.data_nascimento=`${_d[3]}-${_d[2]}-${_d[1]}`;break;}}
-        }
+      // 1) Label e data na mesma linha, com qualquer texto entre eles (layout 2 colunas)
+      //    Ex: "Data de nascimento Nacionalidade 16/01/1978" — até 200 chars entre label e data
+      const _ddFlat=f.match(/Data\s+de\s+nascimento\b[\s\S]{0,200}?(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/i);
+      if(_ddFlat){const y=parseInt(_ddFlat[3]);if(y>=1920&&y<=2025)r.data_nascimento=`${y}-${String(parseInt(_ddFlat[2])).padStart(2,'0')}-${String(parseInt(_ddFlat[1])).padStart(2,'0')}`;}
+    }
+    if(!r.data_nascimento){
+      // 2) Busca direta no raw: primeiro data após "Data de nascimento" (dentro de 300 chars)
+      const _li=raw.search(/Data\s+de\s+nascimento/i);
+      if(_li>=0){
+        const _after=raw.slice(_li,_li+300);
+        const _dm=_after.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
+        if(_dm){const y=parseInt(_dm[3]);if(y>=1920&&y<=2025)r.data_nascimento=`${y}-${String(parseInt(_dm[2])).padStart(2,'0')}-${String(parseInt(_dm[1])).padStart(2,'0')}`;}
       }
     }
-    // Sexo / Gênero — tenta flat (mesmo linha) e raw (próxima linha)
-    if(!r.genero){
-      // 1) Label e valor na mesma linha (ex: "Sexo Masculino" ou "Sexo: Masculino")
-      const _sgFlat=f.match(/\bSexo\b.{0,60}?(Masculino|Feminino)\b/i);
-      if(_sgFlat)r.genero=_sgFlat[1][0].toUpperCase()==='M'?'M':'F';
-      else{
-        // 2) Valor na linha seguinte ao label
-        const _sgR=raw.match(/\bSexo\b[^\n]*\n\s*(Masculino|Feminino)\b/im);
-        if(_sgR)r.genero=_sgR[1][0].toUpperCase()==='M'?'M':'F';
-        else{
-          const _sgF=f.match(/\bG[eê]nero[:\s]+(Masculino|Feminino)\b/i);
-          if(_sgF)r.genero=_sgF[1][0].toUpperCase()==='M'?'M':'F';
-        }
+    if(!r.data_nascimento){
+      // 3) Nuclear: qualquer data no raw completo com ano plausível
+      for(const _d of [...raw.matchAll(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/g)]){
+        const y=parseInt(_d[3]);if(y>=1940&&y<=2010){r.data_nascimento=`${y}-${String(parseInt(_d[2])).padStart(2,'0')}-${String(parseInt(_d[1])).padStart(2,'0')}`;break;}
       }
+    }
+    // Sexo / Gênero
+    if(!r.genero){
+      // 1) Qualquer Masculino/Feminino no raw (para CTPS é campo único)
+      if(/\bMasculino\b/i.test(raw))r.genero='M';
+      else if(/\bFeminino\b/i.test(raw))r.genero='F';
+    }
+    if(!r.genero){
+      // 2) Label "Sexo" ou "Gênero" no flat, valor em qualquer posição
+      const _sgFlat=f.match(/\b(?:Sexo|G[eê]nero)\b[\s\S]{0,120}?(Masculino|Feminino)\b/i);
+      if(_sgFlat)r.genero=_sgFlat[1][0].toUpperCase()==='M'?'M':'F';
     }
     // Nacionalidade
     if(!r.nacionalidade){
