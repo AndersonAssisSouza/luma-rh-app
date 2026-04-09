@@ -1,4 +1,4 @@
-<!-- v2026-04-09e -->
+<!-- v2026-04-09f -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -266,8 +266,9 @@ nav.legacy{display:none!important;}
   .modal[style*="max-width:720px"]{max-width:min(900px,95vw)!important;width:min(900px,95vw)!important;max-height:95vh!important;}
   /* Modais de editar/novo colaborador — tela toda */
   #mEditColab,#mNewColab{padding:4px!important;}
-  #mEditColab .modal,#mNewColab .modal{max-width:calc(100vw - 8px)!important;width:calc(100vw - 8px)!important;max-height:calc(100vh - 8px)!important;border-radius:8px!important;}
-  #mEditColab .mtpane.active,#mNewColab .mtpane.active{grid-template-columns:repeat(4,1fr);}
+  #mEditColab .modal,#mNewColab .modal{max-width:calc(100vw - 8px)!important;width:calc(100vw - 8px)!important;height:calc(100vh - 8px)!important;max-height:calc(100vh - 8px)!important;border-radius:8px!important;overflow:hidden!important;}
+  #mEditColab .mb,#mNewColab .mb{overflow:hidden!important;min-height:0;}
+  #mEditColab .mtpane.active,#mNewColab .mtpane.active{grid-template-columns:repeat(4,1fr);overflow-y:auto;}
 }
 
 .pf-cal-wrap{background:var(--bg3);border-radius:10px;padding:16px;}.pf-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}.pf-cal-month{font-size:15px;font-weight:500;}.pf-cal-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}.pf-cal-btn:hover{background:var(--bg2);}.pf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}.pf-cal-dname{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}.pf-cal-day{text-align:center;padding:7px 2px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}.pf-cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}.pf-cal-day.tod{border-color:var(--accent);color:var(--accent);}.pf-cal-day.rs,.pf-cal-day.re{background:var(--accent);color:#fff;}.pf-cal-day.ri{background:rgba(155,102,244,.2);}.pf-cal-day.dis{opacity:.2;cursor:not-allowed;}.pf-cal-day.oth{opacity:.15;cursor:default;}.pf-cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}.pf-cal-day.fds{color:var(--muted);}.pf-cal-legend{display:flex;gap:12px;margin-top:10px;}.pf-cal-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}.pf-cal-dot{width:8px;height:8px;border-radius:3px;}.pf-steps{display:flex;margin-bottom:22px;}.pf-step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}.pf-step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:1px;background:var(--border2);}.pf-step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--bg);z-index:1;margin-bottom:5px;}.pf-step-item.done .pf-step-circle{background:var(--ok);border-color:var(--ok);color:#0d2a1e;}.pf-step-item.active .pf-step-circle{background:var(--accent);border-color:var(--accent);color:#fff;}.pf-step-label{font-size:10px;color:var(--muted);text-align:center;}.pf-step-item.active .pf-step-label{color:var(--accent);}#pf .hist-row{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}#pf .hist-row:last-child{border-bottom:none;}#pf .hist-info{flex:1;}#pf .hist-period{font-size:14px;font-weight:500;margin-bottom:3px;}#pf .hist-meta{font-size:12px;color:var(--muted);}#pf .hist-motivo{font-size:12px;color:var(--danger);margin-top:4px;}
@@ -1043,7 +1044,6 @@ nav.legacy{display:none!important;}
         </div>
         <div class="fgrp s2"><div class="flbl">Observações gerais</div><textarea class="fi fta" id="eObsGerais" rows="3" placeholder="Notas adicionais sobre o colaborador..."></textarea></div>
       </div>
-    </div>
       <!-- TAB 4: DOCUMENTOS (edit) -->
       <div class="mtpane" id="eTab4" style="display:none;">
         <div style="grid-column:1/-1;">
@@ -1067,6 +1067,7 @@ nav.legacy{display:none!important;}
     </div>
   </div>
 </div>
+<!-- /mEditColab -->
 
 <!-- Novo colaborador -->
 <div class="ov" id="mNewColab">
@@ -1188,7 +1189,6 @@ nav.legacy{display:none!important;}
         </div>
         <div class="fgrp s2"><div class="flbl">Observações gerais</div><textarea class="fi fta" id="nObsGerais" rows="3" placeholder="Notas adicionais sobre o colaborador..."></textarea></div>
       </div>
-    </div>
       <!-- TAB 4: DOCUMENTOS (new) -->
       <div class="mtpane" id="nTab4" style="display:none;">
         <div style="grid-column:1/-1;">
@@ -2638,8 +2638,14 @@ async function _extractPdfText(file,stEl){
     canvas.width=viewport.width;canvas.height=viewport.height;
     await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
     const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
-    const ocrText=await _ocrImage(blob,stEl);
-    return (text+'\n'+ocrText).trim();
+    try{
+      const ocrText=await _ocrImage(blob,stEl);
+      return (text+'\n'+ocrText).trim();
+    }catch(ocrErr){
+      console.warn('[LUMA-DOC] OCR externo falhou, usando texto digital do PDF:',ocrErr.message);
+      if(stEl)stEl.innerHTML='<span style="color:var(--warn)">⚠️</span> OCR externo indisponível. Usando texto digital do PDF…';
+      return text;
+    }
   }
   return text;
 }
@@ -2924,22 +2930,33 @@ function _parseDocText(raw,filename){
     // CTPS Digital: layout 2 colunas → "Data de nascimento Nacionalidade\n16/01/1978 Brasileiro"
     // A data e o sexo ficam na LINHA SEGUINTE ao label, possivelmente junto com outros valores
     if(!r.data_nascimento){
-      // Tenta: label na mesma linha ou na linha anterior à data
-      const _ddR=raw.match(/Data\s+de\s+nascimento[^\n]*\n\s*(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/im);
-      if(_ddR)r.data_nascimento=`${_ddR[3]}-${_ddR[2]}-${_ddR[1]}`;
+      // 1) Label e data na mesma linha (qualquer texto entre eles, ex: "Data de nascimento Nacionalidade 16/01/1978")
+      const _ddFlat=f.match(/Data\s+de\s+nascimento\b.{0,120}?(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/i);
+      if(_ddFlat)r.data_nascimento=`${_ddFlat[3]}-${_ddFlat[2]}-${_ddFlat[1]}`;
       else{
-        // Fallback: qualquer data de nascimento no texto (ano entre 1940-2010)
-        const _ddAll=[...f.matchAll(/\b(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})\b/g)];
-        for(const _d of _ddAll){const y=parseInt(_d[3]);if(y>=1940&&y<=2010){r.data_nascimento=`${_d[3]}-${_d[2]}-${_d[1]}`;break;}}
+        // 2) Data na linha seguinte ao label (raw com quebras de linha)
+        const _ddR=raw.match(/Data\s+de\s+nascimento[^\n]*\n[^\n]*?(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/im);
+        if(_ddR)r.data_nascimento=`${_ddR[3]}-${_ddR[2]}-${_ddR[1]}`;
+        else{
+          // 3) Fallback: qualquer data de nascimento no texto (ano entre 1940-2010)
+          const _ddAll=[...f.matchAll(/\b(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})\b/g)];
+          for(const _d of _ddAll){const y=parseInt(_d[3]);if(y>=1940&&y<=2010){r.data_nascimento=`${_d[3]}-${_d[2]}-${_d[1]}`;break;}}
+        }
       }
     }
-    // Sexo / Gênero — valor pode estar na próxima linha junto com outro texto
+    // Sexo / Gênero — tenta flat (mesmo linha) e raw (próxima linha)
     if(!r.genero){
-      const _sgR=raw.match(/\bSexo\b[^\n]*\n\s*(Masculino|Feminino)\b/im);
-      if(_sgR)r.genero=_sgR[1][0].toUpperCase()==='M'?'M':'F';
+      // 1) Label e valor na mesma linha (ex: "Sexo Masculino" ou "Sexo: Masculino")
+      const _sgFlat=f.match(/\bSexo\b.{0,60}?(Masculino|Feminino)\b/i);
+      if(_sgFlat)r.genero=_sgFlat[1][0].toUpperCase()==='M'?'M':'F';
       else{
-        const _sgF=f.match(/\bSexo[:\s]+(Masculino|Feminino)\b/i)||f.match(/\bG[eê]nero[:\s]+(Masculino|Feminino)\b/i);
-        if(_sgF)r.genero=_sgF[1][0].toUpperCase()==='M'?'M':'F';
+        // 2) Valor na linha seguinte ao label
+        const _sgR=raw.match(/\bSexo\b[^\n]*\n\s*(Masculino|Feminino)\b/im);
+        if(_sgR)r.genero=_sgR[1][0].toUpperCase()==='M'?'M':'F';
+        else{
+          const _sgF=f.match(/\bG[eê]nero[:\s]+(Masculino|Feminino)\b/i);
+          if(_sgF)r.genero=_sgF[1][0].toUpperCase()==='M'?'M':'F';
+        }
       }
     }
     // Nacionalidade
