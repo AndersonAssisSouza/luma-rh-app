@@ -2668,7 +2668,9 @@ async function _extractPdfText(file,stEl){
         const topText=topBlob?.size>1000?await _ocrImage(topBlob,null,['1','2']):'';
         if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR CNH-e parte 2/2 (filiação)…`;
         const botText=botBlob?.size>1000?await _ocrImage(botBlob,stEl,['1','2']):'';
-        const ocrText=(topText+'\n'+botText).trim();
+        // ##CNH_BOT## separa metade superior (CPF/nome) da inferior (filiação)
+        // _parseDocText usa isso para restringir busca de CPF à metade superior
+        const ocrText=(topText+'\n##CNH_BOT##\n'+botText).trim();
         window._docOcrDebug.step='ocr_ok';window._docOcrDebug.ocrLen=ocrText.length;window._docOcrDebug.ocrText=ocrText;
         console.log('[LUMA-DOC] OCR CNH-e OK ('+ocrText.length+' chars):',ocrText.slice(0,400));
         return (text+'\n'+ocrText).trim();
@@ -2830,9 +2832,13 @@ function _parseDocText(raw,filename){
   // ── Validação de CPF (dígitos verificadores) — descarta números-de-conta falsos ──
   function _validCpf(s){const d=s.replace(/\D/g,'');if(d.length!==11||/^(\d)\1{10}$/.test(d))return false;let sm=0;for(let i=0;i<9;i++)sm+=parseInt(d[i])*(10-i);let r1=sm%11<2?0:11-sm%11;if(parseInt(d[9])!==r1)return false;sm=0;for(let i=0;i<10;i++)sm+=parseInt(d[i])*(11-i);const r2=sm%11<2?0:11-sm%11;return parseInt(d[10])===r2;}
 
-  // ── CPF — prefere label + dígito verificador válido; descarta CPFs inválidos (contas Cemig etc.) ──
-  const cpfLabelAll=[...f.matchAll(/\bCPF[:\s\.\/nNº°]*(\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2})\b/gi)];
-  const cpfAnyAll=[...f.matchAll(/\b(\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2})\b/g)];
+  // ── CPF — restringe busca ao trecho ANTES do marcador ##CNH_BOT## (evita CPF do pai/mãe) ──
+  // Para CNH-e: a metade inferior (filiação) contém número do pai que pode ser confundido com CPF
+  const _cnhBotMark='##CNH_BOT##';
+  const _cnhBotIdx=f.indexOf(_cnhBotMark);
+  const _fCpf=_cnhBotIdx>0?f.slice(0,_cnhBotIdx):f;
+  const cpfLabelAll=[..._fCpf.matchAll(/\bCPF[:\s\.\/nNº°]*(\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2})\b/gi)];
+  const cpfAnyAll=[..._fCpf.matchAll(/\b(\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2})\b/g)];
   const cpfM=cpfLabelAll.find(m=>_validCpf(m[1]))||cpfLabelAll[0]||cpfAnyAll.find(m=>_validCpf(m[1]))||cpfAnyAll[0];
   if(cpfM){const c=cpfM[1].replace(/\D/g,'');if(c.length===11)r.cpf=c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');}
 
@@ -2907,6 +2913,24 @@ function _parseDocText(raw,filename){
     delete r.cidade;delete r.uf;delete r.cep;delete r.endereco;delete r.numero;delete r.bairro;
   }
 
+  // ── Limpeza de nome OCR — corrige erros comuns de reconhecimento ──
+  function _cleanOcrName(s){
+    if(!s||s.length<3)return s;
+    // 'l' minúsculo entre maiúsculas = OCR confundindo uppercase I com lowercase l
+    // Ex: "GlLDA" → "GILDA", "GI LDA" → tratado abaixo
+    s=s.replace(/([A-ZÁÉÍÓÚ])l([A-ZÁÉÍÓÚ])/g,'$1I$2');
+    s=s.replace(/([A-ZÁÉÍÓÚ])l(\s)/g,'$1I$2');
+    s=s.replace(/^l([A-ZÁÉÍÓÚ])/,'I$1');
+    // Merge fragmento inicial: se o 1º "word" tem 1-3 chars e NÃO é preposição conhecida,
+    // funde com a próxima palavra (ex: "GI LDA" → "GILDA", "Gl LDA" → "GILDA")
+    const _preps=new Set(['DE','DA','DO','DI','DU','DOS','DAS','VON','VAN','E']);
+    s=s.replace(/^([A-ZÁÉÍÓÚa-z]{1,3})\s+([A-ZÁÉÍÓÚ]{3,})/,(m,p1,p2)=>{
+      const up=p1.toUpperCase();
+      return _preps.has(up)?m:(p1.toUpperCase()+p2);
+    });
+    return s.replace(/\s+/g,' ').trim();
+  }
+
   // ── Filiação ──
   // Método principal: busca linha-por-linha no raw por "FILIAÇÃO" e pega as 2 linhas seguintes
   const _rawLines=raw.split('\n').map(l=>l.trim()).filter(l=>l);
@@ -2921,8 +2945,8 @@ function _parseDocText(raw,filename){
           _names.push(_ln.replace(/\s+/g,' '));
         }
       }
-      if(_names[0]&&!r.filiacao1)r.filiacao1=_names[0];
-      if(_names[1]&&!r.filiacao2)r.filiacao2=_names[1];
+      if(_names[0]&&!r.filiacao1)r.filiacao1=_cleanOcrName(_names[0]);
+      if(_names[1]&&!r.filiacao2)r.filiacao2=_cleanOcrName(_names[1]);
       break;
     }
   }
