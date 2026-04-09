@@ -1,4 +1,4 @@
-<!-- v2026-04-08n -->
+<!-- v2026-04-08o -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2597,12 +2597,21 @@ async function _extractPdfText(file,stEl){
     const page=await pdf.getPage(i);
     const content=await page.getTextContent();
     text+=content.items.map(it=>it.str).join(' ')+'\n';
+    // Lê também valores de campos de formulário (CNH digital usa form fields no PDF)
+    try{
+      const annots=await page.getAnnotations();
+      for(const a of annots){
+        if(a.fieldValue&&String(a.fieldValue).trim()){
+          const label=a.alternativeText||a.fieldName||'';
+          text+='\n'+(label?label+': ':'')+String(a.fieldValue).trim();
+        }
+      }
+    }catch(e){/* ignora se não suportado */}
   }
-  // PDF baseado em imagem (ex: CNH digital, RG escaneado):
-  // Detecta ausência de dados de identidade no texto extraído → aciona OCR
+  // PDF baseado em imagem: detecta ausência de CPF E data → aciona OCR
+  // (form fields já foram lidos acima, então CNH digital não precisa de OCR)
   const hasCpf=/\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2}/.test(text);
   const hasDate=/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(text);
-  // Nota: não usa hasName — textos institucionais como "REPÚBLICA FEDERATIVA" causam falso positivo
   if(!hasCpf&&!hasDate){
     if(stEl) stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — aplicando OCR… aguarde.';
     const page=await pdf.getPage(1);
