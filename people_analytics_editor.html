@@ -1,4 +1,4 @@
-<!-- v2026-04-09i -->
+<!-- v2026-04-09j -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2648,10 +2648,11 @@ async function _extractPdfText(file,stEl){
     const blob=await new Promise(res=>canvas.toBlob(res,'image/jpeg',0.85));
     try{
       const ocrText=await _ocrImage(blob,stEl);
+      console.log('[LUMA-DOC] OCR texto obtido:',ocrText.slice(0,500));
       return (text+'\n'+ocrText).trim();
     }catch(ocrErr){
-      console.warn('[LUMA-DOC] OCR externo falhou, usando texto digital do PDF:',ocrErr.message);
-      if(stEl)stEl.innerHTML='<span style="color:var(--warn)">⚠️</span> OCR externo indisponível. Usando texto digital do PDF…';
+      console.warn('[LUMA-DOC] OCR externo falhou:',ocrErr.message);
+      if(stEl)stEl.innerHTML=`<span style="color:var(--warn)">⚠️</span> OCR falhou: ${ocrErr.message}. Usando texto digital do PDF…`;
       return text;
     }
   }
@@ -2665,31 +2666,45 @@ async function _ocrImage(blob,stEl){
   if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Reconhecendo texto (OCR)…';
   // Converte blob → base64 dataURL
   const b64=await new Promise(res=>{const fr=new FileReader();fr.onloadend=()=>res(fr.result);fr.readAsDataURL(blob);});
-  const fd=new FormData();
-  // apikey no body (não no header) para evitar CORS preflight
-  fd.append('apikey',_OCR_KEY);
-  fd.append('base64Image',b64);
-  fd.append('language','por');
-  fd.append('isOverlayRequired','false');
-  fd.append('OCREngine','2');
-  fd.append('scale','true');
-  fd.append('detectOrientation','true');
-  fd.append('filetype','JPG');
-  if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Processando OCR na nuvem…';
-  const ctrl=new AbortController();
-  const tid=setTimeout(()=>ctrl.abort(),40000);
-  try{
-    const resp=await fetch('https://api.ocr.space/parse/image',{
-      method:'POST',body:fd,signal:ctrl.signal
-    });
-    clearTimeout(tid);
-    if(!resp.ok)throw new Error(`OCR HTTP ${resp.status}`);
-    const j=await resp.json();
-    if(j.IsErroredOnProcessing)throw new Error(j.ErrorMessage?.[0]||'Erro OCR.space');
-    const txt=j.ParsedResults?.[0]?.ParsedText||'';
-    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Texto reconhecido, extraindo campos…';
-    return txt;
-  }catch(e){clearTimeout(tid);throw e;}
+  const b64Size=Math.round(b64.length/1024);
+  console.log(`[LUMA-DOC] OCR imagem: ${b64Size}KB base64`);
+  // Tenta Engine 2 primeiro (melhor para fontes modernas), fallback Engine 1
+  for(const engine of ['2','1']){
+    const fd=new FormData();
+    // apikey no body (não no header) para evitar CORS preflight
+    fd.append('apikey',_OCR_KEY);
+    fd.append('base64Image',b64);
+    fd.append('language','por');
+    fd.append('isOverlayRequired','false');
+    fd.append('OCREngine',engine);
+    fd.append('scale','true');
+    fd.append('detectOrientation','true');
+    fd.append('filetype','JPG');
+    if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR na nuvem (engine ${engine}, ${b64Size}KB)…`;
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),45000);
+    try{
+      const resp=await fetch('https://api.ocr.space/parse/image',{
+        method:'POST',body:fd,signal:ctrl.signal
+      });
+      clearTimeout(tid);
+      if(!resp.ok){console.warn(`[LUMA-DOC] OCR engine ${engine} HTTP ${resp.status}`);continue;}
+      const j=await resp.json();
+      console.log(`[LUMA-DOC] OCR engine ${engine} resposta:`,JSON.stringify(j).slice(0,500));
+      if(j.IsErroredOnProcessing){console.warn(`[LUMA-DOC] OCR engine ${engine} erro:`,j.ErrorMessage);continue;}
+      const txt=j.ParsedResults?.[0]?.ParsedText||'';
+      if(txt.trim().length>20){
+        if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Texto reconhecido, extraindo campos…';
+        return txt;
+      }
+      console.warn(`[LUMA-DOC] OCR engine ${engine}: texto muito curto (${txt.length} chars), tentando próxima`);
+    }catch(e){
+      clearTimeout(tid);
+      console.warn(`[LUMA-DOC] OCR engine ${engine} falhou:`,e.message);
+      if(engine==='1')throw e; // última tentativa
+    }
+  }
+  throw new Error('OCR não conseguiu extrair texto da imagem');
 }
 
 // ── Parser de texto para campos de documentos brasileiros ──
