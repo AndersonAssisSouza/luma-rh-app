@@ -1,4 +1,4 @@
-<!-- v2026-04-08s -->
+<!-- v2026-04-08t -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2594,18 +2594,20 @@ async function _extractPdfText(file,stEl){
   let text='';
   for(let i=1;i<=pdf.numPages;i++){
     const page=await pdf.getPage(i);
-    const content=await page.getTextContent();
-    text+=content.items.map(it=>it.str).join(' ')+'\n';
-    // Lê também valores de campos de formulário (CNH digital usa form fields no PDF)
+    // includeMarkedContent captura campos de formulário e conteúdo marcado (CNH digital SERPRO)
+    const content=await page.getTextContent({includeMarkedContent:true,disableNormalization:false});
+    text+=content.items.map(it=>it.str||it.tag||'').filter(s=>s.trim()).join(' ')+'\n';
+    // Fallback: valores de anotações/AcroForm
     try{
       const annots=await page.getAnnotations();
       for(const a of annots){
-        if(a.fieldValue&&String(a.fieldValue).trim()){
+        const val=Array.isArray(a.fieldValue)?a.fieldValue.join(' '):(a.fieldValue||a.buttonValue||'');
+        if(val&&String(val).trim()){
           const label=a.alternativeText||a.fieldName||'';
-          text+='\n'+(label?label+': ':'')+String(a.fieldValue).trim();
+          text+='\n'+(label?label+': ':'')+String(val).trim();
         }
       }
-    }catch(e){/* ignora se não suportado */}
+    }catch(e){/* ignora */}
   }
   // PDF baseado em imagem: só aciona OCR se não encontrou CPF, data E o texto é muito curto
   // (texto longo = PDF digital; texto curto = só cabeçalhos = imagem embedida)
@@ -2632,7 +2634,7 @@ async function _ocrImage(file,stEl){
     if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Carregando motor OCR…';
     await new Promise((res,rej)=>{
       const s=document.createElement('script');
-      s.src='https://unpkg.com/tesseract.js@4/dist/tesseract.min.js';
+      s.src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js';
       s.onload=res;s.onerror=()=>rej(new Error('Falha ao carregar Tesseract.js'));
       document.head.appendChild(s);
     });
@@ -2642,9 +2644,9 @@ async function _ocrImage(file,stEl){
   const ocrPromise=(async()=>{
     if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Inicializando OCR…';
     worker=await window.Tesseract.createWorker('por',1,{
-      workerPath:'https://unpkg.com/tesseract.js@4/dist/worker.min.js',
-      langPath:'https://tessdata.projectnaptha.com/4.0.0',
-      corePath:'https://unpkg.com/tesseract.js-core@4/tesseract-core-simd-lstm.wasm.js',
+      workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/worker.min.js',
+      langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/por/dist/4.0.0_best_int',
+      corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@4/tesseract-core-simd-lstm.wasm.js',
       logger(m){
         if(!stEl)return;
         if(m.status==='loading tesseract core')
@@ -2784,9 +2786,17 @@ function _parseDocText(raw,filename){
   }
 
   // ── Filiação (CNH: label "FILIAÇÃO" seguido de dois nomes em linhas/sequência) ──
+  // Filiação — CNH: label "Filiação:" seguido de dois nomes separados por newline ou duplo espaço
   const filRe=/filia[çc][aã]o[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,50}?)(?:\s{2,}|\n)([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,50})/i;
   const fm=f.match(filRe)||raw.match(filRe);
   if(fm){r.filiacao1=fm[1].trim().replace(/\s+/g,' ');r.filiacao2=fm[2].trim().replace(/\s+/g,' ');}
+  // CTPS Digital: labels "Nome do pai:" e "Nome da mãe:" separados
+  const _nomePaiM=f.match(/nome\s+do\s+pai[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,60}?)(?=\s{2,}|\n|CPF|Data|Sexo|Nacionalidade|$)/i)
+               ||raw.match(/nome\s+do\s+pai[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,60}?)(?=\n|$)/im);
+  if(_nomePaiM&&!r.filiacao1)r.filiacao1=_nomePaiM[1].trim().replace(/\s+/g,' ');
+  const _nomeMaeM=f.match(/nome\s+da\s+m[ãa]e[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,60}?)(?=\s{2,}|\n|CPF|Data|Sexo|Nacionalidade|$)/i)
+               ||raw.match(/nome\s+da\s+m[ãa]e[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,60}?)(?=\n|$)/im);
+  if(_nomeMaeM&&!r.filiacao2)r.filiacao2=_nomeMaeM[1].trim().replace(/\s+/g,' ');
 
   // ── PIS/PASEP: 000.00000.00-0 ──
   const pisM=f.match(/\b(\d{3}[\.\s]?\d{5}[\.\s]?\d{2}[\-\s]?\d)\b/);
