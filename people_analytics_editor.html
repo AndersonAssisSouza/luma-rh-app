@@ -1,4 +1,4 @@
-<!-- v2026-04-08p -->
+<!-- v2026-04-08q -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2558,12 +2558,11 @@ async function readDocumentoIA(prefix,fileOverride){
     if(filled>0&&conflicts.length===0){
       stEl.style.color='var(--ok)';
       stEl.innerHTML=`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário. ${_diagBtn}`;
-    } else if(filled>0&&conflicts.length>0){
-      stEl.style.color='var(--ok)';
-      stEl.innerHTML=`✅ ${filled} campo(s) preenchido(s). ${_renderConflictUI(conflicts,data,prefix)} ${_diagBtn}`;
     } else if(conflicts.length>0){
-      stEl.style.color='var(--warn)';
-      stEl.innerHTML=_renderConflictUI(conflicts,data,prefix)+_diagBtn;
+      // Inclui tanto o caso filled>0 com conflitos quanto apenas conflitos (ex: comprovante endereço)
+      stEl.style.color='var(--ok)';
+      const msg=filled>0?`✅ ${filled} campo(s) preenchido(s). `:'📋 Endereço encontrado — confirme os campos abaixo: ';
+      stEl.innerHTML=msg+_renderConflictUI(conflicts,data,prefix)+' '+_diagBtn;
     } else if(Object.keys(data).filter(k=>data[k]).length>0){
       stEl.style.color='var(--muted)';
       stEl.innerHTML='ℹ️ Todos os campos detectados já estavam preenchidos com os mesmos valores. '+_diagBtn;
@@ -2944,23 +2943,34 @@ const _DOC_FIELD_MAP=[
   {k:'filiacao1',  s:'Filiacao1', lbl:'Nome do pai',      t:'text'},
   {k:'filiacao2',  s:'Filiacao2', lbl:'Nome da mãe',      t:'text'},
 ];
+// _ADDR_KEYS: campos de endereço que sempre vão para aprovação no comprovante
+const _ADDR_KEYS=['cep','endereco','numero','bairro','cidade','uf'];
+
 function _fillFormFromDoc(data,p,forceKeys){
   // forceKeys: array de chaves a forçar sobrescrita (resolução de conflito)
   if(!data)return{filled:0,conflicts:[]};
   let filled=0;const conflicts=[];
+
+  // Detecta se é comprovante de endereço: tem CEP mas não tem nome/CPF/RG
+  const _isEndDoc=!!data.cep&&!data.nome&&!data.cpf&&!data.rg;
+
   for(const f of _DOC_FIELD_MAP){
     const val=data[f.k];if(!val)continue;
     const el=$(p+f.s);if(!el)continue;
     const cur=el.value||'';
     const force=forceKeys&&forceKeys.includes(f.k);
-    if(!cur){
-      // Campo vazio → preenche sempre
+    // Campos de endereço em comprovante → sempre para aprovação (mesmo se vazio)
+    const needsApproval=_isEndDoc&&_ADDR_KEYS.includes(f.k)&&!force;
+    if(needsApproval){
+      conflicts.push({k:f.k,lbl:f.lbl,cur:cur||'(vazio)',novo:String(val)});
+    } else if(!cur){
+      // Campo vazio → preenche automaticamente
       if(f.t==='sel')setS(p+f.s,val);else el.value=val;
       filled++;
     } else if(cur.trim().toLowerCase()!==String(val).trim().toLowerCase()){
       // Campo preenchido com valor diferente → conflito
       if(force){if(f.t==='sel')setS(p+f.s,val);else el.value=val;filled++;}
-      else conflicts.push({k:f.k,lbl:f.l||f.lbl,cur,novo:String(val)});
+      else conflicts.push({k:f.k,lbl:f.lbl,cur,novo:String(val)});
     }
     // cur === val → já correto, ignora
   }
