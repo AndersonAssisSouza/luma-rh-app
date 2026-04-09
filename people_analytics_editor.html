@@ -1,4 +1,4 @@
-<!-- v2026-04-08o -->
+<!-- v2026-04-08p -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2543,7 +2543,7 @@ async function readDocumentoIA(prefix,fileOverride){
     if(isPdf){
       text=await _extractPdfText(file,stEl);
     } else {
-      text=await _ocrImage(file);
+      text=await _ocrImage(file,stEl);
     }
     if(!text||text.trim().length<10) throw new Error('Não foi possível extrair texto do documento. Verifique se é legível.');
     console.log('[LUMA-DOC] Arquivo:', file.name);
@@ -2620,22 +2620,38 @@ async function _extractPdfText(file,stEl){
     canvas.width=viewport.width;canvas.height=viewport.height;
     await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
     const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
-    const ocrText=await _ocrImage(blob);
+    const ocrText=await _ocrImage(blob,stEl);
     return (text+'\n'+ocrText).trim();
   }
   return text;
 }
 
 // ── OCR de imagem via Tesseract.js ──
-async function _ocrImage(file){
+async function _ocrImage(file,stEl){
   if(!window.Tesseract){
+    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Baixando motor OCR (primeira vez ~15MB)…';
     await new Promise((res,rej)=>{
       const s=document.createElement('script');
       s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-      s.onload=res;s.onerror=rej;document.head.appendChild(s);
+      s.onload=res;s.onerror=()=>rej(new Error('Falha ao carregar Tesseract.js'));
+      document.head.appendChild(s);
     });
   }
-  const result=await window.Tesseract.recognize(file,'por',{logger:()=>{}});
+  // Timeout de 90 segundos para o OCR
+  const timeoutMs=90000;
+  const ocrPromise=window.Tesseract.recognize(file,'por',{
+    logger(m){
+      if(!stEl)return;
+      if(m.status==='loading tesseract core'||m.status==='initializing tesseract')
+        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Inicializando OCR…`;
+      else if(m.status==='loading language traineddata')
+        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Carregando dicionário OCR… ${Math.round((m.progress||0)*100)}%`;
+      else if(m.status==='recognizing text')
+        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Lendo imagem… ${Math.round((m.progress||0)*100)}%`;
+    }
+  });
+  const timeoutPromise=new Promise((_,rej)=>setTimeout(()=>rej(new Error('OCR excedeu 90 segundos. Tente um PDF com texto digital.')),timeoutMs));
+  const result=await Promise.race([ocrPromise,timeoutPromise]);
   return result.data.text||'';
 }
 
@@ -2704,11 +2720,17 @@ function _parseDocText(raw,filename){
     if(c2)r.cep=c2[1]+'-'+c2[2];
   }
 
-  // ── Endereço + Número (busca no bloco do cliente) ──
-  // Padrão: "RUA SANTA CATARINA 908 AP 1001" — logradouro sem vírgula até o número
-  const endRe=/\b(rua|av\.?|avenida|alameda|travessa|estrada|rod\.?|rodovia|pca\.?|pra[cç]a)\s+([A-Za-z\u00C0-\u00FF][^,;\n\d]{2,48}?)\s+n?[°º]?\s*(\d{1,5}(?:\s*(?:ap|apto|apto\.|bloco|bl|casa|cj|lote)\s*[\w\-]{0,20})?)/i;
+  // ── Endereço + Número ──
+  // Logradouros aceitos: rua, av, avenida, alameda, al, travessa, tv, estrada, rodovia, rod, praça, pça,
+  //   viela, beco, largo, setor, quadra, qd, sqn, sqs, conjunto, cj, loteamento, lot, jardim, jd
+  const _logTipos='rua|av\\.?|avenida|alameda|al\\.?|travessa|tv\\.?|estrada|est\\.?|rodovia|rod\\.?|pra[cç]a|p[cç]a\\.?|viela|beco|largo|setor|set\\.?|quadra|qd\\.?|sqn|sqs|conjunto|cj\\.?|loteamento|lot\\.?|jardim|jd\\.?|col[oô]nia|s[ií]tio|ch[áa]cara|fazenda';
+  const endRe=new RegExp('\\b('+_logTipos+')\\s+([A-Za-z\\u00C0-\\u00FF][^,;\\n\\d]{2,50}?)\\s+n?[°º]?\\s*(\\d{1,5}(?:[\\s\\/](?:ap|apto|apto\\.|bloco|bl|casa|cj|lote|sl|sala|andar|and|ap\\.?)\\s*[\\w\\-]{0,20})?)','i');
   const em=pre.match(endRe)||f.match(endRe);
-  if(em){r.endereco=(em[1]+' '+em[2]).trim().replace(/\s+/g,' ');r.numero=em[3].trim();}
+  if(em){
+    r.endereco=(em[1]+' '+em[2]).trim().replace(/\s+/g,' ');
+    // Separa número do complemento (ex: "908 AP 1001" → numero="908", complemento já vai junto)
+    r.numero=em[3].trim().replace(/\s+/g,' ');
+  }
 
   // ── Bairro: texto entre o fim do endereço e o CEP no bloco do cliente ──
   if(em&&r.cep){
