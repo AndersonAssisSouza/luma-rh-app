@@ -1,4 +1,4 @@
-<!-- v2026-04-09l -->
+<!-- v2026-04-09m -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2717,13 +2717,17 @@ async function _ocrImage(blob,stEl){
   }
   throw new Error('OCR não conseguiu extrair texto da imagem');
 }
-// Envia PDF diretamente ao OCR.space (sem renderizar canvas)
+// Envia PDF como base64 ao OCR.space (evita CORS issues com file upload)
 async function _ocrPdf(pdfBlob,stEl){
   const pdfKB=Math.round(pdfBlob.size/1024);
+  console.log(`[LUMA-DOC] _ocrPdf chamado, ${pdfKB}KB`);
+  // Converte PDF → base64 data URL
+  const b64=await new Promise(res=>{const fr=new FileReader();fr.onloadend=()=>res(fr.result);fr.readAsDataURL(pdfBlob);});
+  console.log(`[LUMA-DOC] PDF base64: ${Math.round(b64.length/1024)}KB`);
   for(const engine of ['2','1']){
     const fd=new FormData();
     fd.append('apikey',_OCR_KEY);
-    fd.append('file',pdfBlob,'document.pdf');
+    fd.append('base64Image',b64);
     fd.append('language','por');
     fd.append('isOverlayRequired','false');
     fd.append('OCREngine',engine);
@@ -2733,11 +2737,13 @@ async function _ocrPdf(pdfBlob,stEl){
     const ctrl=new AbortController();
     const tid=setTimeout(()=>ctrl.abort(),60000);
     try{
+      console.log(`[LUMA-DOC] Enviando PDF base64 para OCR engine ${engine}...`);
       const resp=await fetch('https://api.ocr.space/parse/image',{method:'POST',body:fd,signal:ctrl.signal});
       clearTimeout(tid);
+      console.log(`[LUMA-DOC] OCR PDF engine ${engine} HTTP ${resp.status}`);
       if(!resp.ok){console.warn(`[LUMA-DOC] OCR PDF engine ${engine} HTTP ${resp.status}`);continue;}
       const j=await resp.json();
-      console.log(`[LUMA-DOC] OCR PDF engine ${engine}:`,JSON.stringify(j).slice(0,500));
+      console.log(`[LUMA-DOC] OCR PDF engine ${engine} resposta:`,JSON.stringify(j).slice(0,500));
       if(j.IsErroredOnProcessing){console.warn(`[LUMA-DOC] OCR PDF engine ${engine} erro:`,j.ErrorMessage);continue;}
       const txt=(j.ParsedResults||[]).map(r=>r.ParsedText||'').join('\n');
       if(txt.trim().length>20){
