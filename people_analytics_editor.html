@@ -1,4 +1,4 @@
-<!-- v2026-04-08r -->
+<!-- v2026-04-08s -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2611,12 +2611,11 @@ async function _extractPdfText(file,stEl){
   // (texto longo = PDF digital; texto curto = só cabeçalhos = imagem embedida)
   const hasCpf=/\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2}/.test(text);
   const hasDate=/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(text);
-  const hasRichText=text.replace(/\s/g,'').length>300; // texto suficiente = PDF digital
   console.log('[LUMA-OCR] hasCpf='+hasCpf+' hasDate='+hasDate+' chars='+text.replace(/\s/g,'').length);
-  if(!hasCpf&&!hasDate&&!hasRichText){
+  if(!hasCpf&&!hasDate){
     if(stEl) stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — aplicando OCR… aguarde.';
     const page=await pdf.getPage(1);
-    const viewport=page.getViewport({scale:2.5});
+    const viewport=page.getViewport({scale:2.0});
     const canvas=document.createElement('canvas');
     canvas.width=viewport.width;canvas.height=viewport.height;
     await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
@@ -2627,33 +2626,44 @@ async function _extractPdfText(file,stEl){
   return text;
 }
 
-// ── OCR de imagem via Tesseract.js ──
+// ── OCR de imagem via Tesseract.js v4 ──
 async function _ocrImage(file,stEl){
   if(!window.Tesseract){
-    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Baixando motor OCR (primeira vez ~15MB)…';
+    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Carregando motor OCR…';
     await new Promise((res,rej)=>{
       const s=document.createElement('script');
-      s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+      s.src='https://unpkg.com/tesseract.js@4/dist/tesseract.min.js';
       s.onload=res;s.onerror=()=>rej(new Error('Falha ao carregar Tesseract.js'));
       document.head.appendChild(s);
     });
   }
-  // Timeout de 30 segundos para o OCR
-  const timeoutMs=30000;
-  const ocrPromise=window.Tesseract.recognize(file,'por',{
-    logger(m){
-      if(!stEl)return;
-      if(m.status==='loading tesseract core'||m.status==='initializing tesseract')
-        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Inicializando OCR…`;
-      else if(m.status==='loading language traineddata')
-        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Carregando dicionário OCR… ${Math.round((m.progress||0)*100)}%`;
-      else if(m.status==='recognizing text')
-        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Lendo imagem… ${Math.round((m.progress||0)*100)}%`;
-    }
-  });
-  const timeoutPromise=new Promise((_,rej)=>setTimeout(()=>rej(new Error('OCR demorou demais (>30s). Use um PDF digital ou escaneie com melhor resolução.')),timeoutMs));
-  const result=await Promise.race([ocrPromise,timeoutPromise]);
-  return result.data.text||'';
+  const timeoutMs=60000;
+  let worker;
+  const ocrPromise=(async()=>{
+    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Inicializando OCR…';
+    worker=await window.Tesseract.createWorker('por',1,{
+      workerPath:'https://unpkg.com/tesseract.js@4/dist/worker.min.js',
+      langPath:'https://tessdata.projectnaptha.com/4.0.0',
+      corePath:'https://unpkg.com/tesseract.js-core@4/tesseract-core-simd-lstm.wasm.js',
+      logger(m){
+        if(!stEl)return;
+        if(m.status==='loading tesseract core')
+          stEl.innerHTML='<span style="color:var(--accent)">⏳</span> OCR: carregando…';
+        else if(m.status==='loading language traineddata')
+          stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR: dicionário ${Math.round((m.progress||0)*100)}%`;
+        else if(m.status==='recognizing text')
+          stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR: lendo imagem ${Math.round((m.progress||0)*100)}%`;
+      }
+    });
+    const {data:{text}}=await worker.recognize(file);
+    await worker.terminate();
+    return text||'';
+  })();
+  const timeoutPromise=new Promise((_,rej)=>setTimeout(async()=>{
+    try{if(worker)await worker.terminate();}catch(e){}
+    rej(new Error('OCR demorou mais de 60s. Prefira PDF digital.'));
+  },timeoutMs));
+  return await Promise.race([ocrPromise,timeoutPromise]);
 }
 
 // ── Parser de texto para campos de documentos brasileiros ──
