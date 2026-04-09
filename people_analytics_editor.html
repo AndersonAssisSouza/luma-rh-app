@@ -1,4 +1,4 @@
-<!-- v2026-04-08u -->
+<!-- v2026-04-08v -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2566,11 +2566,6 @@ async function readDocumentoIA(prefix,fileOverride){
     } else if(Object.keys(data).filter(k=>data[k]).length>0){
       stEl.style.color='var(--muted)';
       stEl.innerHTML='ℹ️ Todos os campos detectados já estavam preenchidos com os mesmos valores. '+_diagBtn;
-    } else if(window._pdfForOcr){
-      // PDF com imagem — oferecer OCR manual
-      stEl.style.color='var(--warn)';
-      stEl.innerHTML='📄 PDF com imagem detectado. Nenhum campo reconhecido no texto digital.'
-        +'<br><button onclick="_runOcrManual(\''+prefix+'\')" style="margin-top:6px;padding:4px 12px;border-radius:6px;border:1px solid var(--accent);background:var(--bg2);color:var(--accent);cursor:pointer;font-size:12px">🔍 Tentar leitura por OCR (pode demorar)</button>';
     } else {
       stEl.style.color='var(--warn)';
       stEl.innerHTML='⚠️ Texto extraído mas nenhum campo reconhecido. '+_diagBtn;
@@ -2620,50 +2615,42 @@ async function _extractPdfText(file,stEl){
   const hasDate=/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(text);
   console.log('[LUMA] hasCpf='+hasCpf+' hasDate='+hasDate+' chars='+text.replace(/\s/g,'').length);
   if(!hasCpf&&!hasDate){
-    // Salva o PDF para OCR posterior (se usuário clicar no botão)
-    window._pdfForOcr={pdf,text};
+    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem — iniciando OCR…';
+    const page=await pdf.getPage(1);
+    const viewport=page.getViewport({scale:2.0});
+    const canvas=document.createElement('canvas');
+    canvas.width=viewport.width;canvas.height=viewport.height;
+    await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+    const ocrText=await _ocrImage(blob,stEl);
+    return (text+'\n'+ocrText).trim();
   }
   return text;
 }
 
-// ── OCR de imagem via Tesseract.js v4 ──
+// ── OCR de imagem via Tesseract.js v5 ──
 async function _ocrImage(file,stEl){
   if(!window.Tesseract){
     if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Carregando motor OCR…';
     await new Promise((res,rej)=>{
       const s=document.createElement('script');
-      s.src='https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js';
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js';
       s.onload=res;s.onerror=()=>rej(new Error('Falha ao carregar Tesseract.js'));
       document.head.appendChild(s);
     });
   }
-  const timeoutMs=60000;
-  let worker;
-  const ocrPromise=(async()=>{
-    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Inicializando OCR…';
-    worker=await window.Tesseract.createWorker('por',1,{
-      workerPath:'https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/worker.min.js',
-      langPath:'https://cdn.jsdelivr.net/npm/@tesseract.js-data/por/dist/4.0.0_best_int',
-      corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@4/tesseract-core-simd-lstm.wasm.js',
-      logger(m){
-        if(!stEl)return;
-        if(m.status==='loading tesseract core')
-          stEl.innerHTML='<span style="color:var(--accent)">⏳</span> OCR: carregando…';
-        else if(m.status==='loading language traineddata')
-          stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR: dicionário ${Math.round((m.progress||0)*100)}%`;
-        else if(m.status==='recognizing text')
-          stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR: lendo imagem ${Math.round((m.progress||0)*100)}%`;
-      }
-    });
-    const {data:{text}}=await worker.recognize(file);
-    await worker.terminate();
-    return text||'';
-  })();
-  const timeoutPromise=new Promise((_,rej)=>setTimeout(async()=>{
-    try{if(worker)await worker.terminate();}catch(e){}
-    rej(new Error('OCR demorou mais de 60s. Prefira PDF digital.'));
-  },timeoutMs));
-  return await Promise.race([ocrPromise,timeoutPromise]);
+  const result=await window.Tesseract.recognize(file,'por',{
+    logger(m){
+      if(!stEl)return;
+      if(m.status==='loading tesseract core'||m.status==='initializing tesseract')
+        stEl.innerHTML='<span style="color:var(--accent)">⏳</span> OCR: inicializando…';
+      else if(m.status==='loading language traineddata')
+        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR: carregando dados… ${Math.round((m.progress||0)*100)}%`;
+      else if(m.status==='recognizing text')
+        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR: lendo imagem… ${Math.round((m.progress||0)*100)}%`;
+    }
+  });
+  return result.data.text||'';
 }
 
 // ── Parser de texto para campos de documentos brasileiros ──
@@ -3000,41 +2987,6 @@ function _applyDocConflicts(p,data,keys){
   const {filled}=_fillFormFromDoc(data,p,keys);
   const stEl=$(p+'DocStatus');
   if(stEl)stEl.innerHTML=`✅ <strong>${filled} campo(s) atualizado(s)</strong> com os dados selecionados.`;
-}
-async function _runOcrManual(prefix){
-  const stEl=$(prefix+'DocStatus');
-  const saved=window._pdfForOcr;
-  if(!saved){stEl.innerHTML='❌ Nenhum PDF com imagem em memória.';return;}
-  window._pdfForOcr=null;
-  try{
-    stEl.style.color='var(--text)';
-    stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Preparando imagem…';
-    const page=await saved.pdf.getPage(1);
-    const viewport=page.getViewport({scale:2.0});
-    const canvas=document.createElement('canvas');
-    canvas.width=viewport.width;canvas.height=viewport.height;
-    await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
-    const ocrText=await _ocrImage(blob,stEl);
-    const fullText=(saved.text+'\n'+ocrText).trim();
-    window._docRawText=fullText;
-    const data=_parseDocText(fullText,window._docRawFile||'');
-    console.log('[LUMA-OCR] resultado:', JSON.stringify(data,null,2));
-    const {filled,conflicts}=_fillFormFromDoc(data,prefix);
-    const _diagBtn='<button onclick="_showDocDiag()" style="display:inline-block;margin-top:6px;font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);cursor:pointer;color:var(--muted)">🔍 Ver texto extraído</button>';
-    if(filled>0||conflicts.length>0){
-      stEl.style.color='var(--ok)';
-      const msg=filled>0?`✅ OCR: ${filled} campo(s) preenchido(s). `:'📋 OCR: confirme os campos: ';
-      stEl.innerHTML=msg+(conflicts.length?_renderConflictUI(conflicts,data,prefix):'')+' '+_diagBtn;
-      if(filled>0)switchColabTab(0,prefix);
-    }else{
-      stEl.style.color='var(--warn)';
-      stEl.innerHTML='⚠️ OCR concluído mas nenhum campo reconhecido. '+_diagBtn;
-    }
-  }catch(e){
-    stEl.style.color='var(--danger)';
-    stEl.innerHTML='❌ OCR falhou: '+esc(e.message);
-  }
 }
 function _showDocDiag(){
   const txt=window._docRawText||'(sem texto)';
