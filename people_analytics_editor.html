@@ -1,4 +1,4 @@
-<!-- v2026-04-08w -->
+<!-- v2026-04-08x -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -937,6 +937,7 @@ nav.legacy{display:none!important;}
         <div class="fgrp"><div class="flbl">Gênero</div>
           <select class="fsel" id="eGenero"><option value="">Não informado</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="NB">Não-binário</option><option value="O">Outro</option><option value="PI">Prefiro não informar</option></select>
         </div>
+        <div class="fgrp"><div class="flbl">Nacionalidade</div><input class="fi" id="eNacionalidade" placeholder="Ex: Brasileira"></div>
         <div class="fdiv"></div><div class="fsec">Documentos</div>
         <div class="fgrp"><div class="flbl">CPF</div><input class="fi" id="eCpf" placeholder="000.000.000-00"></div>
         <div class="fgrp"><div class="flbl">RG</div><input class="fi" id="eRg" placeholder="00.000.000-0"></div>
@@ -1086,6 +1087,7 @@ nav.legacy{display:none!important;}
         <div class="fgrp"><div class="flbl">Gênero</div>
           <select class="fsel" id="nGenero"><option value="">Não informado</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="NB">Não-binário</option><option value="O">Outro</option><option value="PI">Prefiro não informar</option></select>
         </div>
+        <div class="fgrp"><div class="flbl">Nacionalidade</div><input class="fi" id="nNacionalidade" placeholder="Ex: Brasileira"></div>
         <div class="fdiv"></div><div class="fsec">Documentos</div>
         <div class="fgrp"><div class="flbl">CPF</div><input class="fi" id="nCpf" placeholder="000.000.000-00"></div>
         <div class="fgrp"><div class="flbl">RG</div><input class="fi" id="nRg" placeholder="00.000.000-0"></div>
@@ -1424,6 +1426,7 @@ function _sbToExcel(r){
     EMERGENCIA_NOME:r.emergencia_nome, EMERGENCIA_TELEFONE:r.emergencia_telefone, EMERGENCIA_PARENTESCO:r.emergencia_parentesco,
     NASC_LOCAL:dc.nasc_local||'', NASC_UF:dc.nasc_uf||'',
     FILIACAO_PAI:dc.filiacao_pai||'', FILIACAO_MAE:dc.filiacao_mae||'',
+    NACIONALIDADE:dc.nacionalidade||'',
     MATRICULA:r.matricula, JORNADA_TRABALHO:r.jornada_trabalho, DESCRICAO_FUNCAO:r.descricao_funcao,
     BANCO:r.banco, AGENCIA:r.agencia, CONTA_BANCARIA:r.conta_bancaria, TIPO_CONTA:r.tipo_conta, SEGURO_VIDA:r.seguro_vida,
     DADOS_COMPLEMENTARES:dc,
@@ -1935,6 +1938,7 @@ function openEditColab(r){
   $('eNome').value=r.NOME||'';
   $('eNasc').value=iso(r.DATA_NASCIMENTO)||'';
   setS('eGenero',r.GENERO||'');
+  $('eNacionalidade').value=r.NACIONALIDADE||'';
   $('eCpf').value=r.CPF||''; $('eRg').value=r.RG||'';
   $('ePis').value=r.PIS_PASEP||''; $('eCtps').value=r.CTPS||'';
   $('eTitulo').value=r.TITULO_ELEITOR||'';
@@ -2006,6 +2010,7 @@ async function saveEditColab(){
     engajamento:$('eEngajamento').value||null, obs_gerais:$('eObsGerais').value||null,
     nasc_local:$('eNascLocal').value||null, nasc_uf:$('eNascUf').value||null,
     filiacao_pai:$('eFiliacao1').value||null, filiacao_mae:$('eFiliacao2').value||null,
+    nacionalidade:$('eNacionalidade').value||null,
   };
   const campos=_excelToSb({
     NOME:$('eNome').value, EMAIL_CORPORATIVO:$('eEmail').value.trim()||null,
@@ -2423,6 +2428,7 @@ async function saveNewColab(){
       engajamento:$('nEngajamento').value||null, obs_gerais:$('nObsGerais').value||null,
       nasc_local:$('nNascLocal').value||null, nasc_uf:$('nNascUf').value||null,
       filiacao_pai:$('nFiliacao1').value||null, filiacao_mae:$('nFiliacao2').value||null,
+      nacionalidade:$('nNacionalidade').value||null,
     };
     const sbRow={
       tenant_id:tenantId,
@@ -2785,6 +2791,16 @@ function _parseDocText(raw,filename){
                ||raw.match(/nome\s+da\s+m[ãa]e[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,60}?)(?=\n|$)/im);
   if(_nomeMaeM&&!r.filiacao2)r.filiacao2=_nomeMaeM[1].trim().replace(/\s+/g,' ');
 
+  // ── Nacionalidade ──
+  const nacM=f.match(/nacionalidade[:\s]+([A-Za-záéíóúàâêôãõçÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÁÉÍÓÚÀÂÊÔÃÕÇ\s]{2,30}?)(?=\s{2,}|\n|CPF|Data|Sexo|$)/i)
+             ||raw.match(/nacionalidade[:\s]+([A-Za-záéíóúàâêôãõçÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÁÉÍÓÚÀÂÊÔÃÕÇ\s]{2,30}?)(?=\n|$)/im);
+  if(nacM)r.nacionalidade=nacM[1].trim().replace(/\s+/g,' ');
+  // CNH: "Nacionalidade: BRASILEIRO" (em maiúsculas)
+  if(!r.nacionalidade){
+    const nacCnh=f.match(/\bbrasileiro[a]?\b/i);
+    if(nacCnh)r.nacionalidade='Brasileira';
+  }
+
   // ── PIS/PASEP: 000.00000.00-0 ──
   const pisM=f.match(/\b(\d{3}[\.\s]?\d{5}[\.\s]?\d{2}[\-\s]?\d)\b/);
   if(pisM){const p=pisM[1].replace(/\D/g,'');if(p.length===11)r.pis_pasep=p.replace(/(\d{3})(\d{5})(\d{2})(\d)/,'$1.$2.$3-$4');}
@@ -2947,6 +2963,7 @@ const _DOC_FIELD_MAP=[
   {k:'cidade',     s:'Cidade',    lbl:'Cidade residência',t:'text'},
   {k:'uf',         s:'Uf',        lbl:'UF residência',    t:'sel'},
   {k:'genero',     s:'Genero',    lbl:'Gênero',           t:'sel'},
+  {k:'nacionalidade',s:'Nacionalidade',lbl:'Nacionalidade', t:'text'},
   {k:'cidade_natal',s:'NascLocal',lbl:'Município natal',  t:'text'},
   {k:'uf_natal',   s:'NascUf',    lbl:'UF natal',         t:'sel'},
   {k:'filiacao1',  s:'Filiacao1', lbl:'Nome do pai',      t:'text'},
