@@ -1,4 +1,4 @@
-<!-- v2026-04-09w -->
+<!-- v2026-04-09x -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2877,32 +2877,36 @@ function _parseDocText(raw,filename){
   }
 
   // ── Filiação ──
-  // CNH OCR: "* FILIAÇÃO\nGERALDO MAGELA DE SOUZA\nGILDA NATIVIDADE ASSIS SOUZA"
-  // Busca no raw (com \n) — [: *]* NÃO inclui \s (que consome \n)
-  const _filRawM=raw.match(/filia[çc][aã]o[: *]*\n\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,60}?)\s*\n\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,60})/im);
-  if(_filRawM){
-    r.filiacao1=_filRawM[1].trim().replace(/\s+/g,' ');
-    r.filiacao2=_filRawM[2].trim().replace(/\s+/g,' ');
-  }
-  // Fallback: flat text com 2+ espaços ou \n entre os dois nomes
-  if(!r.filiacao1&&!r.filiacao2){
-    const filRe=/filia[çc][aã]o[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,50}?)(?:\s{2,}|\n)([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,50})/i;
-    const fm=f.match(filRe)||raw.match(filRe);
-    if(fm){r.filiacao1=fm[1].trim().replace(/\s+/g,' ');r.filiacao2=fm[2].trim().replace(/\s+/g,' ');}
+  // Método principal: busca linha-por-linha no raw por "FILIAÇÃO" e pega as 2 linhas seguintes
+  const _rawLines=raw.split('\n').map(l=>l.trim()).filter(l=>l);
+  for(let _fi=0;_fi<_rawLines.length;_fi++){
+    if(/filia/i.test(_rawLines[_fi])){
+      const _n1=_rawLines[_fi+1]||'';
+      const _n2=_rawLines[_fi+2]||'';
+      // Linha seguinte deve ser nome (começa com maiúscula, >3 chars, sem números)
+      if(_n1.length>3&&/^[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]/.test(_n1)&&!/\d/.test(_n1)){
+        if(!r.filiacao1)r.filiacao1=_n1.replace(/\s+/g,' ');
+        if(_n2.length>3&&/^[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]/.test(_n2)&&!/\d/.test(_n2)){
+          if(!r.filiacao2)r.filiacao2=_n2.replace(/\s+/g,' ');
+        }
+        break;
+      }
+    }
   }
   // CTPS Digital: valor vem NA LINHA ANTERIOR ao label
-  // Ex raw: "GILDA NATIVIDADE ASSIS SOUZA\nNome da mãe"
-  const _maeRevM=raw.match(/([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)\s*\n\s*Nome\s+da\s+m[ãa]e\b/im);
-  if(_maeRevM&&!r.filiacao2)r.filiacao2=_maeRevM[1].trim().replace(/\s+/g,' ');
-  const _paiRevM=raw.match(/([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)\s*\n\s*Nome\s+do\s+pai\b/im);
-  if(_paiRevM&&!r.filiacao1)r.filiacao1=_paiRevM[1].trim().replace(/\s+/g,' ');
-  // Fallback: label antes do valor
-  const _nomePaiM=f.match(/nome\s+do\s+pai[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)(?=\s{2,}|\bCPF\b|\bData\b|\bSexo\b|\bNacionalidade\b|$)/i)
-               ||raw.match(/nome\s+do\s+pai[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)(?=\n|$)/im);
-  if(_nomePaiM&&!r.filiacao1)r.filiacao1=_nomePaiM[1].trim().replace(/\s+/g,' ');
-  const _nomeMaeM=f.match(/nome\s+da\s+m[ãa]e[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)(?=\s{2,}|\bCPF\b|\bData\b|\bSexo\b|\bNacionalidade\b|$)/i)
-               ||raw.match(/nome\s+da\s+m[ãa]e[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)(?=\n|$)/im);
-  if(_nomeMaeM&&!r.filiacao2)r.filiacao2=_nomeMaeM[1].trim().replace(/\s+/g,' ');
+  for(let _fi=0;_fi<_rawLines.length;_fi++){
+    const _L=_rawLines[_fi];
+    if(/^Nome\s+da\s+m[ãa]e$/i.test(_L)){
+      const _prev=_rawLines[_fi-1]||'';
+      if(_prev.length>3&&/^[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]/.test(_prev)&&!/\d/.test(_prev)&&!r.filiacao2)
+        r.filiacao2=_prev.replace(/\s+/g,' ');
+    }
+    if(/^Nome\s+do\s+pai$/i.test(_L)){
+      const _prev=_rawLines[_fi-1]||'';
+      if(_prev.length>3&&/^[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]/.test(_prev)&&!/\d/.test(_prev)&&!r.filiacao1)
+        r.filiacao1=_prev.replace(/\s+/g,' ');
+    }
+  }
 
   // ── Nacionalidade ──
   const nacM=f.match(/nacionalidade[:\s]+([A-Za-záéíóúàâêôãõçÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÁÉÍÓÚÀÂÊÔÃÕÇ\s]{2,30}?)(?=\s{2,}|\n|CPF|Data|Sexo|$)/i)
