@@ -1,4 +1,4 @@
-<!-- v2026-04-09b -->
+<!-- v2026-04-09c -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2601,7 +2601,17 @@ async function _extractPdfText(file,stEl){
     const page=await pdf.getPage(i);
     // includeMarkedContent captura campos de formulário e conteúdo marcado (CNH digital SERPRO)
     const content=await page.getTextContent({includeMarkedContent:true,disableNormalization:false});
-    text+=content.items.map(it=>it.str||'').filter(s=>s.trim()).join(' ')+'\n';
+    // Preserva quebras de linha baseadas em coordenada Y (transform[5])
+    // Necessário para filiação CNH, CTPS Digital (labels/valores em linhas separadas)
+    let _pt='',_ly=null;
+    for(const it of content.items){
+      const s=(it.str||'').trim();if(!s)continue;
+      const y=it.transform?it.transform[5]:null;
+      if(_ly!==null&&y!==null&&Math.abs(_ly-y)>5){_pt=_pt.trimEnd()+'\n';}
+      else if(_pt&&!_pt.endsWith('\n')){_pt+=' ';}
+      _pt+=s;if(y!==null)_ly=y;
+    }
+    text+=_pt.trimEnd()+'\n';
     // Fallback: valores de anotações/AcroForm
     try{
       const annots=await page.getAnnotations();
@@ -2865,17 +2875,29 @@ function _parseDocText(raw,filename){
     delete r.telefone;
   }
   if(_isCtps){
-    // CTPS: só extrai CPF, data nascimento, sexo/gênero, nacionalidade, filiação, PIS
-    delete r.nome; delete r.rg;
+    // CTPS: extrai nome, CPF, data nascimento, sexo/gênero, nacionalidade, filiação, PIS
+    // Não extrai: RG, endereço, cidade natal (não constam na CTPS)
+    delete r.rg;
     delete r.cidade; delete r.uf; delete r.cep;
     delete r.endereco; delete r.numero; delete r.bairro;
     delete r.cidade_natal; delete r.uf_natal;
     delete r.telefone; delete r.email;
-    // CTPS Digital: label e valor ficam em linhas separadas
-    // Percorre linha a linha para extrair campos com certeza
+    // CTPS Digital: label e valor ficam em linhas separadas (extração por coordenada Y)
     const _ctpsLines=raw.split('\n').map(l=>l.trim()).filter(l=>l);
     for(let _i=0;_i<_ctpsLines.length;_i++){
-      const _L=_ctpsLines[_i], _N=_ctpsLines[_i+1]||'';
+      const _L=_ctpsLines[_i], _N=_ctpsLines[_i+1]||'', _N2=_ctpsLines[_i+2]||'';
+      // "Nome civil" → próxima linha pode ser "CPF" (label), depois o nome
+      // OU: "Nome civil CPF" na mesma linha → próxima é o nome
+      if(/^Nome\s+civil$/i.test(_L)){
+        if(/^CPF$/i.test(_N)&&_N2&&/^[A-ZÁÉÍÓÚ]/.test(_N2)){
+          r.nome=_N2.replace(/\s+\d{3}[\.\d]+-\d{2}.*/,'').trim();
+        }else if(_N&&/^[A-ZÁÉÍÓÚ]/.test(_N)&&_N.length>4&&!/^\d/.test(_N)){
+          r.nome=_N.replace(/\s+\d{3}[\.\d]+-\d{2}.*/,'').trim();
+        }
+      }
+      if(/^Nome\s+civil\s+CPF$/i.test(_L)&&_N&&/^[A-ZÁÉÍÓÚ]/.test(_N)){
+        r.nome=_N.replace(/\s+\d{3}[\.\d]+-\d{2}.*/,'').trim();
+      }
       // "Data de nascimento" → próxima linha é DD/MM/YYYY
       if(/^Data\s+de\s+nascimento$/i.test(_L)){
         const _dm=_N.match(/(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/);
@@ -2890,8 +2912,10 @@ function _parseDocText(raw,filename){
         r.nacionalidade=_N.trim();
       }
     }
-    // Fallback sexo via flat text
+    // Fallback sexo/gênero via flat text
     if(!r.genero){const sexoM=f.match(/\bsexo[:\s]+([MF](?:asculino|eminino)?)\b/i);if(sexoM)r.genero=sexoM[1][0].toUpperCase()==='M'?'M':'F';}
+    // Fallback nome via flat: "Nome civil CPF NOME 042.694.716-97"
+    if(!r.nome){const _nf=f.match(/Nome\s+civil\s+(?:CPF\s+)?([A-ZÁÉÍÓÚ][A-Za-záéíóúàâêôãõçÇ\s]{4,60}?)\s+\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2}/i);if(_nf)r.nome=_nf[1].trim().replace(/\s+/g,' ');}
   }
   if(_isComprEnd){
     // Comprovante de endereço: só popula CEP, endereço, bairro, cidade, UF
