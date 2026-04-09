@@ -1,4 +1,4 @@
-<!-- v2026-04-08x -->
+<!-- v2026-04-08y -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2621,11 +2621,10 @@ async function _extractPdfText(file,stEl){
   const hasDate=/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(text);
   // CNH-e é sempre imagem: força OCR pelo nome do arquivo
   const _isCnhFile=/cnh|habilitac|motorista/i.test(file.name||'');
-  console.log('[LUMA] hasCpf='+hasCpf+' hasDate='+hasDate+' isCnhFile='+_isCnhFile);
   if(_isCnhFile||(!hasCpf&&!hasDate)){
-    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem — iniciando OCR…';
+    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — aplicando OCR… aguarde.';
     const page=await pdf.getPage(1);
-    const viewport=page.getViewport({scale:2.0});
+    const viewport=page.getViewport({scale:2.5});
     const canvas=document.createElement('canvas');
     canvas.width=viewport.width;canvas.height=viewport.height;
     await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
@@ -2636,28 +2635,31 @@ async function _extractPdfText(file,stEl){
   return text;
 }
 
-// ── OCR de imagem via Tesseract.js v5 ──
+// ── OCR de imagem via Tesseract.js v5 (jsdelivr) ──
 async function _ocrImage(file,stEl){
   if(!window.Tesseract){
-    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Carregando motor OCR…';
+    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Baixando motor OCR (primeira vez ~15MB)…';
     await new Promise((res,rej)=>{
       const s=document.createElement('script');
-      s.src='https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js';
+      s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
       s.onload=res;s.onerror=()=>rej(new Error('Falha ao carregar Tesseract.js'));
       document.head.appendChild(s);
     });
   }
-  const result=await window.Tesseract.recognize(file,'por',{
+  const timeoutMs=120000;
+  const ocrPromise=window.Tesseract.recognize(file,'por',{
     logger(m){
       if(!stEl)return;
       if(m.status==='loading tesseract core'||m.status==='initializing tesseract')
-        stEl.innerHTML='<span style="color:var(--accent)">⏳</span> OCR: inicializando…';
+        stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Inicializando OCR…';
       else if(m.status==='loading language traineddata')
-        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR: carregando dados… ${Math.round((m.progress||0)*100)}%`;
+        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Carregando dicionário OCR… ${Math.round((m.progress||0)*100)}%`;
       else if(m.status==='recognizing text')
-        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR: lendo imagem… ${Math.round((m.progress||0)*100)}%`;
+        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Lendo imagem… ${Math.round((m.progress||0)*100)}%`;
     }
   });
+  const timeoutPromise=new Promise((_,rej)=>setTimeout(()=>rej(new Error('OCR excedeu 2 minutos.')),timeoutMs));
+  const result=await Promise.race([ocrPromise,timeoutPromise]);
   return result.data.text||'';
 }
 
