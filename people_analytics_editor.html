@@ -1,4 +1,4 @@
-<!-- v2026-04-08q -->
+<!-- v2026-04-08r -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2607,11 +2607,13 @@ async function _extractPdfText(file,stEl){
       }
     }catch(e){/* ignora se não suportado */}
   }
-  // PDF baseado em imagem: detecta ausência de CPF E data → aciona OCR
-  // (form fields já foram lidos acima, então CNH digital não precisa de OCR)
+  // PDF baseado em imagem: só aciona OCR se não encontrou CPF, data E o texto é muito curto
+  // (texto longo = PDF digital; texto curto = só cabeçalhos = imagem embedida)
   const hasCpf=/\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2}/.test(text);
   const hasDate=/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(text);
-  if(!hasCpf&&!hasDate){
+  const hasRichText=text.replace(/\s/g,'').length>300; // texto suficiente = PDF digital
+  console.log('[LUMA-OCR] hasCpf='+hasCpf+' hasDate='+hasDate+' chars='+text.replace(/\s/g,'').length);
+  if(!hasCpf&&!hasDate&&!hasRichText){
     if(stEl) stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — aplicando OCR… aguarde.';
     const page=await pdf.getPage(1);
     const viewport=page.getViewport({scale:2.5});
@@ -2636,8 +2638,8 @@ async function _ocrImage(file,stEl){
       document.head.appendChild(s);
     });
   }
-  // Timeout de 90 segundos para o OCR
-  const timeoutMs=90000;
+  // Timeout de 30 segundos para o OCR
+  const timeoutMs=30000;
   const ocrPromise=window.Tesseract.recognize(file,'por',{
     logger(m){
       if(!stEl)return;
@@ -2649,7 +2651,7 @@ async function _ocrImage(file,stEl){
         stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Lendo imagem… ${Math.round((m.progress||0)*100)}%`;
     }
   });
-  const timeoutPromise=new Promise((_,rej)=>setTimeout(()=>rej(new Error('OCR excedeu 90 segundos. Tente um PDF com texto digital.')),timeoutMs));
+  const timeoutPromise=new Promise((_,rej)=>setTimeout(()=>rej(new Error('OCR demorou demais (>30s). Use um PDF digital ou escaneie com melhor resolução.')),timeoutMs));
   const result=await Promise.race([ocrPromise,timeoutPromise]);
   return result.data.text||'';
 }
