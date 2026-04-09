@@ -1,4 +1,4 @@
-<!-- v2026-04-09x -->
+<!-- v2026-04-09y -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2657,7 +2657,7 @@ async function _extractPdfText(file,stEl){
       if(!blob||blob.size<1000)throw new Error('Imagem renderizada vazia');
       if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR imagem ${blobKB}KB…`;
       const ocrText=await _ocrImage(blob,stEl);
-      window._docOcrDebug.step='ocr_ok';window._docOcrDebug.ocrLen=ocrText.length;window._docOcrDebug.ocrPreview=ocrText.slice(0,200);
+      window._docOcrDebug.step='ocr_ok';window._docOcrDebug.ocrLen=ocrText.length;window._docOcrDebug.ocrText=ocrText;
       console.log('[LUMA-DOC] OCR OK ('+ocrText.length+' chars):',ocrText.slice(0,300));
       return (text+'\n'+ocrText).trim();
     }catch(ocrErr){
@@ -2879,10 +2879,17 @@ function _parseDocText(raw,filename){
   // ── Filiação ──
   // Método principal: busca linha-por-linha no raw por "FILIAÇÃO" e pega as 2 linhas seguintes
   const _rawLines=raw.split('\n').map(l=>l.trim()).filter(l=>l);
+  window._docFilDebug={rawLineCount:_rawLines.length,filLines:[]};
   for(let _fi=0;_fi<_rawLines.length;_fi++){
     if(/filia/i.test(_rawLines[_fi])){
       const _n1=_rawLines[_fi+1]||'';
       const _n2=_rawLines[_fi+2]||'';
+      window._docFilDebug.filLines=[
+        {i:_fi,line:_rawLines[_fi]},
+        {i:_fi+1,line:_n1,len:_n1.length,startsUpper:/^[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]/.test(_n1),noDigits:!/\d/.test(_n1)},
+        {i:_fi+2,line:_n2,len:_n2.length,startsUpper:/^[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]/.test(_n2),noDigits:!/\d/.test(_n2)}
+      ];
+      console.log('[LUMA-DOC] Filiação debug:',JSON.stringify(window._docFilDebug.filLines));
       // Linha seguinte deve ser nome (começa com maiúscula, >3 chars, sem números)
       if(_n1.length>3&&/^[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]/.test(_n1)&&!/\d/.test(_n1)){
         if(!r.filiacao1)r.filiacao1=_n1.replace(/\s+/g,' ');
@@ -3213,7 +3220,8 @@ function _showDocDiag(){
   const od=window._docOcrDebug||{};
   const pdStr=Object.entries(pd).filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`).join('\n');
   const flStr=fl.join('\n');
-  const odStr=JSON.stringify(od,null,2);
+  const fd=window._docFilDebug||{};
+  const odStr=JSON.stringify({...od,filiacao:fd},null,2);
   const el=document.createElement('div');
   el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
   el.innerHTML='<div style="background:var(--bg);border-radius:10px;padding:20px;max-width:700px;width:95vw;max-height:80vh;display:flex;flex-direction:column;gap:10px;overflow-y:auto;">'
