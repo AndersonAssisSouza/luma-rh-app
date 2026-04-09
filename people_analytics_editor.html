@@ -1,4 +1,4 @@
-<!-- v2026-04-09t -->
+<!-- v2026-04-09u -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2874,11 +2874,20 @@ function _parseDocText(raw,filename){
     delete r.cidade;delete r.uf;delete r.cep;delete r.endereco;delete r.numero;delete r.bairro;
   }
 
-  // ── Filiação (CNH: label "FILIAÇÃO" seguido de dois nomes em linhas/sequência) ──
-  // IMPORTANTE: usar espaço literal ' ' no grupo de captura de nome (NÃO \s) para não cruzar linhas
-  const filRe=/filia[çc][aã]o[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,50}?)(?:\s{2,}|\n)([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,50})/i;
-  const fm=f.match(filRe)||raw.match(filRe);
-  if(fm){r.filiacao1=fm[1].trim().replace(/\s+/g,' ');r.filiacao2=fm[2].trim().replace(/\s+/g,' ');}
+  // ── Filiação ──
+  // CNH OCR: "FILIAÇÃO\nGERALDO MAGELA DE SOUZA\nGILDA NATIVIDADE ASSIS SOUZA"
+  // Busca no raw (com \n) primeiro — mais confiável que flat
+  const _filRawM=raw.match(/filia[çc][aã]o[:\s*]*\n\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,60}?)\s*\n\s*([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,60})$/im);
+  if(_filRawM){
+    r.filiacao1=_filRawM[1].trim().replace(/\s+/g,' ');
+    r.filiacao2=_filRawM[2].trim().replace(/\s+/g,' ');
+  }
+  // Fallback: flat text com 2+ espaços ou \n entre os dois nomes
+  if(!r.filiacao1&&!r.filiacao2){
+    const filRe=/filia[çc][aã]o[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,50}?)(?:\s{2,}|\n)([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{3,50})/i;
+    const fm=f.match(filRe)||raw.match(filRe);
+    if(fm){r.filiacao1=fm[1].trim().replace(/\s+/g,' ');r.filiacao2=fm[2].trim().replace(/\s+/g,' ');}
+  }
   // CTPS Digital: valor vem NA LINHA ANTERIOR ao label
   // Ex raw: "GILDA NATIVIDADE ASSIS SOUZA\nNome da mãe"
   const _maeRevM=raw.match(/([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)\s*\n\s*Nome\s+da\s+m[ãa]e\b/im);
