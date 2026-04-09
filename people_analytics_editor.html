@@ -1,4 +1,4 @@
-<!-- v2026-04-08v -->
+<!-- v2026-04-08w -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2613,8 +2613,10 @@ async function _extractPdfText(file,stEl){
   // Retorna o texto + flag para UI oferecer botão OCR ao usuário
   const hasCpf=/\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2}/.test(text);
   const hasDate=/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(text);
-  console.log('[LUMA] hasCpf='+hasCpf+' hasDate='+hasDate+' chars='+text.replace(/\s/g,'').length);
-  if(!hasCpf&&!hasDate){
+  // CNH-e é sempre imagem: força OCR pelo nome do arquivo
+  const _isCnhFile=/cnh|habilitac|motorista/i.test(file.name||'');
+  console.log('[LUMA] hasCpf='+hasCpf+' hasDate='+hasDate+' isCnhFile='+_isCnhFile);
+  if(_isCnhFile||(!hasCpf&&!hasDate)){
     if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem — iniciando OCR…';
     const page=await pdf.getPage(1);
     const viewport=page.getViewport({scale:2.0});
