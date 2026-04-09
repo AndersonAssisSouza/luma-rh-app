@@ -2642,24 +2642,54 @@ async function _extractPdfText(file,stEl){
     window._docOcrDebug.step='renderizando_canvas';window._docOcrDebug.pdfKB=pdfKB;
     if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Renderizando imagem do PDF…`;
     try{
-      // Renderiza a página do PDF para canvas → JPEG → OCR via _ocrImage
-      // NÃO envia o PDF direto (OCR.space bloqueia PDF base64 via CORS no browser)
       const pg=await pdf.getPage(1);
-      const vp=pg.getViewport({scale:3});
-      const cv=document.createElement('canvas');
-      cv.width=vp.width;cv.height=vp.height;
-      window._docOcrDebug.canvas=`${cv.width}x${cv.height}`;
-      await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
-      const blob=await new Promise(res=>cv.toBlob(res,'image/jpeg',0.92));
-      const blobKB=blob?Math.round(blob.size/1024):0;
-      window._docOcrDebug.step='enviando_ocr';window._docOcrDebug.imgKB=blobKB;
-      console.log(`[LUMA-DOC] Canvas ${cv.width}x${cv.height} → JPEG ${blobKB}KB`);
-      if(!blob||blob.size<1000)throw new Error('Imagem renderizada vazia');
-      if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR imagem ${blobKB}KB…`;
-      const ocrText=await _ocrImage(blob,stEl);
-      window._docOcrDebug.step='ocr_ok';window._docOcrDebug.ocrLen=ocrText.length;window._docOcrDebug.ocrText=ocrText;
-      console.log('[LUMA-DOC] OCR OK ('+ocrText.length+' chars):',ocrText.slice(0,300));
-      return (text+'\n'+ocrText).trim();
+      // CNH-e: escala 4 + divide em metade superior e inferior (2 OCR focados)
+      // Outros docs: escala 3 + página inteira
+      if(_isCnhFile){
+        const vp=pg.getViewport({scale:4});
+        const cv=document.createElement('canvas');
+        cv.width=vp.width;cv.height=vp.height;
+        window._docOcrDebug.canvas=`${cv.width}x${cv.height}`;
+        await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+        // Metade superior (nome, CPF, RG, data nascimento)
+        const midY=Math.floor(cv.height/2);
+        const topCv=document.createElement('canvas');
+        topCv.width=cv.width;topCv.height=midY;
+        topCv.getContext('2d').drawImage(cv,0,0,cv.width,midY,0,0,cv.width,midY);
+        // Metade inferior (filiação, endereço, validade)
+        const botCv=document.createElement('canvas');
+        botCv.width=cv.width;botCv.height=cv.height-midY;
+        botCv.getContext('2d').drawImage(cv,0,midY,cv.width,cv.height-midY,0,0,cv.width,cv.height-midY);
+        const topBlob=await new Promise(res=>topCv.toBlob(res,'image/jpeg',0.93));
+        const botBlob=await new Promise(res=>botCv.toBlob(res,'image/jpeg',0.93));
+        console.log(`[LUMA-DOC] CNH-e canvas ${cv.width}x${cv.height} → top ${Math.round((topBlob?.size||0)/1024)}KB + bot ${Math.round((botBlob?.size||0)/1024)}KB`);
+        if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR CNH-e parte 1/2…`;
+        // Engine 1 primeiro para CNH-e (melhor para imagens fotográficas)
+        const topText=topBlob?.size>1000?await _ocrImage(topBlob,null,['1','2']):'';
+        if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR CNH-e parte 2/2 (filiação)…`;
+        const botText=botBlob?.size>1000?await _ocrImage(botBlob,stEl,['1','2']):'';
+        const ocrText=(topText+'\n'+botText).trim();
+        window._docOcrDebug.step='ocr_ok';window._docOcrDebug.ocrLen=ocrText.length;window._docOcrDebug.ocrText=ocrText;
+        console.log('[LUMA-DOC] OCR CNH-e OK ('+ocrText.length+' chars):',ocrText.slice(0,400));
+        return (text+'\n'+ocrText).trim();
+      }else{
+        // Outros documentos: página completa escala 3
+        const vp=pg.getViewport({scale:3});
+        const cv=document.createElement('canvas');
+        cv.width=vp.width;cv.height=vp.height;
+        window._docOcrDebug.canvas=`${cv.width}x${cv.height}`;
+        await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+        const blob=await new Promise(res=>cv.toBlob(res,'image/jpeg',0.92));
+        const blobKB=blob?Math.round(blob.size/1024):0;
+        window._docOcrDebug.step='enviando_ocr';window._docOcrDebug.imgKB=blobKB;
+        console.log(`[LUMA-DOC] Canvas ${cv.width}x${cv.height} → JPEG ${blobKB}KB`);
+        if(!blob||blob.size<1000)throw new Error('Imagem renderizada vazia');
+        if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR imagem ${blobKB}KB…`;
+        const ocrText=await _ocrImage(blob,stEl);
+        window._docOcrDebug.step='ocr_ok';window._docOcrDebug.ocrLen=ocrText.length;window._docOcrDebug.ocrText=ocrText;
+        console.log('[LUMA-DOC] OCR OK ('+ocrText.length+' chars):',ocrText.slice(0,300));
+        return (text+'\n'+ocrText).trim();
+      }
     }catch(ocrErr){
       window._docOcrDebug.step='ocr_falhou';window._docOcrDebug.ocrErr=ocrErr.message;
       console.warn('[LUMA-DOC] OCR falhou:',ocrErr.message);
@@ -2680,7 +2710,8 @@ async function _ocrImage(blob,stEl){
   const b64Size=Math.round(b64.length/1024);
   console.log(`[LUMA-DOC] OCR imagem: ${b64Size}KB base64`);
   // Tenta Engine 2 primeiro (melhor para fontes modernas), fallback Engine 1
-  for(const engine of ['2','1']){
+  const _engineOrder=arguments[2]||['2','1'];
+  for(const engine of _engineOrder){
     const fd=new FormData();
     // apikey no body (não no header) para evitar CORS preflight
     fd.append('apikey',_OCR_KEY);
