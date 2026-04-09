@@ -1,4 +1,4 @@
-<!-- v2026-04-09n -->
+<!-- v2026-04-09o -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2630,24 +2630,25 @@ async function _extractPdfText(file,stEl){
     }catch(e){/* ignora */}
   }
   // CNH-e (SERPRO): texto contém apenas metadados de cert digital (sem CPF/dados biométricos)
-  // → Para CNH: OCR obrigatório se não há CPF no texto (datas do cert não contam)
-  // → Para outros docs: OCR só se não há CPF nem data
   const hasCpf=/\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2}/.test(text);
   const hasDate=/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(text);
   const _isCnhFile=file?.name&&/cnh|habilitacao|habilitação|motorista/i.test(file.name.toLowerCase());
   const _needsOcr=_isCnhFile?!hasCpf:(!hasCpf&&!hasDate);
+  // Debug: salva estado para diagnóstico
+  window._docOcrDebug={hasCpf,hasDate,isCnh:_isCnhFile,needsOcr:_needsOcr,fileName:file?.name,textLen:text.length,textPreview:text.slice(0,200)};
+  console.log('[LUMA-DOC] OCR check:',JSON.stringify(window._docOcrDebug));
   if(_needsOcr){
-    console.log('[LUMA-DOC] OCR necessário. hasCpf=',hasCpf,'hasDate=',hasDate,'isCnh=',_isCnhFile);
     const pdfKB=Math.round(file.size/1024);
-    if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> PDF com imagem (${pdfKB}KB) — enviando para OCR…`;
-    // IMPORTANTE: usar `file` diretamente (File extends Blob)
-    // NÃO usar `new Blob([ab])` — o ArrayBuffer `ab` foi consumido/detached pelo PDF.js
+    window._docOcrDebug.step='enviando_ocr';window._docOcrDebug.pdfKB=pdfKB;
+    if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> PDF com imagem (${pdfKB}KB) — enviando OCR…`;
     try{
       const ocrText=await _ocrPdf(file,stEl);
-      console.log('[LUMA-DOC] OCR texto obtido ('+ocrText.length+' chars):',ocrText.slice(0,500));
+      window._docOcrDebug.step='ocr_ok';window._docOcrDebug.ocrLen=ocrText.length;window._docOcrDebug.ocrPreview=ocrText.slice(0,200);
+      console.log('[LUMA-DOC] OCR OK ('+ocrText.length+' chars):',ocrText.slice(0,300));
       return (text+'\n'+ocrText).trim();
     }catch(ocrErr){
-      console.warn('[LUMA-DOC] OCR PDF falhou:',ocrErr.message);
+      window._docOcrDebug.step='ocr_falhou';window._docOcrDebug.ocrErr=ocrErr.message;
+      console.warn('[LUMA-DOC] OCR falhou:',ocrErr.message);
       if(stEl)stEl.innerHTML=`<span style="color:var(--warn)">⚠️</span> OCR falhou: ${ocrErr.message}`;
       return text;
     }
@@ -3176,18 +3177,22 @@ function _showDocDiag(){
   const fn=window._docRawFile||'';
   const pd=window._docParsedData||{};
   const fl=window._docFillLog||[];
+  const od=window._docOcrDebug||{};
   const pdStr=Object.entries(pd).filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`).join('\n');
   const flStr=fl.join('\n');
+  const odStr=JSON.stringify(od,null,2);
   const el=document.createElement('div');
   el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
-  el.innerHTML='<div style="background:var(--bg);border-radius:10px;padding:20px;max-width:700px;width:95vw;max-height:80vh;display:flex;flex-direction:column;gap:10px;">'
+  el.innerHTML='<div style="background:var(--bg);border-radius:10px;padding:20px;max-width:700px;width:95vw;max-height:80vh;display:flex;flex-direction:column;gap:10px;overflow-y:auto;">'
     +'<div style="display:flex;justify-content:space-between;align-items:center;"><b>Diagnóstico — '+esc(fn)+'</b><button onclick="this.closest(\'div[style*=fixed]\').remove()" style="font-size:18px;background:none;border:none;cursor:pointer;color:var(--muted)">×</button></div>'
+    +'<div style="font-size:11px;font-weight:bold;color:var(--danger)">Debug OCR:</div>'
+    +'<textarea readonly style="min-height:10vh;font-family:monospace;font-size:11px;background:#1a1a2e;border:1px solid var(--border);border-radius:6px;padding:8px;color:#0f0;resize:none;">'+esc(odStr)+'</textarea>'
     +'<div style="font-size:11px;font-weight:bold;color:var(--accent)">Campos detectados pelo parser:</div>'
-    +'<textarea readonly style="min-height:12vh;font-family:monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);resize:none;">'+esc(pdStr||'(nenhum campo)')+'</textarea>'
+    +'<textarea readonly style="min-height:8vh;font-family:monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);resize:none;">'+esc(pdStr||'(nenhum campo)')+'</textarea>'
     +'<div style="font-size:11px;font-weight:bold;color:var(--accent)">Log de preenchimento:</div>'
-    +'<textarea readonly style="min-height:10vh;font-family:monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);resize:none;">'+esc(flStr||'(sem log)')+'</textarea>'
+    +'<textarea readonly style="min-height:6vh;font-family:monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);resize:none;">'+esc(flStr||'(sem log)')+'</textarea>'
     +'<div style="font-size:11px;font-weight:bold;color:var(--accent)">Texto extraído do documento:</div>'
-    +'<textarea readonly style="flex:1;min-height:20vh;font-family:monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);resize:none;">'+esc(txt.slice(0,4000))+'</textarea>'
+    +'<textarea readonly style="flex:1;min-height:15vh;font-family:monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);resize:none;">'+esc(txt.slice(0,4000))+'</textarea>'
     +'<p style="font-size:11px;color:var(--muted);margin:0">Copie e envie para o desenvolvedor diagnosticar.</p>'
     +'</div>';
   document.body.appendChild(el);
