@@ -1,4 +1,4 @@
-<!-- v2026-04-09k -->
+<!-- v2026-04-09l -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2638,30 +2638,31 @@ async function _extractPdfText(file,stEl){
   const _needsOcr=_isCnhFile?!hasCpf:(!hasCpf&&!hasDate);
   if(_needsOcr){
     console.log('[LUMA-DOC] OCR necessário. hasCpf=',hasCpf,'hasDate=',hasDate,'isCnh=',_isCnhFile);
-    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — renderizando página…';
-    const page=await pdf.getPage(1);
-    const viewport=page.getViewport({scale:1.5});
-    const canvas=document.createElement('canvas');
-    canvas.width=viewport.width;canvas.height=viewport.height;
-    console.log(`[LUMA-DOC] Canvas: ${canvas.width}x${canvas.height}px`);
-    if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Renderizando ${canvas.width}x${canvas.height}px…`;
-    await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-    // JPEG 0.85 para manter abaixo de 1MB (limite OCR.space free)
-    const blob=await new Promise(res=>canvas.toBlob(res,'image/jpeg',0.85));
-    if(!blob||blob.size<1000){
-      console.warn('[LUMA-DOC] Blob inválido ou vazio:',blob?.size);
-      if(stEl)stEl.innerHTML='<span style="color:var(--warn)">⚠️</span> Falha ao renderizar imagem do PDF.';
-      return text;
-    }
-    const blobKB=Math.round(blob.size/1024);
-    console.log(`[LUMA-DOC] Imagem JPEG: ${blobKB}KB`);
-    if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Imagem ${blobKB}KB — enviando para OCR…`;
+    const pdfKB=Math.round(ab.byteLength/1024);
+    if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> PDF com imagem (${pdfKB}KB) — enviando para OCR…`;
+    // Envia PDF diretamente ao OCR.space (mais confiável que renderizar canvas → JPEG)
+    const pdfBlob=new Blob([ab],{type:'application/pdf'});
     try{
-      const ocrText=await _ocrImage(blob,stEl);
+      const ocrText=await _ocrPdf(pdfBlob,stEl);
       console.log('[LUMA-DOC] OCR texto obtido ('+ocrText.length+' chars):',ocrText.slice(0,500));
       return (text+'\n'+ocrText).trim();
     }catch(ocrErr){
-      console.warn('[LUMA-DOC] OCR externo falhou:',ocrErr.message);
+      console.warn('[LUMA-DOC] OCR PDF falhou:',ocrErr.message);
+      // Fallback: renderiza página para imagem e tenta OCR da imagem
+      console.log('[LUMA-DOC] Tentando fallback: canvas → JPEG → OCR');
+      if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Tentando OCR alternativo (imagem)…';
+      try{
+        const page=await pdf.getPage(1);
+        const viewport=page.getViewport({scale:1.5});
+        const canvas=document.createElement('canvas');
+        canvas.width=viewport.width;canvas.height=viewport.height;
+        await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+        const imgBlob=await new Promise(res=>canvas.toBlob(res,'image/jpeg',0.85));
+        if(imgBlob&&imgBlob.size>1000){
+          const ocrText2=await _ocrImage(imgBlob,stEl);
+          if(ocrText2.trim().length>20)return(text+'\n'+ocrText2).trim();
+        }
+      }catch(e2){console.warn('[LUMA-DOC] Fallback imagem também falhou:',e2.message);}
       if(stEl)stEl.innerHTML=`<span style="color:var(--warn)">⚠️</span> OCR falhou: ${ocrErr.message}`;
       return text;
     }
@@ -2715,6 +2716,38 @@ async function _ocrImage(blob,stEl){
     }
   }
   throw new Error('OCR não conseguiu extrair texto da imagem');
+}
+// Envia PDF diretamente ao OCR.space (sem renderizar canvas)
+async function _ocrPdf(pdfBlob,stEl){
+  const pdfKB=Math.round(pdfBlob.size/1024);
+  for(const engine of ['2','1']){
+    const fd=new FormData();
+    fd.append('apikey',_OCR_KEY);
+    fd.append('file',pdfBlob,'document.pdf');
+    fd.append('language','por');
+    fd.append('isOverlayRequired','false');
+    fd.append('OCREngine',engine);
+    fd.append('scale','true');
+    fd.append('filetype','PDF');
+    if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR PDF ${pdfKB}KB (engine ${engine})…`;
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),60000);
+    try{
+      const resp=await fetch('https://api.ocr.space/parse/image',{method:'POST',body:fd,signal:ctrl.signal});
+      clearTimeout(tid);
+      if(!resp.ok){console.warn(`[LUMA-DOC] OCR PDF engine ${engine} HTTP ${resp.status}`);continue;}
+      const j=await resp.json();
+      console.log(`[LUMA-DOC] OCR PDF engine ${engine}:`,JSON.stringify(j).slice(0,500));
+      if(j.IsErroredOnProcessing){console.warn(`[LUMA-DOC] OCR PDF engine ${engine} erro:`,j.ErrorMessage);continue;}
+      const txt=(j.ParsedResults||[]).map(r=>r.ParsedText||'').join('\n');
+      if(txt.trim().length>20){
+        if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Texto reconhecido, extraindo campos…';
+        return txt;
+      }
+      console.warn(`[LUMA-DOC] OCR PDF engine ${engine}: texto curto (${txt.length} chars)`);
+    }catch(e){clearTimeout(tid);console.warn(`[LUMA-DOC] OCR PDF engine ${engine}:`,e.message);if(engine==='1')throw e;}
+  }
+  throw new Error('OCR PDF não extraiu texto');
 }
 
 // ── Parser de texto para campos de documentos brasileiros ──
