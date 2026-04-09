@@ -1,4 +1,4 @@
-<!-- v2026-04-09c -->
+<!-- v2026-04-09d -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -263,9 +263,10 @@ nav.legacy{display:none!important;}
 @media(min-width:769px){
   .modal[style*="max-width:680px"]{max-width:min(900px,95vw)!important;width:min(900px,95vw)!important;max-height:95vh!important;}
   .modal[style*="max-width:720px"]{max-width:min(900px,95vw)!important;width:min(900px,95vw)!important;max-height:95vh!important;}
-  /* Modais de editar/novo colaborador — tela cheia aproveitada */
-  #mEditColab .modal,#mNewColab .modal{max-width:min(1140px,96vw)!important;width:min(1140px,96vw)!important;max-height:90vh!important;}
-  #mEditColab .mtpane.active,#mNewColab .mtpane.active{grid-template-columns:repeat(3,1fr);}
+  /* Modais de editar/novo colaborador — tela toda */
+  #mEditColab,#mNewColab{padding:4px!important;}
+  #mEditColab .modal,#mNewColab .modal{max-width:calc(100vw - 8px)!important;width:calc(100vw - 8px)!important;max-height:calc(100vh - 8px)!important;border-radius:8px!important;}
+  #mEditColab .mtpane.active,#mNewColab .mtpane.active{grid-template-columns:repeat(4,1fr);}
 }
 
 .pf-cal-wrap{background:var(--bg3);border-radius:10px;padding:16px;}.pf-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}.pf-cal-month{font-size:15px;font-weight:500;}.pf-cal-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}.pf-cal-btn:hover{background:var(--bg2);}.pf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}.pf-cal-dname{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}.pf-cal-day{text-align:center;padding:7px 2px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}.pf-cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}.pf-cal-day.tod{border-color:var(--accent);color:var(--accent);}.pf-cal-day.rs,.pf-cal-day.re{background:var(--accent);color:#fff;}.pf-cal-day.ri{background:rgba(155,102,244,.2);}.pf-cal-day.dis{opacity:.2;cursor:not-allowed;}.pf-cal-day.oth{opacity:.15;cursor:default;}.pf-cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}.pf-cal-day.fds{color:var(--muted);}.pf-cal-legend{display:flex;gap:12px;margin-top:10px;}.pf-cal-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}.pf-cal-dot{width:8px;height:8px;border-radius:3px;}.pf-steps{display:flex;margin-bottom:22px;}.pf-step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}.pf-step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:1px;background:var(--border2);}.pf-step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--bg);z-index:1;margin-bottom:5px;}.pf-step-item.done .pf-step-circle{background:var(--ok);border-color:var(--ok);color:#0d2a1e;}.pf-step-item.active .pf-step-circle{background:var(--accent);border-color:var(--accent);color:#fff;}.pf-step-label{font-size:10px;color:var(--muted);text-align:center;}.pf-step-item.active .pf-step-label{color:var(--accent);}#pf .hist-row{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}#pf .hist-row:last-child{border-bottom:none;}#pf .hist-info{flex:1;}#pf .hist-period{font-size:14px;font-weight:500;margin-bottom:3px;}#pf .hist-meta{font-size:12px;color:var(--muted);}#pf .hist-motivo{font-size:12px;color:var(--danger);margin-top:4px;}
@@ -2642,32 +2643,36 @@ async function _extractPdfText(file,stEl){
   return text;
 }
 
-// ── OCR de imagem via Tesseract.js v5 (jsdelivr) ──
-async function _ocrImage(file,stEl){
-  if(!window.Tesseract){
-    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Baixando motor OCR (primeira vez ~15MB)…';
-    await new Promise((res,rej)=>{
-      const s=document.createElement('script');
-      s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-      s.onload=res;s.onerror=()=>rej(new Error('Falha ao carregar Tesseract.js'));
-      document.head.appendChild(s);
+// ── OCR via OCR.space (gratuito, cloud, sem download) ──
+// Chave demo: 'helloworld' (500 req/dia). Chave gratuita em: https://ocr.space/ocrapi
+const _OCR_KEY=window.OCR_SPACE_KEY||'helloworld';
+async function _ocrImage(blob,stEl){
+  if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Reconhecendo texto (OCR)…';
+  // Converte blob → base64 dataURL
+  const b64=await new Promise(res=>{const fr=new FileReader();fr.onloadend=()=>res(fr.result);fr.readAsDataURL(blob);});
+  const fd=new FormData();
+  fd.append('base64Image',b64);
+  fd.append('language','por');
+  fd.append('isOverlayRequired','false');
+  fd.append('OCREngine','2');       // Motor 2: maior precisão
+  fd.append('scale','true');
+  fd.append('detectOrientation','true');
+  fd.append('filetype','PNG');
+  if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Processando OCR na nuvem…';
+  const ctrl=new AbortController();
+  const tid=setTimeout(()=>ctrl.abort(),40000);
+  try{
+    const resp=await fetch('https://api.ocr.space/parse/image',{
+      method:'POST',headers:{apikey:_OCR_KEY},body:fd,signal:ctrl.signal
     });
-  }
-  const timeoutMs=120000;
-  const ocrPromise=window.Tesseract.recognize(file,'por',{
-    logger(m){
-      if(!stEl)return;
-      if(m.status==='loading tesseract core'||m.status==='initializing tesseract')
-        stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Inicializando OCR…';
-      else if(m.status==='loading language traineddata')
-        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Carregando dicionário OCR… ${Math.round((m.progress||0)*100)}%`;
-      else if(m.status==='recognizing text')
-        stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Lendo imagem… ${Math.round((m.progress||0)*100)}%`;
-    }
-  });
-  const timeoutPromise=new Promise((_,rej)=>setTimeout(()=>rej(new Error('OCR excedeu 2 minutos.')),timeoutMs));
-  const result=await Promise.race([ocrPromise,timeoutPromise]);
-  return result.data.text||'';
+    clearTimeout(tid);
+    if(!resp.ok)throw new Error(`OCR HTTP ${resp.status}`);
+    const j=await resp.json();
+    if(j.IsErroredOnProcessing)throw new Error(j.ErrorMessage?.[0]||'Erro OCR.space');
+    const txt=j.ParsedResults?.[0]?.ParsedText||'';
+    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Texto reconhecido, extraindo campos…';
+    return txt;
+  }catch(e){clearTimeout(tid);throw e;}
 }
 
 // ── Parser de texto para campos de documentos brasileiros ──
@@ -2912,9 +2917,24 @@ function _parseDocText(raw,filename){
         r.nacionalidade=_N.trim();
       }
     }
-    // Fallback sexo/gênero via flat text
-    if(!r.genero){const sexoM=f.match(/\bsexo[:\s]+([MF](?:asculino|eminino)?)\b/i);if(sexoM)r.genero=sexoM[1][0].toUpperCase()==='M'?'M':'F';}
-    // Fallback nome via flat: "Nome civil CPF NOME 042.694.716-97"
+    // ── Extração direta via flat text — garante captura independente da estrutura de linhas ──
+    // Data de nascimento
+    if(!r.data_nascimento){
+      const _dd=f.match(/Data\s+de\s+nascimento[:\s]+(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/i)
+               ||f.match(/nasc\w*[:\s]*(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/i);
+      if(_dd)r.data_nascimento=`${_dd[3]}-${_dd[2]}-${_dd[1]}`;
+    }
+    // Sexo / Gênero
+    if(!r.genero){
+      const _sg=f.match(/\bSexo[:\s]+([MF][a-záéíóú]*)\b/i)||f.match(/\bG[eê]nero[:\s]+([MF][a-záéíóú]*)\b/i);
+      if(_sg)r.genero=_sg[1][0].toUpperCase()==='M'?'M':'F';
+    }
+    // Nacionalidade
+    if(!r.nacionalidade){
+      const _na=f.match(/Nacionalidade[:\s]+([A-Za-záéíóúàâêôãõç]{3,30})/i);
+      if(_na)r.nacionalidade=_na[1].trim();
+    }
+    // Fallback nome via flat: "Nome civil CPF NOME 042.694.716-97" ou "Nome civil NOME CPF"
     if(!r.nome){const _nf=f.match(/Nome\s+civil\s+(?:CPF\s+)?([A-ZÁÉÍÓÚ][A-Za-záéíóúàâêôãõçÇ\s]{4,60}?)\s+\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2}/i);if(_nf)r.nome=_nf[1].trim().replace(/\s+/g,' ');}
   }
   if(_isComprEnd){
