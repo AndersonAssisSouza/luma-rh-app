@@ -1,4 +1,4 @@
-<!-- v2026-04-09g -->
+<!-- v2026-04-09h -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2636,11 +2636,13 @@ async function _extractPdfText(file,stEl){
   if(_needsOcr){
     if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — aplicando OCR… aguarde.';
     const page=await pdf.getPage(1);
-    const viewport=page.getViewport({scale:2.5});
+    // Scale 1.5 + JPEG para manter imagem abaixo de 1MB (limite OCR.space free)
+    // PNG a 2.5x gera ~10MB — muito acima do limite
+    const viewport=page.getViewport({scale:1.5});
     const canvas=document.createElement('canvas');
     canvas.width=viewport.width;canvas.height=viewport.height;
     await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/jpeg',0.85));
     try{
       const ocrText=await _ocrImage(blob,stEl);
       return (text+'\n'+ocrText).trim();
@@ -2669,7 +2671,7 @@ async function _ocrImage(blob,stEl){
   fd.append('OCREngine','2');
   fd.append('scale','true');
   fd.append('detectOrientation','true');
-  fd.append('filetype','PNG');
+  fd.append('filetype','JPG');
   if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Processando OCR na nuvem…';
   const ctrl=new AbortController();
   const tid=setTimeout(()=>ctrl.abort(),40000);
@@ -2956,8 +2958,8 @@ function _parseDocText(raw,filename){
     // Sexo / Gênero
     if(!r.genero){
       // 1) Qualquer Masculino/Feminino no raw (para CTPS é campo único)
-      if(/\bMasculino\b/i.test(raw))r.genero='M';
-      else if(/\bFeminino\b/i.test(raw))r.genero='F';
+      if(/Masculino/i.test(raw))r.genero='M';
+      else if(/Feminino/i.test(raw))r.genero='F';
     }
     if(!r.genero){
       // 2) Label "Sexo" ou "Gênero" no flat, valor em qualquer posição
