@@ -1,4 +1,4 @@
-<!-- v2026-04-09h -->
+<!-- v2026-04-09i -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2561,11 +2561,14 @@ async function readDocumentoIA(prefix,fileOverride){
     // Armazena texto bruto para diagnóstico (botão "Ver texto")
     window._docRawText=text;
     window._docRawFile=file.name;
-    const {filled,conflicts}=_fillFormFromDoc(data,prefix);
-    const _diagBtn='<button onclick="_showDocDiag()" style="display:inline-block;margin-top:6px;font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);cursor:pointer;color:var(--muted)">🔍 Ver texto extraído</button>';
+    window._docParsedData=data;
+    const {filled,conflicts,log:_fillLog}=_fillFormFromDoc(data,prefix);
+    const _diagBtn='<button onclick="_showDocDiag()" style="display:inline-block;margin-top:6px;font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);cursor:pointer;color:var(--muted)">🔍 Diagnóstico</button>';
+    const _detectedKeys=Object.entries(data).filter(([,v])=>v).map(([k])=>k);
+    const _detectedStr=_detectedKeys.length?` <span style="font-size:11px;color:var(--muted)">(${_detectedKeys.join(', ')})</span>`:'';
     if(filled>0&&conflicts.length===0){
       stEl.style.color='var(--ok)';
-      stEl.innerHTML=`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente. Verifique e ajuste se necessário. ${_diagBtn}`;
+      stEl.innerHTML=`✅ <strong>${filled} campo(s) preenchido(s)</strong> automaticamente.${_detectedStr} ${_diagBtn}`;
     } else if(conflicts.length>0){
       // Inclui tanto o caso filled>0 com conflitos quanto apenas conflitos (ex: comprovante endereço)
       stEl.style.color='var(--ok)';
@@ -3079,33 +3082,41 @@ const _ADDR_KEYS=['cep','endereco','numero','bairro','cidade','uf'];
 
 function _fillFormFromDoc(data,p,forceKeys){
   // forceKeys: array de chaves a forçar sobrescrita (resolução de conflito)
-  if(!data)return{filled:0,conflicts:[]};
-  let filled=0;const conflicts=[];
+  if(!data)return{filled:0,conflicts:[],log:[]};
+  let filled=0;const conflicts=[];const log=[];
 
   // Detecta se é comprovante de endereço: tem CEP mas não tem nome/CPF/RG
   const _isEndDoc=!!data.cep&&!data.nome&&!data.cpf&&!data.rg;
 
   for(const f of _DOC_FIELD_MAP){
-    const val=data[f.k];if(!val)continue;
-    const el=$(p+f.s);if(!el)continue;
+    const val=data[f.k];
+    if(!val){if(data[f.k]!==undefined)log.push(`${f.k}: valor falsy (${JSON.stringify(data[f.k])})`);continue;}
+    const elId=p+f.s;
+    const el=$(elId);
+    if(!el){log.push(`${f.k}: elemento #${elId} NÃO ENCONTRADO`);continue;}
     const cur=el.value||'';
     const force=forceKeys&&forceKeys.includes(f.k);
     // Campos de endereço em comprovante → sempre para aprovação (mesmo se vazio)
     const needsApproval=_isEndDoc&&_ADDR_KEYS.includes(f.k)&&!force;
     if(needsApproval){
       conflicts.push({k:f.k,lbl:f.lbl,cur:cur||'(vazio)',novo:String(val)});
+      log.push(`${f.k}: → conflito (endereço)`);
     } else if(!cur){
       // Campo vazio → preenche automaticamente
-      if(f.t==='sel')setS(p+f.s,val);else el.value=val;
+      if(f.t==='sel')setS(elId,val);else el.value=val;
       filled++;
+      log.push(`${f.k}: ✅ preenchido = "${val}"`);
     } else if(cur.trim().toLowerCase()!==String(val).trim().toLowerCase()){
       // Campo preenchido com valor diferente → conflito
-      if(force){if(f.t==='sel')setS(p+f.s,val);else el.value=val;filled++;}
-      else conflicts.push({k:f.k,lbl:f.lbl,cur,novo:String(val)});
+      if(force){if(f.t==='sel')setS(elId,val);else el.value=val;filled++;log.push(`${f.k}: ✅ forçado = "${val}"`);}
+      else{conflicts.push({k:f.k,lbl:f.lbl,cur,novo:String(val)});log.push(`${f.k}: ⚠️ conflito cur="${cur}" novo="${val}"`);}
+    } else {
+      log.push(`${f.k}: = já correto ("${cur}")`);
     }
-    // cur === val → já correto, ignora
   }
-  return{filled,conflicts};
+  console.log('[LUMA-DOC] Fill log:', log.join(' | '));
+  window._docFillLog=log;
+  return{filled,conflicts,log};
 }
 function _applyDocConflicts(p,data,keys){
   const {filled}=_fillFormFromDoc(data,p,keys);
@@ -3115,12 +3126,21 @@ function _applyDocConflicts(p,data,keys){
 function _showDocDiag(){
   const txt=window._docRawText||'(sem texto)';
   const fn=window._docRawFile||'';
+  const pd=window._docParsedData||{};
+  const fl=window._docFillLog||[];
+  const pdStr=Object.entries(pd).filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`).join('\n');
+  const flStr=fl.join('\n');
   const el=document.createElement('div');
   el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
   el.innerHTML='<div style="background:var(--bg);border-radius:10px;padding:20px;max-width:700px;width:95vw;max-height:80vh;display:flex;flex-direction:column;gap:10px;">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;"><b>Texto extraído — '+esc(fn)+'</b><button onclick="this.closest(\'div[style*=fixed]\').remove()" style="font-size:18px;background:none;border:none;cursor:pointer;color:var(--muted)">×</button></div>'
-    +'<textarea readonly style="flex:1;min-height:50vh;font-family:monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);resize:none;">'+esc(txt.slice(0,4000))+'</textarea>'
-    +'<p style="font-size:11px;color:var(--muted);margin:0">Copie o texto acima e envie para o desenvolvedor diagnosticar o parser.</p>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;"><b>Diagnóstico — '+esc(fn)+'</b><button onclick="this.closest(\'div[style*=fixed]\').remove()" style="font-size:18px;background:none;border:none;cursor:pointer;color:var(--muted)">×</button></div>'
+    +'<div style="font-size:11px;font-weight:bold;color:var(--accent)">Campos detectados pelo parser:</div>'
+    +'<textarea readonly style="min-height:12vh;font-family:monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);resize:none;">'+esc(pdStr||'(nenhum campo)')+'</textarea>'
+    +'<div style="font-size:11px;font-weight:bold;color:var(--accent)">Log de preenchimento:</div>'
+    +'<textarea readonly style="min-height:10vh;font-family:monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);resize:none;">'+esc(flStr||'(sem log)')+'</textarea>'
+    +'<div style="font-size:11px;font-weight:bold;color:var(--accent)">Texto extraído do documento:</div>'
+    +'<textarea readonly style="flex:1;min-height:20vh;font-family:monospace;font-size:11px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;color:var(--text);resize:none;">'+esc(txt.slice(0,4000))+'</textarea>'
+    +'<p style="font-size:11px;color:var(--muted);margin:0">Copie e envie para o desenvolvedor diagnosticar.</p>'
     +'</div>';
   document.body.appendChild(el);
 }
