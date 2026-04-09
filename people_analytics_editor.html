@@ -1,4 +1,4 @@
-<!-- v2026-04-09o -->
+<!-- v2026-04-09p -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2639,10 +2639,24 @@ async function _extractPdfText(file,stEl){
   console.log('[LUMA-DOC] OCR check:',JSON.stringify(window._docOcrDebug));
   if(_needsOcr){
     const pdfKB=Math.round(file.size/1024);
-    window._docOcrDebug.step='enviando_ocr';window._docOcrDebug.pdfKB=pdfKB;
-    if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> PDF com imagem (${pdfKB}KB) — enviando OCR…`;
+    window._docOcrDebug.step='renderizando_canvas';window._docOcrDebug.pdfKB=pdfKB;
+    if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Renderizando imagem do PDF…`;
     try{
-      const ocrText=await _ocrPdf(file,stEl);
+      // Renderiza a página do PDF para canvas → JPEG → OCR via _ocrImage
+      // NÃO envia o PDF direto (OCR.space bloqueia PDF base64 via CORS no browser)
+      const pg=await pdf.getPage(1);
+      const vp=pg.getViewport({scale:2});
+      const cv=document.createElement('canvas');
+      cv.width=vp.width;cv.height=vp.height;
+      window._docOcrDebug.canvas=`${cv.width}x${cv.height}`;
+      await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+      const blob=await new Promise(res=>cv.toBlob(res,'image/jpeg',0.8));
+      const blobKB=blob?Math.round(blob.size/1024):0;
+      window._docOcrDebug.step='enviando_ocr';window._docOcrDebug.imgKB=blobKB;
+      console.log(`[LUMA-DOC] Canvas ${cv.width}x${cv.height} → JPEG ${blobKB}KB`);
+      if(!blob||blob.size<1000)throw new Error('Imagem renderizada vazia');
+      if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR imagem ${blobKB}KB…`;
+      const ocrText=await _ocrImage(blob,stEl);
       window._docOcrDebug.step='ocr_ok';window._docOcrDebug.ocrLen=ocrText.length;window._docOcrDebug.ocrPreview=ocrText.slice(0,200);
       console.log('[LUMA-DOC] OCR OK ('+ocrText.length+' chars):',ocrText.slice(0,300));
       return (text+'\n'+ocrText).trim();
