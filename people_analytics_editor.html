@@ -1,4 +1,4 @@
-<!-- v2026-04-08t -->
+<!-- v2026-04-08u -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2566,6 +2566,11 @@ async function readDocumentoIA(prefix,fileOverride){
     } else if(Object.keys(data).filter(k=>data[k]).length>0){
       stEl.style.color='var(--muted)';
       stEl.innerHTML='ℹ️ Todos os campos detectados já estavam preenchidos com os mesmos valores. '+_diagBtn;
+    } else if(window._pdfForOcr){
+      // PDF com imagem — oferecer OCR manual
+      stEl.style.color='var(--warn)';
+      stEl.innerHTML='📄 PDF com imagem detectado. Nenhum campo reconhecido no texto digital.'
+        +'<br><button onclick="_runOcrManual(\''+prefix+'\')" style="margin-top:6px;padding:4px 12px;border-radius:6px;border:1px solid var(--accent);background:var(--bg2);color:var(--accent);cursor:pointer;font-size:12px">🔍 Tentar leitura por OCR (pode demorar)</button>';
     } else {
       stEl.style.color='var(--warn)';
       stEl.innerHTML='⚠️ Texto extraído mas nenhum campo reconhecido. '+_diagBtn;
@@ -2609,21 +2614,14 @@ async function _extractPdfText(file,stEl){
       }
     }catch(e){/* ignora */}
   }
-  // PDF baseado em imagem: só aciona OCR se não encontrou CPF, data E o texto é muito curto
-  // (texto longo = PDF digital; texto curto = só cabeçalhos = imagem embedida)
+  // Se não encontrou CPF nem data: PDF com imagem — OCR NÃO é automático
+  // Retorna o texto + flag para UI oferecer botão OCR ao usuário
   const hasCpf=/\d{3}[\.\s]?\d{3}[\.\s]?\d{3}[\-\s]?\d{2}/.test(text);
   const hasDate=/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(text);
-  console.log('[LUMA-OCR] hasCpf='+hasCpf+' hasDate='+hasDate+' chars='+text.replace(/\s/g,'').length);
+  console.log('[LUMA] hasCpf='+hasCpf+' hasDate='+hasDate+' chars='+text.replace(/\s/g,'').length);
   if(!hasCpf&&!hasDate){
-    if(stEl) stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — aplicando OCR… aguarde.';
-    const page=await pdf.getPage(1);
-    const viewport=page.getViewport({scale:2.0});
-    const canvas=document.createElement('canvas');
-    canvas.width=viewport.width;canvas.height=viewport.height;
-    await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
-    const ocrText=await _ocrImage(blob,stEl);
-    return (text+'\n'+ocrText).trim();
+    // Salva o PDF para OCR posterior (se usuário clicar no botão)
+    window._pdfForOcr={pdf,text};
   }
   return text;
 }
@@ -3002,6 +3000,41 @@ function _applyDocConflicts(p,data,keys){
   const {filled}=_fillFormFromDoc(data,p,keys);
   const stEl=$(p+'DocStatus');
   if(stEl)stEl.innerHTML=`✅ <strong>${filled} campo(s) atualizado(s)</strong> com os dados selecionados.`;
+}
+async function _runOcrManual(prefix){
+  const stEl=$(prefix+'DocStatus');
+  const saved=window._pdfForOcr;
+  if(!saved){stEl.innerHTML='❌ Nenhum PDF com imagem em memória.';return;}
+  window._pdfForOcr=null;
+  try{
+    stEl.style.color='var(--text)';
+    stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Preparando imagem…';
+    const page=await saved.pdf.getPage(1);
+    const viewport=page.getViewport({scale:2.0});
+    const canvas=document.createElement('canvas');
+    canvas.width=viewport.width;canvas.height=viewport.height;
+    await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+    const blob=await new Promise(res=>canvas.toBlob(res,'image/png'));
+    const ocrText=await _ocrImage(blob,stEl);
+    const fullText=(saved.text+'\n'+ocrText).trim();
+    window._docRawText=fullText;
+    const data=_parseDocText(fullText,window._docRawFile||'');
+    console.log('[LUMA-OCR] resultado:', JSON.stringify(data,null,2));
+    const {filled,conflicts}=_fillFormFromDoc(data,prefix);
+    const _diagBtn='<button onclick="_showDocDiag()" style="display:inline-block;margin-top:6px;font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);cursor:pointer;color:var(--muted)">🔍 Ver texto extraído</button>';
+    if(filled>0||conflicts.length>0){
+      stEl.style.color='var(--ok)';
+      const msg=filled>0?`✅ OCR: ${filled} campo(s) preenchido(s). `:'📋 OCR: confirme os campos: ';
+      stEl.innerHTML=msg+(conflicts.length?_renderConflictUI(conflicts,data,prefix):'')+' '+_diagBtn;
+      if(filled>0)switchColabTab(0,prefix);
+    }else{
+      stEl.style.color='var(--warn)';
+      stEl.innerHTML='⚠️ OCR concluído mas nenhum campo reconhecido. '+_diagBtn;
+    }
+  }catch(e){
+    stEl.style.color='var(--danger)';
+    stEl.innerHTML='❌ OCR falhou: '+esc(e.message);
+  }
 }
 function _showDocDiag(){
   const txt=window._docRawText||'(sem texto)';
