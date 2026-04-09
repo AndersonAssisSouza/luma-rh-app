@@ -1,4 +1,4 @@
-<!-- v2026-04-09r -->
+<!-- v2026-04-09s -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2928,10 +2928,12 @@ function _parseDocText(raw,filename){
   const titM=f.match(/\b(\d{4}\s?\d{4}\s?\d{4})\b/);
   if(titM&&!r.cpf)r.titulo_eleitor=titM[1];
 
-  // ── Data de nascimento ──
-  const nascCtx=f.match(/nasc\w*[:\s]*(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/i);
-  if(nascCtx)r.data_nascimento=`${nascCtx[3]}-${nascCtx[2]}-${nascCtx[1]}`;
-  else{
+  // ── Data de nascimento (só se não foi setada por MRZ ou nascLocalRe) ──
+  if(!r.data_nascimento){
+    const nascCtx=f.match(/nasc\w*[:\s]*(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})/i);
+    if(nascCtx)r.data_nascimento=`${nascCtx[3]}-${nascCtx[2]}-${nascCtx[1]}`;
+  }
+  if(!r.data_nascimento){
     const dM=[...f.matchAll(/\b(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})\b/g)];
     for(const d of dM){const y=parseInt(d[3]);if(y>=1940&&y<=2010){r.data_nascimento=`${d[3]}-${d[2]}-${d[1]}`;break;}}
   }
