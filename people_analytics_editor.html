@@ -2660,8 +2660,20 @@ async function _extractPdfText(file,stEl){
         const botCv=document.createElement('canvas');
         botCv.width=cv.width;botCv.height=cv.height-midY;
         botCv.getContext('2d').drawImage(cv,0,midY,cv.width,cv.height-midY,0,0,cv.width,cv.height-midY);
+        // Pré-processa metade inferior: grayscale + contraste 2x → texto mais nítido para OCR
+        (()=>{
+          const ctx=botCv.getContext('2d');
+          const id=ctx.getImageData(0,0,botCv.width,botCv.height);
+          const d=id.data;
+          for(let i=0;i<d.length;i+=4){
+            const g=Math.round(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]);
+            const c=Math.min(255,Math.max(0,Math.round(128+2*(g-128))));
+            d[i]=d[i+1]=d[i+2]=c;
+          }
+          ctx.putImageData(id,0,0);
+        })();
         const topBlob=await new Promise(res=>topCv.toBlob(res,'image/jpeg',0.93));
-        const botBlob=await new Promise(res=>botCv.toBlob(res,'image/jpeg',0.93));
+        const botBlob=await new Promise(res=>botCv.toBlob(res,'image/jpeg',0.95));
         console.log(`[LUMA-DOC] CNH-e canvas ${cv.width}x${cv.height} → top ${Math.round((topBlob?.size||0)/1024)}KB + bot ${Math.round((botBlob?.size||0)/1024)}KB`);
         if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> OCR CNH-e parte 1/2…`;
         // Engine 1 primeiro para CNH-e (melhor para imagens fotográficas)
@@ -2928,6 +2940,9 @@ function _parseDocText(raw,filename){
       const up=p1.toUpperCase();
       return _preps.has(up)?m:(p1.toUpperCase()+p2);
     });
+    // Split preposições fundidas: DESOUZA→DE SOUZA, DASILVA→DA SILVA, DOSANTOS→DOS ANTOS→DOS SANTOS
+    // Aplica DE/DA/DO + 5+ chars (evita splits em DANIEL=DA+NIEL=4 chars)
+    s=s.replace(/\b(DE|DA|DO)([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]{5,})\b/g,'$1 $2');
     return s.replace(/\s+/g,' ').trim();
   }
 
