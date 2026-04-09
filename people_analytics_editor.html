@@ -1,4 +1,4 @@
-<!-- v2026-04-09m -->
+<!-- v2026-04-09n -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2638,31 +2638,16 @@ async function _extractPdfText(file,stEl){
   const _needsOcr=_isCnhFile?!hasCpf:(!hasCpf&&!hasDate);
   if(_needsOcr){
     console.log('[LUMA-DOC] OCR necessário. hasCpf=',hasCpf,'hasDate=',hasDate,'isCnh=',_isCnhFile);
-    const pdfKB=Math.round(ab.byteLength/1024);
+    const pdfKB=Math.round(file.size/1024);
     if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> PDF com imagem (${pdfKB}KB) — enviando para OCR…`;
-    // Envia PDF diretamente ao OCR.space (mais confiável que renderizar canvas → JPEG)
-    const pdfBlob=new Blob([ab],{type:'application/pdf'});
+    // IMPORTANTE: usar `file` diretamente (File extends Blob)
+    // NÃO usar `new Blob([ab])` — o ArrayBuffer `ab` foi consumido/detached pelo PDF.js
     try{
-      const ocrText=await _ocrPdf(pdfBlob,stEl);
+      const ocrText=await _ocrPdf(file,stEl);
       console.log('[LUMA-DOC] OCR texto obtido ('+ocrText.length+' chars):',ocrText.slice(0,500));
       return (text+'\n'+ocrText).trim();
     }catch(ocrErr){
       console.warn('[LUMA-DOC] OCR PDF falhou:',ocrErr.message);
-      // Fallback: renderiza página para imagem e tenta OCR da imagem
-      console.log('[LUMA-DOC] Tentando fallback: canvas → JPEG → OCR');
-      if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> Tentando OCR alternativo (imagem)…';
-      try{
-        const page=await pdf.getPage(1);
-        const viewport=page.getViewport({scale:1.5});
-        const canvas=document.createElement('canvas');
-        canvas.width=viewport.width;canvas.height=viewport.height;
-        await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-        const imgBlob=await new Promise(res=>canvas.toBlob(res,'image/jpeg',0.85));
-        if(imgBlob&&imgBlob.size>1000){
-          const ocrText2=await _ocrImage(imgBlob,stEl);
-          if(ocrText2.trim().length>20)return(text+'\n'+ocrText2).trim();
-        }
-      }catch(e2){console.warn('[LUMA-DOC] Fallback imagem também falhou:',e2.message);}
       if(stEl)stEl.innerHTML=`<span style="color:var(--warn)">⚠️</span> OCR falhou: ${ocrErr.message}`;
       return text;
     }
