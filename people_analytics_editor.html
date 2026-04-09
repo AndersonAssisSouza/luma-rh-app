@@ -1,4 +1,4 @@
-<!-- v2026-04-09j -->
+<!-- v2026-04-09k -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2637,22 +2637,32 @@ async function _extractPdfText(file,stEl){
   const _isCnhFile=file?.name&&/cnh|habilitacao|habilitação|motorista/i.test(file.name.toLowerCase());
   const _needsOcr=_isCnhFile?!hasCpf:(!hasCpf&&!hasDate);
   if(_needsOcr){
-    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — aplicando OCR… aguarde.';
+    console.log('[LUMA-DOC] OCR necessário. hasCpf=',hasCpf,'hasDate=',hasDate,'isCnh=',_isCnhFile);
+    if(stEl)stEl.innerHTML='<span style="color:var(--accent)">⏳</span> PDF com imagem detectado — renderizando página…';
     const page=await pdf.getPage(1);
-    // Scale 1.5 + JPEG para manter imagem abaixo de 1MB (limite OCR.space free)
-    // PNG a 2.5x gera ~10MB — muito acima do limite
     const viewport=page.getViewport({scale:1.5});
     const canvas=document.createElement('canvas');
     canvas.width=viewport.width;canvas.height=viewport.height;
+    console.log(`[LUMA-DOC] Canvas: ${canvas.width}x${canvas.height}px`);
+    if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Renderizando ${canvas.width}x${canvas.height}px…`;
     await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+    // JPEG 0.85 para manter abaixo de 1MB (limite OCR.space free)
     const blob=await new Promise(res=>canvas.toBlob(res,'image/jpeg',0.85));
+    if(!blob||blob.size<1000){
+      console.warn('[LUMA-DOC] Blob inválido ou vazio:',blob?.size);
+      if(stEl)stEl.innerHTML='<span style="color:var(--warn)">⚠️</span> Falha ao renderizar imagem do PDF.';
+      return text;
+    }
+    const blobKB=Math.round(blob.size/1024);
+    console.log(`[LUMA-DOC] Imagem JPEG: ${blobKB}KB`);
+    if(stEl)stEl.innerHTML=`<span style="color:var(--accent)">⏳</span> Imagem ${blobKB}KB — enviando para OCR…`;
     try{
       const ocrText=await _ocrImage(blob,stEl);
-      console.log('[LUMA-DOC] OCR texto obtido:',ocrText.slice(0,500));
+      console.log('[LUMA-DOC] OCR texto obtido ('+ocrText.length+' chars):',ocrText.slice(0,500));
       return (text+'\n'+ocrText).trim();
     }catch(ocrErr){
       console.warn('[LUMA-DOC] OCR externo falhou:',ocrErr.message);
-      if(stEl)stEl.innerHTML=`<span style="color:var(--warn)">⚠️</span> OCR falhou: ${ocrErr.message}. Usando texto digital do PDF…`;
+      if(stEl)stEl.innerHTML=`<span style="color:var(--warn)">⚠️</span> OCR falhou: ${ocrErr.message}`;
       return text;
     }
   }
@@ -2825,23 +2835,22 @@ function _parseDocText(raw,filename){
   }
 
   // ── Filiação (CNH: label "FILIAÇÃO" seguido de dois nomes em linhas/sequência) ──
-  // Filiação — CNH: label "Filiação:" seguido de dois nomes separados por newline ou duplo espaço
-  const filRe=/filia[çc][aã]o[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,50}?)(?:\s{2,}|\n)([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,50})/i;
+  // IMPORTANTE: usar espaço literal ' ' no grupo de captura de nome (NÃO \s) para não cruzar linhas
+  const filRe=/filia[çc][aã]o[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,50}?)(?:\s{2,}|\n)([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,50})/i;
   const fm=f.match(filRe)||raw.match(filRe);
   if(fm){r.filiacao1=fm[1].trim().replace(/\s+/g,' ');r.filiacao2=fm[2].trim().replace(/\s+/g,' ');}
-  // CTPS Digital: labels "Nome do pai:" e "Nome da mãe:" separados
-  // Formato CTPS Digital: valor vem NA LINHA ANTERIOR ao label (layout 2 colunas)
-  // Ex: "GILDA NATIVIDADE ASSIS SOUZA\nNome da mãe" → busca reversa no raw
-  const _maeRevM=raw.match(/([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,60}?)\s*\n\s*Nome\s+da\s+m[ãa]e\b/im);
+  // CTPS Digital: valor vem NA LINHA ANTERIOR ao label
+  // Ex raw: "GILDA NATIVIDADE ASSIS SOUZA\nNome da mãe"
+  const _maeRevM=raw.match(/([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)\s*\n\s*Nome\s+da\s+m[ãa]e\b/im);
   if(_maeRevM&&!r.filiacao2)r.filiacao2=_maeRevM[1].trim().replace(/\s+/g,' ');
-  const _paiRevM=raw.match(/([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,60}?)\s*\n\s*Nome\s+do\s+pai\b/im);
+  const _paiRevM=raw.match(/([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)\s*\n\s*Nome\s+do\s+pai\b/im);
   if(_paiRevM&&!r.filiacao1)r.filiacao1=_paiRevM[1].trim().replace(/\s+/g,' ');
-  // Fallback: label antes do valor (outros formatos de CTPS)
-  const _nomePaiM=f.match(/nome\s+do\s+pai[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,60}?)(?=\s{2,}|\bCPF\b|\bData\b|\bSexo\b|\bNacionalidade\b|$)/i)
-               ||raw.match(/nome\s+do\s+pai[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,60}?)(?=\n|$)/im);
+  // Fallback: label antes do valor
+  const _nomePaiM=f.match(/nome\s+do\s+pai[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)(?=\s{2,}|\bCPF\b|\bData\b|\bSexo\b|\bNacionalidade\b|$)/i)
+               ||raw.match(/nome\s+do\s+pai[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)(?=\n|$)/im);
   if(_nomePaiM&&!r.filiacao1)r.filiacao1=_nomePaiM[1].trim().replace(/\s+/g,' ');
-  const _nomeMaeM=f.match(/nome\s+da\s+m[ãa]e[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,60}?)(?=\s{2,}|\bCPF\b|\bData\b|\bSexo\b|\bNacionalidade\b|$)/i)
-               ||raw.match(/nome\s+da\s+m[ãa]e[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ\s]{5,60}?)(?=\n|$)/im);
+  const _nomeMaeM=f.match(/nome\s+da\s+m[ãa]e[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)(?=\s{2,}|\bCPF\b|\bData\b|\bSexo\b|\bNacionalidade\b|$)/i)
+               ||raw.match(/nome\s+da\s+m[ãa]e[:\s]+([A-ZÁÉÍÓÚÀÂÊÔÃÕÇ][A-Za-záéíóúàâêôãõçÇ ]{5,60}?)(?=\n|$)/im);
   if(_nomeMaeM&&!r.filiacao2)r.filiacao2=_nomeMaeM[1].trim().replace(/\s+/g,' ');
 
   // ── Nacionalidade ──
