@@ -1,8 +1,10 @@
 import {
-  sb, requireAuth, logout, getProfileCached,
+  sb, SUPABASE_URL, requireAuth, logout, getProfileCached,
   getTenants, criarTenant, updateTenant,
   getProfiles, updateProfile
 } from './supabase_client.js'
+
+const SB_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0Y2xjZHBwaWZtbWRqenRmdW5sIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDUzNjg4OCwiZXhwIjoyMDkwMTEyODg4fQ.OGYi5aNnXIyZdQbK3I7e-_GICcClzHd9G2hZZS0dx1g'
 
 let TENANTS = []
 let USERS   = []
@@ -191,6 +193,9 @@ function renderUsers() {
         <button class="btn btn-sm btn-danger" onclick="toggleUser('${esc(u.id)}','${esc(u.status)}')">
           ${u.status === 'ATIVO' ? 'Bloquear' : 'Ativar'}
         </button>
+        <button class="btn btn-sm" style="background:rgba(155,102,244,.15);color:var(--accent);" onclick="resetUserPassword('${esc(u.id)}','${esc(u.email)}')">
+          Redefinir senha
+        </button>
       </div></td>
     </tr>`}).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">Nenhum usuário encontrado.</td></tr>'
 }
@@ -246,6 +251,26 @@ window.toggleUser = async function(id, status) {
     toast('Status do usuário atualizado', 'success')
     await loadAll(); renderUsers()
   } catch (e) { toast('Erro: '+e.message,'error') }
+}
+
+window.resetUserPassword = async function(userId, email) {
+  if (!confirm(`Redefinir senha de ${email} para "lumarh"?\n\nO usuário será obrigado a criar nova senha no próximo acesso.`)) return
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'apikey': SB_SERVICE_KEY,
+        'Authorization': `Bearer ${SB_SERVICE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ password: 'lumarh' })
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.message || 'Falha ao redefinir senha')
+    }
+    toast(`Senha de ${email} redefinida para "lumarh". Informe o usuário.`, 'success')
+  } catch (e) { toast('Erro: '+e.message, 'error') }
 }
 
 // ============================================================
