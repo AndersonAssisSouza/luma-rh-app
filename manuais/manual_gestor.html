@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Manual do Gestor — LUMA RH</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+:root{--purple:#7c3aed;--gold:#f59e0b;--dark:#1e0b3e;--text:#1f2937;--muted:#6b7280;--bg:#f9fafb;--border:#e5e7eb;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:#fff;line-height:1.7;}
+.lh{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:#fff;border-bottom:1px solid var(--border);}
+.lh-brand{display:flex;align-items:center;gap:14px;}
+.lh-logo{width:46px;height:46px;flex-shrink:0;}
+.lh-name{font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-.3px;line-height:1.2;}
+.lh-tag{font-size:11px;color:var(--muted);}
+.lh-right{text-align:right;}
+.lh-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.lh-dtitle{font-size:13px;font-weight:600;color:var(--dark);}
+.lh-bar{height:4px;background:linear-gradient(90deg,var(--purple) 0%,var(--gold) 100%);}
+.cover{background:linear-gradient(135deg,var(--dark) 0%,#2d1047 60%,#3b1562 100%);color:#fff;padding:52px 48px 44px;position:relative;overflow:hidden;}
+.cover::before{content:'';position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;background:rgba(245,158,11,.07);}
+.cover::after{content:'';position:absolute;left:-40px;bottom:-60px;width:200px;height:200px;border-radius:50%;background:rgba(124,58,237,.12);}
+.badge{position:relative;display:inline-flex;align-items:center;background:rgba(245,158,11,.18);border:1px solid rgba(245,158,11,.5);color:var(--gold);padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px;}
+.cover h1{position:relative;font-size:36px;font-weight:700;margin-bottom:8px;letter-spacing:-.5px;}
+.cover .subtitle{position:relative;font-size:15px;color:rgba(255,255,255,.6);max-width:480px;}
+.cover .meta{position:relative;display:flex;gap:24px;margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.12);}
+.cover .meta-item{font-size:11px;color:rgba(255,255,255,.4);}
+.cover .meta-item strong{display:block;font-size:12px;color:rgba(255,255,255,.7);font-weight:600;}
+.container{max-width:820px;margin:0 auto;padding:36px 48px 60px;}
+.toc{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin:28px 0;}
+.toc h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--purple);margin-bottom:10px;}
+.toc ol{padding-left:18px;}.toc li{margin:5px 0;}.toc a{color:var(--text);text-decoration:none;}.toc a:hover{color:var(--purple);}
+h2{font-size:20px;font-weight:700;color:var(--dark);margin:40px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--purple);display:flex;align-items:center;gap:10px;}
+h3{font-size:15px;font-weight:600;color:var(--dark);margin:22px 0 8px;}
+p{margin-bottom:12px;}ul,ol{padding-left:20px;margin-bottom:12px;}li{margin:5px 0;}
+.steps{counter-reset:step;margin:14px 0;}
+.step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
+.step-num{counter-increment:step;background:var(--purple);color:#fff;min-width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:3px;}
+.step-num::before{content:counter(step);}
+.step-body strong{display:block;margin-bottom:3px;}
+.tip{background:rgba(124,58,237,.06);border-left:4px solid var(--purple);border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}
+.tip strong{color:var(--purple);}
+.warn{background:rgba(245,158,11,.08);border-left:4px solid var(--gold);border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}
+.warn strong{color:#b45309;}
+.info{background:rgba(14,165,233,.06);border-left:4px solid #0ea5e9;border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th{background:var(--dark);color:#fff;padding:9px 13px;text-align:left;font-weight:600;}
+td{padding:9px 13px;border-bottom:1px solid var(--border);}
+tr:nth-child(even) td{background:var(--bg);}
+.perm-box{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0;}
+.perm{background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);color:var(--purple);padding:4px 11px;border-radius:20px;font-size:12px;font-weight:600;}
+.perm-no{background:rgba(107,114,128,.07);border:1px solid var(--border);color:var(--muted);padding:4px 11px;border-radius:20px;font-size:12px;}
+.chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.chip-ok{background:rgba(16,185,129,.1);color:#065f46;}
+.chip-no{background:rgba(239,68,68,.1);color:#991b1b;}
+.chip-pend{background:rgba(245,158,11,.12);color:#92400e;}
+.lh-footer-wrap{margin-top:52px;}
+.lh-footer-bar{height:3px;background:linear-gradient(90deg,var(--purple) 0%,var(--gold) 100%);}
+.lh-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 0 0;font-size:11px;color:var(--muted);}
+.lh-footer-brand{display:flex;align-items:center;gap:8px;}
+.lh-footer-brand svg{width:20px;height:20px;}
+@media print{.lh{padding:12px 28px;}.cover{padding:36px 28px;}.container{padding:24px 28px;}h2{page-break-before:auto;}.tip,.warn,.info{page-break-inside:avoid;}}
+</style>
+</head>
+<body>
+
+<header class="lh">
+  <div class="lh-brand">
+    <svg class="lh-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="12" fill="#9b66f4"/><polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/></svg>
+    <div><div class="lh-name">LUMA RH</div><div class="lh-tag">Sistema de Gestão de Recursos Humanos</div></div>
+  </div>
+  <div class="lh-right"><div class="lh-label">Manual de Uso</div><div class="lh-dtitle">Perfil: Gestor</div></div>
+</header>
+<div class="lh-bar"></div>
+
+<div class="cover">
+  <div class="badge">Perfil · Gestor</div>
+  <h1>Manual do Gestor</h1>
+  <div class="subtitle">Gerenciamento de Equipe, Férias e Ocorrências</div>
+  <div class="meta">
+    <div class="meta-item"><strong>Versão</strong>1.0 · 2026</div>
+    <div class="meta-item"><strong>Sistema</strong>LUMA RH</div>
+    <div class="meta-item"><strong>Classificação</strong>Uso interno</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="toc">
+    <h3>Índice</h3>
+    <ol>
+      <li><a href="#perfil">Sobre o Perfil Gestor</a></li>
+      <li><a href="#acesso">Acesso ao Painel</a></li>
+      <li><a href="#equipe">Visualizando sua Equipe</a></li>
+      <li><a href="#ferias">Gerenciando Férias da Equipe</a></li>
+      <li><a href="#ausencias">Registrando Ausências e Ocorrências</a></li>
+      <li><a href="#exames">Acompanhando Exames Ocupacionais</a></li>
+      <li><a href="#alertas">Alertas e Pendências</a></li>
+      <li><a href="#aniversario">Mensagens de Aniversário</a></li>
+    </ol>
+  </div>
+
+  <h2 id="perfil">1. Sobre o Perfil Gestor</h2>
+  <p>O perfil <strong>Gestor</strong> tem acesso ao Painel RH com foco exclusivo na sua equipe. Você visualiza e gerencia apenas os colaboradores vinculados a você como responsável.</p>
+  <h3>Pode fazer</h3>
+  <div class="perm-box">
+    <span class="perm">✅ Ver colaboradores da equipe</span>
+    <span class="perm">✅ Aprovar/rejeitar férias</span>
+    <span class="perm">✅ Registrar ausências</span>
+    <span class="perm">✅ Acompanhar exames</span>
+    <span class="perm">✅ Ver alertas da equipe</span>
+    <span class="perm">✅ Mensagens de aniversário</span>
+  </div>
+  <h3>Não pode fazer</h3>
+  <div class="perm-box">
+    <span class="perm-no">🚫 Cadastrar colaboradores</span>
+    <span class="perm-no">🚫 Ver outras equipes</span>
+    <span class="perm-no">🚫 Alterar configurações</span>
+    <span class="perm-no">🚫 Gerenciar usuários</span>
+    <span class="perm-no">🚫 Agendar desligamentos</span>
+  </div>
+
+  <h2 id="acesso">2. Acesso ao Painel</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Faça login com e-mail e senha</strong>O sistema redireciona automaticamente para o Painel RH.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>O painel exibe apenas sua equipe</strong>Colaboradores de outras equipes não aparecem.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Navegue pelo menu lateral</strong>Dashboard · Colaboradores · Férias · Ausências · Exames · Alertas.</div></div>
+  </div>
+
+  <h2 id="equipe">3. Visualizando sua Equipe</h2>
+  <table>
+    <tr><th>Coluna</th><th>O que mostra</th></tr>
+    <tr><td>Nome</td><td>Nome completo do colaborador</td></tr>
+    <tr><td>Cargo</td><td>Função dentro da empresa</td></tr>
+    <tr><td>Tipo de Vínculo</td><td>CLT, PJ, Estágio, Autônomo</td></tr>
+    <tr><td>Status</td><td>Ativo ou Inativo</td></tr>
+    <tr><td>Admissão</td><td>Data de entrada na empresa</td></tr>
+  </table>
+  <div class="tip"><strong>Dica:</strong> Clique no nome do colaborador para ver o cadastro completo com histórico.</div>
+
+  <h2 id="ferias">4. Gerenciando Férias da Equipe</h2>
+  <h3>Aprovando ou rejeitando uma solicitação</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse a aba "Férias &amp; Saldo"</strong>No menu lateral. Solicitações pendentes aparecem no topo com destaque.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique na solicitação</strong>Veja as datas, o saldo disponível e o total de dias solicitados.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Escolha: Aprovar ou Rejeitar</strong>Se rejeitar, informe o motivo — o colaborador verá essa justificativa no portal.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>A decisão é registrada imediatamente</strong>O status do colaborador é atualizado em tempo real.</div></div>
+  </div>
+  <div class="warn"><strong>Atenção:</strong> O motivo da rejeição é exibido ao colaborador. Seja claro e respeitoso.</div>
+
+  <h3>Status das solicitações</h3>
+  <table>
+    <tr><th>Status</th><th>Significado</th></tr>
+    <tr><td><span class="chip chip-pend">Pendente</span></td><td>Aguardando sua análise</td></tr>
+    <tr><td><span class="chip chip-ok">Aprovado</span></td><td>Férias confirmadas</td></tr>
+    <tr><td><span class="chip chip-no">Rejeitado</span></td><td>Não aprovado — motivo visível ao colaborador</td></tr>
+  </table>
+
+  <h2 id="ausencias">5. Registrando Ausências e Ocorrências</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse "Ausências/Ocorrências" no menu lateral</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique em "+ Nova Ocorrência"</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Preencha: colaborador, data, tipo e observações</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Salve</strong>Registro fica no histórico do colaborador.</div></div>
+  </div>
+  <table>
+    <tr><th>Tipo</th><th>Quando usar</th></tr>
+    <tr><td>Falta justificada</td><td>Com comprovante aceito</td></tr>
+    <tr><td>Falta injustificada</td><td>Sem justificativa</td></tr>
+    <tr><td>Atestado médico</td><td>Apresentou atestado</td></tr>
+    <tr><td>Atraso</td><td>Chegou após o horário</td></tr>
+    <tr><td>Licença</td><td>Maternidade, paternidade ou outra</td></tr>
+    <tr><td>Outros</td><td>Detalhar no campo de observações</td></tr>
+  </table>
+
+  <h2 id="exames">6. Acompanhando Exames Ocupacionais</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse "Exames Ocupacionais"</strong>Lista colaboradores com data do último exame e do próximo.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Identifique vencidos (vermelho) ou próximos (amarelo)</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Providencie o agendamento</strong>Entre em contato com o colaborador e com a clínica parceira. O RH atualiza a data no sistema.</div></div>
+  </div>
+  <div class="tip"><strong>Base legal:</strong> NR-7 (PCMSO) exige exames periódicos. Exames vencidos expõem a empresa a autuação fiscal.</div>
+
+  <h2 id="alertas">7. Alertas e Pendências</h2>
+  <table>
+    <tr><th>Alerta</th><th>Significado</th><th>Ação</th></tr>
+    <tr><td>🩺 Exame vencido</td><td>ASO fora do prazo</td><td>Agendar novo exame</td></tr>
+    <tr><td>🏖️ Férias pendentes</td><td>Colaborador sem férias programadas</td><td>Planejar e comunicar ao RH</td></tr>
+    <tr><td>📋 Experiência vencendo</td><td>Contrato de experiência próximo do fim</td><td>Definir efetivação ou encerramento</td></tr>
+    <tr><td>⚠️ Contrato sem data fim</td><td>Contrato PJ/temporário sem prazo</td><td>Regularizar com RH/Jurídico</td></tr>
+  </table>
+  <div class="warn"><strong>Atenção:</strong> Férias CLT não programadas no período concessivo geram pagamento em dobro (Art. 137, CLT).</div>
+
+  <h2 id="aniversario">8. Mensagens de Aniversário</h2>
+  <p>O sistema envia automaticamente mensagens ao gestor 2 dias antes do aniversário do colaborador, para que você possa parabenizá-lo a tempo.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse "Mensagens de Aniversário" no menu</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Ative ou desative mensagens</strong>Use o botão ao lado de cada mensagem.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Crie novas mensagens</strong>Clique em "+ Nova Mensagem". Use <code>{nome}</code> e <code>{anos}</code> como variáveis dinâmicas.</div></div>
+  </div>
+  <div class="info">O sistema sorteia uma mensagem ativa e envia por e-mail ao gestor 2 dias antes da data.</div>
+
+  <div class="lh-footer-wrap">
+    <div class="lh-footer-bar"></div>
+    <div class="lh-footer">
+      <div class="lh-footer-brand">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="12" fill="#9b66f4"/><polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/></svg>
+        <strong style="color:#374151">LUMA RH</strong> · lumaplataforma.com.br
+      </div>
+      <div>Manual do Gestor · Versão 1.0 · 2026 · Uso interno</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

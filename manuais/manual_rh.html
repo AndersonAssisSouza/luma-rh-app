@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Manual do RH — LUMA RH</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+:root{--purple:#7c3aed;--gold:#f59e0b;--dark:#1e0b3e;--text:#1f2937;--muted:#6b7280;--bg:#f9fafb;--border:#e5e7eb;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:#fff;line-height:1.7;}
+.lh{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:#fff;border-bottom:1px solid var(--border);}
+.lh-brand{display:flex;align-items:center;gap:14px;}.lh-logo{width:46px;height:46px;flex-shrink:0;}
+.lh-name{font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-.3px;line-height:1.2;}.lh-tag{font-size:11px;color:var(--muted);}
+.lh-right{text-align:right;}.lh-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}.lh-dtitle{font-size:13px;font-weight:600;color:var(--dark);}
+.lh-bar{height:4px;background:linear-gradient(90deg,var(--purple) 0%,var(--gold) 100%);}
+.cover{background:linear-gradient(135deg,var(--dark) 0%,#2d1047 60%,#3b1562 100%);color:#fff;padding:52px 48px 44px;position:relative;overflow:hidden;}
+.cover::before{content:'';position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;background:rgba(245,158,11,.07);}
+.cover::after{content:'';position:absolute;left:-40px;bottom:-60px;width:200px;height:200px;border-radius:50%;background:rgba(124,58,237,.12);}
+.badge{position:relative;display:inline-flex;align-items:center;background:rgba(245,158,11,.18);border:1px solid rgba(245,158,11,.5);color:var(--gold);padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px;}
+.cover h1{position:relative;font-size:36px;font-weight:700;margin-bottom:8px;letter-spacing:-.5px;}
+.cover .subtitle{position:relative;font-size:15px;color:rgba(255,255,255,.6);max-width:480px;}
+.cover .meta{position:relative;display:flex;gap:24px;margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.12);}
+.cover .meta-item{font-size:11px;color:rgba(255,255,255,.4);}.cover .meta-item strong{display:block;font-size:12px;color:rgba(255,255,255,.7);font-weight:600;}
+.container{max-width:820px;margin:0 auto;padding:36px 48px 60px;}
+.toc{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin:28px 0;}
+.toc h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--purple);margin-bottom:10px;}
+.toc ol{padding-left:18px;}.toc li{margin:5px 0;}.toc a{color:var(--text);text-decoration:none;}.toc a:hover{color:var(--purple);}
+h2{font-size:20px;font-weight:700;color:var(--dark);margin:40px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--purple);display:flex;align-items:center;gap:10px;}
+h3{font-size:15px;font-weight:600;color:var(--dark);margin:22px 0 8px;}
+p{margin-bottom:12px;}ul,ol{padding-left:20px;margin-bottom:12px;}li{margin:5px 0;}
+.steps{counter-reset:step;margin:14px 0;}.step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
+.step-num{counter-increment:step;background:var(--purple);color:#fff;min-width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:3px;}
+.step-num::before{content:counter(step);}.step-body strong{display:block;margin-bottom:3px;}
+.tip{background:rgba(124,58,237,.06);border-left:4px solid var(--purple);border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}.tip strong{color:var(--purple);}
+.warn{background:rgba(245,158,11,.08);border-left:4px solid var(--gold);border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}.warn strong{color:#b45309;}
+.info{background:rgba(14,165,233,.06);border-left:4px solid #0ea5e9;border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}
+.danger{background:rgba(239,68,68,.06);border-left:4px solid #ef4444;border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}.danger strong{color:#b91c1c;}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th{background:var(--dark);color:#fff;padding:9px 13px;text-align:left;font-weight:600;}
+td{padding:9px 13px;border-bottom:1px solid var(--border);}tr:nth-child(even) td{background:var(--bg);}
+.perm-box{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0;}
+.perm{background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);color:var(--purple);padding:4px 11px;border-radius:20px;font-size:12px;font-weight:600;}
+.perm-no{background:rgba(107,114,128,.07);border:1px solid var(--border);color:var(--muted);padding:4px 11px;border-radius:20px;font-size:12px;}
+.lh-footer-wrap{margin-top:52px;}.lh-footer-bar{height:3px;background:linear-gradient(90deg,var(--purple) 0%,var(--gold) 100%);}
+.lh-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 0 0;font-size:11px;color:var(--muted);}
+.lh-footer-brand{display:flex;align-items:center;gap:8px;}.lh-footer-brand svg{width:20px;height:20px;}
+@media print{.lh{padding:12px 28px;}.cover{padding:36px 28px;}.container{padding:24px 28px;}h2{page-break-before:auto;}}
+</style>
+</head>
+<body>
+
+<header class="lh">
+  <div class="lh-brand">
+    <svg class="lh-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="12" fill="#9b66f4"/><polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/></svg>
+    <div><div class="lh-name">LUMA RH</div><div class="lh-tag">Sistema de Gestão de Recursos Humanos</div></div>
+  </div>
+  <div class="lh-right"><div class="lh-label">Manual de Uso</div><div class="lh-dtitle">Perfil: RH</div></div>
+</header>
+<div class="lh-bar"></div>
+
+<div class="cover">
+  <div class="badge">Perfil · RH</div>
+  <h1>Manual do RH</h1>
+  <div class="subtitle">Gestão Completa de Colaboradores, Documentos e Processos</div>
+  <div class="meta">
+    <div class="meta-item"><strong>Versão</strong>1.0 · 2026</div>
+    <div class="meta-item"><strong>Sistema</strong>LUMA RH</div>
+    <div class="meta-item"><strong>Classificação</strong>Uso interno</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="toc">
+    <h3>Índice</h3>
+    <ol>
+      <li><a href="#perfil">Sobre o Perfil RH</a></li>
+      <li><a href="#dashboard">Dashboard e Indicadores</a></li>
+      <li><a href="#cadastro">Cadastrando Colaboradores</a></li>
+      <li><a href="#documentos">Leitura Automática de Documentos (OCR)</a></li>
+      <li><a href="#ferias">Gestão de Férias</a></li>
+      <li><a href="#ausencias">Ausências e Ocorrências</a></li>
+      <li><a href="#exames">Exames Ocupacionais</a></li>
+      <li><a href="#desligamentos">Desligamentos</a></li>
+      <li><a href="#alertas">Central de Alertas</a></li>
+      <li><a href="#aniversario">Mensagens de Aniversário</a></li>
+    </ol>
+  </div>
+
+  <h2 id="perfil">1. Sobre o Perfil RH</h2>
+  <p>O perfil <strong>RH</strong> tem acesso completo ao Painel RH para todos os colaboradores da empresa, independente do gestor responsável.</p>
+  <div class="perm-box">
+    <span class="perm">✅ Ver todos os colaboradores</span>
+    <span class="perm">✅ Cadastrar e editar colaboradores</span>
+    <span class="perm">✅ Ler documentos via OCR</span>
+    <span class="perm">✅ Gerenciar férias e saldos</span>
+    <span class="perm">✅ Registrar ausências</span>
+    <span class="perm">✅ Controlar exames</span>
+    <span class="perm">✅ Agendar desligamentos</span>
+    <span class="perm">✅ Mensagens de aniversário</span>
+  </div>
+  <div class="perm-box">
+    <span class="perm-no">🚫 Configurações do sistema (logo, cores)</span>
+    <span class="perm-no">🚫 Gerenciar roles de usuários</span>
+    <span class="perm-no">🚫 Painel global de empresas</span>
+  </div>
+
+  <h2 id="dashboard">2. Dashboard e Indicadores</h2>
+  <table>
+    <tr><th>Indicador</th><th>O que representa</th></tr>
+    <tr><td>Total de Colaboradores</td><td>Ativos na empresa no momento</td></tr>
+    <tr><td>Admissões Recentes</td><td>Admitidos nos últimos 30 dias</td></tr>
+    <tr><td>Férias Pendentes</td><td>Solicitações aguardando aprovação</td></tr>
+    <tr><td>Exames Vencidos</td><td>ASOs fora do prazo — ação imediata</td></tr>
+    <tr><td>Aniversários Próximos</td><td>Aniversários nos próximos 7 dias</td></tr>
+    <tr><td>Desligamentos Agendados</td><td>Colaboradores com data de saída marcada</td></tr>
+  </table>
+  <div class="tip"><strong>Dica:</strong> Clique em qualquer card do dashboard para ir direto à lista correspondente.</div>
+
+  <h2 id="cadastro">3. Cadastrando Colaboradores</h2>
+  <table>
+    <tr><th>Aba</th><th>Campos</th></tr>
+    <tr><td><strong>Pessoal</strong></td><td>Nome, e-mail, CPF, RG, data nascimento, sexo, nacionalidade, cidade/UF natal, filiação</td></tr>
+    <tr><td><strong>Endereço</strong></td><td>CEP, logradouro, número, complemento, bairro, cidade, UF</td></tr>
+    <tr><td><strong>Vínculo</strong></td><td>Tipo (CLT/PJ/Estágio), cargo, gestor, admissão, data fim, salário, CTPS, PIS</td></tr>
+    <tr><td><strong>Documentos</strong></td><td>Upload de CNH, RG, CTPS, comprovante de endereço</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique em "+ Novo Colaborador"</strong>Botão no topo da lista.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Preencha os dados pessoais</strong>Nome e e-mail são obrigatórios.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Preencha o vínculo empregatício</strong>Tipo de contrato, cargo, gestor e data de admissão.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Salve</strong>O colaborador aparece na listagem e pode acessar o portal de férias.</div></div>
+  </div>
+
+  <h2 id="documentos">4. Leitura Automática de Documentos (OCR)</h2>
+  <p>O sistema lê automaticamente documentos e preenche os campos do cadastro. Aceita CNH-e, CTPS Digital e comprovante de endereço.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Abra o cadastro do colaborador → aba "Documentos"</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Arraste ou selecione o arquivo</strong>PDF, JPG ou PNG. Use sempre o arquivo original.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Aguarde o processamento</strong>CNH-e demora alguns segundos a mais — processa a imagem em duas etapas.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Revise os campos preenchidos</strong>Em caso de conflito com dado já existente, escolha qual manter.</div></div>
+  </div>
+  <table>
+    <tr><th>Documento</th><th>Campos extraídos</th></tr>
+    <tr><td>CNH-e</td><td>Nome, CPF, RG, data nascimento, filiação, cidade/UF natal, nacionalidade</td></tr>
+    <tr><td>CTPS Digital</td><td>Nome, CPF, data nascimento, sexo, nacionalidade, filiação, PIS</td></tr>
+    <tr><td>Comprovante de endereço</td><td>CEP, logradouro, número, bairro, cidade, UF</td></tr>
+  </table>
+  <div class="warn"><strong>Atenção:</strong> O OCR é uma ferramenta de auxílio. Sempre revise os dados preenchidos, especialmente nomes com acentos.</div>
+
+  <h2 id="ferias">5. Gestão de Férias</h2>
+  <h3>Atualizando saldo de férias</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse "Férias &amp; Saldo" → localize o colaborador</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique em "Editar Saldo"</strong>Insira o novo saldo em dias e confirme.</div></div>
+  </div>
+  <div class="tip"><strong>Dica:</strong> Filtre por gestor para ver solicitações de uma equipe específica.</div>
+  <h3>Referências CLT</h3>
+  <table>
+    <tr><th>Regra</th><th>Base Legal</th></tr>
+    <tr><td>30 dias por período aquisitivo (12 meses)</td><td>Art. 130, CLT</td></tr>
+    <tr><td>Férias concedidas em até 12 meses após período aquisitivo</td><td>Art. 134, CLT</td></tr>
+    <tr><td>Não concedidas no prazo = pagamento em dobro</td><td>Art. 137, CLT</td></tr>
+    <tr><td>Parcelamento em até 3 períodos (mínimo 14 dias)</td><td>Art. 134 §1º, CLT</td></tr>
+  </table>
+
+  <h2 id="ausencias">6. Ausências e Ocorrências</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse "Ausências/Ocorrências" → "+ Nova Ocorrência"</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Preencha: colaborador, data, tipo e observações</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Salve</strong>Registro fica no histórico do colaborador.</div></div>
+  </div>
+  <div class="info">O histórico de ocorrências é fundamental para processos de advertência ou disputas trabalhistas. Mantenha sempre atualizado.</div>
+
+  <h2 id="exames">7. Exames Ocupacionais</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse "Exames Ocupacionais" → localize o colaborador</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique em "Atualizar"</strong>Informe a data do exame realizado e a data do próximo.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Salve</strong>O alerta some do painel quando o exame estiver em dia.</div></div>
+  </div>
+
+  <h2 id="desligamentos">8. Desligamentos</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Abra o cadastro do colaborador → "Agendar Desligamento"</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Informe a data e o motivo</strong>Ex.: Pedido de demissão · Demissão sem justa causa · Término de contrato</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Confirme</strong>O gestor recebe notificação por e-mail. Na data, o colaborador é marcado como Inativo.</div></div>
+  </div>
+  <div class="danger"><strong>Atenção legal:</strong> O registro no sistema não substitui os trâmites legais (TRCT, FGTS, homologação). Siga todos os procedimentos trabalhistas aplicáveis.</div>
+
+  <h2 id="alertas">9. Central de Alertas</h2>
+  <table>
+    <tr><th>Alerta</th><th>Regra de disparo</th><th>Ação</th></tr>
+    <tr><td>🩺 Exame vencido</td><td>Data do próximo exame passou</td><td>Agendar novo ASO</td></tr>
+    <tr><td>🏖️ Férias pendentes</td><td>12 meses sem programar férias</td><td>Planejar período de gozo</td></tr>
+    <tr><td>📋 Experiência vencendo</td><td>Fim do período de experiência próximo</td><td>Comunicar gestor e colaborador</td></tr>
+    <tr><td>⚠️ Contrato sem data fim</td><td>Contrato PJ/temporário sem prazo</td><td>Regularizar documentação</td></tr>
+  </table>
+
+  <h2 id="aniversario">10. Mensagens de Aniversário</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse "Mensagens de Aniversário"</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Gerencie o banco de mensagens</strong>Ative, desative, edite ou crie novas. Use <code>{nome}</code> e <code>{anos}</code> como variáveis.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Envio é automático</strong>O sistema sorteia uma mensagem ativa e envia ao gestor 2 dias antes da data.</div></div>
+  </div>
+
+  <div class="lh-footer-wrap">
+    <div class="lh-footer-bar"></div>
+    <div class="lh-footer">
+      <div class="lh-footer-brand">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="12" fill="#9b66f4"/><polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/></svg>
+        <strong style="color:#374151">LUMA RH</strong> · lumaplataforma.com.br
+      </div>
+      <div>Manual do RH · Versão 1.0 · 2026 · Uso interno</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Manual do Manager Global — LUMA RH</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+:root{--purple:#7c3aed;--gold:#f59e0b;--dark:#1e0b3e;--text:#1f2937;--muted:#6b7280;--bg:#f9fafb;--border:#e5e7eb;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:#fff;line-height:1.7;}
+.lh{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:#fff;border-bottom:1px solid var(--border);}
+.lh-brand{display:flex;align-items:center;gap:14px;}.lh-logo{width:46px;height:46px;flex-shrink:0;}
+.lh-name{font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-.3px;line-height:1.2;}.lh-tag{font-size:11px;color:var(--muted);}
+.lh-right{text-align:right;}.lh-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}.lh-dtitle{font-size:13px;font-weight:600;color:var(--dark);}
+.lh-bar{height:4px;background:linear-gradient(90deg,var(--purple) 0%,var(--gold) 100%);}
+.cover{background:linear-gradient(135deg,var(--dark) 0%,#2d1047 60%,#3b1562 100%);color:#fff;padding:52px 48px 44px;position:relative;overflow:hidden;}
+.cover::before{content:'';position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;background:rgba(245,158,11,.07);}
+.cover::after{content:'';position:absolute;left:-40px;bottom:-60px;width:200px;height:200px;border-radius:50%;background:rgba(124,58,237,.12);}
+.badge{position:relative;display:inline-flex;align-items:center;background:rgba(245,158,11,.18);border:1px solid rgba(245,158,11,.5);color:var(--gold);padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px;}
+.cover h1{position:relative;font-size:36px;font-weight:700;margin-bottom:8px;letter-spacing:-.5px;}
+.cover .subtitle{position:relative;font-size:15px;color:rgba(255,255,255,.6);max-width:480px;}
+.cover .meta{position:relative;display:flex;gap:24px;margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.12);}
+.cover .meta-item{font-size:11px;color:rgba(255,255,255,.4);}.cover .meta-item strong{display:block;font-size:12px;color:rgba(255,255,255,.7);font-weight:600;}
+.container{max-width:820px;margin:0 auto;padding:36px 48px 60px;}
+.toc{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin:28px 0;}
+.toc h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--purple);margin-bottom:10px;}
+.toc ol{padding-left:18px;}.toc li{margin:5px 0;}.toc a{color:var(--text);text-decoration:none;}.toc a:hover{color:var(--purple);}
+h2{font-size:20px;font-weight:700;color:var(--dark);margin:40px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--purple);display:flex;align-items:center;gap:10px;}
+h3{font-size:15px;font-weight:600;color:var(--dark);margin:22px 0 8px;}
+p{margin-bottom:12px;}ul,ol{padding-left:20px;margin-bottom:12px;}li{margin:5px 0;}
+.steps{counter-reset:step;margin:14px 0;}.step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
+.step-num{counter-increment:step;background:var(--purple);color:#fff;min-width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:3px;}
+.step-num::before{content:counter(step);}.step-body strong{display:block;margin-bottom:3px;}
+.tip{background:rgba(124,58,237,.06);border-left:4px solid var(--purple);border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}.tip strong{color:var(--purple);}
+.warn{background:rgba(245,158,11,.08);border-left:4px solid var(--gold);border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}.warn strong{color:#b45309;}
+.info{background:rgba(14,165,233,.06);border-left:4px solid #0ea5e9;border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}
+.danger{background:rgba(239,68,68,.06);border-left:4px solid #ef4444;border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}.danger strong{color:#b91c1c;}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th{background:var(--dark);color:#fff;padding:9px 13px;text-align:left;font-weight:600;}
+td{padding:9px 13px;border-bottom:1px solid var(--border);}tr:nth-child(even) td{background:var(--bg);}
+.perm-box{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0;}
+.perm{background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);color:var(--purple);padding:4px 11px;border-radius:20px;font-size:12px;font-weight:600;}
+.perm-no{background:rgba(107,114,128,.07);border:1px solid var(--border);color:var(--muted);padding:4px 11px;border-radius:20px;font-size:12px;}
+.chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.chip-ok{background:rgba(16,185,129,.1);color:#065f46;}
+.chip-no{background:rgba(239,68,68,.1);color:#991b1b;}
+.chip-warn{background:rgba(245,158,11,.12);color:#92400e;}
+.lh-footer-wrap{margin-top:52px;}.lh-footer-bar{height:3px;background:linear-gradient(90deg,var(--purple) 0%,var(--gold) 100%);}
+.lh-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 0 0;font-size:11px;color:var(--muted);}
+.lh-footer-brand{display:flex;align-items:center;gap:8px;}.lh-footer-brand svg{width:20px;height:20px;}
+@media print{.lh{padding:12px 28px;}.cover{padding:36px 28px;}.container{padding:24px 28px;}h2{page-break-before:auto;}}
+</style>
+</head>
+<body>
+
+<header class="lh">
+  <div class="lh-brand">
+    <svg class="lh-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="12" fill="#9b66f4"/><polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/></svg>
+    <div><div class="lh-name">LUMA RH</div><div class="lh-tag">Sistema de Gestão de Recursos Humanos</div></div>
+  </div>
+  <div class="lh-right"><div class="lh-label">Manual de Uso</div><div class="lh-dtitle">Perfil: Manager Global</div></div>
+</header>
+<div class="lh-bar"></div>
+
+<div class="cover">
+  <div class="badge">Perfil · Manager Global</div>
+  <h1>Manual do Manager Global</h1>
+  <div class="subtitle">Gestão Multi-Empresa, Planos, Usuários e Auditoria</div>
+  <div class="meta">
+    <div class="meta-item"><strong>Versão</strong>1.0 · 2026</div>
+    <div class="meta-item"><strong>Sistema</strong>LUMA RH</div>
+    <div class="meta-item"><strong>Classificação</strong>Altamente restrito — super administrador</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="toc">
+    <h3>Índice</h3>
+    <ol>
+      <li><a href="#perfil">Sobre o Perfil Manager Global</a></li>
+      <li><a href="#painel">Painel Global — Visão Geral</a></li>
+      <li><a href="#empresas">Gerenciando Empresas (Tenants)</a></li>
+      <li><a href="#planos">Planos e Limites</a></li>
+      <li><a href="#usuarios">Gerenciando Usuários</a></li>
+      <li><a href="#logs">Logs de Auditoria</a></li>
+      <li><a href="#rh">Acesso ao Painel RH das Empresas</a></li>
+      <li><a href="#seguranca">Segurança e Boas Práticas</a></li>
+    </ol>
+  </div>
+
+  <h2 id="perfil">1. Sobre o Perfil Manager Global</h2>
+  <p>O <strong>Manager Global</strong> é o super administrador da plataforma LUMA RH. Tem acesso ao <strong>Painel Global</strong> exclusivo, onde gerencia todas as empresas (tenants) cadastradas na plataforma.</p>
+  <div class="perm-box">
+    <span class="perm">✅ Painel Global exclusivo</span>
+    <span class="perm">✅ Criar e gerenciar empresas</span>
+    <span class="perm">✅ Definir planos e limites</span>
+    <span class="perm">✅ Gerenciar todos os usuários</span>
+    <span class="perm">✅ Ver logs de auditoria</span>
+    <span class="perm">✅ Acessar RH de qualquer empresa como Master</span>
+    <span class="perm">✅ Configurações e identidade visual</span>
+  </div>
+  <div class="danger"><strong>Acesso crítico:</strong> O Manager Global tem visibilidade sobre todas as empresas e dados da plataforma. Este perfil deve ser restrito a no máximo 1-2 pessoas responsáveis pela operação da LUMA Plataforma.</div>
+
+  <h2 id="painel">2. Painel Global — Visão Geral</h2>
+  <p>Ao fazer login, o Manager Global é redirecionado automaticamente para o <strong>Painel Global</strong> (manager.html), diferente dos demais perfis que vão para o Painel RH.</p>
+
+  <h3>KPIs do Painel Global</h3>
+  <table>
+    <tr><th>Indicador</th><th>O que representa</th></tr>
+    <tr><td>Empresas Ativas</td><td>Total de tenants com status ATIVO na plataforma</td></tr>
+    <tr><td>Usuários Totais</td><td>Soma de todos os usuários em todas as empresas</td></tr>
+    <tr><td>Trials em Andamento</td><td>Empresas no período de teste gratuito</td></tr>
+    <tr><td>Planos Pro</td><td>Empresas com plano PRO ativo</td></tr>
+    <tr><td>Planos Enterprise</td><td>Empresas com plano ENTERPRISE ativo</td></tr>
+  </table>
+
+  <h3>Navegação do Painel Global</h3>
+  <table>
+    <tr><th>Aba</th><th>Função</th></tr>
+    <tr><td>Dashboard</td><td>Resumo geral de todas as empresas</td></tr>
+    <tr><td>Empresas</td><td>CRUD de empresas/tenants</td></tr>
+    <tr><td>Usuários</td><td>Listagem e gestão de usuários por empresa</td></tr>
+    <tr><td>Logs</td><td>Auditoria de eventos do sistema</td></tr>
+  </table>
+
+  <h2 id="empresas">3. Gerenciando Empresas (Tenants)</h2>
+  <p>Cada empresa cliente é um <em>tenant</em> isolado na plataforma. Seus dados são completamente separados das demais.</p>
+
+  <h3>Criando uma nova empresa</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse "Empresas" no menu lateral do Painel Global</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique em "+ Nova Empresa"</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Preencha os dados</strong>Nome da empresa · Slug (identificador único, ex: empresa-abc) · E-mail do admin · Plano · Limite de usuários.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Salve</strong>A empresa é criada. O admin receberá um e-mail para definir a senha e começar a usar o sistema.</div></div>
+  </div>
+
+  <h3>Editando uma empresa existente</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Localize a empresa na lista</strong>Use a busca pelo nome.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique em "Editar"</strong>Altere plano, limite de usuários, status ou e-mail do admin.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Salve</strong>As alterações têm efeito imediato.</div></div>
+  </div>
+
+  <h3>Status das empresas</h3>
+  <table>
+    <tr><th>Status</th><th>Efeito</th></tr>
+    <tr><td><span class="chip chip-ok">ATIVO</span></td><td>Empresa e usuários funcionam normalmente</td></tr>
+    <tr><td><span class="chip chip-warn">SUSPENSO</span></td><td>Usuários não conseguem fazer login · dados preservados</td></tr>
+    <tr><td><span class="chip chip-no">INATIVO</span></td><td>Empresa desativada · acesso bloqueado</td></tr>
+  </table>
+  <div class="warn"><strong>Atenção:</strong> Suspender uma empresa bloqueia o acesso de TODOS os seus usuários imediatamente. Use apenas em casos de inadimplência confirmada ou encerramento contratual.</div>
+
+  <h2 id="planos">4. Planos e Limites</h2>
+  <table>
+    <tr><th>Plano</th><th>Descrição</th><th>Limite típico</th></tr>
+    <tr><td><strong>TRIAL</strong></td><td>Período de teste gratuito</td><td>5–10 usuários · 30 dias</td></tr>
+    <tr><td><strong>PRO</strong></td><td>Plano pago padrão</td><td>Conforme contrato</td></tr>
+    <tr><td><strong>ENTERPRISE</strong></td><td>Plano corporativo com suporte dedicado</td><td>Sem limite definido</td></tr>
+  </table>
+  <p>Para alterar o plano de uma empresa, acesse a aba <strong>Empresas</strong>, edite o tenant e selecione o novo plano. O limite de usuários é configurado separadamente no campo <em>Máximo de Usuários</em>.</p>
+  <div class="tip"><strong>Dica:</strong> Ao encerrar um trial, altere o status para SUSPENSO até a confirmação do pagamento, depois mude para ATIVO com o plano PRO ou ENTERPRISE.</div>
+
+  <h2 id="usuarios">5. Gerenciando Usuários</h2>
+  <p>A aba <strong>Usuários</strong> lista todos os usuários de todas as empresas. Você pode filtrar por empresa e por role.</p>
+
+  <h3>Bloqueando ou ativando um usuário</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse "Usuários" no Painel Global</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Filtre por empresa ou pesquise pelo nome/e-mail</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique em "Bloquear" ou "Ativar"</strong>Usuários bloqueados não conseguem fazer login, mas seus dados são preservados.</div></div>
+  </div>
+
+  <h3>Resetando senha de um usuário</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Localize o usuário na lista</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique em "Resetar Senha"</strong>O sistema envia um e-mail de redefinição ao usuário.</div></div>
+  </div>
+  <div class="info">Resets de senha são registrados nos logs de auditoria com data, hora e quem executou a ação.</div>
+
+  <h2 id="logs">6. Logs de Auditoria</h2>
+  <p>A aba <strong>Logs</strong> registra todos os eventos relevantes do sistema para fins de auditoria e segurança.</p>
+  <table>
+    <tr><th>Tipo de evento registrado</th></tr>
+    <tr><td>Login / Logout de usuários</td></tr>
+    <tr><td>Criação, edição e exclusão de colaboradores</td></tr>
+    <tr><td>Aprovação e rejeição de férias</td></tr>
+    <tr><td>Alterações de plano e status de empresas</td></tr>
+    <tr><td>Criação e bloqueio de usuários</td></tr>
+    <tr><td>Reset de senhas</td></tr>
+    <tr><td>Alterações de configuração</td></tr>
+  </table>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse "Logs" no Painel Global</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Filtre por empresa, tipo de evento ou data</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique no evento para ver os detalhes</strong>Data/hora, usuário que executou, empresa e dados alterados.</div></div>
+  </div>
+
+  <h2 id="rh">7. Acesso ao Painel RH das Empresas</h2>
+  <p>O Manager Global pode acessar o Painel RH de qualquer empresa com permissões equivalentes ao perfil <strong>Master</strong>.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Na lista de Empresas, clique em "Acessar RH"</strong>O sistema abre o Painel RH da empresa selecionada.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Navegue normalmente</strong>Você tem acesso completo como se fosse o Master da empresa.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Para voltar ao Painel Global</strong>Clique em "Voltar ao Painel Global" no topo ou faça logout e login novamente.</div></div>
+  </div>
+  <div class="warn"><strong>Atenção:</strong> Todas as ações realizadas no Painel RH de uma empresa ficam registradas nos logs com identificação do Manager Global. Acesse apenas quando necessário.</div>
+
+  <h2 id="seguranca">8. Segurança e Boas Práticas</h2>
+  <ul>
+    <li><strong>Nunca compartilhe as credenciais do Manager Global.</strong> Este é o acesso mais privilegiado da plataforma.</li>
+    <li><strong>Use autenticação forte</strong> — senha longa, única e armazenada em gerenciador de senhas.</li>
+    <li><strong>Revise os logs semanalmente</strong> para identificar acessos suspeitos ou ações não autorizadas.</li>
+    <li><strong>Ao suspender uma empresa</strong>, comunique o contato responsável por escrito antes.</li>
+    <li><strong>Documente todas as alterações de plano</strong> e guarde os contratos correspondentes.</li>
+    <li><strong>Não crie usuários Manager Global desnecessários</strong> — deve haver no máximo 2 pessoas com este perfil.</li>
+    <li><strong>Faça logout</strong> ao terminar o uso, especialmente em computadores compartilhados.</li>
+  </ul>
+
+  <div class="lh-footer-wrap">
+    <div class="lh-footer-bar"></div>
+    <div class="lh-footer">
+      <div class="lh-footer-brand">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="12" fill="#9b66f4"/><polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/></svg>
+        <strong style="color:#374151">LUMA RH</strong> · lumaplataforma.com.br
+      </div>
+      <div>Manual do Manager Global · Versão 1.0 · 2026 · Altamente restrito</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

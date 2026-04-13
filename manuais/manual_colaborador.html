@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Manual do Colaborador — LUMA RH</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap');
+:root{--purple:#7c3aed;--gold:#f59e0b;--dark:#1e0b3e;--text:#1f2937;--muted:#6b7280;--bg:#f9fafb;--border:#e5e7eb;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:#fff;line-height:1.7;}
+/* ─── TIMBRADO ─── */
+.lh{display:flex;align-items:center;justify-content:space-between;padding:18px 48px;background:#fff;border-bottom:1px solid var(--border);}
+.lh-brand{display:flex;align-items:center;gap:14px;}
+.lh-logo{width:46px;height:46px;flex-shrink:0;}
+.lh-name{font-size:18px;font-weight:700;color:var(--dark);letter-spacing:-.3px;line-height:1.2;}
+.lh-tag{font-size:11px;color:var(--muted);}
+.lh-right{text-align:right;}
+.lh-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.lh-dtitle{font-size:13px;font-weight:600;color:var(--dark);}
+.lh-bar{height:4px;background:linear-gradient(90deg,var(--purple) 0%,var(--gold) 100%);}
+/* ─── CAPA ─── */
+.cover{background:linear-gradient(135deg,var(--dark) 0%,#2d1047 60%,#3b1562 100%);color:#fff;padding:52px 48px 44px;position:relative;overflow:hidden;}
+.cover::before{content:'';position:absolute;right:-80px;top:-80px;width:320px;height:320px;border-radius:50%;background:rgba(245,158,11,.07);}
+.cover::after{content:'';position:absolute;left:-40px;bottom:-60px;width:200px;height:200px;border-radius:50%;background:rgba(124,58,237,.12);}
+.badge{position:relative;display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,.18);border:1px solid rgba(245,158,11,.5);color:var(--gold);padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px;}
+.cover h1{position:relative;font-size:36px;font-weight:700;margin-bottom:8px;letter-spacing:-.5px;}
+.cover .subtitle{position:relative;font-size:15px;color:rgba(255,255,255,.6);max-width:480px;}
+.cover .meta{position:relative;display:flex;gap:24px;margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.12);}
+.cover .meta-item{font-size:11px;color:rgba(255,255,255,.4);}
+.cover .meta-item strong{display:block;font-size:12px;color:rgba(255,255,255,.7);font-weight:600;}
+/* ─── LAYOUT ─── */
+.container{max-width:820px;margin:0 auto;padding:36px 48px 60px;}
+.toc{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin:28px 0;}
+.toc h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--purple);margin-bottom:10px;}
+.toc ol{padding-left:18px;}.toc li{margin:5px 0;}.toc a{color:var(--text);text-decoration:none;}.toc a:hover{color:var(--purple);}
+h2{font-size:20px;font-weight:700;color:var(--dark);margin:40px 0 14px;padding-bottom:10px;border-bottom:2px solid var(--purple);display:flex;align-items:center;gap:10px;}
+h3{font-size:15px;font-weight:600;color:var(--dark);margin:22px 0 8px;}
+p{margin-bottom:12px;}
+ul,ol{padding-left:20px;margin-bottom:12px;}li{margin:5px 0;}
+.steps{counter-reset:step;margin:14px 0;}
+.step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start;}
+.step-num{counter-increment:step;background:var(--purple);color:#fff;min-width:27px;height:27px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:3px;}
+.step-num::before{content:counter(step);}
+.step-body strong{display:block;margin-bottom:3px;}
+.tip{background:rgba(124,58,237,.06);border-left:4px solid var(--purple);border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}
+.tip strong{color:var(--purple);}
+.warn{background:rgba(245,158,11,.08);border-left:4px solid var(--gold);border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}
+.warn strong{color:#b45309;}
+.info{background:rgba(14,165,233,.06);border-left:4px solid #0ea5e9;border-radius:0 8px 8px 0;padding:13px 16px;margin:14px 0;}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13px;}
+th{background:var(--dark);color:#fff;padding:9px 13px;text-align:left;font-weight:600;}
+td{padding:9px 13px;border-bottom:1px solid var(--border);}
+tr:nth-child(even) td{background:var(--bg);}
+.chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.chip-ok{background:rgba(16,185,129,.1);color:#065f46;}
+.chip-no{background:rgba(239,68,68,.1);color:#991b1b;}
+.chip-pend{background:rgba(245,158,11,.12);color:#92400e;}
+/* ─── RODAPÉ TIMBRADO ─── */
+.lh-footer-wrap{margin-top:52px;}
+.lh-footer-bar{height:3px;background:linear-gradient(90deg,var(--purple) 0%,var(--gold) 100%);}
+.lh-footer{display:flex;align-items:center;justify-content:space-between;padding:14px 0 0;font-size:11px;color:var(--muted);}
+.lh-footer-brand{display:flex;align-items:center;gap:8px;}
+.lh-footer-brand svg{width:20px;height:20px;}
+@media print{.lh{padding:12px 28px;}.cover{padding:36px 28px;}.container{padding:24px 28px;}h2{page-break-before:auto;}.tip,.warn,.info{page-break-inside:avoid;}}
+</style>
+</head>
+<body>
+
+<!-- TIMBRADO: CABEÇALHO -->
+<header class="lh">
+  <div class="lh-brand">
+    <svg class="lh-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="12" fill="#9b66f4"/>
+      <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
+    </svg>
+    <div>
+      <div class="lh-name">LUMA RH</div>
+      <div class="lh-tag">Sistema de Gestão de Recursos Humanos</div>
+    </div>
+  </div>
+  <div class="lh-right">
+    <div class="lh-label">Manual de Uso</div>
+    <div class="lh-dtitle">Perfil: Colaborador</div>
+  </div>
+</header>
+<div class="lh-bar"></div>
+
+<!-- CAPA -->
+<div class="cover">
+  <div class="badge">Perfil · Colaborador</div>
+  <h1>Manual do Colaborador</h1>
+  <div class="subtitle">Portal de Férias e Informações Pessoais</div>
+  <div class="meta">
+    <div class="meta-item"><strong>Versão</strong>1.0 · 2026</div>
+    <div class="meta-item"><strong>Sistema</strong>LUMA RH</div>
+    <div class="meta-item"><strong>Classificação</strong>Uso interno</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="toc">
+    <h3>Índice</h3>
+    <ol>
+      <li><a href="#acesso">Acesso ao Sistema</a></li>
+      <li><a href="#portal">Portal do Colaborador</a></li>
+      <li><a href="#saldo">Consultando Saldo de Férias</a></li>
+      <li><a href="#solicitacao">Solicitando Férias</a></li>
+      <li><a href="#historico">Histórico de Solicitações</a></li>
+      <li><a href="#senha">Alterando sua Senha</a></li>
+      <li><a href="#duvidas">Dúvidas Frequentes</a></li>
+    </ol>
+  </div>
+
+  <h2 id="acesso">🔐 1. Acesso ao Sistema</h2>
+  <p>O LUMA RH é acessado pelo navegador, sem necessidade de instalar nenhum aplicativo.</p>
+
+  <h3>Primeiro acesso</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Receba o e-mail de boas-vindas</strong>O RH enviará um link para definir sua senha.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique no link do e-mail</strong>Escolha uma senha com pelo menos 8 caracteres, letras maiúsculas e números.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Faça o login</strong>Informe seu e-mail corporativo e a senha criada.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Redirecionamento automático</strong>O sistema abre diretamente o seu Portal do Colaborador.</div></div>
+  </div>
+  <div class="warn"><strong>Atenção:</strong> O link do e-mail tem validade de 24 horas. Se expirar, solicite ao RH que reenvie o convite.</div>
+
+  <h3>Acessos seguintes</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Abra o navegador e acesse o endereço fornecido pela empresa</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Informe e-mail e senha</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique em Entrar</strong>O sistema valida e abre o portal automaticamente.</div></div>
+  </div>
+
+  <h2 id="portal">🏠 2. Portal do Colaborador</h2>
+  <p>Ao fazer login você verá seu portal pessoal com as seguintes informações:</p>
+  <table>
+    <tr><th>Seção</th><th>O que mostra</th></tr>
+    <tr><td><strong>Saldo de Férias</strong></td><td>Dias disponíveis, utilizados e total do período</td></tr>
+    <tr><td><strong>Calendário</strong></td><td>Período de férias aprovado ou em andamento</td></tr>
+    <tr><td><strong>Solicitações</strong></td><td>Histórico de pedidos (aprovado, pendente, rejeitado)</td></tr>
+  </table>
+  <div class="tip"><strong>Dica:</strong> O portal é atualizado em tempo real. Se o RH aprovar suas férias, o status muda automaticamente.</div>
+
+  <h2 id="saldo">📅 3. Consultando Saldo de Férias</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse o Portal</strong>O saldo aparece em destaque logo no topo da tela após o login.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Leia o painel de saldo</strong><em>Dias disponíveis</em> = o que ainda pode solicitar · <em>Dias utilizados</em> = já gozados · <em>Total</em> = 30 dias por período aquisitivo (CLT).</div></div>
+  </div>
+  <div class="info">O saldo é atualizado manualmente pelo RH. Em caso de divergência, entre em contato com o setor de RH.</div>
+
+  <h2 id="solicitacao">✉️ 4. Solicitando Férias</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique em "Solicitar Férias"</strong>Botão disponível no topo ou centro do portal.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Selecione as datas no calendário</strong>Clique na data de início e na data de fim. O sistema calcula o total de dias automaticamente.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Confirme a solicitação</strong>Revise as datas e clique em <em>Confirmar</em>.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Aguarde a aprovação</strong>Seu pedido ficará com status <em>Pendente</em> até o gestor ou RH responder.</div></div>
+  </div>
+  <div class="warn"><strong>Atenção:</strong> Não é possível solicitar mais dias do que o saldo disponível.</div>
+
+  <h3>Status da solicitação</h3>
+  <table>
+    <tr><th>Status</th><th>Significado</th></tr>
+    <tr><td><span class="chip chip-pend">Pendente</span></td><td>Aguardando análise do gestor/RH</td></tr>
+    <tr><td><span class="chip chip-ok">Aprovado</span></td><td>Férias confirmadas nas datas solicitadas</td></tr>
+    <tr><td><span class="chip chip-no">Rejeitado</span></td><td>Pedido não aprovado — veja o motivo informado</td></tr>
+  </table>
+
+  <h2 id="historico">📋 5. Histórico de Solicitações</h2>
+  <p>Todas as solicitações ficam registradas no portal, inclusive as já finalizadas. Role a tela para baixo para visualizar o histórico completo com datas, dias e status de cada pedido.</p>
+
+  <h2 id="senha">🔑 6. Alterando sua Senha</h2>
+  <div class="steps">
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Na tela de login, clique em "Esqueci minha senha"</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Acesse o link enviado por e-mail</strong></div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Digite e confirme a nova senha</strong>Mínimo 8 caracteres com letras maiúsculas e números.</div></div>
+    <div class="step"><div class="step-num"></div><div class="step-body"><strong>Clique em Salvar</strong>Faça login com a nova senha.</div></div>
+  </div>
+  <div class="warn"><strong>Segurança:</strong> Nunca compartilhe sua senha. O sistema jamais solicita senha por e-mail ou WhatsApp.</div>
+
+  <h2 id="duvidas">❓ 7. Dúvidas Frequentes</h2>
+  <h3>Não consigo fazer login.</h3>
+  <p>Verifique o e-mail digitado e use a opção <em>Esqueci minha senha</em>. Se persistir, contate o RH para verificar se sua conta está ativa.</p>
+  <h3>Meu saldo parece errado.</h3>
+  <p>O saldo é gerenciado pelo RH. Entre em contato diretamente com o setor.</p>
+  <h3>Posso solicitar férias parceladas?</h3>
+  <p>Sim, desde que autorizado pela empresa (Art. 134 CLT). Para cada período, faça uma solicitação separada.</p>
+  <h3>Posso acessar de celular?</h3>
+  <p>Sim, o sistema funciona em qualquer navegador moderno no celular ou tablet.</p>
+
+  <!-- RODAPÉ TIMBRADO -->
+  <div class="lh-footer-wrap">
+    <div class="lh-footer-bar"></div>
+    <div class="lh-footer">
+      <div class="lh-footer-brand">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="12" fill="#9b66f4"/><polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/></svg>
+        <strong style="color:#374151">LUMA RH</strong> · lumaplataforma.com.br
+      </div>
+      <div>Manual do Colaborador · Versão 1.0 · 2026 · Uso interno</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
