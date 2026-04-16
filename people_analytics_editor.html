@@ -311,6 +311,7 @@ nav.legacy{display:none!important;}
     <div class="sidebar-sep"></div>
     <li class="menu-item"><button class="menu-link" onclick="location.href='./mensagens_aniversario.html'"><span class="menu-icon">🎉</span>Mensagens</button></li>
     <li class="menu-item"><button class="menu-link" onclick="location.href='./configuracoes.html'"><span class="menu-icon">⚙️</span>Configurações</button></li>
+    <li class="menu-item" id="nav-minha-empresa" style="display:none;"><button class="menu-link" onclick="openMinhaEmpresa()"><span class="menu-icon">🏢</span>Minha Empresa</button></li>
   </ul>
 
   <div class="sidebar-footer">
@@ -1280,7 +1281,7 @@ nav.legacy{display:none!important;}
         <div class="fgrp s2"><div class="flbl">Data <span class="rq">*</span></div><input class="fi" id="ausData" type="date"></div>
       </div>
 
-      <!-- Seção médica: visível apenas para ATESTADO e AFASTAMENTO -->
+      <!-- Seção médica: CID + Anexo — visível apenas para ATESTADO, AFASTAMENTO, LICENÇA -->
       <div id="ausCidSection" style="margin-top:6px;">
         <div class="fsec" style="grid-column:1/-1;margin-bottom:10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);border-bottom:1px solid rgba(155,102,244,.2);padding-bottom:6px;">🩺 Dados Médicos</div>
 
@@ -1302,12 +1303,6 @@ nav.legacy{display:none!important;}
           </div>
         </div>
 
-        <!-- Observação -->
-        <div class="fgrp" style="margin-bottom:10px;">
-          <div class="flbl">Observação</div>
-          <textarea class="fi" id="ausObs" rows="3" placeholder="Descrição do CID será preenchida automaticamente. Adicione observações se necessário." style="resize:vertical;font-family:inherit;line-height:1.5;"></textarea>
-        </div>
-
         <!-- Anexo -->
         <div class="fgrp" style="margin-bottom:0;">
           <div class="flbl">Anexo do atestado <span style="font-weight:400;color:var(--muted);text-transform:none;">(PDF, JPG ou PNG · máx. 10 MB)</span></div>
@@ -1319,6 +1314,12 @@ nav.legacy{display:none!important;}
         </div>
       </div>
 
+      <!-- Observação — disponível para todos os tipos -->
+      <div class="fgrp" style="margin-top:10px;margin-bottom:0;">
+        <div class="flbl">Observação</div>
+        <textarea class="fi" id="ausObs" rows="3" placeholder="Observações sobre a ausência..." style="resize:vertical;font-family:inherit;line-height:1.5;"></textarea>
+      </div>
+
       <!-- Campo legado (hidden - backward compat) -->
       <input type="hidden" id="ausDetail">
     </div>
@@ -1326,6 +1327,37 @@ nav.legacy{display:none!important;}
 </div>
 
 <!-- TOAST -->
+
+<!-- Modal: Minha Empresa (master) -->
+<div class="ov" id="mMinhaEmpresa">
+  <div class="modal" style="max-width:640px;">
+    <div class="mh">
+      <div><div class="mt">🏢 Minha Empresa</div><div class="ms">Dados cadastrais e contatos da empresa</div></div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+        <button class="btn" onclick="closeModal('mMinhaEmpresa')">Cancelar</button>
+        <button class="btn btn-g" onclick="salvarMinhaEmpresa()">Salvar</button>
+        <button class="mc" onclick="closeModal('mMinhaEmpresa')">×</button>
+      </div>
+    </div>
+    <div class="mb">
+      <div class="fg">
+        <div class="fgrp s2"><div class="flbl">Nome da empresa</div><input class="fi" id="meNome" placeholder="Razão social" disabled style="background:var(--s2);color:var(--muted);"></div>
+        <div class="fgrp"><div class="flbl">CNPJ</div><input class="fi" id="meCnpj" placeholder="00.000.000/0001-00" maxlength="18"></div>
+        <div class="fgrp"><div class="flbl">Telefone</div><input class="fi" id="meTelefone" placeholder="(00) 00000-0000"></div>
+        <div class="fgrp s2"><div class="flbl">Endereço</div><input class="fi" id="meEndereco" placeholder="Rua, número, complemento, cidade - UF"></div>
+      </div>
+      <div class="fsec" style="margin:14px 0 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);border-bottom:1px solid rgba(155,102,244,.2);padding-bottom:6px;">📧 E-mails de Contato</div>
+      <div class="fg">
+        <div class="fgrp"><div class="flbl">E-mail do Administrador</div><input class="fi" id="meEmailAdmin" type="email" placeholder="admin@empresa.com" disabled style="background:var(--s2);color:var(--muted);"></div>
+        <div class="fgrp"><div class="flbl">E-mail do Financeiro</div><input class="fi" id="meEmailFin" type="email" placeholder="financeiro@empresa.com"></div>
+        <div class="fgrp"><div class="flbl">E-mail do RH</div><input class="fi" id="meEmailRH" type="email" placeholder="rh@empresa.com"></div>
+      </div>
+      <div style="margin-top:10px;padding:10px 14px;background:rgba(155,102,244,.06);border:1px solid rgba(155,102,244,.2);border-radius:8px;font-size:12px;color:var(--muted);">
+        💡 O e-mail do financeiro receberá automaticamente o relatório mensal de ausências todo dia 20.
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Férias Coletivas -->
 <div class="ov" id="mFeriasColetivas">
@@ -3718,16 +3750,18 @@ window.editarAus=function(id){
 function ausTipoChange(){
   const tipo=$('ausTipo').value;
   const sec=$('ausCidSection');
-  const precisa=['ATESTADO','AFASTAMENTO','LICENCA'].includes(tipo);
+  const precisaCid=['ATESTADO','AFASTAMENTO','LICENCA'].includes(tipo);
   if(sec){
-    sec.style.display=precisa?'block':'none';
-    if(!precisa){
+    sec.style.display=precisaCid?'block':'none';
+    if(!precisaCid){
+      // Limpa apenas campos médicos, NÃO a observação
       $('ausCid').value='';
-      $('ausCidDesc').textContent='Informe o código CID acima';
+      $('ausCidDesc').innerHTML='Informe o código CID acima';
       $('ausCidDesc').style.color='var(--muted)';
-      $('ausObs').value='';
+      $('ausCidDesc').style.fontStyle='italic';
       const fi=$('ausAnexo'); if(fi)fi.value='';
       $('ausAnexoNome').textContent='Clique para selecionar o arquivo';
+      $('ausAnexoNome').style.color='var(--muted)';
     }
   }
 }
@@ -3852,6 +3886,46 @@ async function saveNewAus(){
     await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
 }
+
+// ══════════════════════════════
+// MINHA EMPRESA (master)
+// ══════════════════════════════
+window._minhaEmpresaData = null;
+
+window.openMinhaEmpresa = async function(){
+  try{
+    const d = await window._sbFns.getTenantConfig();
+    window._minhaEmpresaData = d;
+    const t = window._minhaEmpresaData || {};
+    $('meNome').value       = t.nome || '';
+    $('meEmailAdmin').value = t.email_admin || '';
+    $('meCnpj').value       = t.cnpj || '';
+    $('meTelefone').value   = t.telefone || '';
+    $('meEndereco').value   = t.endereco || '';
+    $('meEmailFin').value   = t.email_financeiro || '';
+    $('meEmailRH').value    = t.email_rh || '';
+    openModal('mMinhaEmpresa');
+  } catch(e){ toast('Erro ao carregar dados da empresa: '+e.message,'error'); }
+}
+
+window.salvarMinhaEmpresa = async function(){
+  const campos = {
+    cnpj:             $('meCnpj').value.trim()||null,
+    telefone:         $('meTelefone').value.trim()||null,
+    endereco:         $('meEndereco').value.trim()||null,
+    email_financeiro: $('meEmailFin').value.trim().toLowerCase()||null,
+    email_rh:         $('meEmailRH').value.trim().toLowerCase()||null,
+  };
+  try{
+    const tenantId = window._sbTenantId;
+    if(!tenantId){ toast('Tenant não identificado','error'); return; }
+    await window._sbFns.updateTenant(tenantId, campos);
+    window._minhaEmpresaData = { ...(window._minhaEmpresaData||{}), ...campos };
+    closeModal('mMinhaEmpresa');
+    toast('Dados da empresa salvos!','success');
+  } catch(e){ toast('Erro ao salvar: '+e.message,'error'); }
+}
+
 
 // ══════════════════════════════
 // DEMO DATA
@@ -4343,6 +4417,9 @@ function detectRole(){
   if(sbRole==='master'||sbRole==='manager_global'){
     USER_ROLE='master';
     const t=$('btn-admin');if(t)t.style.display='';
+    // Exibir "Minha Empresa" apenas para master (não manager_global, que usa manager.html)
+    const navEmp=$('nav-minha-empresa');
+    if(navEmp&&sbRole==='master') navEmp.style.display='';
     return;
   }
   // RH: acesso total mas sem admin
