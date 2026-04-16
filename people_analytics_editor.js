@@ -13,6 +13,7 @@ import {
 
 window._sbLogout = () => logout()
 window._sb = sb
+window._sbClient = sb   // alias para Storage (verAtestado, upload atestado)
 
 ;(async () => {
   // colaborador → Portal de Férias (acesso direto à URL do admin bloqueado)

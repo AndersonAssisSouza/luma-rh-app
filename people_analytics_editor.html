@@ -532,11 +532,11 @@ nav.legacy{display:none!important;}
 <div class="sec" id="aus">
   <div class="sttl">
     <div class="sttl-l"><div class="sdot" style="background:var(--coral)"></div>Ausências &amp; Ocorrências</div>
-    <button class="btn btn-g" onclick="openModal('mNewAus')">+ Registrar ausência</button>
+    <button class="btn btn-g" onclick="openModalAus()">+ Registrar ausência</button>
   </div>
   <div class="card">
     <div class="ct">Registros <span id="ausCount">—</span></div>
-    <div class="sy"><table class="tbl"><thead><tr><th>Tipo</th><th>Colaborador</th><th>Data</th><th>Detalhe / CID</th><th></th></tr></thead><tbody id="ausBody"></tbody></table></div>
+    <div class="sy"><table class="tbl"><thead><tr><th>Tipo</th><th>Colaborador</th><th>Data</th><th>CID</th><th>Observação</th><th></th></tr></thead><tbody id="ausBody"></tbody></table></div>
   </div>
 </div>
 
@@ -1261,17 +1261,65 @@ nav.legacy{display:none!important;}
 
 <!-- Nova ausência -->
 <div class="ov" id="mNewAus">
-  <div class="modal">
+  <div class="modal" style="max-width:600px;">
     <div class="mh"><div><div class="mt">Registrar ausência</div><div class="ms">Atestado, falta ou ocorrência</div></div><div style="display:flex;align-items:center;gap:6px;flex-shrink:0;"><button class="btn" onclick="closeModal('mNewAus')">Cancelar</button><button class="btn btn-g" onclick="saveNewAus()">Registrar</button><button class="mc" onclick="closeModal('mNewAus')">×</button></div></div>
     <div class="mb">
+      <!-- Campos base -->
       <div class="fg">
         <div class="fgrp"><div class="flbl">Tipo <span class="rq">*</span></div>
-          <select class="fsel" id="ausTipo"><option value="ATESTADO">Atestado médico</option><option value="FALTA">Falta</option><option value="AFASTAMENTO">Afastamento</option><option value="LICENCA">Licença</option><option value="DAYOFF">Day Off</option></select>
+          <select class="fsel" id="ausTipo" onchange="ausTipoChange()">
+            <option value="ATESTADO">Atestado médico</option>
+            <option value="AFASTAMENTO">Afastamento</option>
+            <option value="FALTA">Falta</option>
+            <option value="LICENCA">Licença</option>
+            <option value="DAYOFF">Day Off</option>
+          </select>
         </div>
-        <div class="fgrp"><div class="flbl">Colaborador <span class="rq">*</span></div><select class="fsel" id="ausColab" style="font-size:17px;"></select></div>
-        <div class="fgrp"><div class="flbl">Data <span class="rq">*</span></div><input class="fi" id="ausData" type="date"></div>
-        <div class="fgrp"><div class="flbl">Detalhe / CID</div><input class="fi" id="ausDetail" placeholder="Ex: K01, J00"></div>
+        <div class="fgrp"><div class="flbl">Colaborador <span class="rq">*</span></div><select class="fsel" id="ausColab"></select></div>
+        <div class="fgrp s2"><div class="flbl">Data <span class="rq">*</span></div><input class="fi" id="ausData" type="date"></div>
       </div>
+
+      <!-- Seção médica: visível apenas para ATESTADO e AFASTAMENTO -->
+      <div id="ausCidSection" style="margin-top:6px;">
+        <div class="fsec" style="grid-column:1/-1;margin-bottom:10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);border-bottom:1px solid rgba(155,102,244,.2);padding-bottom:6px;">🩺 Dados Médicos</div>
+
+        <!-- CID -->
+        <div class="fg" style="grid-template-columns:1fr 2fr;gap:10px;margin-bottom:10px;">
+          <div class="fgrp" style="margin:0;">
+            <div class="flbl">Código CID <span class="rq">*</span></div>
+            <div style="position:relative;">
+              <input class="fi" id="ausCid" placeholder="Ex: J00, M54" maxlength="8"
+                style="text-transform:uppercase;padding-right:32px;"
+                oninput="this.value=this.value.toUpperCase();buscarCid()"
+                autocomplete="off">
+              <span id="ausCidSpinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:14px;">⏳</span>
+            </div>
+          </div>
+          <div class="fgrp" style="margin:0;">
+            <div class="flbl">Descrição CID</div>
+            <div id="ausCidDesc" style="font-size:13px;padding:9px 12px;background:rgba(155,102,244,.06);border:1px solid rgba(155,102,244,.2);border-radius:8px;min-height:38px;color:var(--muted);font-style:italic;line-height:1.4;">Informe o código CID acima</div>
+          </div>
+        </div>
+
+        <!-- Observação -->
+        <div class="fgrp" style="margin-bottom:10px;">
+          <div class="flbl">Observação</div>
+          <textarea class="fi" id="ausObs" rows="3" placeholder="Descrição do CID será preenchida automaticamente. Adicione observações se necessário." style="resize:vertical;font-family:inherit;line-height:1.5;"></textarea>
+        </div>
+
+        <!-- Anexo -->
+        <div class="fgrp" style="margin-bottom:0;">
+          <div class="flbl">Anexo do atestado <span style="font-weight:400;color:var(--muted);text-transform:none;">(PDF, JPG ou PNG · máx. 10 MB)</span></div>
+          <label id="ausAnexoLabel" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s2);border:1px dashed var(--border);border-radius:8px;cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
+            <span style="font-size:20px;">📎</span>
+            <span id="ausAnexoNome" style="font-size:13px;color:var(--muted);">Clique para selecionar o arquivo</span>
+            <input type="file" id="ausAnexo" accept=".pdf,.jpg,.jpeg,.png,.webp" style="display:none;" onchange="ausAnexoChange(this)">
+          </label>
+        </div>
+      </div>
+
+      <!-- Campo legado (hidden - backward compat) -->
+      <input type="hidden" id="ausDetail">
     </div>
   </div>
 </div>
@@ -1470,6 +1518,7 @@ function _sbAusToExcel(a){
     _row:a.id, _id:a.id,
     ID_COLABORADOR:c.id_colaborador||'', NOME:c.nome||'',
     TIPO:a.tipo, DATA:a.data, DETALHE:a.detalhe||'',
+    CID:a.cid||'', OBSERVACAO:a.observacao||'', ANEXO_URL:a.anexo_url||'',
   };
 }
 function _excelToSb(r){
@@ -1890,7 +1939,12 @@ function render(){
   // Ausências (gestor: apenas subordinados; demais: todos)
   const ausR=(ausSub||[]).filter(r=>{const n=String(r.NOME||'').trim();const d=String(r.DATA||'').trim();return n&&n!=='Colaborador (a)'&&n!=='Colaborador'&&d&&d!=='Data';});
   $('ausCount').textContent=ausR.length+' registros';
-  $('ausBody').innerHTML=ausR.map(r=>`<tr><td><span class="chip ce">${esc(r.TIPO||'—')}</span></td><td>${esc(r.NOME||'—')}</td><td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA)}</td><td>${esc(r.DETALHE||'—')}</td><td></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Nenhum registro</td></tr>';
+  $('ausBody').innerHTML=ausR.map(r=>{
+    const cidDisp=r.CID||r.DETALHE||'—';
+    const obsDisp=r.OBSERVACAO?`<span title="${esc(r.OBSERVACAO)}" style="cursor:help;">${esc(r.OBSERVACAO.slice(0,40))}${r.OBSERVACAO.length>40?'…':''}</span>`:'—';
+    const anexo=r.ANEXO_URL?`<button class="btn btn-sm" title="Ver atestado" onclick="verAtestado('${esc(r.ANEXO_URL)}')" style="padding:3px 8px;font-size:11px;">📎</button>`:'';
+    return`<tr><td><span class="chip ce">${esc(r.TIPO||'—')}</span></td><td>${esc(r.NOME||'—')}</td><td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA)}</td><td style="font-weight:600;color:var(--accent)">${esc(cidDisp)}</td><td style="font-size:12px;color:var(--muted)">${obsDisp}</td><td>${anexo}</td></tr>`;
+  }).join('')||'<tr><td colspan="6" class="empty">Nenhum registro</td></tr>';
   $('ausColab').innerHTML=ativosSub.map(a=>`<option value="${esc(a._id||a.ID_COLABORADOR)}">${esc(a.NOME)}</option>`).join('');
 
   // Desligados
@@ -3437,23 +3491,317 @@ async function saveEditEx(){
 }
 
 // NOVA AUSÊNCIA
+// ── CID-10: tabela local (códigos mais comuns em absenteísmo) ──────────────────
+const _CID10={
+  // A — Infecciosas
+  'A00':'Cólera','A01':'Febre tifoide e paratifoide','A02':'Infecções por Salmonella',
+  'A04':'Infecções intestinais bacterianas','A05':'Intoxicações alimentares bacterianas',
+  'A06':'Amebíase','A08':'Infecções intestinais virais','A09':'Diarreia e gastroenterite de origem infecciosa',
+  'A15':'Tuberculose respiratória confirmada','A16':'Tuberculose respiratória sem confirmação',
+  'A37':'Coqueluche','A38':'Escarlatina','A40':'Septicemia estreptocócica','A41':'Outras septicemias',
+  'B00':'Infecção pelo herpesvírus','B01':'Varicela','B02':'Herpes zóster',
+  'B05':'Sarampo','B06':'Rubéola','B15':'Hepatite aguda tipo A',
+  'B16':'Hepatite aguda tipo B','B18':'Hepatite viral crônica','B19':'Hepatite viral não especificada',
+  'B34':'Infecção viral de localização não especificada',
+  // F — Mental e comportamental
+  'F10':'Transtornos mentais devidos ao uso de álcool',
+  'F17':'Transtornos mentais devidos ao uso de tabaco',
+  'F20':'Esquizofrenia','F25':'Transtorno esquizoafetivo',
+  'F30':'Episódio maníaco','F31':'Transtorno afetivo bipolar',
+  'F32':'Episódio depressivo','F33':'Transtorno depressivo recorrente',
+  'F40':'Transtornos fóbico-ansiosos','F41':'Outros transtornos ansiosos',
+  'F41.0':'Transtorno de pânico','F41.1':'Transtorno de ansiedade generalizada',
+  'F41.2':'Transtorno misto ansioso-depressivo',
+  'F43':'Reação ao estresse grave e transtornos de adaptação',
+  'F43.0':'Reação aguda ao estresse','F43.1':'Transtorno de estresse pós-traumático',
+  'F43.2':'Transtorno de adaptação','F44':'Transtornos dissociativos (conversivos)',
+  'F48':'Outros transtornos neuróticos',
+  'F51':'Transtornos não orgânicos do sono','F54':'Fatores psicológicos associados a doenças',
+  // G — Sistema nervoso
+  'G35':'Esclerose múltipla','G40':'Epilepsia',
+  'G43':'Enxaqueca','G43.0':'Enxaqueca sem aura','G43.1':'Enxaqueca com aura',
+  'G44':'Outras síndromes de cefaleia','G45':'Ataques isquêmicos transitórios',
+  'G54':'Transtornos de raízes nervosas e plexos nervosos',
+  'G56':'Mononeuropatias dos membros superiores',
+  'G56.0':'Síndrome do túnel do carpo',
+  'G89':'Dor não classificada em outra parte',
+  // I — Cardiovascular
+  'I10':'Hipertensão essencial (primária)',
+  'I20':'Angina pectoris','I21':'Infarto agudo do miocárdio',
+  'I25':'Doença isquêmica crônica do coração',
+  'I48':'Fibrilação e flutter atrial',
+  'I50':'Insuficiência cardíaca','I63':'Infarto cerebral',
+  'I64':'Acidente vascular cerebral (AVC)','I67':'Outras doenças cerebrovasculares',
+  // J — Respiratórias (MAIS COMUNS)
+  'J00':'Nasofaringite aguda (resfriado comum)',
+  'J01':'Sinusite aguda','J01.0':'Sinusite maxilar aguda',
+  'J02':'Faringite aguda','J02.0':'Faringite estreptocócica','J02.9':'Faringite aguda não especificada',
+  'J03':'Amigdalite aguda','J04':'Laringite e traqueíte aguda',
+  'J06':'Infecções agudas das vias aéreas superiores',
+  'J06.0':'Laringofaringite aguda','J06.9':'Infecção aguda das vias aéreas superiores não especificada',
+  'J09':'Influenza (gripe) devida a vírus identificado',
+  'J10':'Influenza devida a outro vírus identificado',
+  'J11':'Influenza (gripe) vírus não identificado',
+  'J12':'Pneumonia viral','J13':'Pneumonia por Streptococcus',
+  'J18':'Pneumonia por microrganismo não especificado',
+  'J20':'Bronquite aguda','J21':'Bronquiolite aguda',
+  'J22':'Infecção aguda das vias aéreas inferiores não especificada',
+  'J30':'Rinite alérgica e vasomotora','J31':'Rinite, nasofaringite e faringite crônicas',
+  'J32':'Sinusite crônica','J35':'Doenças crônicas das amígdalas e adenoides',
+  'J40':'Bronquite não especificada como aguda ou crônica',
+  'J42':'Bronquite crônica não especificada',
+  'J43':'Enfisema','J44':'DPOC - Doença pulmonar obstrutiva crônica',
+  'J45':'Asma','J45.0':'Asma predominantemente alérgica','J45.1':'Asma não alérgica',
+  // K — Digestório
+  'K00':'Distúrbios do desenvolvimento e irrupção dos dentes',
+  'K02':'Cárie dentária','K04':'Doenças da polpa e dos tecidos periapicais',
+  'K08':'Outros transtornos dos dentes',
+  'K21':'Doença do refluxo gastroesofágico',
+  'K21.0':'Doença do refluxo com esofagite',
+  'K25':'Úlcera gástrica','K26':'Úlcera duodenal',
+  'K29':'Gastrite e duodenite','K29.0':'Gastrite hemorrágica aguda',
+  'K29.7':'Gastrite não especificada',
+  'K30':'Dispepsia (indigestão)',
+  'K35':'Apendicite aguda','K37':'Apendicite não especificada',
+  'K40':'Hérnia inguinal','K41':'Hérnia femoral','K43':'Hérnia ventral',
+  'K52':'Outras gastroenterites e colites não infecciosas',
+  'K57':'Doença diverticular do intestino',
+  'K58':'Síndrome do intestino irritável',
+  'K59':'Outros transtornos funcionais do intestino','K59.0':'Constipação',
+  'K64':'Hemorroidas','K70':'Doenças alcoólicas do fígado',
+  'K72':'Insuficiência hepática','K74':'Fibrose e cirrose hepáticas',
+  'K80':'Colelitíase (cálculo biliar)','K81':'Colecistite',
+  'K85':'Pancreatite aguda','K86':'Outras doenças do pâncreas',
+  // L — Pele
+  'L00':'Síndrome da pele escaldada estafilocócica',
+  'L02':'Abscesso cutâneo, furúnculo e carbúnculo',
+  'L03':'Celulite','L04':'Linfadenite aguda',
+  'L20':'Dermatite atópica','L23':'Dermatite alérgica de contato',
+  'L24':'Dermatite de contato irritante','L25':'Dermatite de contato não especificada',
+  'L30':'Outras dermatites','L40':'Psoríase',
+  'L50':'Urticária','L72':'Cistos foliculares da pele',
+  // M — Musculoesquelético (MUITO COMUNS)
+  'M00':'Artrite piogênica','M05':'Artrite reumatoide soropositiva',
+  'M06':'Outras artrites reumatoides','M10':'Gota',
+  'M13':'Outras artrites','M15':'Poliartrose',
+  'M16':'Coxartrose (artrose do quadril)','M17':'Gonartrose (artrose do joelho)',
+  'M19':'Outras artroses',
+  'M20':'Deformidades adquiridas dos dedos',
+  'M23':'Transtornos internos do joelho',
+  'M25':'Outros transtornos das articulações',
+  'M40':'Cifose e lordose','M41':'Escoliose',
+  'M47':'Espondilose','M48':'Outros transtornos da coluna vertebral',
+  'M50':'Transtornos de discos cervicais',
+  'M51':'Outros transtornos de discos intervertebrais',
+  'M51.1':'Degeneração de disco lombar','M51.2':'Deslocamento de disco intervertebral',
+  'M54':'Dorsalgia (dores nas costas)',
+  'M54.2':'Cervicalgia (dor no pescoço)',
+  'M54.4':'Lumbago com ciática','M54.5':'Dor lombar baixa (lombalgia)',
+  'M54.6':'Dor na coluna torácica',
+  'M60':'Miosite','M62':'Outros transtornos musculares',
+  'M65':'Sinovite e tenossinovite',
+  'M70':'Transtornos dos tecidos moles relacionados ao uso, uso excessivo e pressão',
+  'M75':'Lesões do ombro','M75.0':'Capsulite adesiva do ombro (ombro congelado)',
+  'M75.1':'Síndrome do manguito rotador',
+  'M77':'Outras entesopatias','M77.0':'Epicondilite medial','M77.1':'Epicondilite lateral (cotovelo do tenista)',
+  'M79':'Outros transtornos dos tecidos moles',
+  'M79.1':'Mialgia','M79.2':'Nevralgia e neurite não especificadas',
+  'M80':'Osteoporose com fratura','M81':'Osteoporose sem fratura',
+  // N — Urogenital
+  'N00':'Síndrome nefrítica aguda','N10':'Nefrite tubulointersticial aguda (pielonefrite)',
+  'N11':'Nefrite tubulointersticial crônica',
+  'N17':'Insuficiência renal aguda','N18':'Insuficiência renal crônica',
+  'N20':'Cálculo renal (pedra nos rins)','N21':'Cálculo no aparelho urinário inferior',
+  'N23':'Cólica renal não especificada',
+  'N30':'Cistite','N39':'Outros transtornos do aparelho urinário',
+  'N39.0':'Infecção urinária de localização não especificada',
+  'N40':'Hiperplasia da próstata','N45':'Orquite e epididimite',
+  'N60':'Displasia mamária','N73':'Outras doenças inflamatórias pélvicas femininas',
+  'N76':'Outras inflamações da vagina e da vulva',
+  'N80':'Endometriose','N94':'Dismenorreia',
+  // R — Sintomas e sinais
+  'R00':'Anormalidades do batimento cardíaco',
+  'R04':'Hemorragia das vias respiratórias',
+  'R05':'Tosse','R06':'Anormalidades da respiração',
+  'R07':'Dor de garganta e no peito',
+  'R10':'Dor abdominal e pélvica','R11':'Náusea e vômitos',
+  'R17':'Icterícia não especificada','R19':'Outros sintomas digestivos',
+  'R20':'Perturbações da sensibilidade cutânea',
+  'R25':'Movimentos involuntários anormais','R26':'Anormalidades da marcha e da mobilidade',
+  'R42':'Tontura e instabilidade','R50':'Febre de outra origem e de origem desconhecida',
+  'R51':'Cefaleia','R53':'Mal-estar e fadiga','R55':'Síncope e colapso',
+  'R60':'Edema não classificado em outra parte',
+  // S — Traumatismos (comuns em acidentes de trabalho)
+  'S00':'Traumatismo superficial da cabeça',
+  'S01':'Ferimento da cabeça','S02':'Fratura do crânio e dos ossos da face',
+  'S09':'Outros traumatismos e os não especificados da cabeça',
+  'S10':'Traumatismo superficial do pescoço','S12':'Fratura do pescoço',
+  'S20':'Traumatismo superficial do tórax','S22':'Fratura de costela',
+  'S30':'Traumatismo superficial do abdome','S32':'Fratura da coluna lombar e da pelve',
+  'S40':'Traumatismo superficial do ombro e do braço',
+  'S42':'Fratura do ombro e do braço',
+  'S50':'Traumatismo superficial do cotovelo e do antebraço',
+  'S52':'Fratura do antebraço',
+  'S60':'Traumatismo superficial do punho e da mão',
+  'S62':'Fratura ao nível do punho e da mão',
+  'S70':'Traumatismo superficial do quadril e da coxa',
+  'S72':'Fratura do fêmur',
+  'S80':'Traumatismo superficial da perna','S82':'Fratura da perna',
+  'S90':'Traumatismo superficial do tornozelo e do pé',
+  'S92':'Fratura do pé',
+  'T08':'Fratura da coluna vertebral nível não especificado',
+  'T14':'Traumatismo de região não especificada do corpo',
+  // Z — Fatores de saúde
+  'Z00':'Exame geral e investigação de pessoas sem queixas',
+  'Z03':'Observação médica e avaliação por suspeita de doenças',
+  'Z04':'Exame e observação por outras razões',
+  'Z13':'Exame de rastreamento de outras doenças e transtornos',
+  'Z76':'Pessoas em contato com serviços de saúde em outras circunstâncias',
+  'Z96':'Presença de outros implantes funcionais',
+};
+
+function _cidDesc(codigo){
+  if(!codigo)return null;
+  const c=codigo.toUpperCase().trim();
+  return _CID10[c]||_CID10[c.split('.')[0]]||null;
+}
+
+function openModalAus(){
+  // Reset campos
+  $('ausTipo').value='ATESTADO';
+  $('ausData').value=new Date().toISOString().split('T')[0];
+  $('ausCid').value='';
+  $('ausCidDesc').innerHTML='Informe o código CID acima';
+  $('ausCidDesc').style.color='var(--muted)';
+  $('ausCidDesc').style.fontStyle='italic';
+  $('ausObs').value='';
+  const fi=$('ausAnexo'); if(fi){fi.value='';}
+  $('ausAnexoNome').textContent='Clique para selecionar o arquivo';
+  $('ausAnexoNome').style.color='var(--muted)';
+  ausTipoChange();   // garante seção médica visível (ATESTADO é padrão)
+  openModal('mNewAus');
+}
+
+function ausTipoChange(){
+  const tipo=$('ausTipo').value;
+  const sec=$('ausCidSection');
+  const precisa=['ATESTADO','AFASTAMENTO'].includes(tipo);
+  if(sec){
+    sec.style.display=precisa?'block':'none';
+    if(!precisa){
+      $('ausCid').value='';
+      $('ausCidDesc').textContent='Informe o código CID acima';
+      $('ausCidDesc').style.color='var(--muted)';
+      $('ausObs').value='';
+      const fi=$('ausAnexo'); if(fi)fi.value='';
+      $('ausAnexoNome').textContent='Clique para selecionar o arquivo';
+    }
+  }
+}
+
+function buscarCid(){
+  const val=($('ausCid').value||'').toUpperCase().trim();
+  const descEl=$('ausCidDesc');
+  const obsEl=$('ausObs');
+  if(!val){
+    descEl.innerHTML='Informe o código CID acima';
+    descEl.style.color='var(--muted)';
+    descEl.style.fontStyle='italic';
+    return;
+  }
+  const desc=_cidDesc(val);
+  if(desc){
+    descEl.innerHTML=`<strong style="color:var(--accent)">${esc(val)}</strong> — ${esc(desc)}`;
+    descEl.style.color='var(--text)';
+    descEl.style.fontStyle='normal';
+    // Preencher observação se estiver vazio ou só tiver CID anterior
+    const obsAtual=obsEl.value.trim();
+    const descAnterior=Object.values(_CID10).some(d=>obsAtual===d);
+    if(!obsAtual||descAnterior) obsEl.value=desc;
+  } else if(val.length>=3){
+    descEl.innerHTML=`<span style="color:var(--muted)">Código <strong>${esc(val)}</strong> não encontrado na tabela local</span>`;
+    descEl.style.color='var(--muted)';
+    descEl.style.fontStyle='italic';
+  } else {
+    descEl.innerHTML='Informe o código CID acima';
+    descEl.style.color='var(--muted)';
+    descEl.style.fontStyle='italic';
+  }
+}
+
+function ausAnexoChange(input){
+  const file=input.files[0];
+  if(file){
+    const mb=(file.size/1048576).toFixed(1);
+    $('ausAnexoNome').textContent=`${file.name} (${mb} MB)`;
+    $('ausAnexoNome').style.color='var(--text)';
+    if(file.size>10485760){
+      toast('Arquivo muito grande. Máximo 10 MB.','error');
+      input.value=''; $('ausAnexoNome').textContent='Clique para selecionar o arquivo';
+      $('ausAnexoNome').style.color='var(--muted)';
+    }
+  }
+}
+
+window.verAtestado=async function(pathOrUrl){
+  if(!pathOrUrl)return;
+  if(pathOrUrl.startsWith('http')){
+    window.open(pathOrUrl,'_blank');return;
+  }
+  try{
+    const {data,error}=await window._sbClient.storage.from('atestados').createSignedUrl(pathOrUrl,3600);
+    if(error)throw error;
+    window.open(data.signedUrl,'_blank');
+  }catch(e){toast('Erro ao abrir anexo: '+e.message,'error');}
+}
+
 async function saveNewAus(){
-  const colabUUID=$('ausColab').value;  // agora é UUID do colaborador
+  const colabUUID=$('ausColab').value;
   const data=$('ausData').value;
+  const tipo=$('ausTipo').value;
+  const precisaCid=['ATESTADO','AFASTAMENTO'].includes(tipo);
+  const cid=precisaCid?($('ausCid').value||'').toUpperCase().trim():null;
+  const obs=$('ausObs').value.trim()||null;
+  const fileInput=$('ausAnexo');
+  const file=fileInput&&fileInput.files[0]?fileInput.files[0]:null;
+
   if(!colabUUID||!data){toast('Colaborador e data obrigatórios','error');return;}
-  closeModal('mNewAus');toast('Registrando ausência...','info');
+  if(precisaCid&&!cid){toast('CID obrigatório para atestado e afastamento','error');return;}
+
+  closeModal('mNewAus');
+  toast('Registrando ausência...','info');
+
+  let anexo_url=null;
+  if(file&&!DEMO){
+    try{
+      const ext=file.name.split('.').pop().toLowerCase();
+      const path=`${window._sbTenantId}/${colabUUID}/${Date.now()}.${ext}`;
+      const{error:upErr}=await window._sbClient.storage.from('atestados').upload(path,file,{contentType:file.type,upsert:false});
+      if(upErr)throw upErr;
+      anexo_url=path;
+    }catch(e){
+      console.warn('Upload atestado falhou:',e.message);
+      toast('Ausência salva (falha no envio do anexo: '+e.message+')','warn');
+    }
+  }
+
   try{
     if(DEMO){
       const nome=($('ausColab').selectedOptions[0]||{}).text||'';
-      D.AUSENCIAS_OCORRENCIAS.push({_row:Date.now(),TIPO:$('ausTipo').value,NOME:nome,DATA:data,DETALHE:$('ausDetail').value||''});
+      D.AUSENCIAS_OCORRENCIAS.push({
+        _row:Date.now(),TIPO:tipo,NOME:nome,DATA:data,
+        DETALHE:cid||'',CID:cid||'',OBSERVACAO:obs||'',ANEXO_URL:''
+      });
       render();toast('Ausência registrada','success');return;
     }
     await window._sbFns.inserirAusencia({
       tenant_id:window._sbTenantId,
       colaborador_id:colabUUID,
-      tipo:$('ausTipo').value,
-      data:data,
-      detalhe:$('ausDetail').value||null
+      tipo,data,
+      detalhe:cid||null,
+      cid:cid||null,
+      observacao:obs||null,
+      anexo_url:anexo_url||null
     });
     toast('Ausência registrada','success');await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
