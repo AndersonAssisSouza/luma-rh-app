@@ -536,7 +536,7 @@ nav.legacy{display:none!important;}
   </div>
   <div class="card">
     <div class="ct">Registros <span id="ausCount">—</span></div>
-    <div class="sy"><table class="tbl"><thead><tr><th>Tipo</th><th>Colaborador</th><th>Data</th><th>CID</th><th>Observação</th><th></th></tr></thead><tbody id="ausBody"></tbody></table></div>
+    <div class="sy"><table class="tbl"><thead><tr><th>Tipo</th><th>Colaborador</th><th>Data</th><th>CID</th><th>Descrição CID</th><th>Observação</th><th></th></tr></thead><tbody id="ausBody"></tbody></table></div>
   </div>
 </div>
 
@@ -1273,6 +1273,7 @@ nav.legacy{display:none!important;}
             <option value="FALTA">Falta</option>
             <option value="LICENCA">Licença</option>
             <option value="DAYOFF">Day Off</option>
+            <option value="COMPENSACAO">Compensação de horas</option>
           </select>
         </div>
         <div class="fgrp"><div class="flbl">Colaborador <span class="rq">*</span></div><select class="fsel" id="ausColab"></select></div>
@@ -1941,10 +1942,13 @@ function render(){
   $('ausCount').textContent=ausR.length+' registros';
   $('ausBody').innerHTML=ausR.map(r=>{
     const cidDisp=r.CID||r.DETALHE||'—';
+    const descCid=r.CID?(_cidDesc(r.CID)||'—'):'—';
     const obsDisp=r.OBSERVACAO?`<span title="${esc(r.OBSERVACAO)}" style="cursor:help;">${esc(r.OBSERVACAO.slice(0,40))}${r.OBSERVACAO.length>40?'…':''}</span>`:'—';
     const anexo=r.ANEXO_URL?`<button class="btn btn-sm" title="Ver atestado" onclick="verAtestado('${esc(r.ANEXO_URL)}')" style="padding:3px 8px;font-size:11px;">📎</button>`:'';
-    return`<tr><td><span class="chip ce">${esc(r.TIPO||'—')}</span></td><td>${esc(r.NOME||'—')}</td><td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA)}</td><td style="font-weight:600;color:var(--accent)">${esc(cidDisp)}</td><td style="font-size:12px;color:var(--muted)">${obsDisp}</td><td>${anexo}</td></tr>`;
-  }).join('')||'<tr><td colspan="6" class="empty">Nenhum registro</td></tr>';
+    const podeEditar=['master','rh'].includes(USER_ROLE);
+    const btnEdit=podeEditar?`<button class="btn btn-sm" onclick="editarAus('${esc(r._id||r._row)}')" style="padding:3px 8px;font-size:11px;">✏️</button>`:'';
+    return`<tr><td><span class="chip ce">${esc(r.TIPO||'—')}</span></td><td>${esc(r.NOME||'—')}</td><td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA)}</td><td style="font-weight:600;color:var(--accent)">${esc(cidDisp)}</td><td style="font-size:12px;">${esc(descCid)}</td><td style="font-size:12px;color:var(--muted)">${obsDisp}</td><td>${anexo}${btnEdit}</td></tr>`;
+  }).join('')||'<tr><td colspan="7" class="empty">Nenhum registro</td></tr>';
   $('ausColab').innerHTML=ativosSub.map(a=>`<option value="${esc(a._id||a.ID_COLABORADOR)}">${esc(a.NOME)}</option>`).join('');
 
   // Desligados
@@ -3666,8 +3670,11 @@ function _cidDesc(codigo){
   return _CID10[c]||_CID10[c.split('.')[0]]||null;
 }
 
+window._ausEditId=null;
+
 function openModalAus(){
   // Reset campos
+  window._ausEditId=null;
   $('ausTipo').value='ATESTADO';
   $('ausData').value=new Date().toISOString().split('T')[0];
   $('ausCid').value='';
@@ -3678,14 +3685,40 @@ function openModalAus(){
   const fi=$('ausAnexo'); if(fi){fi.value='';}
   $('ausAnexoNome').textContent='Clique para selecionar o arquivo';
   $('ausAnexoNome').style.color='var(--muted)';
+  // Resetar botão para "Registrar"
+  const btnReg=document.querySelector('#mNewAus .btn-g[onclick="saveNewAus()"]');
+  if(btnReg) btnReg.textContent='Registrar';
   ausTipoChange();   // garante seção médica visível (ATESTADO é padrão)
+  openModal('mNewAus');
+}
+
+window.editarAus=function(id){
+  const r=D.AUSENCIAS_OCORRENCIAS.find(x=>(x._id||x._row)==id);
+  if(!r)return;
+  window._ausEditId=id;
+  $('ausTipo').value=r.TIPO||'ATESTADO';
+  $('ausData').value=r.DATA||'';
+  // Selecionar colaborador
+  const opts=$('ausColab').options;
+  for(let i=0;i<opts.length;i++){
+    if(opts[i].text===r.NOME||opts[i].value===(r._id||r.ID_COLABORADOR)){
+      $('ausColab').selectedIndex=i;break;
+    }
+  }
+  $('ausCid').value=r.CID||r.DETALHE||'';
+  buscarCid();
+  $('ausObs').value=r.OBSERVACAO||'';
+  ausTipoChange();
+  // Mudar botão para "Salvar alteração"
+  const btnReg=document.querySelector('#mNewAus .btn-g[onclick="saveNewAus()"]');
+  if(btnReg) btnReg.textContent='Salvar alteração';
   openModal('mNewAus');
 }
 
 function ausTipoChange(){
   const tipo=$('ausTipo').value;
   const sec=$('ausCidSection');
-  const precisa=['ATESTADO','AFASTAMENTO'].includes(tipo);
+  const precisa=['ATESTADO','AFASTAMENTO','LICENCA'].includes(tipo);
   if(sec){
     sec.style.display=precisa?'block':'none';
     if(!precisa){
@@ -3714,10 +3747,6 @@ function buscarCid(){
     descEl.innerHTML=`<strong style="color:var(--accent)">${esc(val)}</strong> — ${esc(desc)}`;
     descEl.style.color='var(--text)';
     descEl.style.fontStyle='normal';
-    // Preencher observação se estiver vazio ou só tiver CID anterior
-    const obsAtual=obsEl.value.trim();
-    const descAnterior=Object.values(_CID10).some(d=>obsAtual===d);
-    if(!obsAtual||descAnterior) obsEl.value=desc;
   } else if(val.length>=3){
     descEl.innerHTML=`<span style="color:var(--muted)">Código <strong>${esc(val)}</strong> não encontrado na tabela local</span>`;
     descEl.style.color='var(--muted)';
@@ -3759,7 +3788,7 @@ async function saveNewAus(){
   const colabUUID=$('ausColab').value;
   const data=$('ausData').value;
   const tipo=$('ausTipo').value;
-  const precisaCid=['ATESTADO','AFASTAMENTO'].includes(tipo);
+  const precisaCid=['ATESTADO','AFASTAMENTO','LICENCA'].includes(tipo);
   const cid=precisaCid?($('ausCid').value||'').toUpperCase().trim():null;
   const obs=$('ausObs').value.trim()||null;
   const fileInput=$('ausAnexo');
@@ -3785,25 +3814,42 @@ async function saveNewAus(){
     }
   }
 
+  const payload={
+    tipo,data,
+    detalhe:cid||null,
+    cid:cid||null,
+    observacao:obs||null,
+    anexo_url:anexo_url||null
+  };
+
   try{
     if(DEMO){
       const nome=($('ausColab').selectedOptions[0]||{}).text||'';
-      D.AUSENCIAS_OCORRENCIAS.push({
-        _row:Date.now(),TIPO:tipo,NOME:nome,DATA:data,
-        DETALHE:cid||'',CID:cid||'',OBSERVACAO:obs||'',ANEXO_URL:''
-      });
-      render();toast('Ausência registrada','success');return;
+      if(window._ausEditId){
+        const idx=D.AUSENCIAS_OCORRENCIAS.findIndex(x=>(x._id||x._row)==window._ausEditId);
+        if(idx>=0) Object.assign(D.AUSENCIAS_OCORRENCIAS[idx],{TIPO:tipo,DATA:data,CID:cid||'',DETALHE:cid||'',OBSERVACAO:obs||''});
+      }else{
+        D.AUSENCIAS_OCORRENCIAS.push({
+          _row:Date.now(),TIPO:tipo,NOME:nome,DATA:data,
+          DETALHE:cid||'',CID:cid||'',OBSERVACAO:obs||'',ANEXO_URL:''
+        });
+      }
+      window._ausEditId=null;
+      render();toast(window._ausEditId?'Ausência atualizada':'Ausência registrada','success');return;
     }
-    await window._sbFns.inserirAusencia({
-      tenant_id:window._sbTenantId,
-      colaborador_id:colabUUID,
-      tipo,data,
-      detalhe:cid||null,
-      cid:cid||null,
-      observacao:obs||null,
-      anexo_url:anexo_url||null
-    });
-    toast('Ausência registrada','success');await loadAll();
+    if(window._ausEditId){
+      await window._sbFns.updateAusencia(window._ausEditId,payload);
+      toast('Ausência atualizada','success');
+    }else{
+      await window._sbFns.inserirAusencia({
+        ...payload,
+        tenant_id:window._sbTenantId,
+        colaborador_id:colabUUID
+      });
+      toast('Ausência registrada','success');
+    }
+    window._ausEditId=null;
+    await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
 }
 

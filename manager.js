@@ -86,6 +86,8 @@ function renderTenants() {
       <td><strong>${esc(t.nome)}</strong><br><span style="font-size:11px;color:var(--muted);">${esc(t.slug)}</span></td>
       <td><span style="font-size:11px;color:var(--muted);">${esc(t.slug)}</span></td>
       <td style="font-size:12px;color:var(--muted);">${esc(t.email_admin)}</td>
+      <td style="font-size:11px;">${esc(t.email_financeiro||'—')}</td>
+      <td style="font-size:11px;">${esc(t.email_rh||'—')}</td>
       <td>${chipPlano(t.plano)}</td>
       <td style="text-align:center;">${esc(usersCount)} / ${esc(t.max_usuarios)}</td>
       <td>${chipStatus(t.status)}</td>
@@ -95,7 +97,7 @@ function renderTenants() {
           ${t.status === 'ATIVO' ? 'Suspender' : 'Ativar'}
         </button>
       </div></td>
-    </tr>`}).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px;">Nenhuma empresa cadastrada.</td></tr>'
+    </tr>`}).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px;">Nenhuma empresa cadastrada.</td></tr>'
 }
 
 window.openModalTenant = function(tenant = null) {
@@ -104,6 +106,11 @@ window.openModalTenant = function(tenant = null) {
   document.getElementById('tNome').value     = tenant?.nome || ''
   document.getElementById('tSlug').value     = tenant?.slug || ''
   document.getElementById('tEmail').value    = tenant?.email_admin || ''
+  document.getElementById('tEmailFin').value  = tenant?.email_financeiro || ''
+  document.getElementById('tEmailRH').value   = tenant?.email_rh || ''
+  document.getElementById('tCnpj').value      = tenant?.cnpj || ''
+  document.getElementById('tTelefone').value  = tenant?.telefone || ''
+  document.getElementById('tEndereco').value  = tenant?.endereco || ''
   document.getElementById('tPlano').value    = tenant?.plano || 'TRIAL'
   document.getElementById('tMaxUsers').value = tenant?.max_usuarios || 10
   document.getElementById('tStatus').value   = tenant?.status || 'ATIVO'
@@ -117,12 +124,17 @@ window.editTenant = function(id) {
 window.saveTenant = async function() {
   const id   = document.getElementById('tId').value
   const data = {
-    nome:         document.getElementById('tNome').value.trim(),
-    slug:         document.getElementById('tSlug').value.trim().toLowerCase().replace(/\s+/g,'-'),
-    email_admin:  document.getElementById('tEmail').value.trim().toLowerCase(),
-    plano:        document.getElementById('tPlano').value,
-    max_usuarios: parseInt(document.getElementById('tMaxUsers').value) || 10,
-    status:       document.getElementById('tStatus').value
+    nome:             document.getElementById('tNome').value.trim(),
+    slug:             document.getElementById('tSlug').value.trim().toLowerCase().replace(/\s+/g,'-'),
+    email_admin:      document.getElementById('tEmail').value.trim().toLowerCase(),
+    email_financeiro: document.getElementById('tEmailFin').value.trim().toLowerCase() || null,
+    email_rh:         document.getElementById('tEmailRH').value.trim().toLowerCase() || null,
+    cnpj:             document.getElementById('tCnpj').value.trim() || null,
+    telefone:         document.getElementById('tTelefone').value.trim() || null,
+    endereco:         document.getElementById('tEndereco').value.trim() || null,
+    plano:            document.getElementById('tPlano').value,
+    max_usuarios:     parseInt(document.getElementById('tMaxUsers').value) || 10,
+    status:           document.getElementById('tStatus').value
   }
   if (!data.nome || !data.slug || !data.email_admin) { toast('Preencha os campos obrigatórios','error'); return }
 

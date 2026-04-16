@@ -148,7 +148,7 @@ tr:hover td{background:var(--bg3);}
       </div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Nome</th><th>Slug</th><th>Admin</th><th>Plano</th><th>Usuários</th><th>Status</th><th>Ações</th></tr></thead>
+          <thead><tr><th>Nome</th><th>Slug</th><th>Admin</th><th>E-mail Financeiro</th><th>E-mail RH</th><th>Plano</th><th>Usuários</th><th>Status</th><th>Ações</th></tr></thead>
           <tbody id="tenants-tbody"></tbody>
         </table>
       </div>
@@ -203,6 +203,15 @@ tr:hover td{background:var(--bg3);}
       <div class="fgrp"><div class="flbl">Slug (URL) *</div><input class="fi" id="tSlug" placeholder="ex: luisa-moraes" oninput="autoSlug()"></div>
     </div>
     <div class="fgrp"><div class="flbl">E-mail do administrador *</div><input class="fi" id="tEmail" type="email" placeholder="admin@empresa.com"></div>
+    <div class="fgrid">
+      <div class="fgrp"><div class="flbl">E-mail do Financeiro</div><input class="fi" id="tEmailFin" type="email" placeholder="financeiro@empresa.com"></div>
+      <div class="fgrp"><div class="flbl">E-mail do RH</div><input class="fi" id="tEmailRH" type="email" placeholder="rh@empresa.com"></div>
+    </div>
+    <div class="fgrid">
+      <div class="fgrp"><div class="flbl">CNPJ</div><input class="fi" id="tCnpj" placeholder="00.000.000/0001-00" maxlength="18"></div>
+      <div class="fgrp"><div class="flbl">Telefone</div><input class="fi" id="tTelefone" placeholder="(00) 00000-0000"></div>
+    </div>
+    <div class="fgrp"><div class="flbl">Endereço</div><input class="fi" id="tEndereco" placeholder="Rua, número, cidade - UF"></div>
     <div class="fgrid">
       <div class="fgrp"><div class="flbl">Plano</div>
         <select class="fsel" id="tPlano">

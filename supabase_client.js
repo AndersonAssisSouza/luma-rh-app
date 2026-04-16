@@ -273,6 +273,17 @@ export async function inserirAusencia(ausencia) {
   return data
 }
 
+export async function updateAusencia(id, campos) {
+  const { data, error } = await sb
+    .from('ausencias_ocorrencias')
+    .update(campos)
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 // ============================================================
 // DESLIGAMENTOS AGENDADOS
 // ============================================================
