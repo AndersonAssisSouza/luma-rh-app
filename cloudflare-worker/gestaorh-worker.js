@@ -52,7 +52,9 @@ export default {
       return new Response('Bad Request', { status: 400 });
     }
 
-    const target = AZURE_ORIGIN + path;  // search/query não é repassado
+    // Repassa query string ao Azure (necessário para cache-busting com ?v=...)
+    const qs     = url.search;
+    const target = AZURE_ORIGIN + path + qs;
 
     // Filtrar headers da requisição — não repassa cookies nem auth ao Azure
     const cleanHeaders = new Headers();
@@ -62,9 +64,11 @@ export default {
       }
     }
 
+    // Desabilita cache do Worker para o Azure — sempre busca versão atual
     const response = await fetch(new Request(target, {
       method:  request.method,
       headers: cleanHeaders,
+      cf: { cacheEverything: false }
     }));
 
     // Filtrar headers da resposta — não expõe detalhes internos do Azure
@@ -73,6 +77,12 @@ export default {
       if (!BLOCKED_RESPONSE_HEADERS.has(key.toLowerCase())) {
         cleanRespHeaders.set(key, value);
       }
+    }
+
+    // Força no-cache para HTML e JS — impede Cloudflare e browser de cachear
+    if (path.endsWith('.html') || path.endsWith('.js') || path === '/') {
+      cleanRespHeaders.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+      cleanRespHeaders.set('Pragma', 'no-cache');
     }
 
     return new Response(response.body, {
