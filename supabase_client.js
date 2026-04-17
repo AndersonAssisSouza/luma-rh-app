@@ -486,7 +486,7 @@ export async function getTenantConfig() {
     if (!tenantId) return { config: {} }
     const { data, error } = await sb
       .from('tenants')
-      .select('id, nome, slug, config')
+      .select('id, nome, slug, email_admin, email_financeiro, email_rh, cnpj, telefone, endereco, config')
       .eq('id', tenantId)
       .single()
     if (error) return { config: {} }
