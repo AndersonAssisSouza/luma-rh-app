@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --luma-purple:  #9b66f4;
+    --luma-purplel: #b98af7;
+    --luma-gold:    #ffd000;
+    --luma-goldd:   #c8950a;
+    --luma-ink:     #0f0f1a;
+    --luma-ink2:    #1a1a2e;
+    --luma-ink3:    #111122;
+    --luma-dark1:   #2a2535;
+    --luma-dark2:   #322d42;
+    --luma-dark3:   #3c3650;
+    --luma-border:  rgba(155,102,244,.18);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    @apply bg-luma-ink text-gray-100 antialiased;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    min-height: 100dvh;
+  }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-luma-dark3 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-luma-purple; }
+
+  ::selection { background: rgba(155,102,244,.35); }
+}
+
+@layer components {
+  /* Card base */
+  .luma-card {
+    @apply bg-luma-ink2 border border-[var(--luma-border)] rounded-xl;
+  }
+
+  /* Input base */
+  .luma-input {
+    @apply w-full bg-luma-dark1 border border-[var(--luma-border)] rounded-lg
+           px-4 py-3 text-sm text-gray-100 placeholder-gray-500
+           focus:outline-none focus:border-luma-purple focus:ring-1 focus:ring-luma-purple/30
+           transition-all duration-200;
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
+           bg-luma-purple text-white
+           hover:bg-luma-purplel active:scale-95
+           transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+           text-gray-400 hover:text-gray-100 hover:bg-luma-dark1
+           transition-all duration-150;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+           text-red-400 hover:bg-red-500/10
+           transition-all duration-150;
+  }
+
+  /* Badge prioridade */
+  .badge-critico  { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-red-500/15 text-red-400; }
+  .badge-alta     { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-orange-500/15 text-orange-400; }
+  .badge-atencao  { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-yellow-500/15 text-yellow-400; }
+  .badge-acomp    { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-emerald-500/15 text-emerald-400; }
+
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+           text-gray-400 hover:text-gray-100 hover:bg-luma-dark1
+           transition-all duration-150 cursor-pointer;
+  }
+  .nav-item.active {
+    @apply bg-luma-purple/15 text-luma-purplel border border-luma-purple/20;
+  }
+
+  /* Table */
+  .luma-table { @apply w-full text-sm; }
+  .luma-table th {
+    @apply px-4 py-3 text-left text-[11px] font-semibold tracking-wider uppercase
+           text-gray-500 border-b border-[var(--luma-border)];
+  }
+  .luma-table td {
+    @apply px-4 py-3 border-b border-[var(--luma-border)] text-gray-300;
+  }
+  .luma-table tr:hover td { @apply bg-luma-dark1/40; }
+  .luma-table tr:last-child td { @apply border-0; }
+}
+
+/* Noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: .025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}

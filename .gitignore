@@ -1,29 +1,6 @@
-# Credenciais — NUNCA commitar
-.env
+node_modules
+dist
 .env.local
-.env*.local
-scripts/.env
-
-# Node
-node_modules/
-scripts/node_modules/
-package-lock.json
-scripts/package-lock.json
-
-# Sistema operacional
+.env.*.local
+*.log
 .DS_Store
-Thumbs.db
-desktop.ini
-
-# Editor
-.vscode/
-*.swp
-*.swo
-
-# Claude Code
-.claude/
-
-# Scripts de migração (contêm credenciais embutidas — usar .env em vez disso)
-scripts/migrate_*.cjs
-scripts/migrate_*.js
-scripts/serve_migration.cjs
