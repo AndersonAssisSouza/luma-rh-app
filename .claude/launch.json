@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "luma-rh",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", ".", "--port", "4200", "--cors", "-c-1"],
+      "port": 4200
+    },
+    {
+      "name": "em-construcao",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["serve-ec.cjs"],
+      "port": 4301
+    }
+  ]
+}

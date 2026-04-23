@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LUMA Plataforma — Em Construção</title>
+  <meta name="description" content="Plataforma inteligente de gestão empresarial. Em breve." />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --purple:  #7c3aed;
+      --purple2: #4c1d95;
+      --gold:    #ffd000;
+      --ink:     #080812;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      min-height: 100vh;
+      background: var(--ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #fff;
+      overflow-x: hidden;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.011) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.011) 1px, transparent 1px);
+      background-size: 64px 64px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(124,58,237,.17) 0%, transparent 65%);
+      top: -20%; left: -12%;
+      animation: driftA 16s ease-in-out infinite alternate;
+    }
+    .orb-2 {
+      width: 560px; height: 560px;
+      background: radial-gradient(circle, rgba(255,208,0,.08) 0%, transparent 65%);
+      bottom: -22%; right: -10%;
+      animation: driftB 20s ease-in-out infinite alternate;
+    }
+    .orb-3 {
+      width: 360px; height: 360px;
+      background: radial-gradient(circle, rgba(124,58,237,.06) 0%, transparent 65%);
+      bottom: 10%; left: 20%;
+      animation: driftC 24s ease-in-out infinite alternate;
+    }
+    @keyframes driftA { from { transform:translate(0,0); } to { transform:translate(45px,35px); } }
+    @keyframes driftB { from { transform:translate(0,0); } to { transform:translate(-35px,-25px); } }
+    @keyframes driftC { from { transform:translate(0,0); } to { transform:translate(25px,-40px); } }
+
+    /* ── Layout ── */
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 26px;
+      padding: 56px 24px 90px;
+      text-align: center;
+      max-width: 780px;
+      width: 100%;
+    }
+
+    /* Logo */
+    .logo { display: flex; align-items: center; gap: 16px; }
+    .logo-icon {
+      width: 62px; height: 62px;
+      border-radius: 17px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(124,58,237,.45), 0 0 0 4px rgba(124,58,237,.08), 0 14px 44px rgba(124,58,237,.36);
+      flex-shrink: 0;
+    }
+    .logo-icon img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+    .logo-wordmark strong {
+      display: block;
+      font-size: 29px; font-weight: 900; letter-spacing: -1.3px; line-height: 1;
+    }
+    .logo-wordmark span {
+      display: block;
+      font-size: 10px; font-weight: 600; letter-spacing: 4px;
+      text-transform: uppercase; color: #4b5563; margin-top: 4px;
+    }
+
+    /* Badge */
+    .badge {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: rgba(255,208,0,.07); border: 1px solid rgba(255,208,0,.22);
+      border-radius: 100px; padding: 8px 20px;
+      font-size: 11px; font-weight: 700; color: var(--gold);
+      letter-spacing: .9px; text-transform: uppercase;
+    }
+    .pulse {
+      width: 7px; height: 7px; background: var(--gold); border-radius: 50%;
+      box-shadow: 0 0 8px rgba(255,208,0,.6);
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.3; transform:scale(.68); }
+    }
+
+    /* Headline */
+    .headline {
+      font-size: 46px; font-weight: 800; line-height: 1.08; letter-spacing: -2px;
+      background: linear-gradient(160deg, #fff 25%, #4b5563 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .sub {
+      font-size: 15.5px; color: #6b7280; line-height: 1.7; max-width: 480px;
+    }
+
+    .divider {
+      width: 48px; height: 3px;
+      background: linear-gradient(90deg, var(--purple), var(--gold));
+      border-radius: 4px;
+    }
+
+    /* ── Grade de produtos ── */
+    .products {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      width: 100%;
+    }
+
+    .pc {
+      background: rgba(255,255,255,.033);
+      border: 1px solid rgba(255,255,255,.068);
+      border-radius: 22px;
+      padding: 28px 24px;
+      text-align: left;
+      position: relative; overflow: hidden;
+      transition: border-color .25s, transform .2s;
+      cursor: default;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 110px;
+    }
+    .pc:hover { border-color: rgba(255,255,255,.14); transform: translateY(-2px); }
+    .pc::before {
+      content:''; position:absolute; top:0; left:10%; right:10%; height:1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.09), transparent);
+    }
+    /* glow colorido no canto superior direito */
+    .pc::after {
+      content:''; position:absolute; top:-50px; right:-50px;
+      width:130px; height:130px; border-radius:50%;
+      filter: blur(45px); opacity:.35; pointer-events:none;
+    }
+    .pc[data-c="purple"]::after { background:#7c3aed; }
+    .pc[data-c="blue"]::after   { background:#2563eb; }
+    .pc[data-c="emerald"]::after{ background:#059669; }
+    .pc[data-c="amber"]::after  { background:#b45309; }
+
+    /* Cabeçalho do card */
+    .pc-head {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    }
+    .pc-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      overflow: hidden; flex-shrink: 0;
+      box-shadow: 0 0 0 1px rgba(124,58,237,.35);
+    }
+    .pc-icon img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
+
+    .pc-titles { display:flex; flex-direction:column; gap:1px; }
+    .pc-label {
+      font-size: 9.5px; font-weight: 700; letter-spacing: 2.5px;
+      text-transform: uppercase;
+    }
+    .pc[data-c="purple"] .pc-label { color:#a78bfa; }
+    .pc[data-c="blue"]   .pc-label { color:#60a5fa; }
+    .pc[data-c="emerald"].pc-label { color:#34d399; }
+    .pc[data-c="amber"]  .pc-label { color:#fbbf24; }
+
+    .pc-name {
+      font-size: 17px; font-weight: 700; color: #f3f4f6; letter-spacing: -.3px; line-height: 1.2;
+    }
+
+    /* Lista de páginas */
+    .pc-pages {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .pc-page {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: #9ca3af; line-height: 1.35;
+    }
+    .pc-page-dot {
+      width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; opacity: .7;
+    }
+    .pc[data-c="purple"] .pc-page-dot { background:#a78bfa; }
+    .pc[data-c="blue"]   .pc-page-dot { background:#60a5fa; }
+    .pc[data-c="emerald"] .pc-page-dot { background:#34d399; }
+    .pc[data-c="amber"]  .pc-page-dot { background:#fbbf24; }
+
+    .pc-soon {
+      margin-top: 14px;
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 10.5px; font-weight: 600; letter-spacing: .5px;
+      text-transform: uppercase; color: #374151;
+    }
+
+    /* Progresso */
+    .progress-wrap { width: 100%; }
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 11.5px; color: #374151; margin-bottom: 8px; font-weight: 600;
+    }
+    .progress-track {
+      width: 100%; height: 4px;
+      background: rgba(255,255,255,.05); border-radius: 100px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--purple), #a855f7, var(--gold));
+      border-radius: 100px;
+      animation: fillBar 2.4s cubic-bezier(.22,1,.36,1) .5s forwards;
+    }
+    @keyframes fillBar { from { width:0%; } to { width:72%; } }
+
+    footer {
+      position: fixed; bottom: 24px;
+      font-size: 11.5px; color: #1f2937; letter-spacing: .4px; z-index: 1; font-weight: 500;
+    }
+
+    @media (max-width: 560px) {
+      .products { grid-template-columns: 1fr; }
+      .headline { font-size: 34px; letter-spacing:-1.2px; }
+      .logo-icon { width:52px; height:52px; }
+      .logo-wordmark strong { font-size:25px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="container">
+
+    <!-- Logo -->
+    <div class="logo">
+      <div class="logo-icon">
+        <img src="/assets/logo-luma.png" alt="LUMA" />
+      </div>
+      <div class="logo-wordmark">
+        <strong>LUMA</strong>
+        <span>Plataforma</span>
+      </div>
+    </div>
+
+    <!-- Badge -->
+    <div class="badge">
+      <div class="pulse"></div>
+      Em construção
+    </div>
+
+    <!-- Headline -->
+    <h1 class="headline">Uma suíte completa<br/>está chegando</h1>
+    <p class="sub">
+      Quatro sistemas integrados, desenvolvidos para transformar
+      a gestão da sua empresa. Tudo com a identidade LUMA.
+    </p>
+
+    <div class="divider"></div>
+
+    <!-- Produtos -->
+    <div class="products">
+
+      <!-- LUMA RH -->
+      <div class="pc" data-c="purple">
+        <div class="pc-head">
+          <div class="pc-icon">
+            <img src="/assets/logo-luma.png" alt="LUMA" />
+          </div>
+          <div class="pc-titles">
+            <div class="pc-label">LUMA</div>
+            <div class="pc-name">RH</div>
+          </div>
+        </div>
+        <div class="pc-soon">· Em breve</div>
+      </div>
+
+      <!-- LUMA Docs -->
+      <div class="pc" data-c="blue">
+        <div class="pc-head">
+          <div class="pc-icon">
+            <img src="/assets/logo-luma.png" alt="LUMA" />
+          </div>
+          <div class="pc-titles">
+            <div class="pc-label">LUMA</div>
+            <div class="pc-name">Docs</div>
+          </div>
+        </div>
+        <div class="pc-soon">· Em breve</div>
+      </div>
+
+      <!-- LUMA Controladoria -->
+      <div class="pc" data-c="emerald">
+        <div class="pc-head">
+          <div class="pc-icon">
+            <img src="/assets/logo-luma.png" alt="LUMA" />
+          </div>
+          <div class="pc-titles">
+            <div class="pc-label">LUMA</div>
+            <div class="pc-name">Controladoria</div>
+          </div>
+        </div>
+        <div class="pc-soon">· Em breve</div>
+      </div>
+
+      <!-- LUMA Manager -->
+      <div class="pc" data-c="amber">
+        <div class="pc-head">
+          <div class="pc-icon">
+            <img src="/assets/logo-luma.png" alt="LUMA" />
+          </div>
+          <div class="pc-titles">
+            <div class="pc-label">LUMA</div>
+            <div class="pc-name">Manager</div>
+          </div>
+        </div>
+        <div class="pc-soon">· Em breve</div>
+      </div>
+
+    </div>
+
+    <!-- Progresso -->
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Progresso geral da plataforma</span>
+        <span>72%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>© 2026 LUMA Plataforma · Todos os direitos reservados</footer>
+
+</body>
+</html>
