@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/auth'
 
+import TrocarSenhaPage    from '@/pages/TrocarSenha'
 import LoginPage          from '@/pages/Login'
 import AppShell            from '@/components/layout/AppShell'
 import DashboardPage       from '@/pages/Dashboard'
@@ -59,6 +60,7 @@ export default function App() {
 
   return (
     <Routes>
+      <Route path="/trocar-senha" element={<TrocarSenhaPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={
         <RequireAuth>
@@ -85,3 +87,4 @@ export default function App() {
     </Routes>
   )
 }
+
