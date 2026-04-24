@@ -570,6 +570,30 @@ tbody tr.clickable:hover td{background:var(--surface-2)}
 .text-muted{color:var(--ink-3)}.text-xs{font-size:11.5px}.text-mono{font-family:var(--font-mono)}
 .flex{display:flex}.items-center{align-items:center}.gap-8{gap:8px}.gap-12{gap:12px}
 .font-bold{font-weight:600}
+
+/* ── Tenant Detail Tabs ─────────────────────────────── */
+.page-head-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.td-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:16px 0 20px;padding-bottom:0}
+.td-tab{padding:8px 16px;font-size:13px;font-weight:500;color:var(--ink-3);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;border-radius:6px 6px 0 0}
+.td-tab:hover{color:var(--ink);background:var(--surface-2)}
+.td-tab.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+.td-tab-panel{animation:fadeIn .15s ease}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px}
+.form-row{display:flex;flex-direction:column;gap:4px}
+.form-label{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.card-head{padding:16px 20px;border-bottom:1px solid var(--line-2);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:600;color:var(--ink)}
+.card-body{padding:20px}
+.nota-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;max-width:680px}
+.nota-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.nota-card-meta{font-size:11px;color:var(--ink-3)}
+.nota-card-text{font-size:13px;color:var(--ink);line-height:1.6;white-space:pre-wrap}
+.nota-del{background:none;border:none;color:var(--danger);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px}
+.nota-del:hover{background:rgba(180,39,31,.08)}
+.btn-ghost{background:none;border:1px solid var(--line);color:var(--ink-2)}
+.btn-ghost:hover{background:var(--surface-2)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 
@@ -910,12 +934,188 @@ tbody tr.clickable:hover td{background:var(--surface-2)}
 
       <!-- ── DETALHE DO TENANT ─────────────────────── -->
       <div id="page-tenants-detail" class="page">
-        <div id="tenant-detail-content">
-          <div class="empty-state" style="padding-top:80px">
-            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18M4.5 3h15M5.25 3v18m13.5-18v18"/></svg></div>
-            <div class="empty-title">Detalhe do tenant</div>
-            <div class="empty-sub">Selecione uma empresa na lista para ver os detalhes.</div>
-            <button class="btn btn-sm mt-12" onclick="navigate('tenants')">← Voltar para lista</button>
+        <!-- Header -->
+        <div class="page-head" style="margin-bottom:0">
+          <div class="page-head-left" style="gap:14px;align-items:center">
+            <button class="btn btn-ghost btn-sm" onclick="navigate('tenants')" style="display:flex;align-items:center;gap:6px;padding:6px 10px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+              Empresas
+            </button>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div id="td-logo" style="width:36px;height:36px;border-radius:9px;background:var(--brand-soft);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--brand-ink)">—</div>
+              <div>
+                <div id="td-nome" style="font-size:16px;font-weight:700;color:var(--ink)">—</div>
+                <div id="td-slug" style="font-size:12px;color:var(--ink-3);font-family:var(--font-mono)">—</div>
+              </div>
+            </div>
+            <span id="td-status-pill"></span>
+            <span id="td-plan-pill"></span>
+          </div>
+          <div class="page-head-right" style="gap:8px">
+            <button id="td-btn-toggle" class="btn btn-sm btn-ghost" onclick="tdToggleStatus()">—</button>
+            <button class="btn btn-sm" onclick="tdTab('usuarios')" style="background:var(--brand);color:#fff">+ Convidar usuário</button>
+          </div>
+        </div>
+
+        <!-- Tabs nav -->
+        <div class="td-tabs">
+          <button class="td-tab active" data-tab="geral"        onclick="tdTab('geral')">Visão geral</button>
+          <button class="td-tab"        data-tab="usuarios"     onclick="tdTab('usuarios')">Usuários</button>
+          <button class="td-tab"        data-tab="faturamento"  onclick="tdTab('faturamento')">Faturamento</button>
+          <button class="td-tab"        data-tab="uso"          onclick="tdTab('uso')">Uso</button>
+          <button class="td-tab"        data-tab="anotacoes"    onclick="tdTab('anotacoes')">Anotações</button>
+          <button class="td-tab"        data-tab="auditoria"    onclick="tdTab('auditoria')">Auditoria</button>
+        </div>
+
+        <!-- Tab: Visao Geral -->
+        <div id="td-tab-geral" class="td-tab-panel">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="td-kpi-row">
+            <div class="kpi-card"><div class="kpi-label">MRR</div><div class="kpi-value" id="td-kpi-mrr">—</div></div>
+            <div class="kpi-card"><div class="kpi-label">Usuários</div><div class="kpi-value" id="td-kpi-users">—</div></div>
+            <div class="kpi-card"><div class="kpi-label">Plano</div><div class="kpi-value" id="td-kpi-plano">—</div></div>
+            <div class="kpi-card"><div class="kpi-label">Cliente desde</div><div class="kpi-value" id="td-kpi-desde">—</div></div>
+          </div>
+
+          <!-- Edit form -->
+          <div class="card" style="max-width:680px">
+            <div class="card-head"><div class="card-title">Dados cadastrais</div></div>
+            <div class="card-body">
+              <form id="td-form-geral" onsubmit="tdSalvarGeral(event)">
+                <div class="form-grid">
+                  <div class="form-row"><label class="form-label">Nome</label><input class="input" id="td-f-nome" required></div>
+                  <div class="form-row"><label class="form-label">CNPJ</label><input class="input" id="td-f-cnpj" maxlength="18" oninput="maskCNPJ(this)"></div>
+                  <div class="form-row"><label class="form-label">Slug</label><input class="input" id="td-f-slug"></div>
+                  <div class="form-row"><label class="form-label">E-mail admin</label><input class="input" type="email" id="td-f-email"></div>
+                  <div class="form-row"><label class="form-label">Plano</label>
+                    <select class="input" id="td-f-plano">
+                      <option value="TRIAL">Trial</option><option value="BASICO">Básico</option>
+                      <option value="PRO">Pro</option><option value="ENTERPRISE">Enterprise</option>
+                    </select>
+                  </div>
+                  <div class="form-row"><label class="form-label">Status</label>
+                    <select class="input" id="td-f-status">
+                      <option value="ATIVO">Ativo</option><option value="TRIAL">Trial</option>
+                      <option value="SUSPENSO">Suspenso</option><option value="CANCELADO">Cancelado</option>
+                    </select>
+                  </div>
+                  <div class="form-row"><label class="form-label">Máx. usuários</label><input class="input" type="number" id="td-f-maxu" min="1"></div>
+                  <div class="form-row"><label class="form-label">MRR (R$)</label><input class="input" type="number" id="td-f-mrr" min="0" step="0.01" placeholder="0.00"></div>
+                </div>
+                <div style="margin-top:20px;display:flex;gap:8px">
+                  <button type="submit" class="btn" id="td-btn-save">Salvar alterações</button>
+                  <button type="button" class="btn btn-ghost" onclick="tdCancelEdit()">Cancelar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Usuarios -->
+        <div id="td-tab-usuarios" class="td-tab-panel" style="display:none">
+          <div class="page-head" style="margin-bottom:16px;padding:0">
+            <div class="page-head-left"><div class="page-subtitle" id="td-u-count">—</div></div>
+            <div class="page-head-right">
+              <button class="btn btn-sm" onclick="tdConvidarModal()" style="background:var(--brand);color:#fff">+ Convidar usuário</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="td-u-tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- Modal Convidar -->
+          <div id="td-invite-modal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+            <div class="modal">
+              <div class="modal-head"><div class="modal-title">Convidar usuário</div></div>
+              <div class="modal-body">
+                <div class="form-grid" style="grid-template-columns:1fr">
+                  <div class="form-row"><label class="form-label">Nome completo</label><input class="input" id="inv-nome" placeholder="João Silva"></div>
+                  <div class="form-row"><label class="form-label">E-mail</label><input class="input" type="email" id="inv-email" placeholder="joao@empresa.com.br"></div>
+                  <div class="form-row"><label class="form-label">Perfil</label>
+                    <select class="input" id="inv-role">
+                      <option value="colaborador">Colaborador</option>
+                      <option value="gestor">Gestor</option>
+                      <option value="rh">RH</option>
+                      <option value="master">Master (admin empresa)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-foot">
+                <button class="btn btn-ghost btn-sm" onclick="$('td-invite-modal').classList.remove('open')">Cancelar</button>
+                <button class="btn btn-sm" id="inv-btn" onclick="tdConvidar()" style="background:var(--brand);color:#fff">Enviar convite</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Faturamento -->
+        <div id="td-tab-faturamento" class="td-tab-panel" style="display:none">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
+            <div class="kpi-card"><div class="kpi-label">MRR</div><div class="kpi-value" id="td-fat-mrr">—</div></div>
+            <div class="kpi-card"><div class="kpi-label">ARR</div><div class="kpi-value" id="td-fat-arr">—</div></div>
+            <div class="kpi-card"><div class="kpi-label">Plano atual</div><div class="kpi-value" id="td-fat-plano">—</div></div>
+          </div>
+          <div class="card">
+            <div class="card-head" style="display:flex;justify-content:space-between;align-items:center">
+              <div class="card-title">Histórico de faturas</div>
+              <button class="btn btn-sm btn-ghost" onclick="tdNovaFatura()">+ Registrar</button>
+            </div>
+            <div class="card-body" style="padding:0">
+              <table>
+                <thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Status</th><th>Stripe ID</th></tr></thead>
+                <tbody id="td-fat-tbody"></tbody>
+              </table>
+              <div id="td-fat-empty" class="empty-state" style="padding:40px;display:none">
+                <div class="empty-sub">Nenhuma fatura registrada</div>
+                <button class="btn btn-sm mt-12" onclick="tdNovaFatura()">+ Registrar primeira fatura</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Uso -->
+        <div id="td-tab-uso" class="td-tab-panel" style="display:none">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px">
+            <div class="kpi-card"><div class="kpi-label">Total usuários</div><div class="kpi-value" id="td-uso-total">—</div></div>
+            <div class="kpi-card"><div class="kpi-label">Colaboradores</div><div class="kpi-value" id="td-uso-colab">—</div></div>
+            <div class="kpi-card"><div class="kpi-label">Gestores / RH</div><div class="kpi-value" id="td-uso-gestores">—</div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Usuários do tenant</div></div>
+            <div class="card-body" style="padding:0">
+              <table>
+                <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th></tr></thead>
+                <tbody id="td-uso-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Anotacoes -->
+        <div id="td-tab-anotacoes" class="td-tab-panel" style="display:none">
+          <div class="card" style="max-width:680px;margin-bottom:20px">
+            <div class="card-head"><div class="card-title">Nova anotação</div></div>
+            <div class="card-body">
+              <textarea id="td-nota-input" class="input" style="width:100%;min-height:100px;resize:vertical;font-family:var(--font)" placeholder="Adicionar nota sobre este tenant..."></textarea>
+              <button class="btn btn-sm" style="margin-top:10px;background:var(--brand);color:#fff" onclick="tdSalvarNota()">Salvar anotação</button>
+            </div>
+          </div>
+          <div id="td-notas-list"></div>
+        </div>
+
+        <!-- Tab: Auditoria -->
+        <div id="td-tab-auditoria" class="td-tab-panel" style="display:none">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Data/hora</th><th>Tipo</th><th>Usuário</th><th>Descrição</th></tr></thead>
+              <tbody id="td-aud-tbody"></tbody>
+            </table>
+            <div id="td-aud-empty" class="empty-state" style="padding:40px;display:none">
+              <div class="empty-sub">Nenhum evento registrado para este tenant</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1163,6 +1363,7 @@ window.navigate = function(route) {
   if (route === 'billing')       renderBilling()
   if (route === 'plans')         renderPlans()
   if (route === 'audit')         loadAudit()
+  if (route.startsWith('tenants-detail-')) loadTenantDetail(route.replace('tenants-detail-',''))
 }
 
 // ── data loading ─────────────────────────────────────────────
@@ -1365,7 +1566,7 @@ window.renderTenants = async function() {
     const st = tenantStatus(t)
     const uc = userCountForTenant(t.id)
     const mrr = tenantMrr(t)
-    return `<tr class="clickable" onclick="navigate('tenants-detail')">
+    return `<tr class="clickable" onclick="navigate('tenants-detail-${t.id}')">
       <td><div class="company-cell">
         <div class="company-logo">${initials(t.nome)}</div>
         <div>
@@ -1523,6 +1724,307 @@ window.salvarNovoTenant = async function(e) {
   await loadAll()
   navigate(_route)
 })()
+
+// ══════════════════════════════════════════════
+// TENANT DETAIL — Fase 2
+// ══════════════════════════════════════════════
+let _td = null // tenant atual
+
+window.loadTenantDetail = async function(id) {
+  if (!_tenants.length) await loadAll()
+  _td = _tenants.find(t => t.id === id) || null
+  if (!_td) { navigate('tenants'); return }
+
+  // Header
+  const st = tenantStatus(_td)
+  $('td-logo').textContent   = initials(_td.nome)
+  $('td-nome').textContent   = _td.nome
+  $('td-slug').textContent   = '@' + (_td.slug || '')
+  $('td-status-pill').outerHTML = `<span id="td-status-pill">${statusPill(st)}</span>`
+  $('td-plan-pill').outerHTML   = `<span id="td-plan-pill">${planPill(_td.plano)}</span>`
+
+  // Toggle button
+  const btn = $('td-btn-toggle')
+  if (st === 'blocked' || _td.status === 'SUSPENSO') {
+    btn.textContent = 'Reativar'
+    btn.style.color = 'var(--good)'
+  } else {
+    btn.textContent = 'Suspender'
+    btn.style.color = 'var(--danger)'
+  }
+
+  // Breadcrumb
+  $('bc-current').textContent = _td.nome
+
+  // Activate first tab
+  tdTab('geral')
+}
+
+window.tdTab = function(name) {
+  document.querySelectorAll('.td-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === name)
+  })
+  document.querySelectorAll('.td-tab-panel').forEach(p => {
+    p.style.display = p.id === 'td-tab-' + name ? '' : 'none'
+  })
+  if (name === 'geral')        tdRenderGeral()
+  if (name === 'usuarios')     tdRenderUsuarios()
+  if (name === 'faturamento')  tdRenderFaturamento()
+  if (name === 'uso')          tdRenderUso()
+  if (name === 'anotacoes')    tdRenderAnotacoes()
+  if (name === 'auditoria')    tdRenderAuditoria()
+}
+
+// ── Visão Geral ────────────────────────────────────────
+function tdRenderGeral() {
+  if (!_td) return
+  const uc  = userCountForTenant(_td.id)
+  const mrr = tenantMrr(_td)
+  $('td-kpi-mrr').textContent   = fmtMrr(mrr)
+  $('td-kpi-users').textContent = uc + ' usuários'
+  $('td-kpi-plano').textContent = _td.plano || '—'
+  $('td-kpi-desde').textContent = fmtDate(_td.criado_em)
+  // Populate edit form
+  $('td-f-nome').value  = _td.nome  || ''
+  $('td-f-cnpj').value  = _td.cnpj  || ''
+  $('td-f-slug').value  = _td.slug  || ''
+  $('td-f-email').value = _td.email_admin || ''
+  $('td-f-plano').value = _td.plano || 'TRIAL'
+  $('td-f-status').value = _td.status || 'ATIVO'
+  $('td-f-maxu').value  = _td.max_usuarios || 10
+  $('td-f-mrr').value   = _td.config && _td.config.mrr_override ? _td.config.mrr_override : ''
+}
+
+window.tdSalvarGeral = async function(e) {
+  e.preventDefault()
+  const btn = $('td-btn-save')
+  btn.disabled = true; btn.textContent = 'Salvando...'
+  try {
+    const updates = {
+      nome:         $('td-f-nome').value.trim(),
+      cnpj:         $('td-f-cnpj').value.trim(),
+      slug:         $('td-f-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,''),
+      email_admin:  $('td-f-email').value.trim(),
+      plano:        $('td-f-plano').value,
+      status:       $('td-f-status').value,
+      max_usuarios: parseInt($('td-f-maxu').value) || 10,
+      config: { ..._td.config, mrr_override: parseFloat($('td-f-mrr').value)||undefined }
+    }
+    const { error } = await sb.from('tenants').update(updates).eq('id', _td.id)
+    if (error) throw error
+    Object.assign(_td, updates)
+    // Refresh header
+    $('td-nome').textContent = _td.nome
+    $('td-slug').textContent = '@' + _td.slug
+    toast('Empresa atualizada ✓', 'success')
+  } catch(err) {
+    toast('Erro: ' + err.message, 'error')
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar alterações'
+  }
+}
+
+window.tdCancelEdit = function() {
+  tdRenderGeral()
+}
+
+window.tdToggleStatus = async function() {
+  if (!_td) return
+  const isSusp = _td.status === 'SUSPENSO'
+  const novoStatus = isSusp ? 'ATIVO' : 'SUSPENSO'
+  const msg = isSusp ? 'Reativar esta empresa?' : 'Suspender esta empresa? Os usuários perderão acesso.'
+  if (!confirm(msg)) return
+  const { error } = await sb.from('tenants').update({ status: novoStatus }).eq('id', _td.id)
+  if (error) { toast('Erro: ' + error.message, 'error'); return }
+  _td.status = novoStatus
+  const idx = _tenants.findIndex(t => t.id === _td.id)
+  if (idx > -1) _tenants[idx].status = novoStatus
+  navigate('tenants-detail-' + _td.id) // re-render header
+  toast(`Empresa ${isSusp ? 'reativada' : 'suspensa'} ✓`, 'success')
+}
+
+// ── Usuários ───────────────────────────────────────────
+function tdRenderUsuarios() {
+  if (!_td) return
+  const users = _profiles.filter(p => p.tenant_id === _td.id && p.role !== 'manager_global')
+  $('td-u-count').textContent = users.length + ' usuário(s)'
+  $('td-u-tbody').innerHTML = users.length ? users.map(p => `
+    <tr>
+      <td><strong>${esc(p.nome||'—')}</strong></td>
+      <td class="td-mono">${esc(p.email||'—')}</td>
+      <td>${roleBadge(p.role)}</td>
+      <td><span class="pill ${p.status==='ATIVO'?'pill-active':'pill-canceled'}">${p.status==='ATIVO'?'Ativo':'Inativo'}</span></td>
+      <td>
+        <button class="btn btn-sm btn-ghost" style="font-size:11px;padding:3px 8px;color:${p.status==='ATIVO'?'var(--danger)':'var(--good)'}"
+          onclick="tdToggleUser('${p.id}','${p.status}')">
+          ${p.status==='ATIVO'?'Bloquear':'Reativar'}
+        </button>
+      </td>
+    </tr>`).join('')
+  : '<tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:24px">Nenhum usuário cadastrado</td></tr>'
+}
+
+window.tdConvidarModal = function() {
+  $('inv-nome').value = ''
+  $('inv-email').value = ''
+  $('inv-role').value = 'colaborador'
+  $('td-invite-modal').classList.add('open')
+  setTimeout(()=>$('inv-nome').focus(), 100)
+}
+
+window.tdConvidar = async function() {
+  const nome  = $('inv-nome').value.trim()
+  const email = $('inv-email').value.trim()
+  const role  = $('inv-role').value
+  if (!nome || !email) { toast('Preencha nome e e-mail', 'error'); return }
+  const btn = $('inv-btn')
+  btn.disabled = true; btn.textContent = 'Enviando...'
+  try {
+    // Criar usuário via Supabase Admin API
+    const SB_URL = 'https://ttclcdppifmmdjztfunl.supabase.co'
+    const KEY = _sbServiceKey || ''
+    if (!KEY) throw new Error('Chave de serviço não disponível — use o painel Supabase.')
+    const r = await fetch(`${SB_URL}/auth/v1/admin/users`, {
+      method: 'POST',
+      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: 'lumarh', email_confirm: true,
+        user_metadata: { nome, tenant_id: _td.id, role } })
+    })
+    const d = await r.json()
+    if (!r.ok && !d.msg?.includes('already')) throw new Error(d.msg || JSON.stringify(d))
+    // Upsert profile
+    await sb.from('profiles').upsert({
+      id: d.id, tenant_id: _td.id, nome, email, role, status: 'ATIVO'
+    }, { onConflict: 'id' })
+    $('td-invite-modal').classList.remove('open')
+    toast(`Usuário ${nome} convidado! Senha inicial: lumarh`, 'success')
+    await loadAll()
+    tdRenderUsuarios()
+  } catch(err) {
+    toast('Erro: ' + err.message, 'error')
+  } finally {
+    btn.disabled = false; btn.textContent = 'Enviar convite'
+  }
+}
+
+window.tdToggleUser = async function(userId, currentStatus) {
+  const novoStatus = currentStatus === 'ATIVO' ? 'INATIVO' : 'ATIVO'
+  const { error } = await sb.from('profiles').update({ status: novoStatus }).eq('id', userId)
+  if (error) { toast('Erro: ' + error.message, 'error'); return }
+  const idx = _profiles.findIndex(p => p.id === userId)
+  if (idx > -1) _profiles[idx].status = novoStatus
+  tdRenderUsuarios()
+  toast(`Usuário ${novoStatus === 'ATIVO' ? 'reativado' : 'bloqueado'} ✓`, 'success')
+}
+
+// ── Faturamento ──────────────────────────────────────────
+async function tdRenderFaturamento() {
+  if (!_td) return
+  const mrr = tenantMrr(_td)
+  $('td-fat-mrr').textContent  = fmtMrr(mrr)
+  $('td-fat-arr').textContent  = fmtMrr(mrr * 12)
+  $('td-fat-plano').textContent = _td.plano || '—'
+  // Buscar invoices do Supabase
+  const { data: inv } = await sb.from('invoices').select('*').eq('tenant_id', _td.id).order('criado_em', { ascending: false })
+  const list = inv || []
+  $('td-fat-empty').style.display = list.length ? 'none' : ''
+  $('td-fat-tbody').innerHTML = list.map(i => `
+    <tr>
+      <td class="td-mono">${fmtDate(i.criado_em)}</td>
+      <td>${esc(i.descricao||'—')}</td>
+      <td class="td-mono">${fmtMrr(i.valor||0)}</td>
+      <td><span class="pill ${i.status==='PAGO'?'pill-active':i.status==='VENCIDO'?'pill-canceled':'pill-trial'}">
+        ${i.status||'PENDENTE'}</span></td>
+      <td class="td-mono" style="font-size:11px;color:var(--ink-3)">${esc(i.stripe_invoice_id||'—')}</td>
+    </tr>`).join('')
+}
+
+window.tdNovaFatura = async function() {
+  const descricao = prompt('Descrição da fatura:')
+  if (!descricao) return
+  const valor = parseFloat(prompt('Valor (R$):') || '0')
+  const { error } = await sb.from('invoices').insert({
+    tenant_id: _td.id, descricao, valor,
+    status: 'PENDENTE', criado_em: new Date().toISOString()
+  })
+  if (error) { toast('Erro: ' + error.message, 'error'); return }
+  toast('Fatura registrada ✓', 'success')
+  tdRenderFaturamento()
+}
+
+// ── Uso ──────────────────────────────────────────────────
+function tdRenderUso() {
+  if (!_td) return
+  const users     = _profiles.filter(p => p.tenant_id === _td.id && p.role !== 'manager_global')
+  const colabs    = users.filter(p => p.role === 'colaborador')
+  const gestores  = users.filter(p => p.role === 'gestor' || p.role === 'rh' || p.role === 'master')
+  $('td-uso-total').textContent    = users.length
+  $('td-uso-colab').textContent    = colabs.length
+  $('td-uso-gestores').textContent = gestores.length
+  $('td-uso-tbody').innerHTML = users.length ? users.map(p => `
+    <tr>
+      <td><strong>${esc(p.nome||'—')}</strong></td>
+      <td class="td-mono">${esc(p.email||'—')}</td>
+      <td>${roleBadge(p.role)}</td>
+      <td><span class="pill ${p.status==='ATIVO'?'pill-active':'pill-canceled'}">${p.status==='ATIVO'?'Ativo':'Inativo'}</span></td>
+    </tr>`).join('')
+  : '<tr><td colspan="4" style="text-align:center;color:var(--ink-3);padding:24px">Nenhum usuário</td></tr>'
+}
+
+// ── Anotações ──────────────────────────────────────────
+async function tdRenderAnotacoes() {
+  if (!_td) return
+  const { data } = await sb.from('tenant_notes').select('*').eq('tenant_id', _td.id).order('criado_em', { ascending: false })
+  const notas = data || []
+  $('td-notas-list').innerHTML = notas.length
+    ? notas.map(n => `
+      <div class="nota-card">
+        <div class="nota-card-head">
+          <span class="nota-card-meta">${fmtRelative(n.criado_em)} · ${esc(n.criado_por||'admin')}</span>
+          <button class="nota-del" onclick="tdDeletarNota('${n.id}')">✕ Deletar</button>
+        </div>
+        <div class="nota-card-text">${esc(n.nota)}</div>
+      </div>`).join('')
+    : '<div style="color:var(--ink-3);font-size:13px;padding:8px 0">Nenhuma anotação ainda.</div>'
+}
+
+window.tdSalvarNota = async function() {
+  const nota = $('td-nota-input').value.trim()
+  if (!nota) return
+  const { error } = await sb.from('tenant_notes').insert({
+    tenant_id: _td.id, nota, criado_por: _profile && _profile.nome ? _profile.nome : 'admin'
+  })
+  if (error) { toast('Erro: ' + error.message, 'error'); return }
+  $('td-nota-input').value = ''
+  toast('Anotação salva ✓', 'success')
+  tdRenderAnotacoes()
+}
+
+window.tdDeletarNota = async function(id) {
+  if (!confirm('Deletar esta anotação?')) return
+  const { error } = await sb.from('tenant_notes').delete().eq('id', id)
+  if (error) { toast('Erro: ' + error.message, 'error'); return }
+  toast('Anotação removida', 'success')
+  tdRenderAnotacoes()
+}
+
+// ── Auditoria ────────────────────────────────────────────
+async function tdRenderAuditoria() {
+  if (!_td) return
+  const { data } = await sb.from('log_eventos').select('*').eq('tenant_id', _td.id)
+    .order('criado_em', { ascending: false }).limit(100)
+  const logs = data || []
+  $('td-aud-empty').style.display = logs.length ? 'none' : ''
+  $('td-aud-tbody').innerHTML = logs.map(l => {
+    const user = _profiles.find(p => p.id === l.usuario_id)
+    return `<tr>
+      <td class="td-mono">${fmtDate(l.criado_em)}</td>
+      <td><span class="pill pill-trial" style="font-size:10px">${esc(l.tipo||'—')}</span></td>
+      <td>${esc(user && (user.nome || user.email) ? (user.nome || user.email) : (l.usuario_id || '—'))}</td>
+      <td style="color:var(--ink-2)">${esc(l.descricao||'—')}</td>
+    </tr>`
+  }).join('')
+}
 </script>
 </body>
 </html>
