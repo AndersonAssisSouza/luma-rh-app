@@ -54,7 +54,7 @@ window.doLogin = async function() {
     if (!profile) throw new Error('Perfil não encontrado.')
 
     if (profile.role === 'manager_global') {
-      window.location.href = './manager.html'
+      window.location.href = './admin.html'
     } else if (profile.role === 'colaborador') {
       window.location.href = './portal_ferias_colaborador.html'
     } else {
@@ -145,7 +145,7 @@ document.addEventListener('keydown', e => {
   const { data: { session } } = await sb.auth.getSession()
   if (session) {
     const profile = await getProfileCached()
-    if (profile?.role === 'manager_global') window.location.href = './manager.html'
+    if (profile?.role === 'manager_global') window.location.href = './admin.html'
     else if (profile?.role === 'colaborador') window.location.href = './portal_ferias_colaborador.html'
     else window.location.href = './people_analytics_editor.html'
   }
