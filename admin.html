@@ -604,9 +604,10 @@ tbody tr.clickable:hover td{background:var(--surface-2)}
      ============================================================ -->
 <div class="admin-band">
   <div class="band-logo">
-    <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
-      <rect width="32" height="32" rx="6" fill="#9B66F4" opacity=".15"/>
-      <path d="M8 7h4v13h8v4H8V7z" fill="#9B66F4"/>
+    <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
+      <rect width="100" height="100" rx="12" fill="#9b66f4"/>
+      <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
+      <polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/>
     </svg>
     <span><strong>luma</strong> · admin console</span>
     <span class="band-pill">PRODUÇÃO</span>
@@ -630,9 +631,11 @@ tbody tr.clickable:hover td{background:var(--surface-2)}
   <nav class="admin-sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">
-          <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
-            <path d="M8 7h4v13h8v4H8V7z" fill="#9B66F4"/>
+        <div class="sidebar-logo-icon" style="background:transparent;padding:0;">
+          <svg width="34" height="34" viewBox="0 0 100 100" fill="none">
+            <rect width="100" height="100" rx="12" fill="#9b66f4"/>
+            <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
+            <polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/>
           </svg>
         </div>
         <div class="sidebar-logo-text">
@@ -1141,14 +1144,32 @@ tbody tr.clickable:hover td{background:var(--surface-2)}
         <div class="page-head">
           <div class="page-head-left">
             <div class="page-title">Faturamento</div>
-            <div class="page-subtitle">Visão financeira consolidada</div>
+            <div class="page-subtitle">Faturas e receita consolidada</div>
+          </div>
+          <div class="page-head-actions">
+            <select id="bill-filter" class="btn btn-sm" style="padding:0 10px;cursor:pointer;" onchange="renderBilling()">
+              <option value="all">Todas</option>
+              <option value="PENDENTE">Pendentes</option>
+              <option value="PAGO">Pagas</option>
+              <option value="VENCIDO">Vencidas</option>
+              <option value="CANCELADO">Canceladas</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="openNovaFatura()">+ Nova fatura</button>
           </div>
         </div>
         <div class="grid grid-4 mb-20" id="billing-kpis"></div>
-        <div class="empty-state" style="padding-top:40px">
-          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg></div>
-          <div class="empty-title">Integração Stripe em breve</div>
-          <div class="empty-sub">O histórico de faturas estará disponível após a integração com o Stripe. Por ora, o MRR é calculado com base nos planos ativos.</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Empresa</th><th>Descrição</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="billing-tbody"></tbody>
+          </table>
+          <div id="billing-empty" style="display:none">
+            <div class="empty-state" style="padding:40px 0">
+              <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg></div>
+              <div class="empty-title">Nenhuma fatura encontrada</div>
+              <div class="empty-sub">Crie a primeira fatura clicando em "Nova fatura".</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1605,18 +1626,104 @@ async function renderUsers() {
 }
 
 // ── BILLING ──────────────────────────────────────────────────
+let _invoices = []
+
 async function renderBilling() {
   if (!_tenants.length) await loadAll()
-  const mrr   = _tenants.reduce((s,t) => s + tenantMrr(t), 0)
-  const arr   = mrr * 12
-  const trial = _tenants.filter(t => tenantStatus(t) === 'trial').length
-  const blkd  = _tenants.filter(t => tenantStatus(t) === 'blocked').length
+
+  // Carregar faturas
+  const { data: inv } = await sb.from('invoices').select('*').order('criado_em', { ascending: false })
+  _invoices = inv || []
+
+  // KPIs
+  const mrr    = _tenants.reduce((s,t) => s + tenantMrr(t), 0)
+  const arr    = mrr * 12
+  const pend   = _invoices.filter(i => i.status === 'PENDENTE').reduce((s,i) => s + Number(i.valor), 0)
+  const vencid = _invoices.filter(i => i.status === 'VENCIDO').reduce((s,i) => s + Number(i.valor), 0)
 
   $('billing-kpis').innerHTML = `
-    <div class="kpi-card"><div class="kpi-label">MRR</div><div class="kpi-value">${fmtMrr(mrr)}</div></div>
-    <div class="kpi-card"><div class="kpi-label">ARR</div><div class="kpi-value">${fmtMrr(arr)}</div></div>
-    <div class="kpi-card"><div class="kpi-label">Em trial</div><div class="kpi-value">${trial}</div></div>
-    <div class="kpi-card"><div class="kpi-label">Bloqueadas</div><div class="kpi-value">${blkd}</div><div class="kpi-sub">Sem pagamento</div></div>`
+    <div class="kpi-card"><div class="kpi-label">MRR estimado</div><div class="kpi-value">${fmtMrr(mrr)}</div><div class="kpi-sub">ARR: ${fmtMrr(arr)}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total de faturas</div><div class="kpi-value">${_invoices.length}</div></div>
+    <div class="kpi-card"><div class="kpi-label">A receber</div><div class="kpi-value" style="color:var(--warn)">${fmtMrr(pend)}</div><div class="kpi-sub">Pendentes</div></div>
+    <div class="kpi-card"><div class="kpi-label">Vencidas</div><div class="kpi-value" style="color:var(--danger)">${fmtMrr(vencid)}</div></div>`
+
+  // Tabela
+  const filter = document.getElementById('bill-filter')?.value || 'all'
+  const list   = filter === 'all' ? _invoices : _invoices.filter(i => i.status === filter)
+  const tbody  = $('billing-tbody')
+  const empty  = $('billing-empty')
+
+  if (!list.length) {
+    tbody.innerHTML = ''
+    empty.style.display = ''
+    return
+  }
+  empty.style.display = 'none'
+
+  const statusMap = { PENDENTE:'warn', PAGO:'active', VENCIDO:'past-due', CANCELADO:'canceled' }
+  const statusLbl = { PENDENTE:'Pendente', PAGO:'Pago', VENCIDO:'Vencida', CANCELADO:'Cancelada' }
+  const tenantMap = {}
+  _tenants.forEach(t => tenantMap[t.id] = t.nome)
+
+  tbody.innerHTML = list.map(i => `<tr>
+    <td>${esc(tenantMap[i.tenant_id] || i.tenant_id?.slice(0,8) + '…')}</td>
+    <td>${esc(i.descricao || '—')}</td>
+    <td style="font-variant-numeric:tabular-nums;font-weight:600">R$ ${Number(i.valor).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+    <td class="td-muted">${fmtDate(i.vencimento)}</td>
+    <td><span class="pill pill-${statusMap[i.status]||''}"><span class="pill-dot"></span>${statusLbl[i.status]||i.status}</span></td>
+    <td style="display:flex;gap:6px;align-items:center;">
+      ${i.status === 'PENDENTE' ? `<button class="btn btn-sm" onclick="billMarkPago('${i.id}')">Marcar pago</button>` : ''}
+      ${i.status === 'PENDENTE' ? `<button class="btn btn-sm" style="color:var(--danger)" onclick="billMarcarVencida('${i.id}')">Vencer</button>` : ''}
+      <button class="btn btn-sm" style="color:var(--danger)" onclick="billDeletar('${i.id}')">✕</button>
+    </td>
+  </tr>`).join('')
+}
+
+window.openNovaFatura = function() {
+  if (!_tenants.length) { toast('Carregue os dados primeiro','error'); return }
+  const opts = _tenants.map(t => `<option value="${t.id}">${esc(t.nome)}</option>`).join('')
+  const modal = document.getElementById('modal-nova-fatura')
+  modal.querySelector('#nf-tenant').innerHTML = opts
+  modal.style.display = 'flex'
+}
+
+window.closeNovaFatura = function() {
+  document.getElementById('modal-nova-fatura').style.display = 'none'
+}
+
+window.salvarNovaFatura = async function() {
+  const tid   = document.getElementById('nf-tenant').value
+  const desc  = document.getElementById('nf-desc').value.trim()
+  const valor = parseFloat(document.getElementById('nf-valor').value.replace(',','.'))
+  const venc  = document.getElementById('nf-venc').value
+  const btn   = document.getElementById('btn-salvar-fatura')
+  if (!tid || !valor || isNaN(valor)) { toast('Preencha empresa e valor','error'); return }
+  btn.disabled = true; btn.textContent = 'Salvando…'
+  const { error } = await sb.from('invoices').insert({ tenant_id: tid, descricao: desc || null, valor, vencimento: venc || null, status: 'PENDENTE' })
+  btn.disabled = false; btn.textContent = 'Salvar'
+  if (error) { toast('Erro: ' + error.message, 'error'); return }
+  closeNovaFatura()
+  toast('Fatura criada!', 'success')
+  renderBilling()
+}
+
+window.billMarkPago = async function(id) {
+  const { error } = await sb.from('invoices').update({ status:'PAGO', pago_em: new Date().toISOString() }).eq('id', id)
+  if (error) { toast('Erro: '+error.message,'error'); return }
+  toast('Marcada como paga!','success'); renderBilling()
+}
+
+window.billMarcarVencida = async function(id) {
+  const { error } = await sb.from('invoices').update({ status:'VENCIDO' }).eq('id', id)
+  if (error) { toast('Erro: '+error.message,'error'); return }
+  toast('Marcada como vencida','info'); renderBilling()
+}
+
+window.billDeletar = async function(id) {
+  if (!confirm('Excluir esta fatura?')) return
+  const { error } = await sb.from('invoices').delete().eq('id', id)
+  if (error) { toast('Erro: '+error.message,'error'); return }
+  toast('Fatura excluída','info'); renderBilling()
 }
 
 // ── PLANS ────────────────────────────────────────────────────
@@ -1631,9 +1738,10 @@ function renderPlans() {
   _tenants.forEach(t => { activeCounts[t.plano] = (activeCounts[t.plano]||0) + 1 })
 
   $('plans-grid').innerHTML = plans.map(p => `
-    <div class="card">
+    <div class="card" style="position:relative;">
+      <button onclick="editPlan('${p.key}')" style="position:absolute;top:12px;right:12px;font-size:11px;color:var(--ink-3);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:3px 8px;cursor:pointer;">Editar</button>
       <div style="margin-bottom:14px">${planPill(p.key)}</div>
-      <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.02em">${p.price}<span style="font-size:13px;font-weight:400;color:var(--ink-3)">${p.period}</span></div>
+      <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.02em" id="plan-price-${p.key}">${p.price}<span style="font-size:13px;font-weight:400;color:var(--ink-3)">${p.period}</span></div>
       <div style="font-size:12px;color:var(--ink-3);margin:4px 0 14px">${p.users ? p.users+' usuários' : 'Ilimitado'}</div>
       <div style="border-top:1px solid var(--line-2);padding-top:12px;margin-bottom:14px">
         ${p.features.map(f => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:12.5px;color:var(--ink-2)">
@@ -1642,6 +1750,42 @@ function renderPlans() {
       </div>
       <div style="font-size:12px;color:var(--ink-3)">${activeCounts[p.key]||0} empresa${(activeCounts[p.key]||0)!==1?'s':''} ativa${(activeCounts[p.key]||0)!==1?'s':''}</div>
     </div>`).join('')
+
+  // armazena planos no estado para o modal de edição
+  window._plans = plans
+}
+
+// ── PLAN EDIT ────────────────────────────────────────────────
+window.editPlan = function(key) {
+  const p = (window._plans||[]).find(x => x.key === key)
+  if (!p) return
+  document.getElementById('ep-key').value   = key
+  document.getElementById('ep-name').value  = p.name
+  document.getElementById('ep-price').value = p.price.replace('R$ ','').replace('.','').replace(',','.')
+  document.getElementById('ep-users').value = p.users || ''
+  document.getElementById('ep-features').value = p.features.join('\n')
+  document.getElementById('modal-edit-plan').style.display = 'flex'
+}
+
+window.closeEditPlan = function() {
+  document.getElementById('modal-edit-plan').style.display = 'none'
+}
+
+window.salvarEditPlan = function() {
+  const key      = document.getElementById('ep-key').value
+  const name     = document.getElementById('ep-name').value.trim()
+  const priceRaw = document.getElementById('ep-price').value.trim()
+  const users    = parseInt(document.getElementById('ep-users').value) || null
+  const features = document.getElementById('ep-features').value.split('\n').map(s=>s.trim()).filter(Boolean)
+  if (!name || !priceRaw) { toast('Preencha nome e preço','error'); return }
+  const price    = 'R$ ' + parseFloat(priceRaw.replace(',','.')).toLocaleString('pt-BR',{minimumFractionDigits:0})
+  const idx      = (window._plans||[]).findIndex(p => p.key === key)
+  if (idx >= 0) {
+    window._plans[idx] = { ...window._plans[idx], name, price, users, features }
+  }
+  closeEditPlan()
+  renderPlans()
+  toast('Plano atualizado (sessão atual)', 'success')
 }
 
 // ── AUDIT ────────────────────────────────────────────────────
@@ -2026,5 +2170,74 @@ async function tdRenderAuditoria() {
   }).join('')
 }
 </script>
+
+<!-- MODAL NOVA FATURA -->
+<div id="modal-nova-fatura" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:14px;padding:28px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-family:var(--font-display);font-size:17px;font-weight:700;">Nova fatura</div>
+      <button onclick="closeNovaFatura()" style="color:var(--ink-3);font-size:20px;line-height:1;background:none;border:none;cursor:pointer;">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px;">Empresa *</label>
+        <select id="nf-tenant" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px;"></select>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px;">Descrição</label>
+        <input id="nf-desc" type="text" placeholder="Ex: Mensalidade Plano Pro — Maio/2026" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px;">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px;">Valor (R$) *</label>
+          <input id="nf-valor" type="number" min="0" step="0.01" placeholder="0,00" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px;">Vencimento</label>
+          <input id="nf-venc" type="date" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px;">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button onclick="closeNovaFatura()" class="btn" style="flex:1;">Cancelar</button>
+        <button id="btn-salvar-fatura" onclick="salvarNovaFatura()" class="btn btn-primary" style="flex:1;">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR PLANO -->
+<div id="modal-edit-plan" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:14px;padding:28px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-family:var(--font-display);font-size:17px;font-weight:700;">Editar plano</div>
+      <button onclick="closeEditPlan()" style="color:var(--ink-3);font-size:20px;line-height:1;background:none;border:none;cursor:pointer;">×</button>
+    </div>
+    <input type="hidden" id="ep-key">
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px;">Nome do plano</label>
+          <input id="ep-name" type="text" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px;">
+        </div>
+        <div>
+          <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px;">Preço (R$)</label>
+          <input id="ep-price" type="number" min="0" step="1" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px;">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px;">Máx. usuários (deixe vazio para ilimitado)</label>
+        <input id="ep-users" type="number" min="1" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px;">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px;">Funcionalidades (uma por linha)</label>
+        <textarea id="ep-features" rows="5" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:13px;resize:vertical;"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button onclick="closeEditPlan()" class="btn" style="flex:1;">Cancelar</button>
+        <button onclick="salvarEditPlan()" class="btn btn-primary" style="flex:1;">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
