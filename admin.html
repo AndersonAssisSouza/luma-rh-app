@@ -1269,13 +1269,102 @@ tbody tr.clickable:hover td{background:var(--surface-2)}
         <div class="page-head">
           <div class="page-head-left">
             <div class="page-title">Configurações</div>
-            <div class="page-subtitle">Políticas e operadores internos da Luma</div>
+            <div class="page-subtitle">Operadores internos, políticas e notificações</div>
           </div>
         </div>
-        <div class="empty-state" style="padding-top:80px">
-          <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
-          <div class="empty-title">Em desenvolvimento</div>
-          <div class="empty-sub">Gestão de operadores internos e políticas de acesso serão implementadas na Fase 5.</div>
+
+        <!-- tabs -->
+        <div class="td-tabs" style="margin-bottom:20px">
+          <button class="td-tab active" id="cfg-tab-op"  onclick="cfgTab('op')">👤 Operadores</button>
+          <button class="td-tab"        id="cfg-tab-pol" onclick="cfgTab('pol')">🛡 Políticas</button>
+          <button class="td-tab"        id="cfg-tab-not" onclick="cfgTab('not')">🔔 Notificações</button>
+        </div>
+
+        <!-- OPERADORES -->
+        <div id="cfg-panel-op" class="td-tab-panel active">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div style="font-size:13px;color:var(--ink-3)">Usuários com acesso total ao Admin Console</div>
+            <button class="btn btn-primary btn-sm" onclick="cfgConvidarOp()">+ Convidar operador</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nome</th><th>E-mail</th><th>Status</th><th>Desde</th><th>Ações</th></tr></thead>
+              <tbody id="cfg-op-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- POLÍTICAS -->
+        <div id="cfg-panel-pol" class="td-tab-panel" style="display:none">
+          <div class="card" style="max-width:560px">
+            <div style="font-size:14px;font-weight:600;margin-bottom:18px">Políticas da plataforma</div>
+            <div style="display:flex;flex-direction:column;gap:16px" id="cfg-pol-form">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div>
+                  <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px">Dias de trial padrão</label>
+                  <input id="pol-trial" type="number" min="1" max="90" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px">
+                </div>
+                <div>
+                  <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px">Dias inatividade → suspender</label>
+                  <input id="pol-inativ" type="number" min="30" max="365" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px">
+                </div>
+              </div>
+              <div>
+                <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px">Mínimo de caracteres na senha</label>
+                <input id="pol-senha" type="number" min="6" max="32" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px">
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface-2);border-radius:8px;border:1px solid var(--line-2)">
+                <div>
+                  <div style="font-size:13px;font-weight:500">Permitir auto-cadastro</div>
+                  <div style="font-size:12px;color:var(--ink-3)">Novos tenants podem se registrar sem convite</div>
+                </div>
+                <label style="position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0">
+                  <input type="checkbox" id="pol-autocad" style="opacity:0;width:0;height:0">
+                  <span onclick="this.previousElementSibling.checked=!this.previousElementSibling.checked" style="position:absolute;cursor:pointer;inset:0;background:var(--line);border-radius:99px;transition:.2s"></span>
+                </label>
+              </div>
+            </div>
+            <div style="margin-top:18px">
+              <button class="btn btn-primary" onclick="cfgSalvarPoliticas()">Salvar políticas</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTIFICAÇÕES -->
+        <div id="cfg-panel-not" class="td-tab-panel" style="display:none">
+          <div class="card" style="max-width:560px">
+            <div style="font-size:14px;font-weight:600;margin-bottom:18px">Alertas por e-mail</div>
+            <div style="display:flex;flex-direction:column;gap:0" id="cfg-not-form">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line-2)">
+                <div>
+                  <div style="font-size:13px;font-weight:500">Novo tenant cadastrado</div>
+                  <div style="font-size:12px;color:var(--ink-3)">Notificar quando uma nova empresa for criada</div>
+                </div>
+                <input type="checkbox" id="not-novo-tenant" style="width:16px;height:16px;accent-color:var(--brand)">
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line-2)">
+                <div>
+                  <div style="font-size:13px;font-weight:500">Fatura vencida</div>
+                  <div style="font-size:12px;color:var(--ink-3)">Alertar quando uma fatura passar do vencimento</div>
+                </div>
+                <input type="checkbox" id="not-fat-venc" style="width:16px;height:16px;accent-color:var(--brand)">
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line-2)">
+                <div>
+                  <div style="font-size:13px;font-weight:500">Trial expirando (3 dias)</div>
+                  <div style="font-size:12px;color:var(--ink-3)">Lembrete antes do fim do período de trial</div>
+                </div>
+                <input type="checkbox" id="not-trial-exp" style="width:16px;height:16px;accent-color:var(--brand)">
+              </div>
+              <div style="padding:14px 0">
+                <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:6px">E-mail para receber alertas</label>
+                <input id="not-email" type="email" placeholder="admin@lumaplataforma.com.br" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px">
+              </div>
+            </div>
+            <div style="margin-top:6px">
+              <button class="btn btn-primary" onclick="cfgSalvarNotificacoes()">Salvar notificações</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1437,6 +1526,7 @@ window.navigate = function(route) {
   if (route === 'billing')       renderBilling()
   if (route === 'plans')         renderPlans()
   if (route === 'reports')      loadReports()
+  if (route === 'settings')     loadSettings()
   if (route === 'audit')         loadAudit()
   if (route.startsWith('tenants-detail-')) loadTenantDetail(route.replace('tenants-detail-',''))
 }
@@ -1693,6 +1783,114 @@ async function renderUsers() {
         </span></td>
       </tr>`).join('')
     : `<tr><td colspan="5" style="text-align:center;color:var(--ink-4);padding:24px">Nenhum usuário encontrado</td></tr>`
+}
+
+// ── CONFIGURAÇÕES ────────────────────────────────────────────
+window.cfgTab = function(tab) {
+  ['op','pol','not'].forEach(t => {
+    $('cfg-tab-'+t)?.classList.toggle('active', t===tab)
+    const p = $('cfg-panel-'+t)
+    if (p) p.style.display = t===tab ? '' : 'none'
+  })
+}
+
+window.loadSettings = async function() {
+  await cfgCarregarOperadores()
+  await cfgCarregarPoliticas()
+  await cfgCarregarNotificacoes()
+}
+
+async function cfgCarregarOperadores() {
+  const { data } = await sb.from('profiles').select('id,nome,email,status,criado_em').eq('role','manager_global').order('criado_em')
+  const ops = data || []
+  const tbody = $('cfg-op-tbody')
+  if (!tbody) return
+  tbody.innerHTML = ops.map(op => `<tr>
+    <td style="font-weight:500">${esc(op.nome||'—')}</td>
+    <td class="td-muted">${esc(op.email)}</td>
+    <td><span class="pill ${op.status==='ATIVO'?'pill-active':'pill-canceled'}"><span class="pill-dot"></span>${op.status==='ATIVO'?'Ativo':'Inativo'}</span></td>
+    <td class="td-muted">${fmtDate(op.criado_em)}</td>
+    <td>
+      ${op.email !== (window._sbProfile?.email||'') ? `<button class="btn btn-sm" style="color:var(--danger)" onclick="cfgDesativarOp('${op.id}','${esc(op.nome||op.email)}')">Desativar</button>` : '<span style="font-size:12px;color:var(--ink-4)">você</span>'}
+    </td>
+  </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--ink-4);padding:20px">Nenhum operador</td></tr>'
+}
+
+async function cfgCarregarPoliticas() {
+  const { data } = await sb.from('platform_settings').select('valor').eq('chave','politicas').single()
+  const pol = data?.valor || {}
+  const f = id => $(id)
+  if (f('pol-trial'))   f('pol-trial').value   = pol.trial_dias   ?? 14
+  if (f('pol-inativ'))  f('pol-inativ').value  = pol.inatividade_dias ?? 90
+  if (f('pol-senha'))   f('pol-senha').value   = pol.min_senha    ?? 8
+  if (f('pol-autocad')) f('pol-autocad').checked = pol.auto_cadastro ?? false
+}
+
+async function cfgCarregarNotificacoes() {
+  const { data } = await sb.from('platform_settings').select('valor').eq('chave','notificacoes').single()
+  const not = data?.valor || {}
+  const f = id => $(id)
+  if (f('not-novo-tenant')) f('not-novo-tenant').checked = not.novo_tenant ?? true
+  if (f('not-fat-venc'))    f('not-fat-venc').checked    = not.fatura_vencida ?? true
+  if (f('not-trial-exp'))   f('not-trial-exp').checked   = not.trial_expirando ?? true
+  if (f('not-email'))       f('not-email').value          = not.email_alerta ?? ''
+}
+
+window.cfgSalvarPoliticas = async function() {
+  const pol = {
+    trial_dias:       parseInt($('pol-trial')?.value)   || 14,
+    inatividade_dias: parseInt($('pol-inativ')?.value)  || 90,
+    min_senha:        parseInt($('pol-senha')?.value)   || 8,
+    auto_cadastro:    $('pol-autocad')?.checked ?? false
+  }
+  const { error } = await sb.from('platform_settings')
+    .upsert({ chave:'politicas', valor:pol, atualizado_em:new Date().toISOString(), atualizado_por: window._sbProfile?.email||'' }, { onConflict:'chave' })
+  if (error) { toast('Erro: '+error.message,'error'); return }
+  toast('Políticas salvas!','success')
+}
+
+window.cfgSalvarNotificacoes = async function() {
+  const not = {
+    novo_tenant:     $('not-novo-tenant')?.checked ?? true,
+    fatura_vencida:  $('not-fat-venc')?.checked    ?? true,
+    trial_expirando: $('not-trial-exp')?.checked   ?? true,
+    email_alerta:    $('not-email')?.value.trim()  || ''
+  }
+  const { error } = await sb.from('platform_settings')
+    .upsert({ chave:'notificacoes', valor:not, atualizado_em:new Date().toISOString(), atualizado_por: window._sbProfile?.email||'' }, { onConflict:'chave' })
+  if (error) { toast('Erro: '+error.message,'error'); return }
+  toast('Notificações salvas!','success')
+}
+
+window.cfgConvidarOp = function() {
+  document.getElementById('modal-convidar-op').style.display = 'flex'
+  document.getElementById('cop-email').value = ''
+  document.getElementById('cop-nome').value  = ''
+}
+
+window.closeCfgConvidar = function() {
+  document.getElementById('modal-convidar-op').style.display = 'none'
+}
+
+window.cfgConvidarSubmit = async function() {
+  const email = $('cop-email').value.trim()
+  const nome  = $('cop-nome').value.trim()
+  const btn   = $('btn-convidar-op')
+  if (!email || !nome) { toast('Preencha nome e e-mail','error'); return }
+  btn.disabled = true; btn.textContent = 'Convidando…'
+  // Criar usuário Supabase via RPC ou registro direto (apenas profiles)
+  // Na prática o admin cria o usuário via Supabase Dashboard; aqui apenas orienta
+  toast('Acesse Supabase Dashboard → Auth → Invite user → defina role=manager_global no profiles','info')
+  btn.disabled = false; btn.textContent = 'Convidar'
+  closeCfgConvidar()
+}
+
+window.cfgDesativarOp = async function(id, nome) {
+  if (!confirm(`Desativar operador "${nome}"? Ele perderá acesso ao Admin Console.`)) return
+  const { error } = await sb.from('profiles').update({ status:'INATIVO' }).eq('id', id)
+  if (error) { toast('Erro: '+error.message,'error'); return }
+  toast(`${nome} desativado`,'info')
+  cfgCarregarOperadores()
 }
 
 // ── BILLING ──────────────────────────────────────────────────
@@ -2367,6 +2565,33 @@ async function tdRenderAuditoria() {
   }).join('')
 }
 </script>
+
+<!-- MODAL CONVIDAR OPERADOR -->
+<div id="modal-convidar-op" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:14px;padding:28px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-family:var(--font-display);font-size:17px;font-weight:700;">Convidar operador</div>
+      <button onclick="closeCfgConvidar()" style="color:var(--ink-3);font-size:20px;line-height:1;background:none;border:none;cursor:pointer;">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px;">Nome completo *</label>
+        <input id="cop-nome" type="text" placeholder="Anderson Souza" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px;">
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:5px;">E-mail *</label>
+        <input id="cop-email" type="email" placeholder="operador@lumaplataforma.com.br" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px;">
+      </div>
+      <div style="padding:10px 12px;background:var(--info-soft);border-radius:8px;font-size:12px;color:var(--info)">
+        ℹ O operador receberá acesso total ao Admin Console. Crie o usuário no Supabase Dashboard e defina <strong>role = manager_global</strong> na tabela profiles.
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button onclick="closeCfgConvidar()" class="btn" style="flex:1;">Cancelar</button>
+        <button id="btn-convidar-op" onclick="cfgConvidarSubmit()" class="btn btn-primary" style="flex:1;">Convidar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL NOVA FATURA -->
 <div id="modal-nova-fatura" style="display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
