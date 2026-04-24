@@ -20,14 +20,21 @@ window._sb = sb
     getSolicitacoesFerias, criarSolicitacaoFerias, atualizarStatusSolicitacao,
     getSolicitacaoPorProtocolo, getProfiles, sendEmail
   }
-  // Auto-inicia o portal após DOM pronto
-  const doStart = () => {
+
+  // Função de inicialização: verifica URL de gestor (aprovação por link de e-mail)
+  // e depois carrega o portal via Supabase (sem MSAL)
+  const doInit = async () => {
+    // checkGestorUrl está definido no HTML inline — verifica ?acao=&prot=
+    if (typeof checkGestorUrl === 'function') {
+      if (await checkGestorUrl()) return // modo gestor: aprovação/rejeição via link
+    }
     if (typeof loadPortalSb === 'function') { loadPortalSb(); return }
-    setTimeout(doStart, 50)
+    setTimeout(doInit, 50)
   }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => setTimeout(doStart, 0))
+    document.addEventListener('DOMContentLoaded', () => setTimeout(doInit, 0))
   } else {
-    setTimeout(doStart, 0)
+    setTimeout(doInit, 0)
   }
 })()

@@ -868,11 +868,8 @@ const _CFG_FIXED={
   itemId:'01O2PYW3EQZTMNB4MN4BB363SUCCHGX7HV',
   webhook:cfgLoad()?.webhook||'https://defaultaadb5cad6c694d6da942e027203a46.75.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1c3d4b1363bf424bbf0cbdbf9c301a2c/triggers/manual/paths/invoke?api-version=1'
 };
-;(async()=>{
-  if(!(await checkGestorUrl())){
-    initApp(_CFG_FIXED);
-  }
-})()
+// Autenticação e carregamento do portal gerenciados por portal_ferias_colaborador.js (Supabase)
+// initApp (MSAL) removido — auth migrada para Supabase
 </script>
 </body>
 </html>
