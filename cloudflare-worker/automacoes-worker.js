@@ -132,7 +132,7 @@ async function checkDesligamentos(env, today, alertas) {
   const tenantIds = [...new Set(rows.map(r => r.tenant_id))]
 
   const [colabs, tenants] = await Promise.all([
-    sbGet(env, 'colaboradores', `id=in.(${colabIds.join(',')})&select=id,nome,cargo,gestor,gestor_email`),
+    sbGet(env, 'colaboradores', `id=in.(${colabIds.join(',')})&status=eq.ATIVO&select=id,nome,cargo,gestor,gestor_email`),
     sbGet(env, 'tenants',       `id=in.(${tenantIds.join(',')})&select=id,nome,email_admin,email_rh`),
   ])
 
@@ -200,7 +200,7 @@ async function checkExames(env, today, alertas) {
   const tenantIds = [...new Set(rows.map(r => r.tenant_id))]
 
   const [colabs, tenants] = await Promise.all([
-    sbGet(env, 'colaboradores', `id=in.(${colabIds.join(',')})&select=id,nome,gestor_email`),
+    sbGet(env, 'colaboradores', `id=in.(${colabIds.join(',')})&status=eq.ATIVO&select=id,nome,gestor_email`),
     sbGet(env, 'tenants',       `id=in.(${tenantIds.join(',')})&select=id,nome,email_admin,email_rh`),
   ])
 
@@ -262,7 +262,7 @@ async function checkFerias(env, today, alertas) {
   const tenantIds = [...new Set(rows.map(r => r.tenant_id))]
 
   const [colabs, tenants] = await Promise.all([
-    sbGet(env, 'colaboradores', `id=in.(${colabIds.join(',')})&select=id,nome,gestor,gestor_email`),
+    sbGet(env, 'colaboradores', `id=in.(${colabIds.join(',')})&status=eq.ATIVO&select=id,nome,gestor,gestor_email`),
     sbGet(env, 'tenants',       `id=in.(${tenantIds.join(',')})&select=id,nome,email_admin,email_rh`),
   ])
 
