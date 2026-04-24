@@ -1,0 +1,19 @@
+name = "luma-automacoes"
+main = "automacoes-worker.js"
+compatibility_date = "2024-01-01"
+
+# ── Cron: diariamente às 11h UTC (08h Brasília, UTC-3) ──
+[triggers]
+crons = ["0 11 * * *"]
+
+# ── Variáveis públicas ──
+[vars]
+SUPABASE_URL = "https://ttclcdppifmmdjztfunl.supabase.co"
+
+# ── Segredos (definir via CLI antes do deploy):
+#
+#   npx wrangler secret put SUPABASE_SERVICE_KEY --config cloudflare-worker/wrangler-automacoes.toml
+#   npx wrangler secret put RUN_SECRET            --config cloudflare-worker/wrangler-automacoes.toml
+#
+# SUPABASE_SERVICE_KEY  → service_role key do projeto LUMA RH (Supabase Dashboard → Settings → API)
+# RUN_SECRET            → string aleatória para trigger manual via GET /run?secret=...
