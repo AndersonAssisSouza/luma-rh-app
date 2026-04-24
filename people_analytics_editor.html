@@ -10,7 +10,7 @@
 <!-- Microsoft MSAL — usado APENAS para envio de e-mail via Graph API (Mail.Send) -->
 <script src="./msal-browser.min.js"></script>
 <!-- Supabase Auth Guard + Data Layer -->
-<script type="module" src="./people_analytics_editor.js?v=20260417"></script>
+<script type="module" src="./people_analytics_editor.js?v=20260424"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -317,7 +317,14 @@ nav.legacy{display:none!important;}
 
   <div class="sidebar-footer">
     <a id="sb-admin-console" href="./admin.html" style="display:none;width:100%;margin-bottom:6px;text-decoration:none;">
-      <button class="menu-link" style="width:100%;background:rgba(107,62,201,.1);color:#6a3ec9;border:1px solid rgba(107,62,201,.25);"><span class="menu-icon">⚙️</span>Admin Console</button>
+      <button class="menu-link" style="width:100%;background:rgba(107,62,201,.1);color:#6a3ec9;border:1px solid rgba(107,62,201,.25);font-weight:600;"><span class="menu-icon">⚙️</span>Admin Console</button>
+    </a>
+    <!-- Link direto para manager_global — sempre acessível mesmo sem JS -->
+    <a href="./admin.html" id="sb-admin-direct" style="display:none;width:100%;margin-bottom:6px;text-decoration:none;">
+      <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#9b66f4);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Admin Console
+      </div>
     </a>
     <button id="btn-admin" class="menu-link" onclick="openAdminModal()" style="display:none;width:100%;margin-bottom:6px;"><span class="menu-icon">🛠️</span>Administração</button>
     <button class="menu-link" style="width:100%;margin-bottom:6px;" onclick="loadAll()"><span class="menu-icon">🔄</span>Atualizar dados</button>
@@ -4442,12 +4449,14 @@ function detectRole(){
     // Exibir "Minha Empresa" apenas para master (não manager_global, que usa admin.html)
     const navEmp=$('nav-minha-empresa');
     if(navEmp&&sbRole==='master') navEmp.style.display='';
-    // Exibir Admin Console para manager_global (topbar + sidebar)
+    // Exibir Admin Console para manager_global (topbar + dois botões sidebar)
     const isGlobal = window._sbIsManagerGlobal || window._sbProfile?.role==='manager_global';
     const adminLink=$('tb-admin-link');
     if(adminLink&&isGlobal) adminLink.style.display='flex';
     const sideAdmin=$('sb-admin-console');
     if(sideAdmin&&isGlobal) sideAdmin.style.display='';
+    const sideAdminDirect=$('sb-admin-direct');
+    if(sideAdminDirect&&isGlobal) sideAdminDirect.style.display='';
     return;
   }
   // RH: acesso total mas sem admin
