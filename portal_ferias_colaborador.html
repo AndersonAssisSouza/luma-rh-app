@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3C/svg%3E">
 <title>Portal de Férias · Luma Plataforma</title>
-<script src="msal-browser.min.js"></script>
 <!-- Supabase Auth Guard + Data Layer -->
 <script type="module" src="./portal_ferias_colaborador.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -116,33 +115,8 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
 </head>
 <body>
 
-<!-- CONFIG -->
-<div class="cscr hidden" id="sConfig">
-  <div class="cbox">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-      <svg width="40" height="40" viewBox="0 0 100 100" fill="none">
-        <rect width="100" height="100" rx="12" fill="#9b66f4"/>
-        <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
-        <polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/>
-      </svg>
-      <div>
-        <div style="font-size:16px;font-weight:500;">Portal de Férias</div>
-        <div style="font-size:12px;color:var(--muted);">Configuração Microsoft 365</div>
-      </div>
-    </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Use os mesmos IDs do Painel Gestão RH.</div>
-    <div class="fgrp"><label class="flbl">Client ID *</label><input class="fi" id="cClientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:var(--mono);font-size:12px;"></div>
-    <div class="fgrp"><label class="flbl">Tenant ID *</label><input class="fi" id="cTenantId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" style="font-family:var(--mono);font-size:12px;"></div>
-    <div class="fgrp"><label class="flbl">Drive ID</label><input class="fi" id="cDriveId" placeholder="b!xxxxxx..." style="font-family:var(--mono);font-size:12px;"></div>
-    <div class="fgrp"><label class="flbl">Item ID do arquivo Excel *</label><input class="fi" id="cItemId" placeholder="01XXXXXXXXXXXXXXXX" style="font-family:var(--mono);font-size:12px;"></div>
-    <div class="fgrp"><label class="flbl">Webhook Power Automate (opcional)</label><input class="fi" id="cWebhook" placeholder="https://prod-XX.westus.logic.azure.com..." style="font-family:var(--mono);font-size:12px;"></div>
-    <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-    <button class="btn btn-gold btn-full" onclick="saveConf()">Conectar ao Microsoft 365</button>
-  </div>
-</div>
-
 <!-- LOADING -->
-<div class="lscr hidden" id="sLoad">
+<div class="lscr" id="sLoad">
   <svg width="48" height="48" viewBox="0 0 100 100" fill="none" style="margin-bottom:4px;">
     <rect width="100" height="100" rx="12" fill="#9b66f4"/>
     <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
@@ -271,12 +245,65 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
   </div>
 </div>
 
+<!-- PAINEL RH/GESTOR -->
+<div id="screen-rh" style="display:none;">
+<nav>
+  <div class="nbrand">
+    <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
+      <rect width="100" height="100" rx="12" fill="#9b66f4"/>
+      <polygon points="20,15 42,15 50,72 58,15 80,15 60,88 40,88" fill="#ffd000"/>
+      <polygon points="50,72 58,15 80,15 60,88" fill="#c9a200" opacity="0.7"/>
+    </svg>
+    <div>
+      <div class="ntitle">Aprovação de Férias</div>
+      <div class="nsub" id="rh-sub">Gestor · RH</div>
+    </div>
+  </div>
+  <div class="nright">
+    <span class="nname" id="rh-nome"></span>
+    <button class="btn btn-outline" onclick="window._sbLogout&&_sbLogout()" style="font-size:12px;padding:5px 12px;">Sair</button>
+  </div>
+</nav>
+<div style="max-width:900px;margin:0 auto;padding:24px 20px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div>
+      <div style="font-size:20px;font-weight:600;">Solicitações de Férias</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:2px;">Gerencie as solicitações da sua equipe</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <select class="fi" id="rh-filtro-status" onchange="renderRhList()" style="width:auto;padding:7px 10px;font-size:13px;">
+        <option value="">Todos os status</option>
+        <option value="PENDENTE" selected>Pendentes</option>
+        <option value="APROVADO">Aprovados</option>
+        <option value="REJEITADO">Rejeitados</option>
+      </select>
+    </div>
+  </div>
+  <div id="rh-list"></div>
+</div>
+</div>
+
+<!-- MODAL REJEIÇÃO RH -->
+<div id="modal-rh-rej" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:24px;max-width:440px;width:100%;">
+    <div style="font-size:16px;font-weight:500;margin-bottom:6px;">Rejeitar solicitação</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;">Colaborador: <strong id="rh-rej-nome" style="color:var(--text);"></strong></div>
+    <div class="fgrp">
+      <label class="flbl">Motivo da rejeição <span style="color:var(--danger)">*</span></label>
+      <textarea class="fi" id="rh-rej-motivo" rows="4" placeholder="Ex: conflito com audiências programadas..."></textarea>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-outline" onclick="$('modal-rh-rej').style.display='none'" style="flex:1;">Cancelar</button>
+      <button class="btn" onclick="rhConfirmarRej()" style="flex:1;background:var(--danger);border-color:var(--danger);color:#fff;font-weight:500;">✗ Confirmar rejeição</button>
+    </div>
+  </div>
+</div>
+
 <div class="tc" id="tc"></div>
 
 <script>
-const CK='pa_v3_cfg';
 const CK_FERIAS='luma_ferias_v2';
-let msalApp=null,tok=null,CFG=null,UCOLAB=null;
+let UCOLAB=null;
 let _solsColabId=null;  // UUID do colaborador logado (para queries Supabase)
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
@@ -316,94 +343,6 @@ function toast(msg,type='success'){
   t.innerHTML=`<div class="tdot" style="background:${c}"></div><span>${msg}</span>`;
   $('tc').appendChild(t);
   setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .25s';setTimeout(()=>t.remove(),300);},4500);
-}
-
-// ── AUTH (igual painel gestão) ──
-function cfgSave(c){const s=JSON.stringify(c);try{localStorage.setItem(CK,s);}catch(e){}try{sessionStorage.setItem(CK,s);}catch(e){}const exp=new Date();exp.setFullYear(exp.getFullYear()+1);document.cookie=`${CK}=${encodeURIComponent(s)};expires=${exp.toUTCString()};path=/;SameSite=Strict;Secure`;}
-function cfgLoad(){try{const v=localStorage.getItem(CK);if(v)return JSON.parse(v);}catch(e){}try{const v=sessionStorage.getItem(CK);if(v)return JSON.parse(v);}catch(e){}try{const m=document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith(CK+'='));if(m){const v=decodeURIComponent(m.split('=').slice(1).join('='));return JSON.parse(v);}}catch(e){}return null;}
-
-async function initApp(c){
-  CFG=c;$('sConfig').classList.add('hidden');$('sLoad').classList.remove('hidden');setL('Inicializando autenticação...');
-  try{
-    msalApp=await msal.createStandardPublicClientApplication({
-      auth:{clientId:c.clientId,authority:`https://login.microsoftonline.com/${c.tenantId}`,redirectUri:window.location.origin+'/portal_ferias_colaborador.html'},
-      cache:{cacheLocation:'localStorage',storeAuthStateInCookie:true}
-    });
-    await msalApp.initialize();
-    const r=await msalApp.handleRedirectPromise();
-    if(r){tok=r.accessToken;await loadPortal();return;}
-    const accounts=msalApp.getAllAccounts();
-    if(accounts.length>0){
-      try{const s=await msalApp.acquireTokenSilent({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],account:accounts[0]});tok=s.accessToken;await loadPortal();return;}catch(e){}
-    }
-    await msalApp.loginRedirect({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All']});
-  }catch(e){$('sLoad').classList.add('hidden');$('sConfig').classList.remove('hidden');toast('Erro: '+e.message,'error');}
-}
-
-async function getT(){
-  if(tok)return tok;
-  const a=msalApp.getAllAccounts();
-  if(!a.length){await msalApp.loginRedirect({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All']});throw new Error('Redirecionando...');}
-  try{const r=await msalApp.acquireTokenSilent({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],account:a[0]});return tok=r.accessToken;}
-  catch(e){await msalApp.acquireTokenRedirect({scopes:['Files.ReadWrite','Files.ReadWrite.All','Sites.ReadWrite.All'],account:a[0]});throw new Error('Renovando token...');}
-}
-function driveB(){return CFG.driveId?`/drives/${CFG.driveId}/items/${CFG.itemId}`:`/me/drive/items/${CFG.itemId}`;}
-async function gGet(url){const t=await getT();const r=await fetch('https://graph.microsoft.com/v1.0'+url,{headers:{Authorization:'Bearer '+t}});if(!r.ok)throw new Error(`Graph ${r.status}`);return r.json();}
-async function gPatch(url,body){const t=await getT();const r=await fetch('https://graph.microsoft.com/v1.0'+url,{method:'PATCH',headers:{Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error(`PATCH ${r.status}`);return r.json();}
-async function rSheet(sh){const d=await gGet(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/usedRange`);const rows=d.values||[];if(rows.length<2)return[];const hdr=rows[0];return rows.slice(1).map((row,i)=>{const o={_row:i+2};hdr.forEach((h,j)=>o[h]=row[j]??null);return o;});}
-function col2L(n){let s='';n++;while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s;}
-async function patchCell(sh,row,col,val){await gPatch(`${driveB()}/workbook/worksheets/${encodeURIComponent(sh)}/range(address='${col2L(col)}${row}')`,{values:[[val]]});}
-function setL(m){$('lMsg').textContent=m;}
-
-function saveConf(){
-  const c={clientId:$('cClientId').value.trim(),tenantId:$('cTenantId').value.trim(),driveId:$('cDriveId').value.trim(),itemId:$('cItemId').value.trim(),webhook:$('cWebhook').value.trim()};
-  if(!c.clientId||!c.tenantId||!c.itemId){toast('Client ID, Tenant ID e Item ID são obrigatórios','error');return;}
-  cfgSave(c);initApp(c);
-}
-
-// ── PORTAL ──
-async function loadPortal(){
-  setL('Lendo dados do colaborador...');
-  try{
-    const accounts=msalApp.getAllAccounts();
-    const email=accounts.length>0?accounts[0].username:'';
-    const nome=accounts.length>0?(accounts[0].name||email):email;
-    UCOLAB={email,nome};
-
-    setL('Lendo FERIAS_CLT...');
-    const ferias=await rSheet('FERIAS_CLT');
-    setL('Lendo CADASTRO_COLABORADORES...');
-    const cad=await rSheet('CADASTRO_COLABORADORES');
-
-    // Busca colaborador por e-mail ou nome
-    const meuCad=cad.find(r=>
-      String(r.EMAIL_CORPORATIVO||'').toLowerCase()===email.toLowerCase()||
-      String(r.NOME||'').toLowerCase().includes(nome.split(' ')[0].toLowerCase())
-    );
-    const meuFer=ferias.find(r=>
-      String(r.EMAIL_CORPORATIVO||'').toLowerCase()===email.toLowerCase()||
-      String(r.NOME||'').toLowerCase().includes(nome.split(' ')[0].toLowerCase())||
-      (meuCad&&r.ID_COLABORADOR===meuCad.ID_COLABORADOR)
-    );
-
-    UCOLAB.cad=meuCad||null;
-    UCOLAB.fer=meuFer||null;
-    UCOLAB.vinculo=meuCad?String(meuCad.TIPO_VINCULO||'').toUpperCase().trim():'N/A';
-    UCOLAB.ferRow=meuFer?meuFer._row:null;
-
-    $('sLoad').classList.add('hidden');
-    $('app').style.display='block';
-    $('nav-av').textContent=nome[0].toUpperCase();
-    $('nav-nome').textContent=nome.split(' ')[0];
-    $('ndot').classList.add('live');
-
-    renderPortal();
-  }catch(e){
-    $('sLoad').classList.add('hidden');$('app').style.display='block';
-    toast('Erro ao carregar: '+e.message,'error');
-    UCOLAB={email:'',nome:'Colaborador',vinculo:'N/A',cad:null,fer:null};
-    renderPortal();
-  }
 }
 
 // ── Carregamento via Supabase (substitui MSAL + Excel) ──
@@ -607,7 +546,7 @@ function goStep2(){
   if(dc<5){toast('O período mínimo é de 5 dias corridos.','error');return;}
   setStep(1);
   $('confirm-body').innerHTML=blocoKPIs(fD(rS),fD(rE),diasCorr(rS,rE),diasUteis(rS,rE))+
-    `<div style="font-size:13px;color:var(--muted);margin-top:12px;">Ao confirmar, <strong style="color:var(--text);">Anderson de Assis de Souza</strong> receberá notificação no Teams e e-mail para aprovar ou rejeitar.</div>
+    `<div style="font-size:13px;color:var(--muted);margin-top:12px;">Ao confirmar, <strong style="color:var(--text);">${esc(UCOLAB.cad?.GESTOR||'seu gestor')}</strong> receberá e-mail para aprovar ou rejeitar.</div>
     <div style="margin-top:10px;background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:8px;padding:10px;font-size:12px;color:var(--muted);line-height:1.7;">
       ⏰ Aviso prévio mínimo: <strong style="color:var(--text);">30 dias</strong><br>
       ✂️ Máximo de <strong style="color:var(--text);">3 períodos</strong> · mínimo de <strong style="color:var(--text);">14 dias</strong> no 1º período<br>
@@ -722,7 +661,7 @@ async function checkGestorUrl(){
   const p=new URLSearchParams(window.location.search);
   const acao=p.get('acao'),prot=p.get('prot');
   if(!acao||!prot)return false;
-  $('sConfig').classList.add('hidden');$('sLoad').classList.add('hidden');
+  $('sLoad').classList.add('hidden');
   $('app').style.display='none';$('screen-gestor').style.display='block';
   // Busca local primeiro; se não encontrar, tenta Supabase
   let sol=_sols.find(s=>s.prot===prot);
@@ -848,7 +787,85 @@ async function confirmarRej(prot){
   toast('Solicitação rejeitada','error');
   _enviarRetornoEmail(sol,false,motivo);
 }
-function logout(){tok=null;try{msalApp.logoutRedirect();}catch(e){window.location.reload();}}
+// ── PAINEL RH/GESTOR ──
+let _rhSols=[];
+
+async function loadRhPanel(profile){
+  $('screen-rh').style.display='block';
+  $('app').style.display='none';
+  $('rh-nome').textContent=(profile.nome||profile.email||'').split(' ')[0];
+  $('rh-sub').textContent=profile.role==='rh'?'Equipe RH':'Gestor · '+profile.role;
+  $('sLoad').classList.remove('hidden');
+  try{
+    const data=await window._sbFnsPortal.getSolicitacoesFerias(null);
+    _rhSols=data||[];
+  }catch(e){toast('Erro ao carregar solicitações: '+e.message,'error');}
+  $('sLoad').classList.add('hidden');
+  renderRhList();
+}
+
+function renderRhList(){
+  const filtro=$('rh-filtro-status')?.value||'';
+  const lista=_rhSols.filter(s=>!filtro||s.status===filtro);
+  const el=$('rh-list');
+  if(!lista.length){el.innerHTML='<div class="empty">Nenhuma solicitação encontrada.</div>';return;}
+  el.innerHTML=lista.map(s=>{
+    const c=s.colaboradores||{};
+    const statusCls=s.status==='APROVADO'?'c-ok':s.status==='REJEITADO'?'c-rej':'c-pend';
+    const acoes=s.status==='PENDENTE'?`
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-gold" style="font-size:12px;padding:6px 14px;" onclick="rhAprovar('${s.id}','${esc(s.protocolo)}')">✓ Aprovar</button>
+        <button class="btn" style="font-size:12px;padding:6px 14px;background:rgba(248,113,113,.1);border-color:var(--danger);color:var(--danger);" onclick="rhRejeitar('${s.id}','${esc(s.protocolo)}','${esc(c.nome||'')}')">✗ Rejeitar</button>
+      </div>`:
+      s.status==='REJEITADO'&&s.motivo_rejeicao?`<div style="font-size:12px;color:var(--danger);margin-top:6px;">Motivo: ${esc(s.motivo_rejeicao)}</div>`:'';
+    return`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:500;margin-bottom:4px;">${esc(c.nome||'—')}</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:2px;">${esc(c.cargo||'')} ${c.tipo_vinculo?'· '+esc(c.tipo_vinculo):''}</div>
+          <div style="font-size:14px;margin-top:8px;"><strong>${fD(s.data_inicio)}</strong> → <strong>${fD(s.data_fim)}</strong> · <span style="color:var(--ok)">${s.dias_corridos} dias corridos</span> · ${s.dias_uteis||0} úteis</div>
+          ${s.observacao?`<div style="font-size:12px;color:var(--muted);margin-top:4px;">Obs: ${esc(s.observacao)}</div>`:''}
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono);">${esc(s.protocolo)} · ${new Date(s.solicitado_em).toLocaleDateString('pt-BR')}</div>
+          ${acoes}
+        </div>
+        <span class="chip ${statusCls}" style="flex-shrink:0;">${esc(s.status)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function rhAprovar(id,prot){
+  if(!confirm('Confirmar aprovação das férias?'))return;
+  try{
+    await window._sbFnsPortal.atualizarStatusSolicitacao(id,'APROVADO',null);
+    const sol=_rhSols.find(s=>s.id===id);
+    if(sol){sol.status='APROVADO';const c=sol.colaboradores||{};
+      _enviarRetornoEmail({_sbId:id,prot,email:c.email_corporativo||'',nome:c.nome||'',ini:sol.data_inicio,fim:sol.data_fim,dc:sol.dias_corridos,du:sol.dias_uteis||0,obs:sol.observacao||''},true,null);
+    }
+    toast('Férias aprovadas!','success');renderRhList();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+let _rhRejId=null,_rhRejProt=null,_rhRejNome=null;
+function rhRejeitar(id,prot,nome){
+  _rhRejId=id;_rhRejProt=prot;_rhRejNome=nome;
+  $('rh-rej-nome').textContent=nome;
+  $('rh-rej-motivo').value='';
+  $('modal-rh-rej').style.display='flex';
+}
+async function rhConfirmarRej(){
+  const motivo=$('rh-rej-motivo').value.trim();
+  if(!motivo){toast('Informe o motivo','error');return;}
+  try{
+    await window._sbFnsPortal.atualizarStatusSolicitacao(_rhRejId,'REJEITADO',motivo);
+    const sol=_rhSols.find(s=>s.id===_rhRejId);
+    if(sol){sol.status='REJEITADO';sol.motivo_rejeicao=motivo;const c=sol.colaboradores||{};
+      _enviarRetornoEmail({_sbId:_rhRejId,prot:_rhRejProt,email:c.email_corporativo||'',nome:c.nome||'',ini:sol.data_inicio,fim:sol.data_fim,dc:sol.dias_corridos,du:sol.dias_uteis||0,obs:sol.observacao||''},false,motivo);
+    }
+    $('modal-rh-rej').style.display='none';
+    toast('Solicitação rejeitada','error');renderRhList();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
 
 // ── EVENT LISTENERS ──
 document.addEventListener('DOMContentLoaded',function(){
@@ -860,16 +877,7 @@ document.addEventListener('DOMContentLoaded',function(){
   $('btn-nova').addEventListener('click',novaSol);
 });
 
-// ── INIT ──
-const _CFG_FIXED={
-  clientId:'6d43cab3-e4b8-471e-ab64-8eec4d3bd538',
-  tenantId:'aadb5cad-6c69-4d6d-a942-e027203a4675',
-  driveId:'b!SYzrfr_-hkupnbeS1zKsZmB6CS4c97VMpJmz3oLVkalAzuB5sMOLR7djv69Vlty9',
-  itemId:'01O2PYW3EQZTMNB4MN4BB363SUCCHGX7HV',
-  webhook:cfgLoad()?.webhook||'https://defaultaadb5cad6c694d6da942e027203a46.75.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1c3d4b1363bf424bbf0cbdbf9c301a2c/triggers/manual/paths/invoke?api-version=1'
-};
 // Autenticação e carregamento do portal gerenciados por portal_ferias_colaborador.js (Supabase)
-// initApp (MSAL) removido — auth migrada para Supabase
 </script>
 </body>
 </html>

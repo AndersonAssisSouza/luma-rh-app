@@ -28,6 +28,11 @@ window._sb = sb
     if (typeof checkGestorUrl === 'function') {
       if (await checkGestorUrl()) return // modo gestor: aprovação/rejeição via link
     }
+    // RH/gestor/master veem o painel de aprovação; colaborador vê o portal de solicitação
+    const rhRoles = ['master','gestor','rh','manager_global']
+    if (rhRoles.includes(profile.role)) {
+      if (typeof loadRhPanel === 'function') { loadRhPanel(profile); return }
+    }
     if (typeof loadPortalSb === 'function') { loadPortalSb(); return }
     setTimeout(doInit, 50)
   }
