@@ -336,6 +336,10 @@ nav.legacy{display:none!important;}
   <div class="topbar-actions">
     <div id="ndot" class="ndot" title="Offline"></div>
     <div class="ndate" id="ndate"></div>
+    <a id="tb-admin-link" href="./admin.html" style="display:none;align-items:center;gap:6px;padding:5px 11px;background:#f1e9fe;border:1px solid #d8b4fe;border-radius:8px;font-size:12px;font-weight:600;color:#6a3ec9;text-decoration:none;" title="Abrir Admin Console">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Admin Console
+    </a>
     <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:#f3f4f6;border-radius:8px;cursor:pointer;" id="tb-user">
       <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#9b66f4);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;" id="tb-avatar">--</div>
       <div style="font-size:13px;font-weight:500;color:#1f2937;" id="tb-nome">Usuário</div>
@@ -4418,9 +4422,12 @@ function detectRole(){
   if(sbRole==='master'||sbRole==='manager_global'){
     USER_ROLE='master';
     const t=$('btn-admin');if(t)t.style.display='';
-    // Exibir "Minha Empresa" apenas para master (não manager_global, que usa manager.html)
+    // Exibir "Minha Empresa" apenas para master (não manager_global, que usa admin.html)
     const navEmp=$('nav-minha-empresa');
     if(navEmp&&sbRole==='master') navEmp.style.display='';
+    // Exibir link para Admin Console apenas para manager_global
+    const adminLink=$('tb-admin-link');
+    if(adminLink&&sbRole==='manager_global') adminLink.style.display='flex';
     return;
   }
   // RH: acesso total mas sem admin
