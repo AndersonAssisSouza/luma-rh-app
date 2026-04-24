@@ -313,19 +313,10 @@ nav.legacy{display:none!important;}
     <li class="menu-item"><button class="menu-link" onclick="location.href='./mensagens_aniversario.html'"><span class="menu-icon">🎉</span>Mensagens</button></li>
     <li class="menu-item"><button class="menu-link" onclick="location.href='./configuracoes.html'"><span class="menu-icon">🎨</span>Aparência / Card Posts</button></li>
     <li class="menu-item" id="nav-minha-empresa" style="display:none;"><button class="menu-link" onclick="openMinhaEmpresa()"><span class="menu-icon">🏢</span>Minha Empresa</button></li>
+    <li class="menu-item" id="nav-admin-console" style="display:none;"><a href="./admin.html" style="text-decoration:none;display:block;"><button class="menu-link" style="width:100%;background:rgba(107,62,201,.08);color:#6a3ec9;font-weight:600;border-left:3px solid #7c3aed;"><span class="menu-icon">⚙️</span>Admin Manager</button></a></li>
   </ul>
 
   <div class="sidebar-footer">
-    <a id="sb-admin-console" href="./admin.html" style="display:none;width:100%;margin-bottom:6px;text-decoration:none;">
-      <button class="menu-link" style="width:100%;background:rgba(107,62,201,.1);color:#6a3ec9;border:1px solid rgba(107,62,201,.25);font-weight:600;"><span class="menu-icon">⚙️</span>Admin Console</button>
-    </a>
-    <!-- Link direto para manager_global — sempre acessível mesmo sem JS -->
-    <a href="./admin.html" id="sb-admin-direct" style="display:none;width:100%;margin-bottom:6px;text-decoration:none;">
-      <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#9b66f4);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        Admin Console
-      </div>
-    </a>
     <button id="btn-admin" class="menu-link" onclick="openAdminModal()" style="display:none;width:100%;margin-bottom:6px;"><span class="menu-icon">🛠️</span>Administração</button>
     <button class="menu-link" style="width:100%;margin-bottom:6px;" onclick="loadAll()"><span class="menu-icon">🔄</span>Atualizar dados</button>
     <button class="menu-link" style="width:100%;" onclick="window._sbLogout&&_sbLogout()"><span class="menu-icon">🚪</span>Sair</button>
@@ -346,10 +337,6 @@ nav.legacy{display:none!important;}
   <div class="topbar-actions">
     <div id="ndot" class="ndot" title="Offline"></div>
     <div class="ndate" id="ndate"></div>
-    <a id="tb-admin-link" href="./admin.html" style="display:none;align-items:center;gap:6px;padding:5px 11px;background:#f1e9fe;border:1px solid #d8b4fe;border-radius:8px;font-size:12px;font-weight:600;color:#6a3ec9;text-decoration:none;" title="Abrir Admin Console">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      Admin Console
-    </a>
     <div style="position:relative;" id="tb-user-wrap">
       <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:#f3f4f6;border-radius:8px;cursor:pointer;" id="tb-user" onclick="tbUserToggle()">
         <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#9b66f4);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;" id="tb-avatar">--</div>
@@ -4449,14 +4436,10 @@ function detectRole(){
     // Exibir "Minha Empresa" apenas para master (não manager_global, que usa admin.html)
     const navEmp=$('nav-minha-empresa');
     if(navEmp&&sbRole==='master') navEmp.style.display='';
-    // Exibir Admin Console para manager_global (topbar + dois botões sidebar)
+    // Exibir Admin Manager no menu lateral apenas para manager_global
     const isGlobal = window._sbIsManagerGlobal || window._sbProfile?.role==='manager_global';
-    const adminLink=$('tb-admin-link');
-    if(adminLink&&isGlobal) adminLink.style.display='flex';
-    const sideAdmin=$('sb-admin-console');
-    if(sideAdmin&&isGlobal) sideAdmin.style.display='';
-    const sideAdminDirect=$('sb-admin-direct');
-    if(sideAdminDirect&&isGlobal) sideAdminDirect.style.display='';
+    const navAdmin=$('nav-admin-console');
+    if(navAdmin&&isGlobal) navAdmin.style.display='';
     return;
   }
   // RH: acesso total mas sem admin
