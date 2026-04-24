@@ -316,6 +316,9 @@ nav.legacy{display:none!important;}
   </ul>
 
   <div class="sidebar-footer">
+    <a id="sb-admin-console" href="./admin.html" style="display:none;width:100%;margin-bottom:6px;text-decoration:none;">
+      <button class="menu-link" style="width:100%;background:rgba(107,62,201,.1);color:#6a3ec9;border:1px solid rgba(107,62,201,.25);"><span class="menu-icon">⚙️</span>Admin Console</button>
+    </a>
     <button id="btn-admin" class="menu-link" onclick="openAdminModal()" style="display:none;width:100%;margin-bottom:6px;"><span class="menu-icon">🛠️</span>Administração</button>
     <button class="menu-link" style="width:100%;margin-bottom:6px;" onclick="loadAll()"><span class="menu-icon">🔄</span>Atualizar dados</button>
     <button class="menu-link" style="width:100%;" onclick="window._sbLogout&&_sbLogout()"><span class="menu-icon">🚪</span>Sair</button>
@@ -4439,9 +4442,12 @@ function detectRole(){
     // Exibir "Minha Empresa" apenas para master (não manager_global, que usa admin.html)
     const navEmp=$('nav-minha-empresa');
     if(navEmp&&sbRole==='master') navEmp.style.display='';
-    // Exibir link para Admin Console apenas para manager_global (usar role original, não convertido)
+    // Exibir Admin Console para manager_global (topbar + sidebar)
+    const isGlobal = window._sbIsManagerGlobal || window._sbProfile?.role==='manager_global';
     const adminLink=$('tb-admin-link');
-    if(adminLink&&window._sbProfile?.role==='manager_global') adminLink.style.display='flex';
+    if(adminLink&&isGlobal) adminLink.style.display='flex';
+    const sideAdmin=$('sb-admin-console');
+    if(sideAdmin&&isGlobal) sideAdmin.style.display='';
     return;
   }
   // RH: acesso total mas sem admin

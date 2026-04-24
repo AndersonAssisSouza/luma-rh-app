@@ -26,11 +26,12 @@ window._sbClient = sb   // alias para Storage (verAtestado, upload atestado)
   const profile = await requireAuth(['master','gestor','rh','manager_global'])
   if (!profile) return
 
-  window._sbProfile = profile
-  window.USER_EMAIL  = profile.email
-  window.USER_NOME   = profile.nome
-  window._sbRole     = profile.role === 'manager_global' ? 'master' : profile.role
-  window._sbTenantId = profile.tenant_id
+  window._sbProfile        = profile
+  window.USER_EMAIL        = profile.email
+  window.USER_NOME         = profile.nome
+  window._sbRole           = profile.role === 'manager_global' ? 'master' : profile.role
+  window._sbIsManagerGlobal = profile.role === 'manager_global'
+  window._sbTenantId       = profile.tenant_id
 
   // Expõe funções Supabase para o script legado
   window._sbFns = {
