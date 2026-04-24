@@ -1,10 +1,8 @@
 /**
- * Cloudflare Worker — Luma Plataforma · Gestão RH
+ * Cloudflare Worker — Luma Plataforma (genérico)
  *
  * NOTA: Este worker não é mais necessário.
- * O sistema agora está hospedado no Cloudflare Pages.
- * A rota /gestaorh não é mais usada — o acesso é feito diretamente
- * via lumarh.lumaplataforma.com.br.
+ * O sistema agora está hospedado no Cloudflare Pages com domínio personalizado.
  *
  * Mantido apenas como referência. Pode ser removido do Cloudflare Dashboard.
  */

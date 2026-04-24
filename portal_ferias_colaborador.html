@@ -326,7 +326,7 @@ async function initApp(c){
   CFG=c;$('sConfig').classList.add('hidden');$('sLoad').classList.remove('hidden');setL('Inicializando autenticação...');
   try{
     msalApp=await msal.createStandardPublicClientApplication({
-      auth:{clientId:c.clientId,authority:`https://login.microsoftonline.com/${c.tenantId}`,redirectUri:'https://ashy-plant-05558780f.2.azurestaticapps.net/portal_ferias_colaborador.html'},
+      auth:{clientId:c.clientId,authority:`https://login.microsoftonline.com/${c.tenantId}`,redirectUri:window.location.origin+'/portal_ferias_colaborador.html'},
       cache:{cacheLocation:'localStorage',storeAuthStateInCookie:true}
     });
     await msalApp.initialize();
