@@ -541,7 +541,7 @@ nav.legacy{display:none!important;}
       <input type="text" id="exSearch" placeholder="Buscar por nome ou situação..." oninput="filterTable('exBody',this.value)"
         style="flex:1;min-width:220px;max-width:340px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:13px;color:var(--text);outline:none;margin-left:auto;">
     </div>
-    <div class="sy"><table class="tbl"><thead><tr><th onclick="sortTable('exBody',0,this)">Colaborador</th><th onclick="sortTable('exBody',1,this)">Tipo</th><th onclick="sortTable('exBody',2,this)">Último exame</th><th onclick="sortTable('exBody',3,this)">Próximo exame</th><th onclick="sortTable('exBody',4,this)">Situação</th><th></th></tr></thead><tbody id="exBody"></tbody></table></div>
+    <div class="sy"><table class="tbl"><thead><tr><th onclick="sortTable('exBody',0,this)">Colaborador</th><th onclick="sortTable('exBody',1,this)">Tipo</th><th onclick="sortTable('exBody',2,this)">Último exame</th><th onclick="sortTable('exBody',3,this)">Próximo exame</th><th onclick="sortTable('exBody',4,this)">Agendado para</th><th onclick="sortTable('exBody',5,this)">Situação</th><th></th></tr></thead><tbody id="exBody"></tbody></table></div>
   </div>
 </div>
 
@@ -1264,13 +1264,42 @@ nav.legacy{display:none!important;}
     <div class="mb">
       <input type="hidden" id="eExId"><input type="hidden" id="eExRow">
       <div class="fg">
-        <div class="fgrp"><div class="flbl">Último exame <span class="rq">*</span></div><input class="fi" id="exUlt" type="date"></div>
+        <div class="fgrp"><div class="flbl">Último exame</div><input class="fi" id="exUlt" type="date"></div>
         <div class="fgrp"><div class="flbl">Próximo exame</div><input class="fi" id="exProx" type="date"></div>
+        <div class="fgrp"><div class="flbl">Data do agendamento</div><input class="fi" id="exAgend" type="date" title="Data em que o exame está agendado para ser realizado"></div>
         <div class="fgrp"><div class="flbl">Situação</div>
-          <select class="fsel" id="exSt"><option value="EM_DIA">Em dia</option><option value="AGENDADO">Agendado</option><option value="VENCIDO">Vencido</option><option value="INATIVO">Inativo</option></select>
+          <select class="fsel" id="exSt">
+            <option value="EM_DIA">Em dia</option>
+            <option value="AGENDADO">Agendado</option>
+            <option value="AGUARDANDO_CONFIRMACAO">Aguardando confirmação</option>
+            <option value="VENCIDO">Vencido</option>
+            <option value="INATIVO">Inativo</option>
+          </select>
         </div>
         <div class="fgrp"><div class="flbl">Fonte / tipo</div><input class="fi" id="exFonte" placeholder="Ex: Exame Periódico"></div>
         <div class="fgrp s2"><div class="flbl">Observação</div><textarea class="fta" id="exObs"></textarea></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmar realização de exame -->
+<div class="ov" id="mConfirmEx">
+  <div class="modal" style="max-width:480px;">
+    <div class="mh"><div><div class="mt">Confirmar realização do exame</div><div class="ms" id="mConfirmExSub">—</div></div><div style="display:flex;align-items:center;gap:6px;flex-shrink:0;"><button class="btn" onclick="closeModal('mConfirmEx')">Cancelar</button><button class="btn btn-g" onclick="saveConfirmEx()">Confirmar</button><button class="mc" onclick="closeModal('mConfirmEx')">×</button></div></div>
+    <div class="mb">
+      <input type="hidden" id="eConfirmExId">
+      <input type="hidden" id="eConfirmExTipo">
+      <div class="fg">
+        <div class="fgrp s2">
+          <div class="flbl">Data de realização <span class="rq">*</span></div>
+          <input class="fi" id="exDataReal" type="date">
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Informe a data em que o exame foi efetivamente realizado.</div>
+        </div>
+        <div class="fgrp s2">
+          <div class="flbl">Próximo exame (calculado automaticamente)</div>
+          <input class="fi" id="exProxCalc" type="date" title="Ajuste se necessário">
+        </div>
       </div>
     </div>
   </div>
@@ -1558,6 +1587,7 @@ function _sbExToExcel(e){
     TIPO_VINCULO:(c.tipo_vinculo||'').toUpperCase(),
     TIPO_EXAME:e.tipo_exame, ULTIMO_EXAME:e.ultimo_exame,
     PROXIMO_EXAME:e.proximo_exame, STATUS_EXAME:e.status_exame,
+    DATA_AGENDAMENTO:e.data_agendamento||null,
     FONTE_BASE_ANTIGA:e.fonte_base_antiga||'', OBSERVACAO:e.observacao||'',
   };
 }
@@ -1973,17 +2003,26 @@ function render(){
   $('exBody').innerHTML=exAtvList.map(r=>{
     const isSocio=socioIds.has(r.ID_COLABORADOR);
     const isDemiss=String(r.TIPO_EXAME||'').toUpperCase()==='DEMISSIONAL';
+    const stEx=r.STATUS_EXAME||'';
     const statusChip=isSocio
       ?`<span class="chip cw" title="Sócio isento de ASO conforme NR-7">Isento NR-7</span>`
-      :`<span class="chip ${r.STATUS_EXAME==='EM_DIA'?'cok':r.STATUS_EXAME==='VENCIDO'?'cd':r.STATUS_EXAME==='AGENDADO'?'cb':'cw'}">${r.STATUS_EXAME||'—'}</span>`;
+      :stEx==='EM_DIA'?`<span class="chip cok">Em dia</span>`
+      :stEx==='AGENDADO'?`<span class="chip cb">Agendado</span>`
+      :stEx==='AGUARDANDO_CONFIRMACAO'?`<span class="chip cw" title="Data do agendamento passou — confirme a realização">⏳ Aguard. confirmação</span>`
+      :stEx==='VENCIDO'?`<span class="chip cd">Vencido</span>`
+      :stEx==='INATIVO'?`<span class="chip cn">Inativo</span>`
+      :`<span class="chip cw">${stEx||'—'}</span>`;
     const nr7Icon=isDemiss?`<span title="${_nr7tip}" style="cursor:help;margin-left:4px;color:var(--muted);">ℹ️</span>`:'';
+    const agendCell=r.DATA_AGENDAMENTO?`<td style="font-family:var(--mono);font-size:17px">${fmtD(r.DATA_AGENDAMENTO)}</td>`:`<td style="color:var(--muted);font-size:12px">—</td>`;
+    const btnConfirm=stEx==='AGUARDANDO_CONFIRMACAO'?`<button class="ab" style="background:var(--warn);color:#fff;" onclick='openConfirmEx(${JSON.stringify(r)})'>Confirmar</button>`:'';
     return`<tr>
     <td>${esc(r.NOME||'—')}</td>
     <td><span class="chip cok">${esc(r.TIPO_EXAME||'—')}</span>${nr7Icon}</td>
     <td style="font-family:var(--mono);font-size:17px">${fmtD(r.ULTIMO_EXAME)}</td>
     <td style="font-family:var(--mono);font-size:17px">${fmtD(r.PROXIMO_EXAME)}</td>
+    ${agendCell}
     <td>${statusChip}</td>
-    <td><div class="acts"><button class="ab" onclick='openEditEx(${JSON.stringify(r)})'>Editar</button></div></td></tr>`;}).join('')||'<tr><td colspan="6" class="empty">Nenhum</td></tr>';
+    <td><div class="acts">${btnConfirm}<button class="ab" onclick='openEditEx(${JSON.stringify(r)})'>Editar</button></div></td></tr>`;}).join('')||'<tr><td colspan="7" class="empty">Nenhum</td></tr>';
 
   // Ausências (gestor: apenas subordinados; demais: todos)
   const ausR=(ausSub||[]).filter(r=>{const n=String(r.NOME||'').trim();const d=String(r.DATA||'').trim();return n&&n!=='Colaborador (a)'&&n!=='Colaborador'&&d&&d!=='Data';});
@@ -3522,6 +3561,7 @@ function openEditEx(r){
   $('eExId').value=r.ID_COLABORADOR||'';$('eExRow').value=r._row||'';
   $('mEditExSub').textContent=(r.NOME||'—')+' · '+(r.ID_COLABORADOR||'—');
   $('exUlt').value=iso(r.ULTIMO_EXAME)||'';$('exProx').value=iso(r.PROXIMO_EXAME)||'';
+  $('exAgend').value=iso(r.DATA_AGENDAMENTO)||'';
   setS('exSt',r.STATUS_EXAME||'EM_DIA');$('exFonte').value=r.FONTE_BASE_ANTIGA||'';$('exObs').value=r.OBSERVACAO||'';
   openModal('mEditEx');
 }
@@ -3531,6 +3571,7 @@ async function saveEditEx(){
   const campos={
     ultimo_exame:$('exUlt').value||null,
     proximo_exame:$('exProx').value||null,
+    data_agendamento:$('exAgend').value||null,
     status_exame:$('exSt').value,
     observacao:$('exObs').value||null
   };
@@ -3540,6 +3581,49 @@ async function saveEditEx(){
     await window._sbFns.updateExame(exId,campos);
     toast('Exame atualizado','success');await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+function _calcProxExame(dataReal, tipoExame) {
+  if (!dataReal) return '';
+  const t = String(tipoExame||'').toUpperCase();
+  const meses = t.includes('RETORNO') ? 6 : t.includes('MUDAN') ? 6 : 12;
+  const d = new Date(dataReal);
+  d.setMonth(d.getMonth() + meses);
+  return d.toISOString().slice(0,10);
+}
+
+function openConfirmEx(r) {
+  $('eConfirmExId').value = r._row || r._id || '';
+  $('eConfirmExTipo').value = r.TIPO_EXAME || '';
+  $('mConfirmExSub').textContent = (r.NOME||'—') + ' · ' + (r.TIPO_EXAME||'—');
+  const hoje = new Date().toISOString().slice(0,10);
+  $('exDataReal').value = r.DATA_AGENDAMENTO ? iso(r.DATA_AGENDAMENTO) : hoje;
+  $('exProxCalc').value = _calcProxExame($('exDataReal').value, r.TIPO_EXAME);
+  $('exDataReal').oninput = () => {
+    $('exProxCalc').value = _calcProxExame($('exDataReal').value, $('eConfirmExTipo').value);
+  };
+  openModal('mConfirmEx');
+}
+
+async function saveConfirmEx() {
+  const exId = $('eConfirmExId').value;
+  const dataReal = $('exDataReal').value;
+  if (!exId) { toast('Registro não identificado','error'); return; }
+  if (!dataReal) { toast('Informe a data de realização','error'); return; }
+  const campos = {
+    ultimo_exame: dataReal,
+    proximo_exame: $('exProxCalc').value || null,
+    data_agendamento: null,
+    status_exame: 'EM_DIA'
+  };
+  closeModal('mConfirmEx');
+  toast('Confirmando exame...','info');
+  try {
+    if (DEMO) { fakeS('EXAMES_OCUPACIONAIS', exId, campos); return; }
+    await window._sbFns.updateExame(exId, campos);
+    toast('Exame confirmado como realizado!','success');
+    await loadAll();
+  } catch(e) { toast('Erro: '+e.message,'error'); }
 }
 
 // NOVA AUSÊNCIA
