@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Luma · Admin Console</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230F1117'/%3E%3Cpath d='M8 7h4v13h8v4H8V7z' fill='%239B66F4'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%239b66f4'/%3E%3Cpolygon points='20,15 42,15 50,72 58,15 80,15 60,88 40,88' fill='%23ffd000'/%3E%3Cpolygon points='50,72 58,15 80,15 60,88' fill='%23c9a200' opacity='0.7'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Inter+Tight:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
@@ -690,6 +690,12 @@ tbody tr.clickable:hover td{background:var(--surface-2)}
       <!-- Sistema -->
       <div class="nav-group">
         <div class="nav-group-label">Sistema</div>
+        <div class="nav-item" data-route="reports" onclick="navigate('reports')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/>
+          </svg>
+          Relatórios
+        </div>
         <div class="nav-item" data-route="audit" onclick="navigate('audit')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
@@ -1184,6 +1190,53 @@ tbody tr.clickable:hover td{background:var(--surface-2)}
         <div class="grid grid-4" id="plans-grid"></div>
       </div>
 
+      <!-- ── RELATÓRIOS ─────────────────────────────── -->
+      <div id="page-reports" class="page">
+        <div class="page-head">
+          <div class="page-head-left">
+            <div class="page-title">Relatórios</div>
+            <div class="page-subtitle">Análises, health scores e exportações</div>
+          </div>
+          <div class="page-head-actions">
+            <button class="btn btn-sm" onclick="exportTenantsCsv()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+              Exportar empresas
+            </button>
+            <button class="btn btn-sm" onclick="exportFaturasCsv()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+              Exportar faturas
+            </button>
+            <button class="btn btn-sm" onclick="loadReports()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+              Atualizar
+            </button>
+          </div>
+        </div>
+
+        <!-- KPIs de health -->
+        <div class="grid grid-4 mb-20" id="rep-kpis"></div>
+
+        <!-- Distribuição de planos + Churn Risk -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+          <div class="card">
+            <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:14px;">Distribuição por plano</div>
+            <div id="rep-plan-dist"></div>
+          </div>
+          <div class="card">
+            <div style="font-size:13px;font-weight:600;color:var(--ink);margin-bottom:14px;">⚠ Risco de churn</div>
+            <div id="rep-churn-list"></div>
+          </div>
+        </div>
+
+        <!-- Tabela de Health Score -->
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Empresa</th><th>Plano</th><th>Dias ativo</th><th>Usuários</th><th>Health Score</th><th>Status</th></tr></thead>
+            <tbody id="rep-health-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- ── AUDITORIA ─────────────────────────────── -->
       <div id="page-audit" class="page">
         <div class="page-head">
@@ -1356,7 +1409,7 @@ function updateThemeIcon(theme) {
 const ROUTE_LABELS = {
   dashboard:'Dashboard', tenants:'Empresas', 'tenants-new':'Nova empresa',
   'tenants-detail':'Detalhe', users:'Usuários', billing:'Faturamento',
-  plans:'Planos', audit:'Auditoria', settings:'Configurações'
+  plans:'Planos', reports:'Relatórios', audit:'Auditoria', settings:'Configurações'
 }
 window.navigate = function(route) {
   _route = route
@@ -1383,6 +1436,7 @@ window.navigate = function(route) {
   if (route === 'users')         renderUsers()
   if (route === 'billing')       renderBilling()
   if (route === 'plans')         renderPlans()
+  if (route === 'reports')      loadReports()
   if (route === 'audit')         loadAudit()
   if (route.startsWith('tenants-detail-')) loadTenantDetail(route.replace('tenants-detail-',''))
 }
@@ -1429,12 +1483,28 @@ window.loadDashboard = async function() {
       <div class="kpi-sub">Disponível com histórico</div>
       <span class="kpi-delta neutral">Em breve</span>
     </div>
-    <div class="kpi-card">
+    <div class="kpi-card" onclick="navigate('reports')" style="cursor:pointer">
       <div class="kpi-label">Health Score médio</div>
-      <div class="kpi-value">—</div>
-      <div class="kpi-sub">Cálculo automático em breve</div>
-      <span class="kpi-delta neutral">Fase 4</span>
+      <div class="kpi-value" id="dash-health-score">—</div>
+      <div class="kpi-sub" id="dash-health-sub">Ver relatório →</div>
+      <span class="kpi-delta neutral" id="dash-health-delta">Relatórios</span>
     </div>`
+
+  // Calcular health score async
+  try {
+    const { data: inv } = await sb.from('invoices').select('tenant_id,status')
+    const invAll = inv || []
+    const scores = _tenants.map(t => calcHealthScore(t, invAll.filter(i=>i.tenant_id===t.id)))
+    const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0
+    const el = $('dash-health-score')
+    if (el) {
+      el.textContent = avg
+      el.style.color = avg>=70?'var(--good)':avg>=40?'var(--warn)':'var(--danger)'
+    }
+    const sub = $('dash-health-sub')
+    const critical = scores.filter(s=>s<40).length
+    if (sub) sub.textContent = critical > 0 ? `⚠ ${critical} crítica${critical>1?'s':''} · Ver →` : 'Ver relatório →'
+  } catch(_) {}
 
   // MRR chart (trend baseado em planos atuais, sem histórico ainda)
   renderMrrChart(mrr)
@@ -1786,6 +1856,133 @@ window.salvarEditPlan = function() {
   closeEditPlan()
   renderPlans()
   toast('Plano atualizado (sessão atual)', 'success')
+}
+
+// ── HEALTH SCORE ─────────────────────────────────────────────
+function calcHealthScore(t, invoicesForTenant) {
+  let score = 100
+  const status = tenantStatus(t)
+  if (status === 'blocked')  score -= 40
+  if (status === 'canceled') score -= 50
+  if (status === 'trial') {
+    const days = Math.floor((Date.now() - new Date(t.criado_em).getTime()) / 86400000)
+    if (days > 30) score -= 25
+    else           score -= 10
+  }
+  const userCount = _profiles.filter(p => p.tenant_id === t.id).length
+  if (userCount === 0) score -= 20
+  else if (userCount < 3) score -= 5
+  const overdueInv = invoicesForTenant.filter(i => i.status === 'VENCIDO').length
+  if (overdueInv > 0) score -= overdueInv * 10
+  if (t.plano === 'PRO') score += 5
+  if (t.plano === 'ENTERPRISE') score += 10
+  return Math.max(0, Math.min(100, score))
+}
+
+function healthBadge(score) {
+  if (score >= 70) return `<span class="pill pill-active"><span class="pill-dot"></span>Saudável (${score})</span>`
+  if (score >= 40) return `<span class="pill pill-trial"><span class="pill-dot"></span>Atenção (${score})</span>`
+  return `<span class="pill pill-past-due"><span class="pill-dot"></span>Crítico (${score})</span>`
+}
+
+// ── RELATÓRIOS ───────────────────────────────────────────────
+window.loadReports = async function() {
+  if (!_tenants.length) await loadAll()
+  const { data: inv } = await sb.from('invoices').select('*')
+  const invoices = inv || []
+
+  // Calcular health de cada tenant
+  const rows = _tenants.map(t => {
+    const invT = invoices.filter(i => i.tenant_id === t.id)
+    const score = calcHealthScore(t, invT)
+    const days  = Math.floor((Date.now() - new Date(t.criado_em).getTime()) / 86400000)
+    const users = _profiles.filter(p => p.tenant_id === t.id).length
+    return { ...t, _score: score, _days: days, _users: users }
+  }).sort((a,b) => b._score - a._score)
+
+  const healthy  = rows.filter(r => r._score >= 70).length
+  const atRisk   = rows.filter(r => r._score >= 40 && r._score < 70).length
+  const critical = rows.filter(r => r._score < 40).length
+  const avgScore = rows.length ? Math.round(rows.reduce((s,r)=>s+r._score,0)/rows.length) : 0
+
+  // KPIs
+  $('rep-kpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Health Score médio</div><div class="kpi-value" style="color:${avgScore>=70?'var(--good)':avgScore>=40?'var(--warn)':'var(--danger)'}">${avgScore}</div><div class="kpi-sub">de 100</div></div>
+    <div class="kpi-card"><div class="kpi-label">Saudáveis</div><div class="kpi-value" style="color:var(--good)">${healthy}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Em atenção</div><div class="kpi-value" style="color:var(--warn)">${atRisk}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Críticas</div><div class="kpi-value" style="color:var(--danger)">${critical}</div></div>`
+
+  // Distribuição por plano
+  const planCounts = {}
+  _tenants.forEach(t => { planCounts[t.plano] = (planCounts[t.plano]||0)+1 })
+  const total = _tenants.length || 1
+  $('rep-plan-dist').innerHTML = Object.entries(planCounts).map(([k,v]) => `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span>${planPill(k)}</span><span style="color:var(--ink-3)">${v} empresa${v!==1?'s':''}</span>
+      </div>
+      <div style="height:6px;background:var(--line-2);border-radius:99px;overflow:hidden">
+        <div style="height:100%;width:${Math.round(v/total*100)}%;background:var(--brand);border-radius:99px;transition:width .4s"></div>
+      </div>
+    </div>`).join('') || '<div style="color:var(--ink-4);font-size:13px">Sem dados</div>'
+
+  // Churn risk (score < 50)
+  const churnList = rows.filter(r => r._score < 50).slice(0,6)
+  $('rep-churn-list').innerHTML = churnList.length
+    ? churnList.map(r => `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--line-2)">
+        <div style="font-size:13px;font-weight:500">${esc(r.nome)}</div>
+        ${healthBadge(r._score)}
+      </div>`).join('')
+    : '<div style="color:var(--good);font-size:13px;padding:12px 0">✓ Nenhum tenant em risco</div>'
+
+  // Tabela health
+  $('rep-health-tbody').innerHTML = rows.map(r => `<tr>
+    <td style="font-weight:500">${esc(r.nome)}</td>
+    <td>${planPill(r.plano)}</td>
+    <td class="td-mono">${r._days}d</td>
+    <td class="td-mono">${r._users}</td>
+    <td>${healthBadge(r._score)}</td>
+    <td>${statusPill(tenantStatus(r))}</td>
+  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--ink-4);padding:24px">Nenhuma empresa cadastrada</td></tr>'
+}
+
+// ── EXPORT CSV ───────────────────────────────────────────────
+window.exportTenantsCsv = async function() {
+  if (!_tenants.length) await loadAll()
+  const { data: inv } = await sb.from('invoices').select('*')
+  const invoices = inv || []
+  const header = 'Nome,Plano,Status,Email Admin,Usuários,MRR,Health Score,Criado em\n'
+  const rows = _tenants.map(t => {
+    const users = _profiles.filter(p => p.tenant_id === t.id).length
+    const mrr   = tenantMrr(t)
+    const score = calcHealthScore(t, invoices.filter(i => i.tenant_id === t.id))
+    return [t.nome, t.plano, t.status, t.email_admin, users, mrr, score, t.criado_em?.slice(0,10)].map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')
+  }).join('\n')
+  downloadCsv('luma-empresas.csv', header + rows)
+  toast('CSV exportado!', 'success')
+}
+
+window.exportFaturasCsv = async function() {
+  const { data: inv } = await sb.from('invoices').select('*').order('criado_em', { ascending: false })
+  const invoices = inv || []
+  const tenantMap = {}
+  _tenants.forEach(t => tenantMap[t.id] = t.nome)
+  const header = 'Empresa,Descrição,Valor,Status,Vencimento,Pago em,Criado em\n'
+  const rows = invoices.map(i => [
+    tenantMap[i.tenant_id]||i.tenant_id, i.descricao, i.valor, i.status,
+    i.vencimento||'', i.pago_em?.slice(0,10)||'', i.criado_em?.slice(0,10)
+  ].map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n')
+  downloadCsv('luma-faturas.csv', header + rows)
+  toast('CSV exportado!', 'success')
+}
+
+function downloadCsv(filename, content) {
+  const blob = new Blob(['\ufeff'+content], { type:'text/csv;charset=utf-8;' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(a.href)
 }
 
 // ── AUDIT ────────────────────────────────────────────────────
