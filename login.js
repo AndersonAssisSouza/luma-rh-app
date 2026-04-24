@@ -53,11 +53,11 @@ window.doLogin = async function() {
     const profile = await getProfileCached()
     if (!profile) throw new Error('Perfil não encontrado.')
 
-    if (profile.role === 'manager_global') {
-      window.location.href = './admin.html'
-    } else if (profile.role === 'colaborador') {
+    if (profile.role === 'colaborador') {
       window.location.href = './portal_ferias_colaborador.html'
     } else {
+      // master, rh, gestor e manager_global entram no editor RH
+      // manager_global tem botão "Admin Console" disponível na topbar do editor
       window.location.href = './people_analytics_editor.html'
     }
   } catch (e) {
@@ -145,8 +145,7 @@ document.addEventListener('keydown', e => {
   const { data: { session } } = await sb.auth.getSession()
   if (session) {
     const profile = await getProfileCached()
-    if (profile?.role === 'manager_global') window.location.href = './admin.html'
-    else if (profile?.role === 'colaborador') window.location.href = './portal_ferias_colaborador.html'
+    if (profile?.role === 'colaborador') window.location.href = './portal_ferias_colaborador.html'
     else window.location.href = './people_analytics_editor.html'
   }
 })()
