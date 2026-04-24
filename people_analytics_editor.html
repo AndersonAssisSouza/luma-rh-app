@@ -153,6 +153,7 @@ nav.legacy{display:none!important;}
 .cok{background:rgba(34,197,94,.1);color:#16a34a;}
 .cw{background:rgba(245,158,11,.12);color:#d97706;}
 .cd{background:rgba(239,68,68,.12);color:#dc2626;}
+.cb{background:rgba(59,130,246,.12);color:#2563eb;}
 .sy{overflow-y:auto;max-height:calc(100vh - 320px);min-height:200px;}
 .sy::-webkit-scrollbar{width:4px;}
 .sy::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
@@ -1251,7 +1252,7 @@ nav.legacy{display:none!important;}
         <div class="fgrp"><div class="flbl">Último exame <span class="rq">*</span></div><input class="fi" id="exUlt" type="date"></div>
         <div class="fgrp"><div class="flbl">Próximo exame</div><input class="fi" id="exProx" type="date"></div>
         <div class="fgrp"><div class="flbl">Situação</div>
-          <select class="fsel" id="exSt"><option value="EM_DIA">Em dia</option><option value="VENCIDO">Vencido</option><option value="INATIVO">Inativo</option></select>
+          <select class="fsel" id="exSt"><option value="EM_DIA">Em dia</option><option value="AGENDADO">Agendado</option><option value="VENCIDO">Vencido</option><option value="INATIVO">Inativo</option></select>
         </div>
         <div class="fgrp"><div class="flbl">Fonte / tipo</div><input class="fi" id="exFonte" placeholder="Ex: Exame Periódico"></div>
         <div class="fgrp s2"><div class="flbl">Observação</div><textarea class="fta" id="exObs"></textarea></div>
@@ -1959,7 +1960,7 @@ function render(){
     const isDemiss=String(r.TIPO_EXAME||'').toUpperCase()==='DEMISSIONAL';
     const statusChip=isSocio
       ?`<span class="chip cw" title="Sócio isento de ASO conforme NR-7">Isento NR-7</span>`
-      :`<span class="chip ${r.STATUS_EXAME==='EM_DIA'?'cok':r.STATUS_EXAME==='VENCIDO'?'cd':'cw'}">${r.STATUS_EXAME||'—'}</span>`;
+      :`<span class="chip ${r.STATUS_EXAME==='EM_DIA'?'cok':r.STATUS_EXAME==='VENCIDO'?'cd':r.STATUS_EXAME==='AGENDADO'?'cb':'cw'}">${r.STATUS_EXAME||'—'}</span>`;
     const nr7Icon=isDemiss?`<span title="${_nr7tip}" style="cursor:help;margin-left:4px;color:var(--muted);">ℹ️</span>`:'';
     return`<tr>
     <td>${esc(r.NOME||'—')}</td>
