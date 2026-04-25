@@ -135,6 +135,19 @@ textarea{resize:vertical;min-height:80px;}
 <!-- AUTH -->
 <script type="module" src="./mensagens_aniversario.js"></script>
 
+<!-- Modo embed: esconde header quando carregado dentro do editor principal -->
+<script>
+  if(new URLSearchParams(location.search).has('embed')){
+    document.addEventListener('DOMContentLoaded',()=>{
+      const h=document.querySelector('.header');
+      const t=document.querySelector('.tabs');
+      if(h)h.style.display='none';
+      if(t)t.style.marginTop='0';
+      document.body.style.background='transparent';
+    });
+  }
+</script>
+
 <!-- HEADER -->
 <div class="header">
   <div class="logo">

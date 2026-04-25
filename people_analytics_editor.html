@@ -317,8 +317,8 @@ nav.legacy{display:none!important;}
     <li class="menu-item"><button class="menu-link" onclick="showTab('acoes',this)"><span class="menu-icon">⚡</span>Ações</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('pf',this)"><span class="menu-icon">📅</span>Portal Férias</button></li>
     <div class="sidebar-sep"></div>
-    <li class="menu-item"><button class="menu-link" onclick="location.href='./mensagens_aniversario.html'"><span class="menu-icon">🎉</span>Mensagens</button></li>
-    <li class="menu-item"><button class="menu-link" onclick="location.href='./configuracoes.html'"><span class="menu-icon">🎨</span>Aparência / Card Posts</button></li>
+    <li class="menu-item"><button class="menu-link" onclick="showTab('msg',this)"><span class="menu-icon">🎉</span>Mensagens</button></li>
+    <li class="menu-item"><button class="menu-link" onclick="showTab('cfg',this)"><span class="menu-icon">🎨</span>Aparência / Card Posts</button></li>
     <li class="menu-item" id="nav-minha-empresa" style="display:none;"><button class="menu-link" onclick="openMinhaEmpresa()"><span class="menu-icon">🏢</span>Minha Empresa</button></li>
     <li class="menu-item" id="nav-admin-console"><a href="./admin.html" style="text-decoration:none;display:block;"><button class="menu-link"><span class="menu-icon">⚙️</span>Admin Manager</button></a></li>
   </ul>
@@ -925,6 +925,16 @@ nav.legacy{display:none!important;}
       </table>
     </div>
   </div>
+</div>
+
+<!-- MENSAGENS DE ANIVERSÁRIO (iframe embed) -->
+<div class="sec" id="msg" style="padding:0;margin:0;">
+  <iframe id="iframe-msg" src="about:blank" style="width:100%;height:calc(100vh - 62px);border:none;display:block;" loading="lazy"></iframe>
+</div>
+
+<!-- APARÊNCIA / CONFIGURAÇÕES (iframe embed) -->
+<div class="sec" id="cfg" style="padding:0;margin:0;">
+  <iframe id="iframe-cfg" src="about:blank" style="width:100%;height:calc(100vh - 62px);border:none;display:block;" loading="lazy"></iframe>
 </div>
 
 <!-- MODAL ADMINISTRAÇÃO -->
@@ -4284,8 +4294,8 @@ function openModalAus(){
   // Resetar botão para "Registrar"
   const btnReg=document.querySelector('#mNewAus .btn-g[onclick="saveNewAus()"]');
   if(btnReg) btnReg.textContent='Registrar';
+  ausTipoChange(); // aplica visibilidade ANTES de abrir (inline style persiste independente do display do pai)
   openModal('mNewAus');
-  requestAnimationFrame(()=>ausTipoChange()); // garante seção médica visível após modal renderizar
 }
 
 window.editarAus=function(id){
@@ -4307,8 +4317,8 @@ window.editarAus=function(id){
   // Mudar botão para "Salvar alteração"
   const btnReg=document.querySelector('#mNewAus .btn-g[onclick="saveNewAus()"]');
   if(btnReg) btnReg.textContent='Salvar alteração';
+  ausTipoChange(); // aplica visibilidade sincronamente antes de abrir
   openModal('mNewAus');
-  requestAnimationFrame(()=>ausTipoChange()); // garante seção médica visível após modal renderizar
 }
 
 function ausTipoChange(){
@@ -5130,8 +5140,11 @@ const DECI_VENC2='-12-20'; // 2ª parcela até 20/dez
 function initDeciAno(){
   const sel=$('deciAno');if(!sel)return;
   const anoAtual=new Date().getFullYear();
+  const mes=new Date().getMonth()+1; // 1-12
+  // Antes de novembro o 13° em processamento é o do ano anterior; nov/dez é o corrente
+  const anoDefault=mes<11?anoAtual-1:anoAtual;
   sel.innerHTML=[anoAtual+1,anoAtual,anoAtual-1,anoAtual-2].map(a=>`<option value="${a}">${a}</option>`).join('');
-  sel.value=anoAtual;
+  sel.value=anoDefault;
 }
 
 async function loadDecimo(){
@@ -5829,7 +5842,24 @@ function renderAcoes(){
   }).join('');
 }
 
-function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.menu-link').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');if(el)el.classList.add('active');else{document.querySelectorAll('.menu-link').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'"))t.classList.add('active');});}if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();if(id==='admin')renderAdmin();if(id==='pf')pfInit();if(id==='complian')renderCompliance();if(id==='vg')setTimeout(renderCharts,50);if(id==='depend')initDepSelect();if(id==='decimo'){initDeciAno();loadDecimo();}}
+function showTab(id,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.menu-link').forEach(t=>t.classList.remove('active'));
+  $(id).classList.add('active');
+  if(el)el.classList.add('active');
+  else{document.querySelectorAll('.menu-link').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'"))t.classList.add('active');});}
+  if(id==='desl')renderDesligados();
+  if(id==='acoes')renderAcoes();
+  if(id==='admin')renderAdmin();
+  if(id==='pf')pfInit();
+  if(id==='complian')renderCompliance();
+  if(id==='vg')setTimeout(renderCharts,50);
+  if(id==='depend')initDepSelect();
+  if(id==='decimo'){initDeciAno();loadDecimo();}
+  // Carrega iframe na primeira visita (lazy load)
+  if(id==='msg'){const f=$('iframe-msg');if(!f.src||f.src==='about:blank')f.src='./mensagens_aniversario.html?embed=1';}
+  if(id==='cfg'){const f=$('iframe-cfg');if(!f.src||f.src==='about:blank')f.src='./configuracoes.html?embed=1';}
+}
 
 function showSection(id){
   // Oculta todas as seções .sec e as seções extras (depend, decimo)

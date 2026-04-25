@@ -134,6 +134,17 @@ select option{background:#18162a;}
 <!-- AUTH GUARD -->
 <script type="module" src="./configuracoes.js"></script>
 
+<!-- Modo embed: esconde header quando carregado dentro do editor principal -->
+<script>
+  if(new URLSearchParams(location.search).has('embed')){
+    document.addEventListener('DOMContentLoaded',()=>{
+      const h=document.querySelector('.header');
+      if(h)h.style.display='none';
+      document.body.style.background='transparent';
+    });
+  }
+</script>
+
 <!-- HEADER -->
 <div class="header">
   <div class="logo">
