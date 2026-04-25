@@ -276,6 +276,80 @@ nav.legacy{display:none!important;}
 }
 
 .pf-cal-wrap{background:var(--bg3);border-radius:10px;padding:16px;}.pf-dual-cal{display:flex;gap:20px;}.pf-cal-panel{flex:1;min-width:0;}@media(max-width:620px){.pf-dual-cal{flex-direction:column;}}.pf-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}.pf-cal-month{font-size:15px;font-weight:500;}.pf-cal-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}.pf-cal-btn:hover{background:var(--bg2);}.pf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}.pf-cal-dname{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}.pf-cal-day{text-align:center;padding:7px 2px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}.pf-cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}.pf-cal-day.tod{border-color:var(--accent);color:var(--accent);}.pf-cal-day.rs,.pf-cal-day.re{background:var(--accent);color:#fff;}.pf-cal-day.ri{background:rgba(155,102,244,.2);}.pf-cal-day.dis{opacity:.2;cursor:not-allowed;}.pf-cal-day.oth{opacity:.15;cursor:default;}.pf-cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}.pf-cal-day.fds{color:var(--muted);}.pf-cal-legend{display:flex;gap:12px;margin-top:10px;}.pf-cal-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}.pf-cal-dot{width:8px;height:8px;border-radius:3px;}.pf-steps{display:flex;margin-bottom:22px;}.pf-step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}.pf-step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:1px;background:var(--border2);}.pf-step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--bg);z-index:1;margin-bottom:5px;}.pf-step-item.done .pf-step-circle{background:var(--ok);border-color:var(--ok);color:#0d2a1e;}.pf-step-item.active .pf-step-circle{background:var(--accent);border-color:var(--accent);color:#fff;}.pf-step-label{font-size:10px;color:var(--muted);text-align:center;}.pf-step-item.active .pf-step-label{color:var(--accent);}#pf .hist-row{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}#pf .hist-row:last-child{border-bottom:none;}#pf .hist-info{flex:1;}#pf .hist-period{font-size:14px;font-weight:500;margin-bottom:3px;}#pf .hist-meta{font-size:12px;color:var(--muted);}#pf .hist-motivo{font-size:12px;color:var(--danger);margin-top:4px;}
+
+/* ── MENSAGENS DE ANIVERSÁRIO ── */
+.msgs-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
+@media(max-width:800px){.msgs-grid{grid-template-columns:1fr;}}
+.msgs-col{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.msgs-col-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.msgs-col-title{font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;}
+.msgs-list{padding:8px;}
+.msg-card{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;transition:border-color .2s;}
+.msg-card:hover{border-color:var(--accent);}
+.msg-card.inativo{opacity:.5;}
+.msg-texto{flex:1;font-size:13px;color:var(--text);line-height:1.6;}
+.msg-actions{display:flex;gap:5px;flex-shrink:0;}
+.mbtn{width:28px;height:28px;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s;}
+.mbtn-edit{background:#ede9fe;color:var(--accent);}
+.mbtn-edit:hover{background:#ddd6fe;}
+.mbtn-del{background:#fee2e2;color:#dc2626;}
+.mbtn-del:hover{background:#fecaca;}
+.mbtn-tog{background:#dcfce7;color:#16a34a;}
+.mbtn-tog:hover{background:#bbf7d0;}
+.mbtn-tog.off{background:#fee2e2;color:#dc2626;}
+.msg-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:10px;font-size:11px;font-weight:700;padding:0 5px;}
+.mb-func{background:#ede9fe;color:#4f46e5;}
+.mb-emp{background:#dbeafe;color:#0369a1;}
+.gerar-wrap{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start;}
+@media(max-width:900px){.gerar-wrap{grid-template-columns:1fr;}}
+.preview-hint-msg{color:var(--muted);font-size:13px;text-align:center;padding:40px 20px;}
+.canvas-outer{position:relative;text-align:center;max-height:400px;overflow:hidden;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--bg);}
+#msg-canvas{max-width:100%;max-height:400px;width:auto;height:auto;border-radius:8px;display:none;}
+.btn-dl{width:100%;background:#dbeafe;border:1px solid var(--accent2);border-radius:8px;padding:10px;font-size:13px;font-weight:600;color:#0369a1;cursor:pointer;margin-top:10px;display:none;}
+.btn-dl:hover{background:#1d4ed8;color:#fff;}
+.msg-sel-info{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:10px;display:none;font-size:12px;color:var(--muted);}
+.msg-sel-text{font-size:13px;color:var(--accent);margin-top:4px;line-height:1.5;}
+/* sub-tabs dentro da seção msg */
+.sec-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;gap:0;}
+.sec-tab{padding:10px 18px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font);}
+.sec-tab:hover{color:var(--accent);}
+.sec-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
+
+/* ── CONFIGURAÇÕES ── */
+.cfg-grid{display:grid;grid-template-columns:320px 1fr;gap:20px;align-items:start;}
+@media(max-width:900px){.cfg-grid{grid-template-columns:1fr;}}
+.logo-drop{border:2px dashed var(--border2);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.logo-drop:hover{border-color:var(--accent);background:var(--bg);}
+.logo-drop.drag{border-color:var(--accent);background:#ede9fe;}
+.logo-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.logo-prev-img{display:none;max-height:80px;max-width:180px;object-fit:contain;margin:0 auto 8px;border-radius:6px;}
+.color-row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.color-swatch2{width:34px;height:34px;border-radius:6px;border:2px solid var(--border2);cursor:pointer;flex-shrink:0;overflow:hidden;position:relative;}
+.color-swatch2 input[type="color"]{position:absolute;inset:-4px;width:calc(100%+8px);height:calc(100%+8px);opacity:0;cursor:pointer;border:none;}
+.color-wrap{display:flex;align-items:center;gap:8px;}
+.color-wrap input[type="text"]{font-family:monospace;}
+.prev-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.prev-btn{height:34px;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:default;display:flex;align-items:center;justify-content:center;}
+.prev-btn.pp{background:var(--prev-primary,#7c3aed);color:#fff;}
+.prev-btn.ps{background:var(--prev-secondary,#ffd000);color:#1f2937;}
+.modelos-grid2{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+@media(max-width:900px){.modelos-grid2{grid-template-columns:repeat(2,1fr);}}
+.modelo-slot2{border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.modelo-prev{width:100%;height:clamp(120px,18vh,180px);background:var(--bg);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.modelo-prev img{width:100%;height:100%;object-fit:contain;display:none;}
+.modelo-ph{text-align:center;color:var(--muted);font-size:12px;}
+.modelo-ph .pi{font-size:28px;margin-bottom:4px;}
+.modelo-ov{position:absolute;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;}
+.modelo-prev:hover .modelo-ov{display:flex;}
+.modelo-info2{padding:10px;background:#fff;}
+.modelo-num2{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+.modelo-up-btn{width:100%;background:#ede9fe;border:1px solid var(--border2);border-radius:6px;padding:6px;font-size:11px;font-weight:600;color:var(--accent);cursor:pointer;text-align:center;transition:all .2s;position:relative;overflow:hidden;margin-top:4px;}
+.modelo-up-btn:hover{background:#ddd6fe;}
+.modelo-up-btn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.modelo-clr-btn{width:100%;background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;padding:4px;font-size:11px;color:#dc2626;cursor:pointer;text-align:center;margin-top:4px;display:none;}
+.cfg-save-bar{display:flex;justify-content:flex-end;margin-top:16px;}
+.reset-lnk{background:none;border:none;font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;margin-top:4px;display:block;}
+.reset-lnk:hover{color:var(--accent);}
 </style>
 </head>
 <body>
@@ -319,7 +393,7 @@ nav.legacy{display:none!important;}
     <div class="sidebar-sep"></div>
     <li class="menu-item"><button class="menu-link" onclick="showTab('msg',this)"><span class="menu-icon">🎉</span>Mensagens</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('cfg',this)"><span class="menu-icon">🎨</span>Aparência / Card Posts</button></li>
-    <li class="menu-item" id="nav-minha-empresa" style="display:none;"><button class="menu-link" onclick="openMinhaEmpresa()"><span class="menu-icon">🏢</span>Minha Empresa</button></li>
+    <li class="menu-item" id="nav-minha-empresa" style="display:none;"><button class="menu-link" onclick="showTab('cfg',this)"><span class="menu-icon">🏢</span>Minha Empresa</button></li>
     <li class="menu-item" id="nav-admin-console"><a href="./admin.html" style="text-decoration:none;display:block;"><button class="menu-link"><span class="menu-icon">⚙️</span>Admin Manager</button></a></li>
   </ul>
 
@@ -927,14 +1001,189 @@ nav.legacy{display:none!important;}
   </div>
 </div>
 
-<!-- MENSAGENS DE ANIVERSÁRIO (iframe embed) -->
-<div class="sec" id="msg" style="padding:0;margin:0;">
-  <iframe id="iframe-msg" src="about:blank" style="width:100%;height:calc(100vh - 62px);border:none;display:block;" loading="lazy"></iframe>
+<!-- MENSAGENS DE ANIVERSÁRIO -->
+<div class="sec" id="msg">
+  <div class="sttl">
+    <div class="sttl-l"><span>🎉</span> Mensagens de Aniversário</div>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <!-- Sub-tabs -->
+    <div style="padding:16px 20px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;gap:0;">
+        <button class="sec-tab active" id="msgt-banco" onclick="msgShowTab('banco')">📝 Banco de Mensagens</button>
+        <button class="sec-tab" id="msgt-gerar" onclick="msgShowTab('gerar')">🎨 Gerar Post</button>
+      </div>
+    </div>
+
+    <div style="padding:20px;">
+      <!-- TAB: Banco de Mensagens -->
+      <div id="msg-tab-banco">
+        <div class="msgs-grid">
+          <div class="msgs-col">
+            <div class="msgs-col-hdr">
+              <div class="msgs-col-title">🎂 Aniversário de Funcionário <span class="msg-badge mb-func" id="msg-count-func">0</span></div>
+              <button class="btn btn-g" onclick="msgOpenModal('funcionario')" style="font-size:12px;padding:6px 12px;">+ Adicionar</button>
+            </div>
+            <div class="msgs-list" id="msg-list-funcionario"><div class="empty">Carregando...</div></div>
+          </div>
+          <div class="msgs-col">
+            <div class="msgs-col-hdr">
+              <div class="msgs-col-title">🏆 Aniversário de Empresa <span class="msg-badge mb-emp" id="msg-count-emp">0</span></div>
+              <button class="btn btn-g" onclick="msgOpenModal('empresa')" style="font-size:12px;padding:6px 12px;">+ Adicionar</button>
+            </div>
+            <div class="msgs-list" id="msg-list-empresa"><div class="empty">Carregando...</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Gerar Post -->
+      <div id="msg-tab-gerar" style="display:none;">
+        <div class="gerar-wrap">
+          <div class="card" style="padding:20px;">
+            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:16px;">Configurar Post</div>
+            <div class="fgrp">
+              <div class="flbl">Tipo de comemoração</div>
+              <select class="fsel" id="g-tipo" onchange="msgOnTipoChange()">
+                <option value="funcionario">🎂 Aniversário de Funcionário</option>
+                <option value="empresa">🏆 Aniversário de Empresa</option>
+              </select>
+            </div>
+            <div class="fgrp">
+              <div class="flbl">Empresa</div>
+              <select class="fsel" id="g-empresa">
+                <option value="luisa">Luisa Moraes Advogados</option>
+                <option value="luma">Luma Plataforma</option>
+              </select>
+            </div>
+            <div class="fgrp">
+              <div class="flbl">Nome do colaborador</div>
+              <input class="fi" type="text" id="g-nome" placeholder="Ex: Maria Silva">
+            </div>
+            <div class="fgrp" id="fgrp-anos" style="display:none;">
+              <div class="flbl">Anos de empresa</div>
+              <input class="fi" type="number" id="g-anos" min="1" max="50" placeholder="Ex: 3">
+            </div>
+            <div class="fgrp">
+              <div class="flbl">Mensagem personalizada <span style="font-weight:400;color:var(--muted);text-transform:none;">(opcional)</span></div>
+              <textarea class="fi" id="g-msg-manual" rows="3" style="resize:vertical;" placeholder="Deixe em branco para sortear automaticamente..."></textarea>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">Use {nome} e {anos} como variáveis</div>
+            </div>
+            <button class="btn btn-g" id="btn-gerar-post" onclick="gerarPostMsg()" style="width:100%;">🎨 Gerar Post</button>
+          </div>
+          <div class="card" style="padding:20px;">
+            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:14px;">🖼️ Pré-visualização</div>
+            <div id="preview-hint-msg" class="preview-hint-msg">Preencha o formulário e clique em<br><strong>"Gerar Post"</strong> para criar o card.</div>
+            <div class="canvas-outer">
+              <canvas id="msg-canvas"></canvas>
+            </div>
+            <div class="msg-sel-info" id="msg-sel-info">
+              <div>Mensagem sorteada:</div>
+              <div class="msg-sel-text" id="msg-sel-text"></div>
+            </div>
+            <button class="btn-dl" id="btn-dl-post" onclick="downloadPostMsg()">⬇️ Download da imagem</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- APARÊNCIA / CONFIGURAÇÕES (iframe embed) -->
-<div class="sec" id="cfg" style="padding:0;margin:0;">
-  <iframe id="iframe-cfg" src="about:blank" style="width:100%;height:calc(100vh - 62px);border:none;display:block;" loading="lazy"></iframe>
+<!-- CONFIGURAÇÕES / APARÊNCIA -->
+<div class="sec" id="cfg">
+  <div class="sttl">
+    <div class="sttl-l"><span>🎨</span> Aparência &amp; Configurações</div>
+  </div>
+
+  <!-- Sub-tabs -->
+  <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;">
+    <button class="sec-tab active" id="cfgt-visual" onclick="cfgShowTab('visual')">🎨 Identidade Visual</button>
+    <button class="sec-tab" id="cfgt-empresa" onclick="cfgShowTab('empresa')">🏢 Minha Empresa</button>
+  </div>
+
+  <!-- TAB: Identidade Visual -->
+  <div id="cfg-tab-visual">
+    <div class="cfg-grid">
+      <!-- Coluna esquerda: Logo + Cores -->
+      <div class="card">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">🎨 Identidade Visual</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Cores e logo do sistema</div>
+
+        <div class="fgrp">
+          <div class="flbl">Logo do Sistema</div>
+          <div class="logo-drop" id="cfg-logo-drop"
+               ondragover="event.preventDefault();this.classList.add('drag')"
+               ondragleave="this.classList.remove('drag')"
+               ondrop="cfgOnLogoDrop(event)">
+            <input type="file" accept="image/jpeg,image/png,image/bmp,image/gif,image/webp,image/svg+xml" onchange="cfgOnLogoFile(this)">
+            <img id="cfg-logo-prev" class="logo-prev-img" alt="Preview">
+            <div id="cfg-logo-ph">
+              <div style="font-size:28px;margin-bottom:6px;">📤</div>
+              <div style="font-size:13px;color:var(--muted);">Clique para enviar o logo</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">JPG, PNG, SVG — máx. 400px</div>
+            </div>
+            <button class="btn" id="cfg-logo-clear" style="display:none;margin-top:8px;font-size:11px;background:#fee2e2;border-color:#fca5a5;color:#dc2626;" onclick="cfgClearLogo(event)">✕ Remover logo</button>
+          </div>
+        </div>
+
+        <div class="color-row2">
+          <div class="fgrp" style="margin:0;">
+            <div class="flbl">Cor Primária</div>
+            <div class="color-wrap">
+              <div class="color-swatch2" id="cfg-sw-primary" style="background:#7c3aed;">
+                <input type="color" id="cfg-pk-primary" value="#7c3aed" oninput="cfgOnColor('primary',this.value)">
+              </div>
+              <input class="fi" type="text" id="cfg-txt-primary" value="#7c3aed" maxlength="7"
+                oninput="cfgOnColorTxt('primary',this.value)" placeholder="#7c3aed" style="font-family:monospace;">
+            </div>
+            <button class="reset-lnk" onclick="cfgResetColor('primary')">Restaurar padrão</button>
+          </div>
+          <div class="fgrp" style="margin:0;">
+            <div class="flbl">Cor Secundária</div>
+            <div class="color-wrap">
+              <div class="color-swatch2" id="cfg-sw-secondary" style="background:#ffd000;">
+                <input type="color" id="cfg-pk-secondary" value="#ffd000" oninput="cfgOnColor('secondary',this.value)">
+              </div>
+              <input class="fi" type="text" id="cfg-txt-secondary" value="#ffd000" maxlength="7"
+                oninput="cfgOnColorTxt('secondary',this.value)" placeholder="#ffd000" style="font-family:monospace;">
+            </div>
+            <button class="reset-lnk" onclick="cfgResetColor('secondary')">Restaurar padrão</button>
+          </div>
+        </div>
+
+        <div class="prev-row">
+          <div class="prev-btn pp" id="cfg-prev-primary">Cor Primária</div>
+          <div class="prev-btn ps" id="cfg-prev-secondary">Cor Secundária</div>
+        </div>
+      </div>
+
+      <!-- Coluna direita: Modelos de Aniversário -->
+      <div class="card">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">🎂 Modelos de Aniversário</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">Imagens usadas para gerar os cards</div>
+        <div class="modelos-grid2" id="cfg-modelos-grid"></div>
+      </div>
+    </div>
+
+    <div class="cfg-save-bar">
+      <button class="btn btn-g" id="cfg-btn-save" onclick="cfgSalvar()">💾 Salvar Configurações</button>
+    </div>
+  </div>
+
+  <!-- TAB: Minha Empresa -->
+  <div id="cfg-tab-empresa" style="display:none;">
+    <div style="max-width:640px;">
+      <div class="card">
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">🏢 Minha Empresa</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Dados cadastrais e contatos da empresa</div>
+        <div id="cfg-empresa-form">
+          <!-- preenchido pelo JS -->
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+          <button class="btn btn-g" onclick="cfgSalvarEmpresa()">💾 Salvar dados da empresa</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL ADMINISTRAÇÃO -->
@@ -1594,6 +1843,29 @@ nav.legacy{display:none!important;}
 
       <!-- Campo legado (hidden - backward compat) -->
       <input type="hidden" id="ausDetail">
+    </div>
+  </div>
+</div>
+
+<!-- Modal: editar/nova mensagem de aniversário -->
+<div class="ov" id="mMsg">
+  <div class="modal" style="max-width:480px;">
+    <div class="mh">
+      <div><div class="mt" id="mMsgTitulo">Nova mensagem</div></div>
+      <button class="mc" onclick="closeModal('mMsg')">×</button>
+    </div>
+    <div class="mb">
+      <input type="hidden" id="mMsgId">
+      <input type="hidden" id="mMsgTipo">
+      <div class="fgrp">
+        <div class="flbl">Texto da mensagem <span class="rq">*</span></div>
+        <textarea class="fi" id="mMsgTexto" rows="5" style="resize:vertical;" placeholder="Use {nome} para o nome e {anos} para os anos de empresa..."></textarea>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;">Variáveis: {nome} → nome · {anos} → anos de empresa</div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button class="btn" onclick="closeModal('mMsg')" style="flex:1;">Cancelar</button>
+        <button class="btn btn-g" id="btn-msg-salvar" onclick="msgSalvar()" style="flex:2;">Salvar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -5856,9 +6128,8 @@ function showTab(id,el){
   if(id==='vg')setTimeout(renderCharts,50);
   if(id==='depend')initDepSelect();
   if(id==='decimo'){initDeciAno();loadDecimo();}
-  // Carrega iframe na primeira visita (lazy load)
-  if(id==='msg'){const f=$('iframe-msg');if(!f.src||f.src==='about:blank')f.src='./mensagens_aniversario.html?embed=1';}
-  if(id==='cfg'){const f=$('iframe-cfg');if(!f.src||f.src==='about:blank')f.src='./configuracoes.html?embed=1';}
+  if(id==='msg'){msgInitOnce();}
+  if(id==='cfg'){cfgInitOnce();}
 }
 
 function showSection(id){
@@ -7153,6 +7424,319 @@ document.addEventListener('click',function(e){
   const menu=document.getElementById('tb-user-menu');
   if(menu&&wrap&&!wrap.contains(e.target)){menu.style.display='none';}
 });
+
+// ══════════════════════════════════════════════════════════════
+// MENSAGENS DE ANIVERSÁRIO (seção #msg)
+// ══════════════════════════════════════════════════════════════
+const MSG_MODELO_CONFIG={modelo1:{textColor:'#ffffff',nameColor:'#ffd000',shadowColor:'rgba(0,0,0,0.7)',textX:0.07,textY:0.30,textW:0.60,nameSizePct:0.048,bodySizePct:0.032,lineH:1.55,align:'left',separatorColor:'rgba(255,208,0,0.6)'},modelo2:{textColor:'#ffffff',nameColor:'#ffd000',shadowColor:'rgba(0,0,0,0.7)',textX:0.07,textY:0.30,textW:0.58,nameSizePct:0.048,bodySizePct:0.032,lineH:1.55,align:'left',separatorColor:'rgba(255,208,0,0.6)'},modelo3:{textColor:'#c9a84c',nameColor:'#ffd000',shadowColor:'rgba(0,0,0,0.6)',textX:0.07,textY:0.38,textW:0.62,nameSizePct:0.048,bodySizePct:0.032,lineH:1.55,align:'left',separatorColor:'rgba(201,168,76,0.7)'},modelo4:{textColor:'#c4b5fd',nameColor:'#ffd000',shadowColor:'rgba(0,0,0,0.6)',textX:0.06,textY:0.38,textW:0.60,nameSizePct:0.048,bodySizePct:0.032,lineH:1.55,align:'left',separatorColor:'rgba(196,181,253,0.6)'}};
+function msgGetModelo(emp,tipo){if(emp==='luisa')return tipo==='funcionario'?'modelo1':'modelo3';return tipo==='funcionario'?'modelo2':'modelo4';}
+let _msgs=[],_lastCanvas=null,_msgInited=false;
+async function msgInitOnce(){if(_msgInited)return;_msgInited=true;await msgLoadMensagens();}
+async function msgLoadMensagens(){
+  try{
+    _msgs=await window._sbFns.getMensagensAniversario();
+    if(_msgs.length===0){await window._sbFns.seedMensagensAniversario?.();_msgs=await window._sbFns.getMensagensAniversario();toast('10 mensagens padrão criadas!','info');}
+    msgRenderLists();
+  }catch(e){toast('Erro ao carregar mensagens: '+e.message,'error');}
+}
+function msgShowTab(name){
+  ['banco','gerar'].forEach(t=>{
+    const el=$('msg-tab-'+t);if(el)el.style.display=t===name?'':'none';
+    const bt=$('msgt-'+t);if(bt)bt.classList.toggle('active',t===name);
+  });
+}
+function msgRenderLists(){
+  const func=_msgs.filter(m=>m.tipo==='funcionario');
+  const emp=_msgs.filter(m=>m.tipo==='empresa');
+  $('msg-count-func').textContent=func.length;
+  $('msg-count-emp').textContent=emp.length;
+  $('msg-list-funcionario').innerHTML=func.length?func.map(msgRenderCard).join(''):'<div class="empty">Nenhuma mensagem.</div>';
+  $('msg-list-empresa').innerHTML=emp.length?emp.map(msgRenderCard).join(''):'<div class="empty">Nenhuma mensagem.</div>';
+}
+function msgRenderCard(m){
+  const off=!m.ativo?' inativo':'';
+  return`<div class="msg-card${off}" id="msgcard-${m.id}">
+    <div class="msg-texto">${esc(m.texto)}</div>
+    <div class="msg-actions">
+      <button class="mbtn mbtn-tog${m.ativo?'':' off'}" title="${m.ativo?'Desativar':'Ativar'}" onclick="msgToggle('${m.id}',${m.ativo})">${m.ativo?'👁':'🚫'}</button>
+      <button class="mbtn mbtn-edit" title="Editar" onclick="msgOpenModal('${m.tipo}','${m.id}')">✏️</button>
+      <button class="mbtn mbtn-del" title="Excluir" onclick="msgDelete('${m.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+function msgOpenModal(tipo,id){
+  const ex=id?_msgs.find(m=>m.id===id):null;
+  $('mMsgTitulo').textContent=ex?'Editar mensagem':'Nova mensagem';
+  $('mMsgId').value=ex?ex.id:'';
+  $('mMsgTipo').value=ex?ex.tipo:tipo;
+  $('mMsgTexto').value=ex?ex.texto:'';
+  openModal('mMsg');
+  setTimeout(()=>$('mMsgTexto').focus(),50);
+}
+async function msgSalvar(){
+  const id=$('mMsgId').value;
+  const tipo=$('mMsgTipo').value;
+  const texto=$('mMsgTexto').value.trim();
+  if(!texto){toast('Digite o texto da mensagem.','error');return;}
+  const btn=$('btn-msg-salvar');btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    const payload={tipo,texto,ativo:true};if(id)payload.id=id;
+    const saved=await window._sbFns.upsertMensagemAniversario(payload);
+    const idx=_msgs.findIndex(m=>m.id===saved.id);
+    if(idx>=0)_msgs[idx]=saved;else _msgs.push(saved);
+    msgRenderLists();closeModal('mMsg');toast('Mensagem salva!','success');
+  }catch(e){toast('Erro: '+e.message,'error');}
+  finally{btn.disabled=false;btn.textContent='Salvar';}
+}
+async function msgToggle(id,cur){
+  try{
+    const m=_msgs.find(x=>x.id===id);if(!m)return;
+    const saved=await window._sbFns.upsertMensagemAniversario({...m,ativo:!cur});
+    const idx=_msgs.findIndex(x=>x.id===id);if(idx>=0)_msgs[idx]=saved;
+    msgRenderLists();toast(saved.ativo?'Ativada.':'Desativada.','info');
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+async function msgDelete(id){
+  if(!confirm('Excluir esta mensagem?'))return;
+  try{
+    await window._sbFns.deleteMensagemAniversario(id);
+    _msgs=_msgs.filter(m=>m.id!==id);msgRenderLists();toast('Excluída.','info');
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+function msgOnTipoChange(){$('fgrp-anos').style.display=$('g-tipo').value==='empresa'?'':'none';}
+async function gerarPostMsg(){
+  const tipo=$('g-tipo').value,empresa=$('g-empresa').value;
+  const nome=$('g-nome').value.trim(),anos=$('g-anos').value.trim();
+  const manual=$('g-msg-manual').value.trim();
+  if(!nome){toast('Informe o nome do colaborador.','error');return;}
+  if(tipo==='empresa'&&!anos){toast('Informe os anos de empresa.','error');return;}
+  let textoFinal;
+  if(manual){textoFinal=manual;}
+  else{
+    const pool=_msgs.filter(m=>m.tipo===tipo&&m.ativo);
+    if(!pool.length){toast('Nenhuma mensagem ativa. Cadastre na aba "Banco de Mensagens".','error');return;}
+    const chosen=pool[Math.floor(Math.random()*pool.length)];
+    textoFinal=chosen.texto;
+    $('msg-sel-text').textContent=chosen.texto;$('msg-sel-info').style.display='block';
+  }
+  textoFinal=textoFinal.replace(/\{nome\}/gi,nome).replace(/\{anos\}/gi,anos||'');
+  const mKey=msgGetModelo(empresa,tipo);
+  const mCfg=(window._tenantModelos||[]).find(m=>m.key===mKey);
+  const imgSrc=mCfg?.base64||`./assets/${mKey}.jpg`;
+  const btn=$('btn-gerar-post');btn.disabled=true;btn.textContent='Gerando...';
+  await msgRenderCanvas(imgSrc,nome,textoFinal,tipo,mKey);
+  toast('Post gerado!','success');btn.disabled=false;btn.textContent='🎨 Gerar Post';
+}
+async function msgRenderCanvas(imgSrc,nome,texto,tipo,mKey){
+  return new Promise(resolve=>{
+    const canvas=$('msg-canvas');const ctx=canvas.getContext('2d');
+    const cfg=MSG_MODELO_CONFIG[mKey]||MSG_MODELO_CONFIG.modelo1;
+    function draw(W,H,c){
+      const x=W*c.textX,maxW=W*c.textW,ns=H*c.nameSizePct,bs=H*c.bodySizePct;
+      ctx.textBaseline='top';ctx.textAlign='left';let cy=H*c.textY;
+      if(c.headerText){
+        const lbl=tipo==='funcionario'?'ANIVERSÁRIO':'ANIVERSÁRIO DE EMPRESA';
+        msgSetShadow(ctx,c.shadowColor);ctx.fillStyle=c.textColor;
+        ctx.font=`300 ${bs*.85}px Arial,sans-serif`;ctx.fillText('FELIZ',x,cy);cy+=bs*1.1;
+        ctx.font=`900 ${ns*1.05}px Arial,sans-serif`;ctx.fillText(lbl,x,cy);cy+=ns*1.3;
+        ctx.shadowColor='transparent';ctx.strokeStyle=c.separatorColor;ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(x,cy);ctx.lineTo(x+maxW*.55,cy);ctx.stroke();cy+=ns*.9;
+        msgSetShadow(ctx,c.shadowColor);
+      }
+      ctx.fillStyle=c.nameColor;ctx.font=`700 ${ns}px Arial,sans-serif`;
+      const nl=msgWrap(ctx,nome,x,cy,maxW,ns*c.lineH,false);cy+=nl*ns*c.lineH;
+      if(!c.headerText){
+        ctx.shadowColor='transparent';ctx.strokeStyle=c.separatorColor;ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(x,cy+ns*.2);ctx.lineTo(x+maxW*.55,cy+ns*.2);ctx.stroke();
+        cy+=ns*.7;msgSetShadow(ctx,c.shadowColor);
+      }
+      ctx.fillStyle=c.textColor;ctx.font=`400 ${bs}px Arial,sans-serif`;
+      msgWrap(ctx,texto,x,cy,maxW,bs*c.lineH,true);
+      canvas.style.display='block';$('preview-hint-msg').style.display='none';$('btn-dl-post').style.display='block';_lastCanvas=canvas;
+    }
+    const img=new Image();img.crossOrigin='anonymous';
+    img.onload=()=>{canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;ctx.drawImage(img,0,0);draw(canvas.width,canvas.height,cfg);resolve();};
+    img.onerror=()=>{canvas.width=1080;canvas.height=1920;const g=ctx.createLinearGradient(0,0,1080,1920);g.addColorStop(0,'#1a0e2e');g.addColorStop(1,'#0f0e17');ctx.fillStyle=g;ctx.fillRect(0,0,1080,1920);ctx.fillStyle='rgba(124,58,237,.18)';ctx.beginPath();ctx.arc(950,180,380,0,Math.PI*2);ctx.fill();draw(1080,1920,{...cfg,headerText:true,textY:0.12});resolve();};
+    img.src=imgSrc;
+  });
+}
+function msgSetShadow(ctx,c){ctx.shadowColor=c;ctx.shadowBlur=6;ctx.shadowOffsetX=1;ctx.shadowOffsetY=1;}
+function msgWrap(ctx,text,x,y,maxW,lh,draw){
+  const lines=[];const paras=text.split('\n');
+  for(const p of paras){const words=p.split(' ');let line='';for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=w;}else line=t;}lines.push(line);}
+  if(draw){let cy=y;for(const l of lines){if(l)ctx.fillText(l,x,cy);cy+=lh;}}
+  return lines.length;
+}
+function downloadPostMsg(){
+  if(!_lastCanvas)return;
+  const tipo=$('g-tipo').value,nome=$('g-nome').value.trim().replace(/\s+/g,'_'),emp=$('g-empresa').value;
+  const lbl=tipo==='funcionario'?'aniv_func':'aniv_empresa';
+  const a=document.createElement('a');a.download=`luma_${lbl}_${nome}_${emp}.png`;a.href=_lastCanvas.toDataURL('image/png');a.click();
+}
+
+// ══════════════════════════════════════════════════════════════
+// CONFIGURAÇÕES / APARÊNCIA (seção #cfg)
+// ══════════════════════════════════════════════════════════════
+let _cfgData={cor_primaria:'#7c3aed',cor_secundaria:'#ffd000',logo_base64:null,modelos:[{key:'modelo1',empresa:'luisa',tipo:'funcionario',base64:null},{key:'modelo2',empresa:'luma',tipo:'funcionario',base64:null},{key:'modelo3',empresa:'luisa',tipo:'empresa',base64:null},{key:'modelo4',empresa:'luma',tipo:'empresa',base64:null}]};
+let _cfgInited=false;
+const CFG_EMP_OPTS=[{value:'luisa',label:'Luisa Moraes Advogados'},{value:'luma',label:'Luma Plataforma'}];
+const CFG_TIPO_OPTS=[{value:'funcionario',label:'🎂 Aniversário de Funcionário'},{value:'empresa',label:'🏆 Aniversário de Empresa'}];
+async function cfgInitOnce(){
+  if(_cfgInited)return;_cfgInited=true;
+  try{
+    const tenant=await window._sbFns?.getTenantConfig?.();
+    const cfg=(tenant?.config)||{};
+    if(cfg.cor_primaria)_cfgData.cor_primaria=cfg.cor_primaria;
+    if(cfg.cor_secundaria)_cfgData.cor_secundaria=cfg.cor_secundaria;
+    if(cfg.logo_base64)_cfgData.logo_base64=cfg.logo_base64;
+    if(Array.isArray(cfg.modelos)&&cfg.modelos.length===4)_cfgData.modelos=cfg.modelos;
+    cfgRenderColors();cfgRenderLogo();cfgRenderModelos();
+    if(typeof window._applyTheme==='function')window._applyTheme(cfg);
+  }catch(e){toast('Erro ao carregar configurações: '+e.message,'error');cfgRenderModelos();}
+  cfgInitEmpresaForm();
+}
+function cfgShowTab(name){
+  ['visual','empresa'].forEach(t=>{
+    const el=$('cfg-tab-'+t);if(el)el.style.display=t===name?'':'none';
+    const bt=$('cfgt-'+t);if(bt)bt.classList.toggle('active',t===name);
+  });
+  if(name==='empresa')cfgInitEmpresaForm();
+}
+function cfgRenderColors(){cfgSetColor('primary',_cfgData.cor_primaria);cfgSetColor('secondary',_cfgData.cor_secundaria);}
+function cfgSetColor(key,val){
+  const hex=val||(key==='primary'?'#7c3aed':'#ffd000');
+  $('cfg-pk-'+key).value=hex;$('cfg-txt-'+key).value=hex;$('cfg-sw-'+key).style.background=hex;
+  document.documentElement.style.setProperty(key==='primary'?'--prev-primary':'--prev-secondary',hex);
+}
+function cfgOnColor(key,val){
+  $('cfg-txt-'+key).value=val;$('cfg-sw-'+key).style.background=val;
+  document.documentElement.style.setProperty(key==='primary'?'--prev-primary':'--prev-secondary',val);
+  if(key==='primary')_cfgData.cor_primaria=val;else _cfgData.cor_secundaria=val;
+}
+function cfgOnColorTxt(key,val){if(!/^#[0-9a-fA-F]{6}$/.test(val))return;cfgOnColor(key,val);$('cfg-pk-'+key).value=val;}
+function cfgResetColor(key){const def=key==='primary'?'#7c3aed':'#ffd000';cfgOnColor(key,def);$('cfg-txt-'+key).value=def;$('cfg-pk-'+key).value=def;}
+function cfgRenderLogo(){if(_cfgData.logo_base64)cfgShowLogoPreview(_cfgData.logo_base64);}
+function cfgShowLogoPreview(src){
+  const p=$('cfg-logo-prev'),ph=$('cfg-logo-ph'),cl=$('cfg-logo-clear');
+  p.src=src;p.style.display='block';ph.style.display='none';cl.style.display='block';
+}
+function cfgOnLogoFile(input){
+  const file=input.files?.[0];if(!file)return;
+  cfgCompress(file,400,.88).then(b64=>{
+    _cfgData.logo_base64=b64;cfgShowLogoPreview(b64);
+    document.querySelectorAll('.tenant-logo-img').forEach(e=>{e.src=b64;e.style.display='block';});
+    document.querySelectorAll('.tenant-logo-svg').forEach(e=>e.style.display='none');
+    cfgSalvar();
+  });
+}
+function cfgOnLogoDrop(e){
+  e.preventDefault();$('cfg-logo-drop').classList.remove('drag');
+  const file=e.dataTransfer?.files?.[0];if(file)cfgOnLogoFile({files:[file]});
+}
+function cfgClearLogo(e){
+  e.preventDefault();e.stopPropagation();
+  _cfgData.logo_base64=null;
+  $('cfg-logo-prev').style.display='none';$('cfg-logo-ph').style.display='';$('cfg-logo-clear').style.display='none';
+  document.querySelectorAll('.tenant-logo-img').forEach(el=>{el.src='';el.style.display='none';});
+  document.querySelectorAll('.tenant-logo-svg').forEach(el=>el.style.display='block');
+}
+function cfgRenderModelos(){
+  const grid=$('cfg-modelos-grid');if(!grid)return;
+  grid.innerHTML=_cfgData.modelos.map((m,i)=>`
+    <div class="modelo-slot2" id="cfg-slot-${i}">
+      <div class="modelo-prev" id="cfg-prev-${i}">
+        <img id="cfg-img-${i}" src="${m.base64?esc(m.base64):''}" alt="Modelo ${i+1}" ${m.base64?'style="display:block"':''}>
+        <div class="modelo-ph" ${m.base64?'style="display:none"':''} id="cfg-ph-${i}"><div class="pi">🖼️</div><div>Modelo ${i+1}</div></div>
+        <div class="modelo-ov">
+          <button onclick="cfgTriggerUpload(${i})" style="background:rgba(255,255,255,.9);border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;">📤 Trocar</button>
+        </div>
+      </div>
+      <div class="modelo-info2">
+        <div class="modelo-num2">Modelo ${i+1}</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;font-weight:600;">Empresa</div>
+        <select class="fsel" id="cfg-emp-${i}" onchange="_cfgData.modelos[${i}].empresa=this.value" style="font-size:11px;padding:4px 8px;margin-bottom:6px;">
+          ${CFG_EMP_OPTS.map(o=>`<option value="${esc(o.value)}" ${m.empresa===o.value?'selected':''}>${esc(o.label)}</option>`).join('')}
+        </select>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;font-weight:600;">Tipo</div>
+        <select class="fsel" id="cfg-tipo-${i}" onchange="_cfgData.modelos[${i}].tipo=this.value" style="font-size:11px;padding:4px 8px;">
+          ${CFG_TIPO_OPTS.map(o=>`<option value="${esc(o.value)}" ${m.tipo===o.value?'selected':''}>${esc(o.label)}</option>`).join('')}
+        </select>
+        <div class="modelo-up-btn" style="margin-top:6px;">📤 ${m.base64?'Trocar':'Enviar'}<input type="file" accept="image/jpeg,image/png,image/bmp,image/gif,image/webp" onchange="cfgOnModelo(${i},this)"></div>
+        <button class="modelo-clr-btn" id="cfg-clr-${i}" onclick="cfgClearModelo(${i})" ${m.base64?'style="display:block"':''}>✕ Remover</button>
+      </div>
+    </div>`).join('');
+}
+function cfgTriggerUpload(i){document.querySelector(`#cfg-slot-${i} .modelo-up-btn input`).click();}
+function cfgOnModelo(i,input){
+  const file=input.files?.[0];if(!file)return;
+  cfgCompress(file,900,.80).then(b64=>{
+    _cfgData.modelos[i].base64=b64;
+    const img=$('cfg-img-'+i),ph=$('cfg-ph-'+i),clr=$('cfg-clr-'+i);
+    img.src=b64;img.style.display='block';ph.style.display='none';clr.style.display='block';
+    document.querySelector(`#cfg-slot-${i} .modelo-up-btn`).innerHTML='🔄 Trocar<input type="file" accept="image/jpeg,image/png,image/bmp,image/gif,image/webp" onchange="cfgOnModelo('+i+',this)">';
+    cfgSalvar();
+  });
+}
+function cfgClearModelo(i){
+  _cfgData.modelos[i].base64=null;
+  const img=$('cfg-img-'+i),ph=$('cfg-ph-'+i),clr=$('cfg-clr-'+i);
+  img.src='';img.style.display='none';ph.style.display='flex';clr.style.display='none';
+}
+async function cfgSalvar(){
+  const btn=$('cfg-btn-save');if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+  try{
+    const patch={cor_primaria:_cfgData.cor_primaria,cor_secundaria:_cfgData.cor_secundaria,logo_base64:_cfgData.logo_base64,modelos:_cfgData.modelos};
+    await window._sbFns?.saveTenantConfig?.(patch);
+    if(typeof window._applyTheme==='function')window._applyTheme(patch);
+    toast('Configurações salvas!','success');
+  }catch(e){toast('Erro: '+e.message,'error');}
+  finally{if(btn){btn.disabled=false;btn.textContent='💾 Salvar Configurações';}}
+}
+function cfgCompress(file,maxW,q){
+  return new Promise(resolve=>{
+    const img=new Image(),url=URL.createObjectURL(file);
+    img.onload=()=>{let w=img.naturalWidth,h=img.naturalHeight;if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);resolve(c.toDataURL('image/jpeg',q));};
+    img.src=url;
+  });
+}
+// Minha Empresa dentro de cfg
+let _cfgEmpresaData={};
+function cfgInitEmpresaForm(){
+  // Lê dados do tenant já carregados no perfil
+  const t=window._sbProfile?.tenants||window._sbProfile;
+  _cfgEmpresaData={
+    nome_empresa:t?.nome_empresa||t?.nome||'',
+    cnpj:t?.cnpj||'',endereco:t?.endereco||'',telefone:t?.telefone||'',
+    email_contato:t?.email_contato||'',site:t?.site||'',responsavel:t?.responsavel||''
+  };
+  const frm=$('cfg-empresa-form');if(!frm)return;
+  frm.innerHTML=`
+    <div class="fg">
+      <div class="fgrp"><div class="flbl">Razão Social / Nome</div><input class="fi" id="cemp-nome" value="${esc(_cfgEmpresaData.nome_empresa)}" placeholder="Nome da empresa"></div>
+      <div class="fgrp"><div class="flbl">CNPJ</div><input class="fi" id="cemp-cnpj" value="${esc(_cfgEmpresaData.cnpj)}" placeholder="00.000.000/0001-00"></div>
+      <div class="fgrp s2"><div class="flbl">Endereço</div><input class="fi" id="cemp-end" value="${esc(_cfgEmpresaData.endereco)}" placeholder="Rua, número, cidade — UF"></div>
+      <div class="fgrp"><div class="flbl">Telefone</div><input class="fi" id="cemp-tel" value="${esc(_cfgEmpresaData.telefone)}" placeholder="(00) 00000-0000"></div>
+      <div class="fgrp"><div class="flbl">E-mail de contato</div><input class="fi" id="cemp-email" value="${esc(_cfgEmpresaData.email_contato)}" placeholder="contato@empresa.com.br"></div>
+      <div class="fgrp"><div class="flbl">Site</div><input class="fi" id="cemp-site" value="${esc(_cfgEmpresaData.site)}" placeholder="https://empresa.com.br"></div>
+      <div class="fgrp"><div class="flbl">Responsável RH</div><input class="fi" id="cemp-resp" value="${esc(_cfgEmpresaData.responsavel)}" placeholder="Nome do responsável"></div>
+    </div>`;
+}
+async function cfgSalvarEmpresa(){
+  const tid=window._sbProfile?.tenant_id;if(!tid)return;
+  const patch={
+    nome_empresa:$('cemp-nome')?.value?.trim(),
+    cnpj:$('cemp-cnpj')?.value?.trim(),
+    endereco:$('cemp-end')?.value?.trim(),
+    telefone:$('cemp-tel')?.value?.trim(),
+    email_contato:$('cemp-email')?.value?.trim(),
+    site:$('cemp-site')?.value?.trim(),
+    responsavel:$('cemp-resp')?.value?.trim()
+  };
+  try{
+    await window._sb.from('tenants').update(patch).eq('id',tid);
+    toast('Dados da empresa salvos!','success');
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
 </script>
 </body>
 </html>
