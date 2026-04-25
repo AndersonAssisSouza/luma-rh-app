@@ -36,6 +36,7 @@
   --accent2:#0ea5e9;      /* azul info */
   --warn:#d97706;         /* âmbar escuro — menos chamativo */
   --danger:#ef4444;
+  --ok:#16a34a;
   --purple:#8b5cf6;
   --coral:#f97316;
 
@@ -311,8 +312,8 @@ nav.legacy{display:none!important;}
     <li class="menu-item"><button class="menu-link" onclick="showTab('complian')"><span class="menu-icon">✅</span>Compliance</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('desl',this)"><span class="menu-icon">🚪</span>Desligados</button></li>
     <li class="menu-item"><button class="menu-link" onclick="openRescisao()"><span class="menu-icon">🧮</span>Rescisão CLT</button></li>
-      <div class="menu-item"><button class="menu-link" onclick="showSection('depend')">👨‍👩‍👧 Dependentes</button></div>
-      <div class="menu-item"><button class="menu-link" onclick="showSection('decimo')">🎄 13° Salário</button></div>
+      <li class="menu-item"><button class="menu-link" onclick="showTab('depend',this)"><span class="menu-icon">👨‍👩‍👧</span>Dependentes</button></li>
+      <li class="menu-item"><button class="menu-link" onclick="showTab('decimo',this)"><span class="menu-icon">🎄</span>13° Salário</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('acoes',this)"><span class="menu-icon">⚡</span>Ações</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('pf',this)"><span class="menu-icon">📅</span>Portal Férias</button></li>
     <div class="sidebar-sep"></div>
@@ -849,6 +850,66 @@ nav.legacy{display:none!important;}
     <span style="color:var(--accent);font-weight:500;">Associado OAB:</span> 📅 <strong>30 dias de recesso anual remunerado</strong> conforme Estatuto OAB (Lei 8.906/94) e contrato de associação.<br>
     <span style="color:var(--danger);font-weight:500;">PJ / MEI:</span> ⚠ Não há férias CLT. Recesso conforme contrato de prestação de serviços.<br>
     ✅ Todas as solicitações sujeitas à aprovação do gestor.
+  </div>
+</div>
+
+<!-- ═══ DEPENDENTES ══════════════════════════════════════ -->
+<div id="depend" class="sec">
+  <div class="sttl">
+    <div class="sttl-l"><span>👨‍👩‍👧</span> Dependentes</div>
+    <span style="font-size:12px;font-weight:400;color:var(--muted);">IRRF · Salário Família · Plano de Saúde</span>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <select id="depColabSel" class="fsel" onchange="loadDependentes()" style="min-width:260px;font-size:13px;">
+        <option value="">— Selecione um colaborador CLT —</option>
+      </select>
+      <button class="btn btn-a" onclick="openNovoDep()">+ Novo dependente</button>
+      <div style="flex:1;"></div>
+      <div id="dep-sf-badge" style="display:none;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--ok);">
+        💰 <strong>Salário Família:</strong> <span id="dep-sf-valor">—</span>/mês
+      </div>
+    </div>
+    <div id="dep-irrf-box" style="display:none;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.15);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;line-height:1.8;">
+      <strong>📊 Impacto fiscal dos dependentes:</strong><br>
+      <span id="dep-irrf-resumo">—</span>
+    </div>
+    <div class="sy">
+      <table class="tbl">
+        <thead><tr>
+          <th>Nome</th><th>Parentesco</th><th>Nascimento</th><th>Idade</th>
+          <th>IRRF</th><th>Sal. Família</th><th>Plano Saúde</th><th>Ações</th>
+        </tr></thead>
+        <tbody id="depTbody"><tr><td colspan="8" class="empty">Selecione um colaborador</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 13° SALÁRIO ══════════════════════════════════════ -->
+<div id="decimo" class="sec">
+  <div class="sttl">
+    <div class="sttl-l"><span>🎄</span> 13° Salário</div>
+    <span style="font-size:12px;font-weight:400;color:var(--muted);">Lei 4.090/62 · 1ª parcela até 30/nov · 2ª parcela até 20/dez</span>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <select id="deciAno" class="fsel" onchange="loadDecimo()" style="width:auto;font-size:13px;"></select>
+      <button class="btn" onclick="gerarDecimoAno()">⚙ Gerar lançamentos do ano</button>
+      <div style="flex:1;"></div>
+      <div id="deci-totais" style="font-size:12px;color:var(--muted);"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;" id="deciKpis"></div>
+    <div class="sy">
+      <table class="tbl">
+        <thead><tr>
+          <th>Colaborador</th><th>Vínculo</th><th>Parcela</th><th>Ávos</th>
+          <th>Bruto</th><th>INSS</th><th>IRRF</th><th>Líquido</th>
+          <th>Vencimento</th><th>Status</th><th>Ações</th>
+        </tr></thead>
+        <tbody id="deciTbody"><tr><td colspan="11" class="empty">Selecione o ano</td></tr></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -1710,134 +1771,73 @@ nav.legacy{display:none!important;}
 </div>
 </div>
 
-  <!-- ═══ DEPENDENTES ══════════════════════════════════════════ -->
-  <div id="depend" style="display:none;">
-    <div class="ct" style="margin-bottom:16px;">👨‍👩‍👧 Dependentes
-      <span style="font-size:12px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;margin-left:8px;">IRRF · Salário Família · Plano de Saúde</span>
+<!-- Modal Dependente -->
+<div class="ov" id="mDep" onclick="if(event.target===this)closeModal('mDep')">
+  <div class="modal" style="max-width:480px;">
+    <div class="mh">
+      <div><div class="mt" id="mDepTitle">Novo Dependente</div></div>
+      <button class="mc" onclick="closeModal('mDep')">✕</button>
     </div>
-
-    <!-- Toolbar -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-      <select id="depColabSel" class="fsel" onchange="loadDependentes()" style="min-width:260px;font-size:13px;">
-        <option value="">— Selecione um colaborador —</option>
-      </select>
-      <button class="btn btn-accent" onclick="openNovoDep()">+ Novo dependente</button>
-      <div style="flex:1;"></div>
-      <div id="dep-sf-badge" style="display:none;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--ok);">
-        💰 <strong>Salário Família:</strong> <span id="dep-sf-valor">—</span>/mês
-      </div>
-    </div>
-
-    <!-- Resumo IRRF -->
-    <div id="dep-irrf-box" style="display:none;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.15);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;line-height:1.8;">
-      <strong>📊 Impacto fiscal dos dependentes:</strong><br>
-      <span id="dep-irrf-resumo">—</span>
-    </div>
-
-    <!-- Tabela -->
-    <div class="sy">
-      <table class="tbl">
-        <thead><tr>
-          <th>Nome</th><th>Parentesco</th><th>Nascimento</th><th>Idade</th>
-          <th>IRRF</th><th>Sal. Família</th><th>Plano Saúde</th><th>Ações</th>
-        </tr></thead>
-        <tbody id="depTbody"><tr><td colspan="8" class="empty">Selecione um colaborador</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Modal Dependente -->
-  <div class="ov" id="mDep" style="display:none;" onclick="if(event.target===this)closeModal('mDep')">
-    <div class="md" style="max-width:480px;">
-      <div class="mh"><span id="mDepTitle">Novo Dependente</span><button class="mc" onclick="closeModal('mDep')">✕</button></div>
-      <div class="mb">
-        <div class="fg2">
-          <div class="fgrp s2"><div class="flbl">Nome completo <span class="rq">*</span></div><input class="fi" id="depNome" placeholder="Nome do dependente"></div>
-          <div class="fgrp s2"><div class="flbl">CPF</div><input class="fi" id="depCpf" placeholder="000.000.000-00"></div>
-          <div class="fgrp"><div class="flbl">Grau de parentesco <span class="rq">*</span></div>
-            <select class="fsel" id="depParentesco">
-              <option value="FILHO">Filho(a)</option>
-              <option value="CONJUGE">Cônjuge / Companheiro(a)</option>
-              <option value="ENTEADO">Enteado(a)</option>
-              <option value="PAI">Pai</option>
-              <option value="MAE">Mãe</option>
-              <option value="IRMAO">Irmão / Irmã</option>
-              <option value="TUTELADO">Tutelado(a)</option>
-              <option value="OUTRO">Outro</option>
-            </select>
-          </div>
-          <div class="fgrp"><div class="flbl">Data de nascimento</div><input class="fi" id="depNasc" type="date"></div>
+    <div class="mb">
+      <div class="fg">
+        <div class="fgrp s2"><div class="flbl">Nome completo <span class="rq">*</span></div><input class="fi" id="depNome" placeholder="Nome do dependente"></div>
+        <div class="fgrp s2"><div class="flbl">CPF</div><input class="fi" id="depCpf" placeholder="000.000.000-00"></div>
+        <div class="fgrp"><div class="flbl">Grau de parentesco <span class="rq">*</span></div>
+          <select class="fsel" id="depParentesco">
+            <option value="FILHO">Filho(a)</option>
+            <option value="CONJUGE">Cônjuge / Companheiro(a)</option>
+            <option value="ENTEADO">Enteado(a)</option>
+            <option value="PAI">Pai</option>
+            <option value="MAE">Mãe</option>
+            <option value="IRMAO">Irmão / Irmã</option>
+            <option value="TUTELADO">Tutelado(a)</option>
+            <option value="OUTRO">Outro</option>
+          </select>
         </div>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;background:var(--bg3);border-radius:8px;padding:12px;">
-          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Benefícios</div>
-          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-            <input type="checkbox" id="depIrrf" checked style="accent-color:var(--accent);">
-            Deduz no <strong>IRRF</strong> (–R$189,59/mês por dependente)
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-            <input type="checkbox" id="depSf" style="accent-color:var(--ok);">
-            <strong>Salário Família</strong> (filhos/enteados ≤ 14 anos ou inválidos)
-          </label>
-          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-            <input type="checkbox" id="depPlano" style="accent-color:var(--accent);">
-            Incluso no <strong>Plano de Saúde</strong> empresarial
-          </label>
-        </div>
-        <div class="fgrp" style="margin-top:12px;"><div class="flbl">Observação</div><input class="fi" id="depObs" placeholder="Ex: Filho com deficiência — benefício permanente"></div>
+        <div class="fgrp"><div class="flbl">Data de nascimento</div><input class="fi" id="depNasc" type="date"></div>
       </div>
-      <div class="mf">
-        <button class="btn btn-outline" onclick="closeModal('mDep')">Cancelar</button>
-        <button class="btn btn-accent" onclick="salvarDependente()">Salvar dependente</button>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;background:var(--bg3);border-radius:8px;padding:12px;">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Benefícios</div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="depIrrf" checked style="accent-color:var(--accent);">
+          Deduz no <strong>IRRF</strong> (–R$189,59/mês por dependente)
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="depSf" style="accent-color:var(--ok);">
+          <strong>Salário Família</strong> (filhos/enteados ≤ 14 anos ou inválidos)
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="depPlano" style="accent-color:var(--accent);">
+          Incluso no <strong>Plano de Saúde</strong> empresarial
+        </label>
       </div>
+      <div class="fgrp" style="margin-top:12px;"><div class="flbl">Observação</div><input class="fi" id="depObs" placeholder="Ex: Filho com deficiência — benefício permanente"></div>
+    </div>
+    <div class="mf">
+      <button class="btn" onclick="closeModal('mDep')">Cancelar</button>
+      <button class="btn btn-g" onclick="salvarDependente()">Salvar dependente</button>
     </div>
   </div>
+</div>
 
-  <!-- ═══ 13° SALÁRIO ══════════════════════════════════════════ -->
-  <div id="decimo" style="display:none;">
-    <div class="ct" style="margin-bottom:16px;">🎄 13° Salário
-      <span style="font-size:12px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;margin-left:8px;">Lei 4.090/62 · 1ª parcela até 30/nov · 2ª parcela até 20/dez</span>
+<!-- Modal pagar 13° -->
+<div class="ov" id="mDeciPagar" onclick="if(event.target===this)closeModal('mDeciPagar')">
+  <div class="modal" style="max-width:420px;">
+    <div class="mh">
+      <div><div class="mt">Registrar Pagamento — 13° Salário</div></div>
+      <button class="mc" onclick="closeModal('mDeciPagar')">✕</button>
     </div>
-
-    <!-- Toolbar -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-      <select id="deciAno" class="fsel" onchange="loadDecimo()" style="width:auto;font-size:13px;">
-      </select>
-      <button class="btn btn-outline" onclick="gerarDecimoAno()">⚙ Gerar lançamentos do ano</button>
-      <div style="flex:1;"></div>
-      <div id="deci-totais" style="font-size:12px;color:var(--muted);"></div>
+    <div class="mb">
+      <div id="mDeciPagarInfo" style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.8;"></div>
+      <div class="fgrp"><div class="flbl">Data do pagamento <span class="rq">*</span></div><input class="fi" id="deciDataPgto" type="date"></div>
+      <div class="fgrp"><div class="flbl">Observação</div><input class="fi" id="deciObs" placeholder="Ex: Pago via folha dezembro"></div>
     </div>
-
-    <!-- KPIs 13° -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;" id="deciKpis"></div>
-
-    <!-- Tabela -->
-    <div class="sy">
-      <table class="tbl">
-        <thead><tr>
-          <th>Colaborador</th><th>Vínculo</th><th>Parcela</th><th>Ávos</th>
-          <th>Bruto</th><th>INSS</th><th>IRRF</th><th>Líquido</th>
-          <th>Vencimento</th><th>Status</th><th>Ações</th>
-        </tr></thead>
-        <tbody id="deciTbody"><tr><td colspan="11" class="empty">Selecione o ano</td></tr></tbody>
-      </table>
+    <div class="mf">
+      <button class="btn" onclick="closeModal('mDeciPagar')">Cancelar</button>
+      <button class="btn btn-g" onclick="confirmarPagtoDecimo()">✓ Confirmar pagamento</button>
     </div>
   </div>
-
-  <!-- Modal pagar 13° -->
-  <div class="ov" id="mDeciPagar" style="display:none;" onclick="if(event.target===this)closeModal('mDeciPagar')">
-    <div class="md" style="max-width:420px;">
-      <div class="mh"><span>Registrar Pagamento — 13° Salário</span><button class="mc" onclick="closeModal('mDeciPagar')">✕</button></div>
-      <div class="mb">
-        <div id="mDeciPagarInfo" style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.8;"></div>
-        <div class="fgrp"><div class="flbl">Data do pagamento <span class="rq">*</span></div><input class="fi" id="deciDataPgto" type="date"></div>
-        <div class="fgrp"><div class="flbl">Observação</div><input class="fi" id="deciObs" placeholder="Ex: Pago via folha dezembro"></div>
-      </div>
-      <div class="mf">
-        <button class="btn btn-outline" onclick="closeModal('mDeciPagar')">Cancelar</button>
-        <button class="btn btn-accent" onclick="confirmarPagtoDecimo()">✓ Confirmar pagamento</button>
-      </div>
-    </div>
-  </div>
+</div>
 
 <!-- MODAL ONBOARDING -->
 <div class="ov" id="mOnboarding">
@@ -5788,7 +5788,7 @@ function renderAcoes(){
   }).join('');
 }
 
-function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.menu-link').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');if(el)el.classList.add('active');else{document.querySelectorAll('.menu-link').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'"))t.classList.add('active');});}if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();if(id==='admin')renderAdmin();if(id==='pf')pfInit();if(id==='complian') renderCompliance();if(id==='vg') setTimeout(renderCharts, 50);}
+function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.menu-link').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');if(el)el.classList.add('active');else{document.querySelectorAll('.menu-link').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'"))t.classList.add('active');});}if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();if(id==='admin')renderAdmin();if(id==='pf')pfInit();if(id==='complian')renderCompliance();if(id==='vg')setTimeout(renderCharts,50);if(id==='depend')initDepSelect();if(id==='decimo'){initDeciAno();loadDecimo();}}
 
 function showSection(id){
   // Oculta todas as seções .sec e as seções extras (depend, decimo)
@@ -6329,6 +6329,8 @@ async function pfInit(){
   $('pf-btn-voltar').onclick=()=>pfSetStep(0);
   $('pf-btn-enviar').onclick=pfEnviarSolicitar;
   $('pf-btn-nova').onclick=pfNovaSol;
+  // Render calendar immediately so it shows even before a collaborator is selected
+  pfRenderCal();
   // Check URL params for gestor approval
   pfCheckGestorUrl();
 }
