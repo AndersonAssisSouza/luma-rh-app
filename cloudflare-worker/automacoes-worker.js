@@ -236,10 +236,12 @@ async function checkDesligamentos(env, today, alertas) {
 // Automação 2 — Exames ocupacionais
 // - AGENDADO com data_agendamento vencida → promove para AGUARDANDO_CONFIRMACAO
 // - AGUARDANDO_CONFIRMACAO → alerta para confirmar realização
-// - Vencidos / vencendo em 15 dias e PENDENTES → alerta para agendar
+// - Vencidos (proximo_exame < hoje) → alerta urgente
+// - Vencendo em ≤30 dias e PENDENTES → alerta preventivo
+// - Sem data programada (proximo_exame IS NULL) → alerta "exame em aberto"
 // ─────────────────────────────────────────────────────────────
 async function checkExames(env, today, alertas) {
-  const in15 = addDays(today, 15)
+  const in30 = addDays(today, 30)
 
   // 1. Promover AGENDADO → AGUARDANDO_CONFIRMACAO quando data_agendamento passou
   const agendados = await sbGet(
@@ -254,19 +256,30 @@ async function checkExames(env, today, alertas) {
   }
   if (agendados.length) alertas.push(`Exames promovidos para AGUARDANDO_CONFIRMACAO: ${agendados.length}`)
 
-  // 2. Buscar exames que precisam de ação (exclui AGENDADO com data futura e EM_DIA)
-  const rows = await sbGet(
+  // 2a. Exames com status de ação necessária (PENDENTE, VENCIDO, AGUARDANDO_CONFIRMACAO)
+  const rowsStatus = await sbGet(
     env,
     'exames_ocupacionais',
-    `status_exame=not.in.(EM_DIA,INATIVO,AGENDADO)&select=id,colaborador_id,tenant_id,tipo_exame,proximo_exame,data_agendamento,status_exame`
+    `status_exame=in.(PENDENTE,VENCIDO,AGUARDANDO_CONFIRMACAO)&select=id,colaborador_id,tenant_id,tipo_exame,proximo_exame,data_agendamento,status_exame`
   )
-  // Também inclui exames sem status ou PENDENTES que estão vencendo em 15 dias
-  const rowsVenc = await sbGet(
+
+  // 2b. Exames EM_DIA mas vencendo nos próximos 30 dias
+  const rowsVenc30 = await sbGet(
     env,
     'exames_ocupacionais',
-    `proximo_exame=lte.${in15}&status_exame=in.(EM_DIA,PENDENTE)&select=id,colaborador_id,tenant_id,tipo_exame,proximo_exame,data_agendamento,status_exame`
+    `proximo_exame=lte.${in30}&status_exame=in.(EM_DIA)&select=id,colaborador_id,tenant_id,tipo_exame,proximo_exame,data_agendamento,status_exame`
   )
-  const allRows = [...rows, ...rowsVenc].filter((r, i, a) => a.findIndex(x => x.id === r.id) === i)
+
+  // 2c. Exames sem data programada (proximo_exame IS NULL) — "exames em aberto"
+  const rowsSemData = await sbGet(
+    env,
+    'exames_ocupacionais',
+    `proximo_exame=is.null&status_exame=not.in.(EM_DIA,INATIVO,AGENDADO,AGUARDANDO_CONFIRMACAO)&select=id,colaborador_id,tenant_id,tipo_exame,proximo_exame,data_agendamento,status_exame`
+  )
+
+  // Deduplica por id
+  const allRows = [...rowsStatus, ...rowsVenc30, ...rowsSemData]
+    .filter((r, i, a) => a.findIndex(x => x.id === r.id) === i)
 
   if (!allRows.length) return
 
@@ -281,7 +294,6 @@ async function checkExames(env, today, alertas) {
   const colabMap  = byId(colabs)
   const tenantMap = byId(tenants)
 
-  // Separar por tipo de alerta
   const grupos = {}
   for (const r of allRows) {
     const c  = colabMap[r.colaborador_id]
@@ -290,48 +302,59 @@ async function checkExames(env, today, alertas) {
     const dest = c.gestor_email || t.email_rh || t.email_admin
     if (!dest) continue
     if (!grupos[dest]) grupos[dest] = []
-    const vencido = r.proximo_exame < today
-    grupos[dest].push({ ...r, _nome: c.nome, _tenant: t.nome, _vencido: vencido })
+    grupos[dest].push({ ...r, _nome: c.nome, _tenant: t.nome })
   }
 
   for (const [dest, items] of Object.entries(grupos)) {
-    const aguardConf = items.filter(i => i.status_exame === 'AGUARDANDO_CONFIRMACAO')
-    const agendar    = items.filter(i => i.status_exame !== 'AGUARDANDO_CONFIRMACAO')
-    const vencidos   = agendar.filter(i => i.proximo_exame < today)
-    const vencendo   = agendar.filter(i => i.proximo_exame >= today)
+    const aguardConf  = items.filter(i => i.status_exame === 'AGUARDANDO_CONFIRMACAO')
+    const vencidos    = items.filter(i => i.proximo_exame && i.proximo_exame < today && i.status_exame !== 'AGUARDANDO_CONFIRMACAO')
+    const vencendo30  = items.filter(i => i.proximo_exame && i.proximo_exame >= today && i.proximo_exame <= in30)
+    const semData     = items.filter(i => !i.proximo_exame && i.status_exame !== 'AGUARDANDO_CONFIRMACAO')
 
     const lista = items.map(i => {
       if (i.status_exame === 'AGUARDANDO_CONFIRMACAO') {
         return `<li style="margin-bottom:8px"><strong>${i._nome}</strong> — ${i.tipo_exame || 'Exame ocupacional'}<br>
           <span style="color:#b4690e;font-weight:600">⏳ Agendado para ${fmtDate(i.data_agendamento)} — confirme a realização no sistema</span> · ${i._tenant}</li>`
       }
+      if (!i.proximo_exame) {
+        return `<li style="margin-bottom:8px"><strong>${i._nome}</strong> — ${i.tipo_exame || 'Exame ocupacional'}<br>
+          <span style="color:#6b21a8;font-weight:600">⚠ Sem data de exame programada — cadastre no sistema</span> · ${i._tenant}</li>`
+      }
       const venc = i.proximo_exame < today
+      const diasRestantes = Math.round((new Date(i.proximo_exame) - new Date(today)) / 864e5)
       return `<li style="margin-bottom:8px"><strong>${i._nome}</strong> — ${i.tipo_exame || 'Exame ocupacional'}<br>
         <span style="color:${venc ? '#b4271f' : '#b4690e'};font-weight:600">
-          ${venc ? '❌ Vencido em' : '⏰ Vence em'} ${fmtDate(i.proximo_exame)}
+          ${venc ? `❌ Vencido em ${fmtDate(i.proximo_exame)}` : `⏰ Vence em ${fmtDate(i.proximo_exame)} (${diasRestantes} dias)`}
         </span> · ${i._tenant}</li>`
     }).join('')
 
     const partes = []
-    if (aguardConf.length) partes.push(`<strong>${aguardConf.length} aguardando confirmação</strong> (agendamento já passou)`)
-    if (vencidos.length)   partes.push(`<strong>${vencidos.length} vencido(s)</strong>`)
-    if (vencendo.length)   partes.push(`<strong>${vencendo.length} vencendo</strong> em até 15 dias`)
+    if (vencidos.length)   partes.push(`<strong style="color:#b4271f">${vencidos.length} vencido(s)</strong>`)
+    if (aguardConf.length) partes.push(`<strong>${aguardConf.length} aguardando confirmação</strong>`)
+    if (vencendo30.length) partes.push(`<strong>${vencendo30.length} vencendo em até 30 dias</strong>`)
+    if (semData.length)    partes.push(`<strong>${semData.length} sem data programada</strong>`)
 
     const corpo = `
       <p>${partes.join(' · ')}</p>
       <ul style="padding-left:18px;margin:16px 0">${lista}</ul>
+      ${vencidos.length ? `<div style="margin-top:16px;padding:14px 16px;background:#fef2f2;border-radius:8px;border-left:3px solid #b4271f;font-size:13px">
+        🚨 Exames vencidos violam a NR-7. Agende imediatamente e notifique o colaborador por escrito.
+      </div>` : ''}
+      ${semData.length ? `<div style="margin-top:16px;padding:14px 16px;background:#f5f3ff;border-radius:8px;border-left:3px solid #7c3aed;font-size:13px">
+        📋 Exames sem data programada: acesse LUMA RH → Exames e cadastre a próxima data prevista.
+      </div>` : ''}
       ${aguardConf.length ? `<div style="margin-top:16px;padding:14px 16px;background:#fbf0da;border-radius:8px;border-left:3px solid #b4690e;font-size:13px">
         📌 Acesse LUMA RH → Exames e clique em <strong>Confirmar</strong> nos itens em laranja.
       </div>` : ''}
-      <p style="margin-top:12px">Mantenha os exames em dia para conformidade com a NR-7.</p>`
+      <p style="margin-top:12px">Exames em dia garantem conformidade com a NR-7 (PCMSO).</p>`
 
     await enviarEmail(
       env, dest,
-      `🩺 ${items.length} exame(s) pendente(s) — LUMA RH`,
-      emailBase('Exames Ocupacionais Pendentes', corpo, '#b4690e')
+      `🩺 ${items.length} exame(s) a regularizar — LUMA RH`,
+      emailBase('Exames Ocupacionais — Ação Necessária', corpo, '#b4690e')
     )
 
-    alertas.push(`Exames: ${items.length} pendente(s) (${aguardConf.length} aguard. confirmação) → ${dest}`)
+    alertas.push(`Exames: ${vencidos.length} vencidos, ${vencendo30.length} vencendo/30d, ${semData.length} sem data → ${dest}`)
   }
 }
 
