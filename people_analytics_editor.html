@@ -275,7 +275,7 @@ nav.legacy{display:none!important;}
   #mEditColab .mtpane.active,#mNewColab .mtpane.active{grid-template-columns:repeat(4,1fr);overflow-y:auto;}
 }
 
-.pf-cal-wrap{background:var(--bg3);border-radius:10px;padding:16px;}.pf-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}.pf-cal-month{font-size:15px;font-weight:500;}.pf-cal-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}.pf-cal-btn:hover{background:var(--bg2);}.pf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}.pf-cal-dname{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}.pf-cal-day{text-align:center;padding:7px 2px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}.pf-cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}.pf-cal-day.tod{border-color:var(--accent);color:var(--accent);}.pf-cal-day.rs,.pf-cal-day.re{background:var(--accent);color:#fff;}.pf-cal-day.ri{background:rgba(155,102,244,.2);}.pf-cal-day.dis{opacity:.2;cursor:not-allowed;}.pf-cal-day.oth{opacity:.15;cursor:default;}.pf-cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}.pf-cal-day.fds{color:var(--muted);}.pf-cal-legend{display:flex;gap:12px;margin-top:10px;}.pf-cal-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}.pf-cal-dot{width:8px;height:8px;border-radius:3px;}.pf-steps{display:flex;margin-bottom:22px;}.pf-step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}.pf-step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:1px;background:var(--border2);}.pf-step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--bg);z-index:1;margin-bottom:5px;}.pf-step-item.done .pf-step-circle{background:var(--ok);border-color:var(--ok);color:#0d2a1e;}.pf-step-item.active .pf-step-circle{background:var(--accent);border-color:var(--accent);color:#fff;}.pf-step-label{font-size:10px;color:var(--muted);text-align:center;}.pf-step-item.active .pf-step-label{color:var(--accent);}#pf .hist-row{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}#pf .hist-row:last-child{border-bottom:none;}#pf .hist-info{flex:1;}#pf .hist-period{font-size:14px;font-weight:500;margin-bottom:3px;}#pf .hist-meta{font-size:12px;color:var(--muted);}#pf .hist-motivo{font-size:12px;color:var(--danger);margin-top:4px;}
+.pf-cal-wrap{background:var(--bg3);border-radius:10px;padding:16px;}.pf-dual-cal{display:flex;gap:20px;}.pf-cal-panel{flex:1;min-width:0;}@media(max-width:620px){.pf-dual-cal{flex-direction:column;}}.pf-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}.pf-cal-month{font-size:15px;font-weight:500;}.pf-cal-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}.pf-cal-btn:hover{background:var(--bg2);}.pf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}.pf-cal-dname{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}.pf-cal-day{text-align:center;padding:7px 2px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}.pf-cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}.pf-cal-day.tod{border-color:var(--accent);color:var(--accent);}.pf-cal-day.rs,.pf-cal-day.re{background:var(--accent);color:#fff;}.pf-cal-day.ri{background:rgba(155,102,244,.2);}.pf-cal-day.dis{opacity:.2;cursor:not-allowed;}.pf-cal-day.oth{opacity:.15;cursor:default;}.pf-cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}.pf-cal-day.fds{color:var(--muted);}.pf-cal-legend{display:flex;gap:12px;margin-top:10px;}.pf-cal-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}.pf-cal-dot{width:8px;height:8px;border-radius:3px;}.pf-steps{display:flex;margin-bottom:22px;}.pf-step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}.pf-step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:1px;background:var(--border2);}.pf-step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--bg);z-index:1;margin-bottom:5px;}.pf-step-item.done .pf-step-circle{background:var(--ok);border-color:var(--ok);color:#0d2a1e;}.pf-step-item.active .pf-step-circle{background:var(--accent);border-color:var(--accent);color:#fff;}.pf-step-label{font-size:10px;color:var(--muted);text-align:center;}.pf-step-item.active .pf-step-label{color:var(--accent);}#pf .hist-row{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}#pf .hist-row:last-child{border-bottom:none;}#pf .hist-info{flex:1;}#pf .hist-period{font-size:14px;font-weight:500;margin-bottom:3px;}#pf .hist-meta{font-size:12px;color:var(--muted);}#pf .hist-motivo{font-size:12px;color:var(--danger);margin-top:4px;}
 </style>
 </head>
 <body>
@@ -794,13 +794,27 @@ nav.legacy{display:none!important;}
     <div id="pf-step-cal">
       <div id="pf-avisos"></div>
       <div class="pf-cal-wrap">
-        <div class="pf-cal-nav">
-          <button class="pf-cal-btn" id="pf-btn-prev">&#8249;</button>
-          <div class="pf-cal-month" id="pf-cal-month">—</div>
-          <button class="pf-cal-btn" id="pf-btn-next">&#8250;</button>
+        <div class="pf-dual-cal">
+          <!-- Mês atual -->
+          <div class="pf-cal-panel">
+            <div class="pf-cal-nav">
+              <button class="pf-cal-btn" id="pf-btn-prev">&#8249;</button>
+              <div class="pf-cal-month" id="pf-cal-month">—</div>
+              <div style="width:30px;"></div>
+            </div>
+            <div class="pf-cal-grid" id="pf-cal-grid"></div>
+          </div>
+          <!-- Próximo mês -->
+          <div class="pf-cal-panel">
+            <div class="pf-cal-nav">
+              <div style="width:30px;"></div>
+              <div class="pf-cal-month" id="pf-cal-month2">—</div>
+              <button class="pf-cal-btn" id="pf-btn-next">&#8250;</button>
+            </div>
+            <div class="pf-cal-grid" id="pf-cal-grid2"></div>
+          </div>
         </div>
-        <div class="pf-cal-grid" id="pf-cal-grid"></div>
-        <div class="pf-cal-legend">
+        <div class="pf-cal-legend" style="margin-top:14px;">
           <div class="pf-cal-leg"><div class="pf-cal-dot" style="background:var(--accent)"></div>Selecionado</div>
           <div class="pf-cal-leg"><div class="pf-cal-dot" style="background:rgba(155,102,244,.25)"></div>Período</div>
           <div class="pf-cal-leg"><div class="pf-cal-dot" style="background:rgba(248,113,113,.2)"></div>Feriado</div>
@@ -1461,7 +1475,17 @@ nav.legacy{display:none!important;}
             <option value="INATIVO">Inativo</option>
           </select>
         </div>
-        <div class="fgrp"><div class="flbl">Fonte / tipo</div><input class="fi" id="exFonte" placeholder="Ex: Exame Periódico"></div>
+        <div class="fgrp"><div class="flbl">Tipo de exame</div>
+          <select class="fsel" id="exTipoExame">
+            <option value="">Selecione...</option>
+            <option value="ADMISSIONAL">Admissional</option>
+            <option value="DEMISSIONAL">Demissional</option>
+            <option value="PERIODICO">Periódico</option>
+            <option value="RETORNO">Retorno ao trabalho</option>
+            <option value="MUDANCA_FUNCAO">Mudança de função</option>
+            <option value="MONITORACAO">Monitoração pontual</option>
+          </select>
+        </div>
         <div class="fgrp s2"><div class="flbl">Observação</div><textarea class="fta" id="exObs"></textarea></div>
       </div>
     </div>
@@ -1498,7 +1522,7 @@ nav.legacy{display:none!important;}
       <!-- Campos base -->
       <div class="fg">
         <div class="fgrp"><div class="flbl">Tipo <span class="rq">*</span></div>
-          <select class="fsel" id="ausTipo" onchange="ausTipoChange()">
+          <select class="fsel" id="ausMTipo" onchange="ausTipoChange()">
             <option value="ATESTADO">Atestado médico</option>
             <option value="AFASTAMENTO">Afastamento INSS</option>
             <option value="FALTA">Falta</option>
@@ -1696,7 +1720,7 @@ nav.legacy{display:none!important;}
 <!-- MODAL RESCISÃO CLT -->
 <div class="ov" id="mRescisao">
 <div class="modal" style="max-width:600px;">
-  <div class="mh"><div><div class="mt">🧮 Rescisão CLT</div><div class="ms" style="font-size:13px;color:var(--muted);">Cálculo orientativo — consulte o DP para valores exatos</div></div><button class="mc" onclick="closeModal('mRescisao')">✕</button></div>
+  <div class="mh"><div><div class="mt">🧮 Rescisão CLT</div><div class="ms" style="font-size:13px;color:var(--muted);">Cálculo orientativo — consulte o DP para valores exatos</div></div><button class="mc" onclick="closeRescisao()">✕</button></div>
   <div class="mb">
     <div class="fg" style="margin-bottom:16px;">
       <div class="fgrp">
@@ -1766,7 +1790,7 @@ nav.legacy{display:none!important;}
   </div>
   <div class="mf">
     <button class="btn" onclick="exportRescisaoCSV()">⬇ Exportar</button>
-    <button class="btn btn-a" onclick="closeModal('mRescisao')">Fechar</button>
+    <button class="btn btn-a" onclick="closeRescisao()">Fechar</button>
   </div>
 </div>
 </div>
@@ -3999,7 +4023,9 @@ function openEditEx(r){
   $('mEditExSub').textContent=(r.NOME||'—')+' · '+(r.ID_COLABORADOR||'—');
   $('exUlt').value=iso(r.ULTIMO_EXAME)||'';$('exProx').value=iso(r.PROXIMO_EXAME)||'';
   $('exAgend').value=iso(r.DATA_AGENDAMENTO)||'';
-  setS('exSt',r.STATUS_EXAME||'EM_DIA');$('exFonte').value=r.FONTE_BASE_ANTIGA||'';$('exObs').value=r.OBSERVACAO||'';
+  setS('exSt',r.STATUS_EXAME||'EM_DIA');
+  setS('exTipoExame',r.TIPO_EXAME||r.tipo_exame||r.FONTE_BASE_ANTIGA||'');
+  $('exObs').value=r.OBSERVACAO||'';
   openModal('mEditEx');
 }
 async function saveEditEx(){
@@ -4010,6 +4036,7 @@ async function saveEditEx(){
     proximo_exame:$('exProx').value||null,
     data_agendamento:$('exAgend').value||null,
     status_exame:$('exSt').value,
+    tipo_exame:$('exTipoExame').value||null,
     observacao:$('exObs').value||null
   };
   closeModal('mEditEx');toast('Salvando exame...','info');
@@ -4244,7 +4271,7 @@ window._ausEditId=null;
 function openModalAus(){
   // Reset campos
   window._ausEditId=null;
-  $('ausTipo').value='ATESTADO';
+  $('ausMTipo').value='ATESTADO';
   $('ausData').value=new Date().toISOString().split('T')[0];
   $('ausCid').value='';
   $('ausCidDesc').innerHTML='Informe o código CID acima';
@@ -4265,7 +4292,7 @@ window.editarAus=function(id){
   const r=D.AUSENCIAS_OCORRENCIAS.find(x=>(x._id||x._row)==id);
   if(!r)return;
   window._ausEditId=id;
-  $('ausTipo').value=r.TIPO||'ATESTADO';
+  $('ausMTipo').value=r.TIPO||'ATESTADO';
   $('ausData').value=r.DATA||'';
   // Selecionar colaborador
   const opts=$('ausColab').options;
@@ -4285,7 +4312,7 @@ window.editarAus=function(id){
 }
 
 function ausTipoChange(){
-  const tipo=$('ausTipo').value;
+  const tipo=$('ausMTipo').value;
   const sec=$('ausCidSection');
   const precisaCid=['ATESTADO','AFASTAMENTO','LICENCA','LIC_MATERNIDADE','LIC_PATERNIDADE'].includes(tipo);
   if(sec){
@@ -4358,7 +4385,7 @@ window.verAtestado=async function(pathOrUrl){
 async function saveNewAus(){
   const colabUUID=$('ausColab').value;
   const data=$('ausData').value;
-  const tipo=$('ausTipo').value;
+  const tipo=$('ausMTipo').value;
   const precisaCid=['ATESTADO','AFASTAMENTO','LICENCA','LIC_MATERNIDADE','LIC_PATERNIDADE'].includes(tipo);
   const cid=precisaCid?($('ausCid').value||'').toUpperCase().trim():null;
   const obs=$('ausObs').value.trim()||null;
@@ -5423,6 +5450,8 @@ function renderCompliance(){
 // RESCISÃO CLT
 // ══════════════════════════════
 function openRescisao(colabId){
+  // Salva aba atual para restaurar ao fechar o modal
+  window._rescisaoFromTab = document.querySelector('.sec.active')?.id || 'vg';
   // Popula select de colaboradores
   const ativos=(D.CADASTRO_COLABORADORES||[]).filter(r=>String(r.STATUS||'').trim().toUpperCase()==='ATIVO'&&String(r.TIPO_VINCULO||'').toUpperCase()==='CLT');
   const sel=$('rColabSel');
@@ -5432,6 +5461,12 @@ function openRescisao(colabId){
   $('rDesligamento').value=new Date().toISOString().slice(0,10);
   $('rResultado').style.display='none';
   openModal('mRescisao');
+}
+function closeRescisao(){
+  closeModal('mRescisao');
+  const tab=window._rescisaoFromTab||'vg';
+  window._rescisaoFromTab=null;
+  showTab(tab);
 }
 
 function preencherRescisao(){
@@ -6470,15 +6505,15 @@ function pfBlocoKPIs(ini,fim,dc,du){
   </div>`;
 }
 
-function pfRenderCal(){
-  $('pf-cal-month').textContent=`${PF_MESES[pfCalM]} ${pfCalY}`;
-  const g=$('pf-cal-grid');g.innerHTML='';
+function pfRenderOneMonth(monthId,gridId,year,month){
+  $(monthId).textContent=`${PF_MESES[month]} ${year}`;
+  const g=$(gridId);g.innerHTML='';
   PF_DS.forEach(d=>{const el=document.createElement('div');el.className='pf-cal-dname';el.textContent=d;g.appendChild(el);});
-  const first=new Date(pfCalY,pfCalM,1),last=new Date(pfCalY,pfCalM+1,0);
+  const first=new Date(year,month,1),last=new Date(year,month+1,0);
   const today=new Date().toISOString().split('T')[0];
   for(let i=0;i<first.getDay();i++){const el=document.createElement('div');el.className='pf-cal-day oth';g.appendChild(el);}
   for(let d=1;d<=last.getDate();d++){
-    const iso=`${pfCalY}-${String(pfCalM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const iso=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     let cls='pf-cal-day';
     if(iso<today)cls+=' dis';
     else if(pfIsFer(iso))cls+=' fer';
@@ -6490,6 +6525,11 @@ function pfRenderCal(){
     if(!cls.includes('dis')&&!cls.includes('oth')){const _i=iso;el.onclick=()=>pfClickD(_i);}
     g.appendChild(el);
   }
+}
+function pfRenderCal(){
+  pfRenderOneMonth('pf-cal-month','pf-cal-grid',pfCalY,pfCalM);
+  const m2=pfCalM===11?0:pfCalM+1,y2=pfCalM===11?pfCalY+1:pfCalY;
+  pfRenderOneMonth('pf-cal-month2','pf-cal-grid2',y2,m2);
 }
 function pfClickD(iso){if(!pfRS||pfRE){pfRS=iso;pfRE=null;pfPicking=true;}else if(pfPicking&&iso>pfRS){pfRE=iso;pfPicking=false;}else{pfRS=iso;pfRE=null;pfPicking=true;}pfUpdMsg();pfRenderCal();}
 function pfUpdMsg(){
