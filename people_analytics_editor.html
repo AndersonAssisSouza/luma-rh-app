@@ -7435,7 +7435,7 @@ async function msgInitOnce(){if(_msgInited)return;_msgInited=true;await msgLoadM
 async function msgLoadMensagens(){
   try{
     _msgs=await window._sbFns.getMensagensAniversario();
-    if(_msgs.length===0){await window._sbFns.seedMensagensAniversario?.();_msgs=await window._sbFns.getMensagensAniversario();toast('10 mensagens padrão criadas!','info');}
+    if(_msgs.length===0){await window._sbFns.seedMensagensDefault?.();_msgs=await window._sbFns.getMensagensAniversario();toast('10 mensagens padrão criadas!','info');}
     msgRenderLists();
   }catch(e){toast('Erro ao carregar mensagens: '+e.message,'error');}
 }
