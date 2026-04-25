@@ -330,6 +330,84 @@ export async function marcarLembreteEnviado(id) {
 }
 
 // ============================================================
+// DEPENDENTES (CLT — IRRF / Salário Família / Plano de Saúde)
+// ============================================================
+
+export async function getDependentes(colaboradorId) {
+  const { data, error } = await sb
+    .from('dependentes')
+    .select('*')
+    .eq('colaborador_id', colaboradorId)
+    .order('nome')
+  if (error) throw error
+  return data
+}
+
+export async function inserirDependente(dep) {
+  const { data, error } = await sb
+    .from('dependentes')
+    .insert(dep)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateDependente(id, campos) {
+  const { data, error } = await sb
+    .from('dependentes')
+    .update({ ...campos, atualizado_em: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteDependente(id) {
+  const { error } = await sb.from('dependentes').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ============================================================
+// 13° SALÁRIO (Lei 4.090/62)
+// ============================================================
+
+export async function getDecimoTerceiro(colaboradorId = null, ano = null) {
+  let q = sb
+    .from('decimo_terceiro')
+    .select('*, colaboradores(nome, id_colaborador, salario_honorario, tipo_vinculo, data_admissao)')
+    .order('ano', { ascending: false })
+    .order('parcela')
+  if (colaboradorId) q = q.eq('colaborador_id', colaboradorId)
+  if (ano) q = q.eq('ano', ano)
+  const { data, error } = await q
+  if (error) throw error
+  return data
+}
+
+export async function upsertDecimoTerceiro(registro) {
+  const { data, error } = await sb
+    .from('decimo_terceiro')
+    .upsert(registro, { onConflict: 'colaborador_id,ano,parcela' })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateDecimoTerceiro(id, campos) {
+  const { data, error } = await sb
+    .from('decimo_terceiro')
+    .update({ ...campos, atualizado_em: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// ============================================================
 // PROFILES / USUÁRIOS (admin)
 // ============================================================
 

@@ -153,6 +153,7 @@ nav.legacy{display:none!important;}
 .ce{background:rgba(249,115,22,.12);color:#ea580c;}.ca{background:rgba(20,184,166,.12);color:#0f766e;}
 .cok{background:rgba(34,197,94,.1);color:#16a34a;}
 .cw{background:rgba(245,158,11,.12);color:#d97706;}
+.cy{background:rgba(234,179,8,.12);color:#ca8a04;}
 .cd{background:rgba(239,68,68,.12);color:#dc2626;}
 .cb{background:rgba(59,130,246,.12);color:#2563eb;}
 .sy{overflow-y:auto;max-height:calc(100vh - 320px);min-height:200px;}
@@ -310,6 +311,8 @@ nav.legacy{display:none!important;}
     <li class="menu-item"><button class="menu-link" onclick="showTab('complian')"><span class="menu-icon">✅</span>Compliance</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('desl',this)"><span class="menu-icon">🚪</span>Desligados</button></li>
     <li class="menu-item"><button class="menu-link" onclick="openRescisao()"><span class="menu-icon">🧮</span>Rescisão CLT</button></li>
+      <div class="menu-item"><button class="menu-link" onclick="showSection('depend')">👨‍👩‍👧 Dependentes</button></div>
+      <div class="menu-item"><button class="menu-link" onclick="showSection('decimo')">🎄 13° Salário</button></div>
     <li class="menu-item"><button class="menu-link" onclick="showTab('acoes',this)"><span class="menu-icon">⚡</span>Ações</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('pf',this)"><span class="menu-icon">📅</span>Portal Férias</button></li>
     <div class="sidebar-sep"></div>
@@ -608,6 +611,13 @@ nav.legacy{display:none!important;}
         <option>Atestado</option><option>Falta</option><option>Licença</option>
         <option>Afastamento INSS</option><option>Atraso</option><option>Saída antecipada</option>
         <option>Day Off</option><option>Compensação de horas</option><option>Liberação da empresa</option>
+        <option>Licença maternidade</option>
+        <option>Licença paternidade</option>
+        <option>Licença gala</option>
+        <option>Licença luto</option>
+        <option>Licença doação de sangue</option>
+        <option>Licença militar</option>
+        <option>Licença vestibular</option>
       </select>
       <button class="btn-nav" onclick="exportTableCSV('ausBody','ausencias_')" style="margin-left:auto;">⬇ CSV</button>
     </div>
@@ -1429,9 +1439,16 @@ nav.legacy{display:none!important;}
         <div class="fgrp"><div class="flbl">Tipo <span class="rq">*</span></div>
           <select class="fsel" id="ausTipo" onchange="ausTipoChange()">
             <option value="ATESTADO">Atestado médico</option>
-            <option value="AFASTAMENTO">Afastamento</option>
+            <option value="AFASTAMENTO">Afastamento INSS</option>
             <option value="FALTA">Falta</option>
             <option value="LICENCA">Licença</option>
+            <option value="LIC_MATERNIDADE">Licença maternidade (120/180d)</option>
+            <option value="LIC_PATERNIDADE">Licença paternidade (5/20d)</option>
+            <option value="LIC_GALA">Licença gala — casamento (3d)</option>
+            <option value="LIC_LUTO">Licença luto — falecimento (2d)</option>
+            <option value="LIC_DOACAO">Licença doação de sangue (1d/ano)</option>
+            <option value="LIC_MILITAR">Licença serviço militar</option>
+            <option value="LIC_VESTIBULAR">Licença vestibular (2d)</option>
             <option value="DAYOFF">Day Off</option>
             <option value="COMPENSACAO">Compensação de horas</option>
             <option value="LIBERACAO">Liberação da empresa</option>
@@ -1692,6 +1709,135 @@ nav.legacy{display:none!important;}
   </div>
 </div>
 </div>
+
+  <!-- ═══ DEPENDENTES ══════════════════════════════════════════ -->
+  <div id="depend" style="display:none;">
+    <div class="ct" style="margin-bottom:16px;">👨‍👩‍👧 Dependentes
+      <span style="font-size:12px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;margin-left:8px;">IRRF · Salário Família · Plano de Saúde</span>
+    </div>
+
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <select id="depColabSel" class="fsel" onchange="loadDependentes()" style="min-width:260px;font-size:13px;">
+        <option value="">— Selecione um colaborador —</option>
+      </select>
+      <button class="btn btn-accent" onclick="openNovoDep()">+ Novo dependente</button>
+      <div style="flex:1;"></div>
+      <div id="dep-sf-badge" style="display:none;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--ok);">
+        💰 <strong>Salário Família:</strong> <span id="dep-sf-valor">—</span>/mês
+      </div>
+    </div>
+
+    <!-- Resumo IRRF -->
+    <div id="dep-irrf-box" style="display:none;background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.15);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;line-height:1.8;">
+      <strong>📊 Impacto fiscal dos dependentes:</strong><br>
+      <span id="dep-irrf-resumo">—</span>
+    </div>
+
+    <!-- Tabela -->
+    <div class="sy">
+      <table class="tbl">
+        <thead><tr>
+          <th>Nome</th><th>Parentesco</th><th>Nascimento</th><th>Idade</th>
+          <th>IRRF</th><th>Sal. Família</th><th>Plano Saúde</th><th>Ações</th>
+        </tr></thead>
+        <tbody id="depTbody"><tr><td colspan="8" class="empty">Selecione um colaborador</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Dependente -->
+  <div class="ov" id="mDep" style="display:none;" onclick="if(event.target===this)closeModal('mDep')">
+    <div class="md" style="max-width:480px;">
+      <div class="mh"><span id="mDepTitle">Novo Dependente</span><button class="mc" onclick="closeModal('mDep')">✕</button></div>
+      <div class="mb">
+        <div class="fg2">
+          <div class="fgrp s2"><div class="flbl">Nome completo <span class="rq">*</span></div><input class="fi" id="depNome" placeholder="Nome do dependente"></div>
+          <div class="fgrp s2"><div class="flbl">CPF</div><input class="fi" id="depCpf" placeholder="000.000.000-00"></div>
+          <div class="fgrp"><div class="flbl">Grau de parentesco <span class="rq">*</span></div>
+            <select class="fsel" id="depParentesco">
+              <option value="FILHO">Filho(a)</option>
+              <option value="CONJUGE">Cônjuge / Companheiro(a)</option>
+              <option value="ENTEADO">Enteado(a)</option>
+              <option value="PAI">Pai</option>
+              <option value="MAE">Mãe</option>
+              <option value="IRMAO">Irmão / Irmã</option>
+              <option value="TUTELADO">Tutelado(a)</option>
+              <option value="OUTRO">Outro</option>
+            </select>
+          </div>
+          <div class="fgrp"><div class="flbl">Data de nascimento</div><input class="fi" id="depNasc" type="date"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;background:var(--bg3);border-radius:8px;padding:12px;">
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Benefícios</div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="depIrrf" checked style="accent-color:var(--accent);">
+            Deduz no <strong>IRRF</strong> (–R$189,59/mês por dependente)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="depSf" style="accent-color:var(--ok);">
+            <strong>Salário Família</strong> (filhos/enteados ≤ 14 anos ou inválidos)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="depPlano" style="accent-color:var(--accent);">
+            Incluso no <strong>Plano de Saúde</strong> empresarial
+          </label>
+        </div>
+        <div class="fgrp" style="margin-top:12px;"><div class="flbl">Observação</div><input class="fi" id="depObs" placeholder="Ex: Filho com deficiência — benefício permanente"></div>
+      </div>
+      <div class="mf">
+        <button class="btn btn-outline" onclick="closeModal('mDep')">Cancelar</button>
+        <button class="btn btn-accent" onclick="salvarDependente()">Salvar dependente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ 13° SALÁRIO ══════════════════════════════════════════ -->
+  <div id="decimo" style="display:none;">
+    <div class="ct" style="margin-bottom:16px;">🎄 13° Salário
+      <span style="font-size:12px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;margin-left:8px;">Lei 4.090/62 · 1ª parcela até 30/nov · 2ª parcela até 20/dez</span>
+    </div>
+
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <select id="deciAno" class="fsel" onchange="loadDecimo()" style="width:auto;font-size:13px;">
+      </select>
+      <button class="btn btn-outline" onclick="gerarDecimoAno()">⚙ Gerar lançamentos do ano</button>
+      <div style="flex:1;"></div>
+      <div id="deci-totais" style="font-size:12px;color:var(--muted);"></div>
+    </div>
+
+    <!-- KPIs 13° -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;" id="deciKpis"></div>
+
+    <!-- Tabela -->
+    <div class="sy">
+      <table class="tbl">
+        <thead><tr>
+          <th>Colaborador</th><th>Vínculo</th><th>Parcela</th><th>Ávos</th>
+          <th>Bruto</th><th>INSS</th><th>IRRF</th><th>Líquido</th>
+          <th>Vencimento</th><th>Status</th><th>Ações</th>
+        </tr></thead>
+        <tbody id="deciTbody"><tr><td colspan="11" class="empty">Selecione o ano</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal pagar 13° -->
+  <div class="ov" id="mDeciPagar" style="display:none;" onclick="if(event.target===this)closeModal('mDeciPagar')">
+    <div class="md" style="max-width:420px;">
+      <div class="mh"><span>Registrar Pagamento — 13° Salário</span><button class="mc" onclick="closeModal('mDeciPagar')">✕</button></div>
+      <div class="mb">
+        <div id="mDeciPagarInfo" style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.8;"></div>
+        <div class="fgrp"><div class="flbl">Data do pagamento <span class="rq">*</span></div><input class="fi" id="deciDataPgto" type="date"></div>
+        <div class="fgrp"><div class="flbl">Observação</div><input class="fi" id="deciObs" placeholder="Ex: Pago via folha dezembro"></div>
+      </div>
+      <div class="mf">
+        <button class="btn btn-outline" onclick="closeModal('mDeciPagar')">Cancelar</button>
+        <button class="btn btn-accent" onclick="confirmarPagtoDecimo()">✓ Confirmar pagamento</button>
+      </div>
+    </div>
+  </div>
 
 <!-- MODAL ONBOARDING -->
 <div class="ov" id="mOnboarding">
@@ -4141,7 +4287,7 @@ window.editarAus=function(id){
 function ausTipoChange(){
   const tipo=$('ausTipo').value;
   const sec=$('ausCidSection');
-  const precisaCid=['ATESTADO','AFASTAMENTO','LICENCA'].includes(tipo);
+  const precisaCid=['ATESTADO','AFASTAMENTO','LICENCA','LIC_MATERNIDADE','LIC_PATERNIDADE'].includes(tipo);
   if(sec){
     sec.style.display=precisaCid?'block':'none';
     if(!precisaCid){
@@ -4213,7 +4359,7 @@ async function saveNewAus(){
   const colabUUID=$('ausColab').value;
   const data=$('ausData').value;
   const tipo=$('ausTipo').value;
-  const precisaCid=['ATESTADO','AFASTAMENTO','LICENCA'].includes(tipo);
+  const precisaCid=['ATESTADO','AFASTAMENTO','LICENCA','LIC_MATERNIDADE','LIC_PATERNIDADE'].includes(tipo);
   const cid=precisaCid?($('ausCid').value||'').toUpperCase().trim():null;
   const obs=$('ausObs').value.trim()||null;
   const fileInput=$('ausAnexo');
@@ -4841,6 +4987,241 @@ async function executarImportCSV(){
   },2000);
 }
 
+// ── DEPENDENTES ─────────────────────────────────────────────────────
+let _depColabId=null,_depEditId=null,_deps=[];
+
+async function initDepSelect(){
+  const sel=$('depColabSel');if(!sel)return;
+  const ativos=(D.CADASTRO_COLABORADORES||[]).filter(r=>r.STATUS==='ATIVO'&&(r.TIPO_VINCULO==='CLT'||r.TIPO_VINCULO==='ESTAGIARIO'));
+  sel.innerHTML='<option value="">— Selecione um colaborador CLT —</option>'+
+    ativos.map(r=>`<option value="${esc(r._id||r.ID_COLABORADOR)}">${esc(r.NOME)} — ${esc(r.TIPO_VINCULO||'')}</option>`).join('');
+}
+
+async function loadDependentes(){
+  const sel=$('depColabSel');
+  _depColabId=sel?.value||null;
+  const tb=$('depTbody');
+  if(!_depColabId){tb.innerHTML='<tr><td colspan="8" class="empty">Selecione um colaborador</td></tr>';return;}
+  tb.innerHTML='<tr><td colspan="8" class="empty">Carregando...</td></tr>';
+  try{
+    _deps=await window._sb.from('dependentes').select('*').eq('colaborador_id',_depColabId).order('nome').then(r=>{if(r.error)throw r.error;return r.data;});
+    renderDeps();
+  }catch(e){tb.innerHTML=`<tr><td colspan="8" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+}
+
+function renderDeps(){
+  const tb=$('depTbody');
+  if(!_deps.length){tb.innerHTML='<tr><td colspan="8" class="empty">Nenhum dependente cadastrado</td></tr>';
+    $('dep-irrf-box').style.display='none';$('dep-sf-badge').style.display='none';return;}
+  // Cálculos
+  const hoje=new Date();
+  const irrfCount=_deps.filter(d=>d.irrf).length;
+  const sfDeps=_deps.filter(d=>d.salario_familia);
+  const sfValor=sfDeps.length*62.04; // valor 2026 (Portaria MTE)
+  $('dep-irrf-box').style.display='';
+  $('dep-irrf-resumo').innerHTML=`${irrfCount} dependente(s) para IRRF → dedução de <strong>R$${_fmt(189.59*irrfCount)}/mês</strong> na base tributável · ${sfDeps.length} apto(s) ao Salário Família → <strong>+R$${_fmt(sfValor)}/mês</strong>`;
+  if(sfDeps.length){$('dep-sf-badge').style.display='';$('dep-sf-valor').textContent='R$'+_fmt(sfValor);}
+  else $('dep-sf-badge').style.display='none';
+  tb.innerHTML=_deps.map(d=>{
+    const nasc=d.data_nascimento?new Date(d.data_nascimento+'T12:00:00'):null;
+    const idade=nasc?Math.floor((hoje-nasc)/31557600000):null;
+    const paren={FILHO:'Filho(a)',CONJUGE:'Cônjuge',ENTEADO:'Enteado(a)',PAI:'Pai',MAE:'Mãe',IRMAO:'Irmão/Irmã',TUTELADO:'Tutelado(a)',OUTRO:'Outro'}[d.grau_parentesco]||d.grau_parentesco;
+    return`<tr>
+      <td><strong>${esc(d.nome)}</strong>${d.cpf?`<br><span style="font-size:11px;color:var(--muted);">${esc(d.cpf)}</span>`:''}${d.observacao?`<br><span style="font-size:11px;color:var(--muted);">${esc(d.observacao)}</span>`:''}
+      </td>
+      <td>${paren}</td>
+      <td>${nasc?nasc.toLocaleDateString('pt-BR'):'—'}</td>
+      <td>${idade!==null?idade+' anos':'—'}</td>
+      <td style="text-align:center;">${d.irrf?'<span style="color:var(--ok)">✓</span>':'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="text-align:center;">${d.salario_familia?'<span style="color:var(--ok)">✓</span>':'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="text-align:center;">${d.plano_saude?'<span style="color:var(--ok)">✓</span>':'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn" style="font-size:11px;padding:4px 8px;" onclick="editDep('${d.id}')">✏</button>
+        <button class="btn" style="font-size:11px;padding:4px 8px;color:var(--danger);" onclick="deleteDep('${d.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openNovoDep(){
+  _depEditId=null;
+  $('mDepTitle').textContent='Novo Dependente';
+  $('depNome').value='';$('depCpf').value='';$('depObs').value='';
+  $('depNasc').value='';$('depParentesco').value='FILHO';
+  $('depIrrf').checked=true;$('depSf').checked=false;$('depPlano').checked=false;
+  openModal('mDep');
+}
+function editDep(id){
+  const d=_deps.find(x=>x.id===id);if(!d)return;
+  _depEditId=id;
+  $('mDepTitle').textContent='Editar Dependente';
+  $('depNome').value=d.nome||'';$('depCpf').value=d.cpf||'';$('depObs').value=d.observacao||'';
+  $('depNasc').value=d.data_nascimento||'';$('depParentesco').value=d.grau_parentesco||'FILHO';
+  $('depIrrf').checked=!!d.irrf;$('depSf').checked=!!d.salario_familia;$('depPlano').checked=!!d.plano_saude;
+  openModal('mDep');
+}
+async function salvarDependente(){
+  const nome=$('depNome').value.trim();
+  if(!nome){toast('Informe o nome do dependente','error');return;}
+  if(!_depColabId){toast('Selecione um colaborador primeiro','error');return;}
+  const colab=D.CADASTRO_COLABORADORES?.find(r=>(r._id||r.ID_COLABORADOR)===_depColabId);
+  const tenantId=window._sbProfile?.tenant_id;
+  const payload={
+    nome,cpf:$('depCpf').value.trim()||null,
+    grau_parentesco:$('depParentesco').value,
+    data_nascimento:$('depNasc').value||null,
+    irrf:$('depIrrf').checked,
+    salario_familia:$('depSf').checked,
+    plano_saude:$('depPlano').checked,
+    observacao:$('depObs').value.trim()||null
+  };
+  try{
+    if(_depEditId){
+      await window._sb.from('dependentes').update(payload).eq('id',_depEditId);
+    }else{
+      await window._sb.from('dependentes').insert({...payload,colaborador_id:_depColabId,tenant_id:tenantId});
+    }
+    toast(_depEditId?'Dependente atualizado!':'Dependente adicionado!','success');
+    closeModal('mDep');
+    await loadDependentes();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+async function deleteDep(id){
+  if(!confirm('Remover este dependente?'))return;
+  try{
+    await window._sb.from('dependentes').delete().eq('id',id);
+    toast('Dependente removido','success');
+    await loadDependentes();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+// ── 13° SALÁRIO ─────────────────────────────────────────────────────
+let _deciPagarId=null;
+const DECI_VENC1='-11-30'; // 1ª parcela até 30/nov
+const DECI_VENC2='-12-20'; // 2ª parcela até 20/dez
+
+function initDeciAno(){
+  const sel=$('deciAno');if(!sel)return;
+  const anoAtual=new Date().getFullYear();
+  sel.innerHTML=[anoAtual+1,anoAtual,anoAtual-1,anoAtual-2].map(a=>`<option value="${a}">${a}</option>`).join('');
+  sel.value=anoAtual;
+}
+
+async function loadDecimo(){
+  const ano=parseInt($('deciAno')?.value||new Date().getFullYear());
+  const tb=$('deciTbody');
+  tb.innerHTML='<tr><td colspan="11" class="empty">Carregando...</td></tr>';
+  try{
+    const {data,error}=await window._sb.from('decimo_terceiro')
+      .select('*,colaboradores(nome,id_colaborador,salario_honorario,tipo_vinculo,data_admissao)')
+      .eq('ano',ano).order('colaboradores(nome)').order('parcela');
+    if(error)throw error;
+    renderDecimo(data||[],ano);
+  }catch(e){tb.innerHTML=`<tr><td colspan="11" class="empty">Erro: ${esc(e.message)}</td></tr>`;}
+}
+
+function renderDecimo(rows,ano){
+  const tb=$('deciTbody');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="11" class="empty">Nenhum lançamento. Clique em "Gerar lançamentos".</td></tr>';
+    $('deciKpis').innerHTML='';$('deci-totais').textContent='';return;}
+  const pagos=rows.filter(r=>r.status==='PAGO');
+  const pendentes=rows.filter(r=>r.status==='PENDENTE');
+  const totalBruto=rows.reduce((s,r)=>s+(r.valor_bruto||0),0);
+  const totalLiq=rows.reduce((s,r)=>s+(r.valor_liquido||0),0);
+  $('deci-totais').textContent=`${rows.length} lançamentos · ${pagos.length} pagos · ${pendentes.length} pendentes`;
+  $('deciKpis').innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;">Total Bruto</div><div style="font-size:20px;font-weight:600;">R$${_fmt(totalBruto)}</div></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;">Total Líquido</div><div style="font-size:20px;font-weight:600;color:var(--ok);">R$${_fmt(totalLiq)}</div></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;">Pagos</div><div style="font-size:20px;font-weight:600;color:var(--ok);">${pagos.length}</div></div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;">Pendentes</div><div style="font-size:20px;font-weight:600;color:var(--warn);">${pendentes.length}</div></div>`;
+  tb.innerHTML=rows.map(r=>{
+    const c=r.colaboradores||{};
+    const venc=r.parcela===1?ano+DECI_VENC1:ano+DECI_VENC2;
+    const vencido=r.status==='PENDENTE'&&new Date()>new Date(venc+'T23:59:00');
+    const stCls=r.status==='PAGO'?'cs':vencido?'cd':'cy';
+    const stLabel=r.status==='PAGO'?'PAGO':vencido?'VENCIDO':'PENDENTE';
+    return`<tr>
+      <td><strong>${esc(c.nome||'—')}</strong><br><span style="font-size:11px;color:var(--muted);">${esc(c.id_colaborador||'')}</span></td>
+      <td><span class="chip cp">${esc(c.tipo_vinculo||'—')}</span></td>
+      <td style="text-align:center;font-weight:600;">${r.parcela}ª</td>
+      <td style="text-align:center;">${r.meses_trabalhados||12}/12</td>
+      <td>R$${_fmt(r.valor_bruto||0)}</td>
+      <td style="color:var(--danger);">–R$${_fmt(r.inss_desconto||0)}</td>
+      <td style="color:var(--danger);">–R$${_fmt(r.irrf_desconto||0)}</td>
+      <td style="color:var(--ok);font-weight:600;">R$${_fmt(r.valor_liquido||0)}</td>
+      <td>${new Date(venc).toLocaleDateString('pt-BR')}</td>
+      <td><span class="chip ${stCls}">${stLabel}</span>${r.data_pagamento?`<br><span style="font-size:10px;color:var(--muted);">${new Date(r.data_pagamento+'T12:00:00').toLocaleDateString('pt-BR')}</span>`:''}</td>
+      <td>${r.status!=='PAGO'?`<button class="btn btn-accent" style="font-size:11px;padding:4px 10px;" onclick="abrirPagarDecimo('${r.id}',${r.parcela},'${esc(c.nome||'')}',${r.valor_liquido||0})">✓ Pagar</button>`:'<span style="color:var(--ok);font-size:12px;">✓ Pago</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function gerarDecimoAno(){
+  const ano=parseInt($('deciAno')?.value||new Date().getFullYear());
+  if(!confirm(`Gerar/atualizar lançamentos de 13° para todos os colaboradores CLT ativos em ${ano}?`))return;
+  const ativos=(D.CADASTRO_COLABORADORES||[]).filter(r=>r.STATUS==='ATIVO'&&r.TIPO_VINCULO==='CLT');
+  if(!ativos.length){toast('Nenhum colaborador CLT ativo','error');return;}
+  const tenantId=window._sbProfile?.tenant_id;
+  let gerados=0;
+  for(const r of ativos){
+    const sal=parseFloat(r.SALARIO_HONORARIO)||0;
+    if(!sal)continue;
+    const colabId=r._id;if(!colabId)continue;
+    // ávos: meses completos no ano
+    const admissao=r.DATA_ADMISSAO?new Date(r.DATA_ADMISSAO+'T12:00:00'):null;
+    let avos=12;
+    if(admissao&&admissao.getFullYear()===ano){
+      avos=12-admissao.getMonth();
+      if(admissao.getDate()>15)avos--;
+      avos=Math.max(0,Math.min(12,avos));
+    }
+    const bruto=(sal/12)*avos;
+    const inssD=_calcInss(bruto);
+    const iqrf=_calcIrrf(Math.max(bruto-inssD,0),0); // sem dependentes no 13°
+    for(const parcela of [1,2]){
+      const brutoP=parcela===1?bruto/2:bruto/2; // simplificado
+      const inssP=parcela===2?inssD:0;
+      const irrfP=parcela===2?iqrf:0;
+      const liqP=brutoP-inssP-irrfP;
+      try{
+        await window._sb.from('decimo_terceiro').upsert({
+          tenant_id:tenantId,colaborador_id:colabId,ano,parcela,
+          meses_trabalhados:avos,
+          valor_bruto:+brutoP.toFixed(2),
+          inss_desconto:+inssP.toFixed(2),
+          irrf_desconto:+irrfP.toFixed(2),
+          valor_liquido:+liqP.toFixed(2),
+          status:'PENDENTE'
+        },{onConflict:'colaborador_id,ano,parcela',ignoreDuplicates:false});
+        gerados++;
+      }catch(e){console.warn('upsert 13°:',e);}
+    }
+  }
+  toast(`${gerados} lançamentos gerados para ${ano}!`,'success');
+  await loadDecimo();
+}
+
+function abrirPagarDecimo(id,parcela,nome,valor){
+  _deciPagarId=id;
+  $('mDeciPagarInfo').innerHTML=`<strong>${esc(nome)}</strong><br>${parcela}ª parcela · Líquido: <strong>R$${_fmt(valor)}</strong>`;
+  $('deciDataPgto').value=new Date().toISOString().split('T')[0];
+  $('deciObs').value='';
+  openModal('mDeciPagar');
+}
+async function confirmarPagtoDecimo(){
+  const data=$('deciDataPgto').value;
+  if(!data){toast('Informe a data de pagamento','error');return;}
+  try{
+    await window._sb.from('decimo_terceiro').update({
+      status:'PAGO',data_pagamento:data,observacao:$('deciObs').value.trim()||null,
+      atualizado_em:new Date().toISOString()
+    }).eq('id',_deciPagarId);
+    toast('Pagamento registrado!','success');
+    closeModal('mDeciPagar');
+    await loadDecimo();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
 // ══════════════════════════════
 // ONBOARDING AUTOMÁTICO
 // ══════════════════════════════
@@ -5408,6 +5789,22 @@ function renderAcoes(){
 }
 
 function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.menu-link').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');if(el)el.classList.add('active');else{document.querySelectorAll('.menu-link').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'"))t.classList.add('active');});}if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();if(id==='admin')renderAdmin();if(id==='pf')pfInit();if(id==='complian') renderCompliance();if(id==='vg') setTimeout(renderCharts, 50);}
+
+function showSection(id){
+  // Oculta todas as seções .sec e as seções extras (depend, decimo)
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  ['depend','decimo'].forEach(sid=>{const el=$(sid);if(el)el.style.display='none';});
+  document.querySelectorAll('.menu-link').forEach(t=>t.classList.remove('active'));
+  // Mostra a seção solicitada
+  const el=$(id);
+  if(el){el.style.display='';}
+  // Destaca o item de menu ativo
+  document.querySelectorAll('.menu-link').forEach(t=>{
+    if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'"))t.classList.add('active');
+  });
+  if(id==='depend'){initDepSelect();}
+  if(id==='decimo'){initDeciAno();loadDecimo();}
+}
 
 // ── CONTROLE DE ACESSO ──
 function loadCoords(){
