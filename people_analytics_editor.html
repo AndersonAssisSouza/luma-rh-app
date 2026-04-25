@@ -5194,14 +5194,20 @@ async function gerarDecimoAno(){
     const sal=parseFloat(r.SALARIO_HONORARIO)||0;
     if(!sal)continue;
     const colabId=r._id;if(!colabId)continue;
-    // ávos: meses completos no ano
+    // ávos: meses completos trabalhados no ano
     const admissao=r.DATA_ADMISSAO?new Date(r.DATA_ADMISSAO+'T12:00:00'):null;
     let avos=12;
-    if(admissao&&admissao.getFullYear()===ano){
-      avos=12-admissao.getMonth();
-      if(admissao.getDate()>15)avos--;
-      avos=Math.max(0,Math.min(12,avos));
+    if(admissao){
+      if(admissao.getFullYear()>ano){
+        avos=0; // admitido APÓS o ano de referência — sem direito
+      } else if(admissao.getFullYear()===ano){
+        avos=12-admissao.getMonth();
+        if(admissao.getDate()>15)avos--;
+        avos=Math.max(0,Math.min(12,avos));
+      }
+      // admissao.getFullYear() < ano → avos permanece 12
     }
+    if(!avos)continue; // pular colaboradores sem avos no ano
     const bruto=(sal/12)*avos;
     const inssD=_calcInss(bruto);
     const iqrf=_calcIrrf(Math.max(bruto-inssD,0),0); // sem dependentes no 13°
