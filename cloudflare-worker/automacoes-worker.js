@@ -85,6 +85,55 @@ async function enviarEmail(env, to, subject, html) {
   if (!res.ok) console.error('Erro ao enviar email:', await res.text())
 }
 
+async function enviarWebhook(env, webhookUrl, payload) {
+  if (!webhookUrl) return null;
+  try {
+    // Suporta Teams (Adaptive Card) e webhook genérico (JSON simples)
+    const isTeams = webhookUrl.includes('office.com') || webhookUrl.includes('webhook.office') || webhookUrl.includes('logic.azure');
+
+    let body;
+    if (isTeams) {
+      // Microsoft Teams Incoming Webhook — formato Adaptive Card simples
+      body = JSON.stringify({
+        "@type": "MessageCard",
+        "@context": "http://schema.org/extensions",
+        "themeColor": "7c3aed",
+        "summary": payload.titulo || "Alerta LUMA RH",
+        "sections": [{
+          "activityTitle": `🔔 ${payload.titulo || 'Alerta LUMA RH'}`,
+          "activitySubtitle": payload.subtitulo || new Date().toLocaleDateString('pt-BR'),
+          "activityImage": "https://app.lumaplataforma.com.br/favicon.ico",
+          "facts": (payload.itens || []).map(item => ({ "name": item.label, "value": item.valor })),
+          "markdown": true
+        }],
+        "potentialAction": payload.linkUrl ? [{
+          "@type": "OpenUri",
+          "name": "Abrir LUMA RH",
+          "targets": [{ "os": "default", "uri": payload.linkUrl }]
+        }] : []
+      });
+    } else {
+      // Webhook genérico (Z-API WhatsApp, Slack, n8n, etc.)
+      body = JSON.stringify({
+        titulo: payload.titulo,
+        mensagem: payload.mensagem || (payload.itens || []).map(i => `• ${i.label}: ${i.valor}`).join('\n'),
+        timestamp: new Date().toISOString(),
+        sistema: 'LUMA RH'
+      });
+    }
+
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body
+    });
+    return { ok: res.ok, status: res.status };
+  } catch (e) {
+    console.error('enviarWebhook error:', e.message);
+    return { ok: false, error: e.message };
+  }
+}
+
 function emailBase(titulo, corpo, cor = '#9b66f4') {
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f7f7fb;font-family:Inter,system-ui,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
@@ -399,6 +448,145 @@ async function checkFaturas(env, today, alertas) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Automação 5 — Relatório Mensal de RH (dia 1 de cada mês)
+// ─────────────────────────────────────────────────────────────
+async function checkRelatorioMensal(env) {
+  // Só executa no dia 1 de cada mês
+  if (new Date().getDate() !== 1) return { skipped: true, motivo: 'não é dia 1' }
+
+  // Busca dados do tenant
+  const tenants = await sbGet(env, 'tenants', 'select=id,nome,email_admin&status=eq.ATIVO&limit=10')
+  if (!tenants?.length) return { skipped: true, motivo: 'sem tenants' }
+
+  let totalEnviados = 0
+
+  for (const tenant of tenants) {
+    if (!tenant.email_admin) continue
+
+    // Colaboradores ativos
+    const colab = await sbGet(env, 'colaboradores', `tenant_id=eq.${tenant.id}&status=eq.ATIVO&select=id,nome,tipo_vinculo,data_admissao,cargo,area`)
+    const total = colab?.length || 0
+
+    // Distribuição por vínculo
+    const vinculos = {}
+    ;(colab || []).forEach(c => {
+      const v = c.tipo_vinculo || 'N/A'
+      vinculos[v] = (vinculos[v] || 0) + 1
+    })
+
+    // Exames
+    const exames = await sbGet(env, 'exames_ocupacionais', `tenant_id=eq.${tenant.id}&select=status_exame,colaboradores(status)`)
+    const exAtivos = (exames || []).filter(e => e.colaboradores?.status === 'ATIVO')
+    const exVencidos  = exAtivos.filter(e => e.status_exame === 'VENCIDO').length
+    const exPendentes = exAtivos.filter(e => e.status_exame === 'PENDENTE').length
+    const exAgendados = exAtivos.filter(e => e.status_exame === 'AGENDADO' || e.status_exame === 'AGUARDANDO_CONFIRMACAO').length
+    const exOk        = exAtivos.filter(e => e.status_exame === 'EM_DIA').length
+
+    // Férias pendentes
+    const hoje = new Date().toISOString().split('T')[0]
+    const ferias = await sbGet(env, 'ferias_saldo', `tenant_id=eq.${tenant.id}&select=status_ferias,colaboradores(status)`)
+    const ferAtivos  = (ferias || []).filter(f => f.colaboradores?.status === 'ATIVO')
+    const ferNaoProg = ferAtivos.filter(f => !f.status_ferias || f.status_ferias === 'NAO_PROGRAMADA').length
+
+    // Solicitações pendentes
+    const sols = await sbGet(env, 'solicitacoes_ferias', `tenant_id=eq.${tenant.id}&status=eq.PENDENTE&select=id,colaboradores(nome)`)
+    const solsPendentes = sols?.length || 0
+
+    // Desligamentos próximos (30 dias)
+    const d30 = new Date(); d30.setDate(d30.getDate() + 30)
+    const d30str = d30.toISOString().split('T')[0]
+    const desl = await sbGet(env, 'desligamentos_agendados', `tenant_id=eq.${tenant.id}&data_desligamento=gte.${hoje}&data_desligamento=lte.${d30str}&select=data_desligamento,colaboradores(nome,cargo)`)
+    const deslProx = desl?.length || 0
+
+    const mes    = new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+    const mesProx = new Date(new Date().setMonth(new Date().getMonth() + 1)).toLocaleDateString('pt-BR', { month: 'long' })
+
+    const vincHtml = Object.entries(vinculos).map(([v, n]) =>
+      `<tr><td style="padding:6px 12px;color:#6b7280;">${v}</td><td style="padding:6px 12px;text-align:right;font-weight:600;">${n}</td></tr>`
+    ).join('')
+
+    const solsHtml = solsPendentes > 0
+      ? `<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px;margin-top:12px;">
+           ⚠️ <strong>${solsPendentes} solicitação(ões) de férias</strong> aguardando aprovação
+         </div>` : ''
+
+    const deslHtml = deslProx > 0
+      ? `<div style="background:#fee2e2;border:1px solid #ef4444;border-radius:8px;padding:12px;margin-top:8px;">
+           🚨 <strong>${deslProx} desligamento(s)</strong> agendado(s) nos próximos 30 dias
+         </div>` : ''
+
+    const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:24px 0;">
+<tr><td align="center">
+<table width="620" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+
+<tr><td style="background:linear-gradient(135deg,#7c3aed,#5b21b6);padding:32px;">
+  <table width="100%"><tr>
+    <td><div style="font-size:26px;font-weight:700;color:#fff;">📊 Relatório Mensal RH</div>
+    <div style="font-size:13px;color:#c4b5fd;margin-top:4px;">${tenant.nome} · ${mes}</div></td>
+    <td align="right"><div style="font-size:42px;">📋</div></td>
+  </tr></table>
+</td></tr>
+
+<tr><td style="padding:28px;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:8px;margin-bottom:20px;">
+  <tr>
+    <td style="background:#ede9fe;border-radius:10px;padding:16px;text-align:center;width:25%;">
+      <div style="font-size:32px;font-weight:700;color:#7c3aed;">${total}</div>
+      <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Ativos</div>
+    </td>
+    <td style="background:#dcfce7;border-radius:10px;padding:16px;text-align:center;width:25%;">
+      <div style="font-size:32px;font-weight:700;color:#16a34a;">${exOk}</div>
+      <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Exames OK</div>
+    </td>
+    <td style="background:${exVencidos > 0 ? '#fee2e2' : '#f9fafb'};border-radius:10px;padding:16px;text-align:center;width:25%;">
+      <div style="font-size:32px;font-weight:700;color:${exVencidos > 0 ? '#dc2626' : '#9ca3af'};">${exVencidos}</div>
+      <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Ex. Vencidos</div>
+    </td>
+    <td style="background:${ferNaoProg > 0 ? '#fef3c7' : '#f9fafb'};border-radius:10px;padding:16px;text-align:center;width:25%;">
+      <div style="font-size:32px;font-weight:700;color:${ferNaoProg > 0 ? '#d97706' : '#9ca3af'};">${ferNaoProg}</div>
+      <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Férias Pend.</div>
+    </td>
+  </tr></table>
+
+  <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:8px;">👥 Distribuição por Vínculo</div>
+  <table width="100%" style="border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:20px;">
+    ${vincHtml}
+  </table>
+
+  <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:8px;">🏥 Exames Ocupacionais</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+    <span style="background:#dcfce7;color:#16a34a;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;">✅ Em dia: ${exOk}</span>
+    <span style="background:#fef3c7;color:#d97706;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;">📅 Agendados: ${exAgendados}</span>
+    <span style="background:#fee2e2;color:#dc2626;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;">❌ Vencidos: ${exVencidos}</span>
+    <span style="background:#f3f4f6;color:#6b7280;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;">⏳ Pendentes: ${exPendentes}</span>
+  </div>
+
+  ${solsHtml}${deslHtml}
+
+  ${deslProx > 0 ? `<table width="100%" style="border-collapse:collapse;margin-top:8px;font-size:13px;">
+    ${(desl || []).map(d => `<tr><td style="padding:6px 0;color:#374151;">• ${d.colaboradores?.nome || '—'}</td><td style="text-align:right;color:#dc2626;font-weight:600;">${d.data_desligamento}</td></tr>`).join('')}
+  </table>` : ''}
+
+</td></tr>
+
+<tr><td style="background:#f9fafb;padding:16px 28px;border-top:1px solid #e5e7eb;">
+  <span style="font-size:11px;color:#9ca3af;">Relatório automático · LUMA RH · ${new Date().toLocaleDateString('pt-BR')} · Próximo: 1° de ${mesProx}</span>
+</td></tr>
+
+</table></td></tr></table>
+</body></html>`
+
+    await enviarEmail(env, tenant.email_admin, `📊 Relatório Mensal RH — ${tenant.nome} · ${mes}`, html)
+    await logEvento(env, 'RELATORIO_MENSAL', `Relatório de ${mes} enviado para ${tenant.email_admin}`, { tenant_id: tenant.id, total, exVencidos, ferNaoProg, solsPendentes, deslProx })
+    totalEnviados++
+  }
+
+  return { ok: true, tenants: totalEnviados, mes: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) }
+}
+
+// ─────────────────────────────────────────────────────────────
 // Orquestrador principal
 // ─────────────────────────────────────────────────────────────
 async function runAutomations(env) {
@@ -406,13 +594,22 @@ async function runAutomations(env) {
   const alertas = []
   const erros   = []
 
+  // Carregar configurações de webhook
+  const settingsWebhook = await sbGet(env, 'platform_settings', 'chave=eq.notificacoes&select=valor').catch(() => null)
+  const cfgWebhook = settingsWebhook?.[0]?.valor || {}
+  const webhookUrl = cfgWebhook.webhookUrl || cfgWebhook.webhook_url || ''
+
   console.log(`[LUMA Automações] Iniciando — ${today}`)
 
+  // Contadores para o resumo do webhook
+  const contadores = { desligamentos: 0, examesUrgentes: 0, feriasUrgentes: 0, faturasVencidas: 0 }
+
   const checks = [
-    ['Desligamentos', () => checkDesligamentos(env, today, alertas)],
-    ['Exames',        () => checkExames(env, today, alertas)],
-    ['Férias',        () => checkFerias(env, today, alertas)],
-    ['Faturas',       () => checkFaturas(env, today, alertas)],
+    ['Desligamentos',     () => checkDesligamentos(env, today, alertas)],
+    ['Exames',            () => checkExames(env, today, alertas)],
+    ['Férias',            () => checkFerias(env, today, alertas)],
+    ['Faturas',           () => checkFaturas(env, today, alertas)],
+    ['RelatorioMensal',   () => checkRelatorioMensal(env)],
   ]
 
   for (const [nome, fn] of checks) {
@@ -422,6 +619,37 @@ async function runAutomations(env) {
     } catch (e) {
       console.error(`  ✗ ${nome}:`, e.message)
       erros.push(`${nome}: ${e.message}`)
+    }
+  }
+
+  // Extrair contadores a partir dos alertas registrados
+  for (const a of alertas) {
+    const mDesl = a.match(/^Desligamentos:.*?(\d+)\s+aviso/)
+    if (mDesl) contadores.desligamentos += parseInt(mDesl[1])
+    const mExame = a.match(/^Exames:.*?(\d+)\s+pendente/)
+    if (mExame) contadores.examesUrgentes += parseInt(mExame[1])
+    const mFerias = a.match(/^Férias:.*?(\d+)\s+alerta/)
+    if (mFerias) contadores.feriasUrgentes += parseInt(mFerias[1])
+    const mFat = a.match(/^Faturas vencidas:\s*(\d+)/)
+    if (mFat) contadores.faturasVencidas += parseInt(mFat[1])
+  }
+
+  // ── Webhook summary (se configurado) ──
+  if (webhookUrl) {
+    const alertasCrit = []
+    if (contadores.desligamentos > 0)  alertasCrit.push({ label: '🚨 Desligamentos próximos',    valor: `${contadores.desligamentos} nos próximos 7 dias` })
+    if (contadores.examesUrgentes > 0) alertasCrit.push({ label: '🏥 Exames vencidos/urgentes',  valor: `${contadores.examesUrgentes} colaboradores` })
+    if (contadores.feriasUrgentes > 0) alertasCrit.push({ label: '🌴 Férias no prazo concessivo', valor: `${contadores.feriasUrgentes} colaboradores` })
+    if (contadores.faturasVencidas > 0) alertasCrit.push({ label: '💰 Faturas vencidas',          valor: `${contadores.faturasVencidas} pendentes` })
+
+    if (alertasCrit.length > 0) {
+      await enviarWebhook(env, webhookUrl, {
+        titulo: `⚠️ LUMA RH — ${alertasCrit.length} alerta(s) do dia`,
+        subtitulo: new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }),
+        itens: alertasCrit,
+        linkUrl: 'https://app.lumaplataforma.com.br/people_analytics_editor.html',
+        mensagem: alertasCrit.map(a => `${a.label}: ${a.valor}`).join('\n')
+      }).catch(e => console.error('Erro ao enviar webhook:', e.message))
     }
   }
 

@@ -1360,6 +1360,11 @@ tbody tr.clickable:hover td{background:var(--surface-2)}
                 <label style="font-size:12px;font-weight:600;color:var(--ink-3);display:block;margin-bottom:6px">E-mail para receber alertas</label>
                 <input id="not-email" type="email" placeholder="admin@lumaplataforma.com.br" style="width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:14px">
               </div>
+              <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+                <label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px;">🔗 Webhook de alertas (Teams / WhatsApp / Slack)</label>
+                <input type="url" id="cfg-webhook-url" class="fi" placeholder="https://outlook.office.com/webhook/... ou https://api.z-api.io/..." style="margin-bottom:6px;">
+                <div style="font-size:11px;color:var(--muted);line-height:1.6;">Suporta Microsoft Teams (Incoming Webhook), Z-API (WhatsApp), Slack e qualquer webhook JSON. Deixe em branco para desativar.</div>
+              </div>
             </div>
             <div style="margin-top:6px">
               <button class="btn btn-primary" onclick="cfgSalvarNotificacoes()">Salvar notificações</button>
@@ -1834,6 +1839,7 @@ async function cfgCarregarNotificacoes() {
   if (f('not-fat-venc'))    f('not-fat-venc').checked    = not.fatura_vencida ?? true
   if (f('not-trial-exp'))   f('not-trial-exp').checked   = not.trial_expirando ?? true
   if (f('not-email'))       f('not-email').value          = not.email_alerta ?? ''
+  if ($('cfg-webhook-url')) $('cfg-webhook-url').value   = not.webhookUrl || ''
 }
 
 window.cfgSalvarPoliticas = async function() {
@@ -1854,7 +1860,8 @@ window.cfgSalvarNotificacoes = async function() {
     novo_tenant:     $('not-novo-tenant')?.checked ?? true,
     fatura_vencida:  $('not-fat-venc')?.checked    ?? true,
     trial_expirando: $('not-trial-exp')?.checked   ?? true,
-    email_alerta:    $('not-email')?.value.trim()  || ''
+    email_alerta:    $('not-email')?.value.trim()  || '',
+    webhookUrl:      $('cfg-webhook-url')?.value?.trim() || ''
   }
   const { error } = await sb.from('platform_settings')
     .upsert({ chave:'notificacoes', valor:not, atualizado_em:new Date().toISOString(), atualizado_por: window._sbProfile?.email||'' }, { onConflict:'chave' })

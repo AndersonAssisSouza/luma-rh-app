@@ -144,6 +144,7 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
     <div class="ndot" id="ndot"></div>
     <div class="navatar" id="nav-av">?</div>
     <span class="nname" id="nav-nome"></span>
+    <button class="btn btn-outline" onclick="togglePerfil()" id="btn-perfil" style="font-size:12px;padding:5px 12px;">👤 Perfil</button>
     <button class="btn btn-outline" onclick="window._sbLogout&&_sbLogout()" style="font-size:12px;padding:5px 12px;">Sair</button>
   </div>
 </nav>
@@ -230,6 +231,61 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
     </div><!-- /portal-col-right -->
   </div><!-- /portal-cols -->
 </div><!-- /main -->
+
+<!-- PAINEL PERFIL -->
+<div id="painel-perfil" style="display:none;position:fixed;top:64px;right:0;width:360px;height:calc(100vh - 64px);background:var(--bg2);border-left:1px solid var(--border2);z-index:200;overflow-y:auto;padding:20px;box-shadow:-6px 0 20px rgba(0,0,0,.2);">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div style="font-size:16px;font-weight:600;">Meu Perfil</div>
+    <button class="btn btn-outline" onclick="togglePerfil()" style="font-size:12px;padding:4px 10px;">✕</button>
+  </div>
+
+  <!-- Avatar -->
+  <div style="text-align:center;margin-bottom:20px;">
+    <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--gold-dark));display:inline-flex;align-items:center;justify-content:center;font-size:28px;font-weight:600;color:#fff;margin-bottom:8px;" id="pf-avatar">?</div>
+    <div style="font-size:16px;font-weight:600;" id="pf-nome-topo">—</div>
+    <div style="font-size:12px;color:var(--muted);" id="pf-cargo-topo">—</div>
+  </div>
+
+  <!-- Informações do colaborador (somente leitura) -->
+  <div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:16px;">
+    <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Dados profissionais</div>
+    <div id="pf-dados-prof"></div>
+  </div>
+
+  <!-- Dados editáveis -->
+  <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Dados pessoais (editável)</div>
+  <div class="fgrp" style="margin-bottom:10px;">
+    <label class="flbl" style="font-size:11px;">Telefone / WhatsApp</label>
+    <input class="fi" id="pf-telefone" type="tel" placeholder="(11) 99999-9999">
+  </div>
+  <div class="fgrp" style="margin-bottom:10px;">
+    <label class="flbl" style="font-size:11px;">E-mail pessoal</label>
+    <input class="fi" id="pf-email-pessoal" type="email" placeholder="seuemail@pessoal.com">
+  </div>
+  <div class="fgrp" style="margin-bottom:10px;">
+    <label class="flbl" style="font-size:11px;">Endereço</label>
+    <input class="fi" id="pf-endereco" placeholder="Rua, número, bairro, cidade">
+  </div>
+  <div class="fgrp" style="margin-bottom:16px;">
+    <label class="flbl" style="font-size:11px;">Contato de emergência</label>
+    <input class="fi" id="pf-emergencia" placeholder="Nome e telefone">
+  </div>
+
+  <button class="btn btn-accent btn-full" id="btn-salvar-pf" onclick="salvarPerfil()">Salvar alterações</button>
+
+  <!-- Alterar senha -->
+  <div style="height:1px;background:var(--border);margin:20px 0;"></div>
+  <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Alterar senha</div>
+  <div class="fgrp" style="margin-bottom:8px;">
+    <label class="flbl" style="font-size:11px;">Nova senha</label>
+    <input class="fi" id="pf-nova-senha" type="password" placeholder="Mínimo 8 caracteres">
+  </div>
+  <div class="fgrp" style="margin-bottom:12px;">
+    <label class="flbl" style="font-size:11px;">Confirmar nova senha</label>
+    <input class="fi" id="pf-conf-senha" type="password" placeholder="Repita a nova senha">
+  </div>
+  <button class="btn btn-full" onclick="alterarSenha()" style="border-color:var(--accent);color:var(--accent);">🔒 Alterar senha</button>
+</div>
 </div><!-- /app -->
 
 <!-- GESTOR -->
@@ -865,6 +921,86 @@ async function rhConfirmarRej(){
     $('modal-rh-rej').style.display='none';
     toast('Solicitação rejeitada','error');renderRhList();
   }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+// ── PAINEL PERFIL ──
+let _perfilAberto=false;
+
+function togglePerfil(){
+  _perfilAberto=!_perfilAberto;
+  $('painel-perfil').style.display=_perfilAberto?'block':'none';
+  if(_perfilAberto)carregarPerfil();
+}
+
+function carregarPerfil(){
+  const profile=window._sbProfile||{};
+  const cad=UCOLAB?.cad||{};
+  const nome=UCOLAB?.nome||profile.nome||profile.email||'—';
+  const inicial=(nome[0]||'?').toUpperCase();
+
+  $('pf-avatar').textContent=inicial;
+  $('pf-nome-topo').textContent=nome;
+  $('pf-cargo-topo').textContent=[cad.CARGO,cad.AREA,cad.EMPRESA].filter(Boolean).join(' · ')||profile.role||'—';
+
+  // Dados profissionais (read-only)
+  const campos=[
+    ['Matrícula',cad.ID_COLABORADOR||'—'],
+    ['Vínculo',cad.TIPO_VINCULO||'—'],
+    ['Admissão',cad.DATA_ADMISSAO?fD(cad.DATA_ADMISSAO):'—'],
+    ['Gestor',cad.GESTOR||'—'],
+    ['E-mail corporativo',UCOLAB?.email||profile.email||'—'],
+  ];
+  $('pf-dados-prof').innerHTML=campos.map(([l,v])=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:12px;color:var(--muted);">${esc(l)}</span>
+      <span style="font-size:12px;font-weight:500;">${esc(v)}</span>
+    </div>`).join('');
+
+  // Carrega dados editáveis do localStorage (fallback até ter campo no Supabase)
+  const saved=JSON.parse(localStorage.getItem('luma_perfil_'+profile.id)||'{}');
+  $('pf-telefone').value=saved.telefone||cad.TELEFONE||'';
+  $('pf-email-pessoal').value=saved.email_pessoal||'';
+  $('pf-endereco').value=saved.endereco||cad.ENDERECO||'';
+  $('pf-emergencia').value=saved.emergencia||'';
+}
+
+async function salvarPerfil(){
+  const profile=window._sbProfile||{};
+  const dados={
+    telefone:$('pf-telefone').value.trim(),
+    email_pessoal:$('pf-email-pessoal').value.trim(),
+    endereco:$('pf-endereco').value.trim(),
+    emergencia:$('pf-emergencia').value.trim()
+  };
+  // Salva localmente
+  localStorage.setItem('luma_perfil_'+profile.id,JSON.stringify(dados));
+  // Tenta salvar no Supabase se UCOLAB tiver id
+  if(window._sbFnsPortal&&UCOLAB?.cad?.id){
+    try{
+      // Atualiza campos extras no colaborador via updateColaborador (se a função existir)
+      if(window._sbFnsPortal.updateColaborador){
+        await window._sbFnsPortal.updateColaborador(UCOLAB.cad.id,{
+          ...(dados.telefone?{telefone:dados.telefone}:{}),
+          ...(dados.endereco?{endereco:dados.endereco}:{}),
+        });
+      }
+    }catch(e){console.warn('salvarPerfil Supabase:',e);}
+  }
+  toast('Perfil atualizado!','success');
+}
+
+async function alterarSenha(){
+  const nova=$('pf-nova-senha').value;
+  const conf=$('pf-conf-senha').value;
+  if(!nova||nova.length<8){toast('Senha deve ter mínimo 8 caracteres','error');return;}
+  if(nova!==conf){toast('Senhas não conferem','error');return;}
+  try{
+    if(!window._sb)throw new Error('Cliente Supabase não disponível');
+    const{error}=await window._sb.auth.updateUser({password:nova});
+    if(error)throw error;
+    $('pf-nova-senha').value='';$('pf-conf-senha').value='';
+    toast('Senha alterada com sucesso!','success');
+  }catch(e){toast('Erro ao alterar senha: '+e.message,'error');}
 }
 
 // ── EVENT LISTENERS ──
