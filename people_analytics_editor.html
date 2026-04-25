@@ -11,6 +11,7 @@
 <script src="./msal-browser.min.js"></script>
 <!-- Supabase Auth Guard + Data Layer -->
 <script type="module" src="./people_analytics_editor.js?v=20260424"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -306,7 +307,9 @@ nav.legacy{display:none!important;}
     <li class="menu-item"><button class="menu-link" onclick="showTab('ex',this)"><span class="menu-icon">🩺</span>Exames</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('aus',this)"><span class="menu-icon">📋</span>Ausências</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('alert',this)"><span class="menu-icon">🔔</span>Alertas</button></li>
+    <li class="menu-item"><button class="menu-link" onclick="showTab('complian')"><span class="menu-icon">✅</span>Compliance</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('desl',this)"><span class="menu-icon">🚪</span>Desligados</button></li>
+    <li class="menu-item"><button class="menu-link" onclick="openRescisao()"><span class="menu-icon">🧮</span>Rescisão CLT</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('acoes',this)"><span class="menu-icon">⚡</span>Ações</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('pf',this)"><span class="menu-icon">📅</span>Portal Férias</button></li>
     <div class="sidebar-sep"></div>
@@ -458,13 +461,46 @@ nav.legacy{display:none!important;}
     </div>
   </div>
 
+  <!-- Charts row -->
+  <div class="g2" style="margin-top:16px;">
+    <div class="card">
+      <div class="ct">Distribuição por Vínculo</div>
+      <div style="position:relative;height:220px;display:flex;align-items:center;justify-content:center;">
+        <canvas id="chartVinculo"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Distribuição por Área</div>
+      <div style="position:relative;height:220px;">
+        <canvas id="chartArea"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="g2" style="margin-top:0;">
+    <div class="card">
+      <div class="ct">Status Exames (colaboradores ativos)</div>
+      <div style="position:relative;height:200px;">
+        <canvas id="chartExames"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct">Admissões por mês (últimos 12 meses)</div>
+      <div style="position:relative;height:200px;">
+        <canvas id="chartAdmissoes"></canvas>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- PESSOAL -->
 <div class="sec" id="ps">
   <div class="sttl">
     <div class="sttl-l"><div class="sdot" style="background:var(--accent)"></div>Gestão de Pessoal</div>
-    <button class="btn btn-g" onclick="openModal('mNewColab')">+ Novo colaborador</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-nav" onclick="openModal('mImportCSV')">⬆ Importar CSV</button>
+      <button class="btn btn-g" onclick="openModal('mNewColab')">+ Novo colaborador</button>
+    </div>
   </div>
   <div class="kg">
     <div class="kpi"><div class="kl">Total ativos</div><div class="kv" style="color:var(--accent)" id="pAtivos">—</div><div class="ks" id="pEmpr">—</div><div class="kbar" style="background:var(--accent)"></div></div>
@@ -571,6 +607,7 @@ nav.legacy{display:none!important;}
         <option value="">Todos os tipos</option>
         <option>Atestado</option><option>Falta</option><option>Licença</option>
         <option>Afastamento INSS</option><option>Atraso</option><option>Saída antecipada</option>
+        <option>Day Off</option><option>Compensação de horas</option><option>Liberação da empresa</option>
       </select>
       <button class="btn-nav" onclick="exportTableCSV('ausBody','ausencias_')" style="margin-left:auto;">⬇ CSV</button>
     </div>
@@ -632,6 +669,54 @@ nav.legacy{display:none!important;}
       <th onclick="sortTable('dBody',5,this)">Desligamento</th>
       <th onclick="sortTable('dBody',6,this)">Tempo</th>
     </tr></thead><tbody id="dBody"></tbody></table></div>
+  </div>
+</div>
+
+<!-- COMPLIANCE -->
+<div class="sec" id="complian">
+  <div class="sttl">
+    <div class="sttl-l"><div class="sdot" style="background:#16a34a"></div>Compliance RH</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn-nav" onclick="exportTableCSV('complBody','compliance_')">⬇ CSV</button>
+      <button class="btn-nav" onclick="renderCompliance()">↻ Atualizar</button>
+    </div>
+  </div>
+  <div class="kg" id="complKpis">
+    <div class="kpi"><div class="kl">Conformes</div><div class="kv" style="color:#16a34a" id="ckOk">—</div><div class="ks">todas categorias OK</div><div class="kbar" style="background:#16a34a"></div></div>
+    <div class="kpi"><div class="kl">Atenção</div><div class="kv" style="color:var(--warn)" id="ckWarn">—</div><div class="ks">1+ categoria pendente</div><div class="kbar" style="background:var(--warn)"></div></div>
+    <div class="kpi"><div class="kl">Crítico</div><div class="kv" style="color:var(--danger)" id="ckCrit">—</div><div class="ks">2+ categorias críticas</div><div class="kbar" style="background:var(--danger)"></div></div>
+    <div class="kpi"><div class="kl">Score médio</div><div class="kv" style="color:var(--accent)" id="ckScore">—</div><div class="ks">% conformidade geral</div><div class="kbar" style="background:var(--accent)"></div></div>
+  </div>
+  <div class="card">
+    <div class="ct" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      Status por colaborador
+      <input id="complSearch" placeholder="🔍 Buscar..." oninput="filterTable('complBody',this.value)"
+        style="padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--font);font-size:13px;width:180px;outline:none;margin-left:auto;">
+      <select id="complFiltro" onchange="renderCompliance()" style="padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;">
+        <option value="">Todos</option>
+        <option value="critico">Apenas críticos</option>
+        <option value="atencao">Atenção</option>
+        <option value="ok">Conformes</option>
+      </select>
+    </div>
+    <div class="sy">
+    <table class="tbl">
+      <thead><tr>
+        <th onclick="sortTable('complBody',0,this)">Colaborador</th>
+        <th onclick="sortTable('complBody',1,this)">Vínculo</th>
+        <th style="text-align:center;">Exame</th>
+        <th style="text-align:center;">Férias</th>
+        <th style="text-align:center;">Contrato</th>
+        <th style="text-align:center;">Cadastro</th>
+        <th onclick="sortTable('complBody',4,this)" style="text-align:center;">Score</th>
+      </tr></thead>
+      <tbody id="complBody"></tbody>
+    </table>
+    </div>
+  </div>
+  <div style="margin-top:10px;padding:10px 14px;background:rgba(124,58,237,.05);border:1px solid rgba(124,58,237,.15);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.8;">
+    <strong style="color:var(--text);">Legenda:</strong> &nbsp;
+    ✅ Conforme &nbsp;|&nbsp; ⚠️ Atenção (vence em 30 dias / pendência) &nbsp;|&nbsp; ❌ Crítico (vencido / ausente) &nbsp;|&nbsp; — Não aplicável
   </div>
 </div>
 
@@ -1349,6 +1434,7 @@ nav.legacy{display:none!important;}
             <option value="LICENCA">Licença</option>
             <option value="DAYOFF">Day Off</option>
             <option value="COMPENSACAO">Compensação de horas</option>
+            <option value="LIBERACAO">Liberação da empresa</option>
           </select>
         </div>
         <div class="fgrp"><div class="flbl">Colaborador <span class="rq">*</span></div><select class="fsel" id="ausColab"></select></div>
@@ -1529,6 +1615,172 @@ nav.legacy{display:none!important;}
   </div>
 </div>
 
+<!-- MODAL RESCISÃO CLT -->
+<div class="ov" id="mRescisao">
+<div class="modal" style="max-width:600px;">
+  <div class="mh"><div><div class="mt">🧮 Rescisão CLT</div><div class="ms" style="font-size:13px;color:var(--muted);">Cálculo orientativo — consulte o DP para valores exatos</div></div><button class="mc" onclick="closeModal('mRescisao')">✕</button></div>
+  <div class="mb">
+    <div class="fg" style="margin-bottom:16px;">
+      <div class="fgrp">
+        <label class="flbl">Colaborador</label>
+        <select class="fsel" id="rColabSel" onchange="preencherRescisao()">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Tipo de desligamento</label>
+        <select class="fsel" id="rTipo" onchange="calcRescisao()">
+          <option value="SEM_JUSTA_CAUSA">Sem justa causa (empresa)</option>
+          <option value="PEDIDO_DEMISSAO">Pedido de demissão (colaborador)</option>
+          <option value="JUSTA_CAUSA">Justa causa</option>
+          <option value="ACORDO">Acordo mútuo (§1° Art. 484-A)</option>
+          <option value="FIM_CONTRATO">Término de contrato</option>
+        </select>
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Data de admissão</label>
+        <input class="fi" type="date" id="rAdmissao" onchange="calcRescisao()">
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Data de desligamento</label>
+        <input class="fi" type="date" id="rDesligamento" onchange="calcRescisao()" value="">
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Salário bruto (R$)</label>
+        <input class="fi" type="number" id="rSalario" step="0.01" min="0" placeholder="5000.00" oninput="calcRescisao()">
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Aviso prévio</label>
+        <select class="fsel" id="rAviso" onchange="calcRescisao()">
+          <option value="TRABALHADO">Trabalhado</option>
+          <option value="INDENIZADO">Indenizado (não trabalhado)</option>
+          <option value="DISPENSADO">Dispensado pelo empregado</option>
+        </select>
+      </div>
+      <div class="fgrp">
+        <label class="flbl">Saldo de férias gozadas (dias)</label>
+        <input class="fi" type="number" id="rFeriasGoz" min="0" max="30" value="0" oninput="calcRescisao()">
+      </div>
+      <div class="fgrp">
+        <label class="flbl">% FGTS já depositado no mês</label>
+        <input class="fi" type="number" id="rFGTSmes" min="0" max="100" value="0" step="0.01" placeholder="0" oninput="calcRescisao()">
+      </div>
+    </div>
+
+    <div id="rResultado" style="display:none;">
+      <div style="height:1px;background:var(--border);margin:4px 0 16px;"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Resultado do Cálculo</div>
+      <div id="rInfo" style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;color:var(--muted);line-height:1.8;"></div>
+      <table style="width:100%;border-collapse:collapse;font-size:13px;" id="rTabela">
+        <thead><tr style="border-bottom:2px solid var(--border);">
+          <th style="text-align:left;padding:8px 4px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Verba</th>
+          <th style="text-align:center;padding:8px 4px;color:var(--muted);font-size:11px;text-transform:uppercase;">Direito</th>
+          <th style="text-align:right;padding:8px 4px;color:var(--muted);font-size:11px;text-transform:uppercase;">Valor (R$)</th>
+        </tr></thead>
+        <tbody id="rVerbas"></tbody>
+        <tfoot><tr style="border-top:2px solid var(--border);">
+          <td colspan="2" style="padding:10px 4px;font-weight:700;font-size:14px;">TOTAL LÍQUIDO ESTIMADO</td>
+          <td style="text-align:right;padding:10px 4px;font-weight:700;font-size:16px;color:var(--accent);" id="rTotal">R$ 0,00</td>
+        </tr></tfoot>
+      </table>
+      <div style="margin-top:10px;padding:10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.7;" id="rObs"></div>
+    </div>
+  </div>
+  <div class="mf">
+    <button class="btn" onclick="exportRescisaoCSV()">⬇ Exportar</button>
+    <button class="btn btn-a" onclick="closeModal('mRescisao')">Fechar</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL ONBOARDING -->
+<div class="ov" id="mOnboarding">
+<div class="modal" style="max-width:440px;">
+  <div class="mh">
+    <div><div class="mt">🎉 Onboarding automático</div><div class="ms" style="font-size:13px;color:var(--muted);">Criar acesso ao sistema</div></div>
+    <button class="mc" onclick="closeModal('mOnboarding')">✕</button>
+  </div>
+  <div class="mb" style="gap:12px;">
+    <div style="background:rgba(124,58,237,.06);border:1px solid rgba(124,58,237,.2);border-radius:10px;padding:14px;font-size:13px;line-height:1.7;">
+      Deseja criar o acesso ao sistema para <strong id="modal-onboarding-nome">—</strong>?<br>
+      Um e-mail de boas-vindas será enviado para <strong id="modal-onboarding-email" style="color:var(--accent);">—</strong> com as instruções de login.
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;font-size:12px;color:var(--muted);line-height:1.8;">
+      <strong style="color:var(--text);">O que será criado:</strong><br>
+      ✅ Conta de acesso com senha temporária<br>
+      ✅ E-mail de boas-vindas com link de primeiro acesso<br>
+      ✅ Perfil com role <span style="font-family:var(--mono);background:var(--bg2);padding:1px 5px;border-radius:3px;">colaborador</span>
+    </div>
+    <div id="onboarding-status" style="display:none;padding:10px;border-radius:8px;font-size:13px;"></div>
+  </div>
+  <div class="mf">
+    <button class="btn" onclick="closeModal('mOnboarding')">Pular</button>
+    <button class="btn btn-a" id="btn-onboarding-confirm" onclick="confirmarOnboarding()">✓ Criar acesso e enviar e-mail</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL IMPORT CSV -->
+<div class="ov" id="mImportCSV">
+<div class="modal" style="max-width:700px;">
+  <div class="mh">
+    <div><div class="mt">⬆ Importar Colaboradores via CSV</div><div class="ms" style="font-size:13px;color:var(--muted);">Upload em massa de cadastros</div></div>
+    <button class="mc" onclick="closeModal('mImportCSV')">✕</button>
+  </div>
+  <div class="mb" style="gap:14px;">
+    <!-- Step 1: Upload -->
+    <div id="csv-step1">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.7;">
+        Faça upload de um arquivo <strong>.csv</strong> com as colunas abaixo. A primeira linha deve ser o cabeçalho.<br>
+        Colaboradores com mesmo e-mail serão atualizados (upsert).
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px;font-family:var(--mono);color:var(--muted);line-height:1.8;">
+        nome*, email_corporativo*, tipo_vinculo*, cargo, area, setor, gestor, gestor_email, empresa, data_admissao, data_nascimento, salario_honorario, vale_refeicao, vale_transporte, plano_saude
+      </div>
+      <div style="text-align:right;margin-bottom:10px;">
+        <button class="btn-nav" onclick="baixarModeloCSV()" style="font-size:12px;">⬇ Baixar modelo CSV</button>
+      </div>
+      <label style="display:block;border:2px dashed var(--border2);border-radius:10px;padding:32px;text-align:center;cursor:pointer;color:var(--muted);font-size:13px;transition:all .2s;" id="csv-drop-area" ondragover="csvDragOver(event)" ondrop="csvDrop(event)" ondragleave="csvDragLeave(event)">
+        <input type="file" id="csv-file-input" accept=".csv" style="display:none;" onchange="csvFileSelected(this)">
+        <div style="font-size:32px;margin-bottom:8px;">📂</div>
+        <div>Arraste o CSV aqui ou <span style="color:var(--accent);text-decoration:underline;" onclick="$('csv-file-input').click()">clique para selecionar</span></div>
+      </label>
+    </div>
+
+    <!-- Step 2: Preview -->
+    <div id="csv-step2" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;" id="csv-preview-title">—</div>
+          <div style="font-size:12px;color:var(--muted);" id="csv-preview-sub">—</div>
+        </div>
+        <button class="btn-nav" onclick="csvVoltarStep1()" style="font-size:12px;">← Trocar arquivo</button>
+      </div>
+      <div id="csv-erros" style="display:none;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--danger);"></div>
+      <div class="sy" style="max-height:300px;">
+        <table class="tbl" id="csv-preview-table">
+          <thead id="csv-preview-thead"></thead>
+          <tbody id="csv-preview-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div id="csv-progress" style="display:none;">
+      <div style="font-size:14px;font-weight:500;margin-bottom:8px;" id="csv-progress-msg">Importando...</div>
+      <div style="background:var(--bg3);border-radius:4px;height:8px;overflow:hidden;">
+        <div id="csv-progress-bar" style="height:100%;background:var(--accent);border-radius:4px;width:0%;transition:width .3s;"></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px;" id="csv-progress-detail">0 / 0</div>
+    </div>
+  </div>
+  <div class="mf">
+    <button class="btn" onclick="closeModal('mImportCSV')">Cancelar</button>
+    <button class="btn btn-a" id="btn-csv-import" style="display:none;" onclick="executarImportCSV()">✓ Importar <span id="csv-import-count">0</span> colaboradores</button>
+  </div>
+</div>
+</div>
+
 <div class="tc" id="tc"></div>
 
 <script>
@@ -1693,6 +1945,7 @@ async function loadAll(){
     await syncCoordsFromSb().catch(()=>{});
     detectRole();
     render();
+    renderCharts();
     $('sLoad').classList.add('hidden');$('app').style.display='block';
     const dot=$('ndot');dot.classList.add('live');dot.title='Ao vivo · '+new Date().toLocaleTimeString('pt-BR');
     if(erros.length>0)toast(`Aviso: ${erros.join(', ')} não carregado(s)`,'info');
@@ -2651,6 +2904,15 @@ async function saveNewColab(){
       await window._sbFns.updateProfileRoleByEmail(sbRow.email_corporativo,_coord?_coord.role:'colaborador').catch(()=>{});
     }
     toast(`${nome} admitido! ID: ${newId}`,'success');await loadAll();
+    // Onboarding automático: criar usuário Supabase Auth se tiver email
+    const emailColab = $('nEmail')?.value?.trim() || sbRow?.email_corporativo || '';
+    const nomeColab = $('nNome')?.value?.trim() || sbRow?.nome || nome || '';
+    if (emailColab && window._sbProfile?.tenant_id) {
+      _onboardingPendente = { email: emailColab, nome: nomeColab, tenantId: window._sbProfile.tenant_id };
+      $('modal-onboarding-email').textContent = emailColab;
+      $('modal-onboarding-nome').textContent = nomeColab;
+      openModal('mOnboarding');
+    }
   }catch(e){toast('Erro: '+e.message,'error');}
 }
 
@@ -4326,6 +4588,609 @@ function filtrarColab(q){
 }
 
 // ══════════════════════════════
+// CHARTS — DASHBOARD
+// ══════════════════════════════
+let _charts = {}
+
+function destroyChart(id) {
+  if (_charts[id]) { _charts[id].destroy(); delete _charts[id]; }
+}
+
+function renderCharts() {
+  const ativos = (D.CADASTRO_COLABORADORES || []).filter(r => String(r.STATUS || '').trim().toUpperCase() === 'ATIVO')
+  if (!ativos.length) return
+
+  // Paleta
+  const COLORS = ['#7c3aed','#f59e0b','#10b981','#3b82f6','#ef4444','#8b5cf6','#ec4899','#14b8a6']
+  const opts = (title) => ({
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'right', labels: { font: { size: 11, family: 'Inter,DM Sans,sans-serif' }, padding: 10, boxWidth: 12 } }, title: { display: false } }
+  })
+
+  // ── Gráfico 1: Vínculo ──
+  const vincCount = {}
+  ativos.forEach(r => { const v = String(r.TIPO_VINCULO || 'N/A').trim(); vincCount[v] = (vincCount[v] || 0) + 1 })
+  destroyChart('chartVinculo')
+  const cvEl = document.getElementById('chartVinculo')
+  if (cvEl) {
+    _charts['chartVinculo'] = new Chart(cvEl, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(vincCount),
+        datasets: [{ data: Object.values(vincCount), backgroundColor: COLORS, borderWidth: 2, borderColor: '#fff' }]
+      },
+      options: { ...opts(), cutout: '60%', plugins: { ...opts().plugins, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} (${Math.round(ctx.raw/ativos.length*100)}%)` } } } }
+    })
+  }
+
+  // ── Gráfico 2: Área ──
+  const areaCount = {}
+  ativos.forEach(r => { const a = String(r.AREA || 'Sem área').trim() || 'Sem área'; areaCount[a] = (areaCount[a] || 0) + 1 })
+  const areasSorted = Object.entries(areaCount).sort((a,b) => b[1]-a[1]).slice(0, 8)
+  destroyChart('chartArea')
+  const caEl = document.getElementById('chartArea')
+  if (caEl) {
+    _charts['chartArea'] = new Chart(caEl, {
+      type: 'bar',
+      data: {
+        labels: areasSorted.map(([k]) => k),
+        datasets: [{ label: 'Colaboradores', data: areasSorted.map(([,v]) => v), backgroundColor: '#7c3aed', borderRadius: 5, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 }, stepSize: 1 } }, y: { grid: { display: false }, ticks: { font: { size: 11 } } } }
+      }
+    })
+  }
+
+  // ── Gráfico 3: Status Exames ──
+  const exAtivos = (D.EXAMES_OCUPACIONAIS || []).filter(e => {
+    const colab = ativos.find(c => c.ID_COLABORADOR === e.ID_COLABORADOR || c.NOME === e.NOME)
+    return !!colab
+  })
+  const exStatus = { 'EM_DIA': 0, 'AGENDADO': 0, 'AGUARDANDO_CONFIRMACAO': 0, 'PENDENTE': 0, 'VENCIDO': 0, 'INATIVO': 0 }
+  exAtivos.forEach(e => { const s = String(e.STATUS_EXAME || 'PENDENTE').trim(); if (exStatus.hasOwnProperty(s)) exStatus[s]++ })
+  const exLabels = ['Em dia','Agendado','Aguard. conf.','Pendente','Vencido','Inativo']
+  const exColors = ['#10b981','#3b82f6','#f59e0b','#9ca3af','#ef4444','#d1d5db']
+  destroyChart('chartExames')
+  const ceEl = document.getElementById('chartExames')
+  if (ceEl) {
+    _charts['chartExames'] = new Chart(ceEl, {
+      type: 'bar',
+      data: {
+        labels: exLabels,
+        datasets: [{ data: Object.values(exStatus), backgroundColor: exColors, borderRadius: 5, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false }, ticks: { font: { size: 11 } } }, y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 }, stepSize: 1 } } }
+      }
+    })
+  }
+
+  // ── Gráfico 4: Admissões por mês ──
+  const hoje = new Date(); hoje.setHours(0,0,0,0)
+  const mesesLabels = [], mesesData = []
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1)
+    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
+    mesesLabels.push(d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}))
+    const count = (D.CADASTRO_COLABORADORES || []).filter(r => {
+      const adm = r.DATA_ADMISSAO ? String(r.DATA_ADMISSAO).slice(0,7) : ''
+      return adm === ym
+    }).length
+    mesesData.push(count)
+  }
+  destroyChart('chartAdmissoes')
+  const cAdEl = document.getElementById('chartAdmissoes')
+  if (cAdEl) {
+    _charts['chartAdmissoes'] = new Chart(cAdEl, {
+      type: 'line',
+      data: {
+        labels: mesesLabels,
+        datasets: [{
+          label: 'Admissões',
+          data: mesesData,
+          borderColor: '#7c3aed', backgroundColor: 'rgba(124,58,237,.1)',
+          borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#7c3aed',
+          fill: true, tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+          y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 }, stepSize: 1 }, beginAtZero: true }
+        }
+      }
+    })
+  }
+}
+
+// ══════════════════════════════
+// IMPORTAÇÃO CSV
+// ══════════════════════════════
+let _csvRows = [], _csvHeaders = [];
+
+const CSV_COLUNAS = ['nome','email_corporativo','tipo_vinculo','cargo','area','setor','gestor','gestor_email','empresa','data_admissao','data_nascimento','salario_honorario','vale_refeicao','vale_transporte','plano_saude'];
+const CSV_OBRIG = ['nome','email_corporativo','tipo_vinculo'];
+
+function baixarModeloCSV(){
+  const csv = CSV_COLUNAS.join(',') + '\nJoão Silva,joao@empresa.com,CLT,Advogado,Jurídico,Contencioso,Maria Souza,maria@empresa.com,Empresa Ltda,2024-01-15,1990-05-20,8000,600,300,Unimed\n';
+  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'modelo_importacao_colaboradores.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+
+function csvDragOver(e){ e.preventDefault(); $('csv-drop-area').style.borderColor='var(--accent)'; $('csv-drop-area').style.background='rgba(124,58,237,.04)'; }
+function csvDragLeave(e){ $('csv-drop-area').style.borderColor=''; $('csv-drop-area').style.background=''; }
+function csvDrop(e){ e.preventDefault(); csvDragLeave(e); const f=e.dataTransfer.files[0]; if(f)parsearCSV(f); }
+function csvFileSelected(inp){ if(inp.files[0])parsearCSV(inp.files[0]); }
+
+function parsearCSV(file){
+  if(!file.name.toLowerCase().endsWith('.csv')){ toast('Selecione um arquivo .csv','error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    const lines = text.split(/\r?\n/).filter(l=>l.trim());
+    if(lines.length < 2){ toast('CSV vazio ou sem dados','error'); return; }
+
+    // Detecta delimitador
+    const delim = lines[0].includes(';') ? ';' : ',';
+    const parseRow = row => {
+      const res=[]; let cur='', inQ=false;
+      for(let i=0;i<row.length;i++){
+        const c=row[i];
+        if(c==='"'){ inQ=!inQ; } else if(c===delim&&!inQ){ res.push(cur.trim()); cur=''; } else cur+=c;
+      }
+      res.push(cur.trim()); return res;
+    };
+
+    _csvHeaders = parseRow(lines[0]).map(h=>h.toLowerCase().trim().replace(/\s+/g,'_').normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+    _csvRows = lines.slice(1).map(l=>parseRow(l));
+
+    // Valida colunas obrigatórias
+    const erros=[];
+    CSV_OBRIG.forEach(c=>{ if(!_csvHeaders.includes(c)) erros.push('Coluna obrigatória ausente: '+c); });
+
+    // Mostra preview
+    $('csv-step1').style.display='none';
+    $('csv-step2').style.display='block';
+    $('btn-csv-import').style.display='';
+    $('csv-import-count').textContent=_csvRows.length;
+    $('csv-preview-title').textContent=file.name;
+    $('csv-preview-sub').textContent=_csvRows.length+' registros encontrados · '+_csvHeaders.length+' colunas';
+
+    if(erros.length){ $('csv-erros').style.display='block'; $('csv-erros').innerHTML='⚠️ '+erros.join('<br>'); $('btn-csv-import').disabled=true; }
+    else { $('csv-erros').style.display='none'; $('btn-csv-import').disabled=false; }
+
+    // Preview table
+    const SHOW_COLS = _csvHeaders.slice(0,6);
+    $('csv-preview-thead').innerHTML='<tr>'+SHOW_COLS.map(h=>`<th>${esc(h)}</th>`).join('')+'<th style="color:var(--muted)">...</th></tr>';
+    $('csv-preview-tbody').innerHTML=_csvRows.slice(0,8).map((row,i)=>{
+      const idxs=SHOW_COLS.map(c=>_csvHeaders.indexOf(c));
+      return`<tr>${idxs.map(j=>`<td>${esc(row[j]||'')}</td>`).join('')}<td style="color:var(--muted);font-size:11px;">+${_csvHeaders.length-6} cols</td></tr>`;
+    }).join('');
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function csvVoltarStep1(){
+  $('csv-step1').style.display='block'; $('csv-step2').style.display='none';
+  $('btn-csv-import').style.display='none'; $('csv-file-input').value='';
+  _csvRows=[]; _csvHeaders=[];
+}
+
+async function executarImportCSV(){
+  if(!_csvRows.length){ toast('Nenhum dado para importar','error'); return; }
+  $('csv-step2').style.display='none'; $('csv-progress').style.display='block';
+  $('btn-csv-import').disabled=true;
+
+  const profile = window._sbProfile;
+  if(!profile?.tenant_id){ toast('Perfil não encontrado','error'); return; }
+
+  let ok=0, erros=0;
+  for(let i=0; i<_csvRows.length; i++){
+    const row=_csvRows[i];
+    const obj={};
+    _csvHeaders.forEach((h,j)=>{ if(row[j]!==undefined&&row[j]!=='') obj[h]=row[j]; });
+
+    // Campos obrigatórios
+    if(!obj.nome||!obj.email_corporativo||!obj.tipo_vinculo){ erros++; continue; }
+
+    const payload={
+      tenant_id: profile.tenant_id,
+      nome: obj.nome,
+      email_corporativo: obj.email_corporativo,
+      tipo_vinculo: String(obj.tipo_vinculo||'').toUpperCase(),
+      cargo: obj.cargo||null, area: obj.area||null, setor: obj.setor||null,
+      gestor: obj.gestor||null, gestor_email: obj.gestor_email||null,
+      empresa: obj.empresa||null,
+      data_admissao: obj.data_admissao||null, data_nascimento: obj.data_nascimento||null,
+      salario_honorario: obj.salario_honorario?parseFloat(obj.salario_honorario):null,
+      vale_refeicao: obj.vale_refeicao?parseFloat(obj.vale_refeicao):null,
+      vale_transporte: obj.vale_transporte?parseFloat(obj.vale_transporte):null,
+      plano_saude: obj.plano_saude||null,
+      status: 'ATIVO'
+    };
+
+    try{
+      await window._sb.from('colaboradores').upsert(payload, {onConflict:'tenant_id,email_corporativo'}).select();
+      ok++;
+    }catch(e){ console.warn('CSV import row error:',e.message); erros++; }
+
+    // Atualiza progresso
+    const pct=Math.round(((i+1)/_csvRows.length)*100);
+    $('csv-progress-bar').style.width=pct+'%';
+    $('csv-progress-detail').textContent=(i+1)+' / '+_csvRows.length;
+    $('csv-progress-msg').textContent='Importando... '+pct+'%';
+    if(i%5===0) await new Promise(r=>setTimeout(r,10)); // yield UI
+  }
+
+  $('csv-progress-msg').textContent=ok+' importados'+( erros?' · '+erros+' com erro':'');
+  $('csv-progress-bar').style.background=erros>0?'var(--warn)':'#10b981';
+  toast(ok+' colaboradores importados!'+(erros?' ('+erros+' erros)':''),'success');
+  setTimeout(async()=>{
+    closeModal('mImportCSV');
+    csvVoltarStep1();
+    $('csv-progress').style.display='none';
+    if(typeof loadAll==='function') await loadAll();
+  },2000);
+}
+
+// ══════════════════════════════
+// ONBOARDING AUTOMÁTICO
+// ══════════════════════════════
+let _onboardingPendente = null;
+
+async function confirmarOnboarding() {
+  if (!_onboardingPendente) return;
+  const { email, nome, tenantId } = _onboardingPendente;
+  const btn = $('btn-onboarding-confirm');
+  const status = $('onboarding-status');
+  btn.disabled = true;
+  btn.textContent = 'Criando...';
+  status.style.display = 'block';
+  status.style.background = 'rgba(124,58,237,.06)';
+  status.style.border = '1px solid rgba(124,58,237,.2)';
+  status.textContent = '⏳ Criando conta de acesso...';
+
+  try {
+    // Cria usuário no Supabase Auth via Edge Function (evita expor service_role key)
+    const { data: { session } } = await window._sb.auth.getSession();
+    const res = await fetch(`${window._sbUrl || 'https://ttclcdppifmmdjztfunl.supabase.co'}/functions/v1/create-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session?.access_token },
+      body: JSON.stringify({ email, nome, tenant_id: tenantId, role: 'colaborador' })
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Erro ao criar usuário');
+
+    // Envia e-mail de boas-vindas
+    const emailHtml = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:24px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
+<tr><td style="background:linear-gradient(135deg,#7c3aed,#5b21b6);padding:32px;">
+  <div style="font-size:28px;font-weight:700;color:#fff;">🎉 Bem-vindo(a) ao LUMA RH!</div>
+  <div style="font-size:13px;color:#c4b5fd;margin-top:6px;">Seu acesso ao sistema de RH está pronto</div>
+</td></tr>
+<tr><td style="padding:32px;">
+  <p style="font-size:15px;color:#374151;line-height:1.7;">Olá, <strong>${nome}</strong>!<br><br>
+  Seu acesso ao Portal de Férias da LUMA RH foi criado. Você pode usar o sistema para solicitar férias, consultar seu saldo e acompanhar suas solicitações.</p>
+  <div style="background:#ede9fe;border-radius:10px;padding:16px;margin:20px 0;">
+    <div style="font-size:13px;color:#6b21a8;font-weight:600;margin-bottom:8px;">Suas credenciais de acesso:</div>
+    <div style="font-size:14px;color:#374151;margin-bottom:4px;">📧 <strong>Login:</strong> ${email}</div>
+    <div style="font-size:13px;color:#6b7280;">🔒 Use o link abaixo para definir sua senha no primeiro acesso.</div>
+  </div>
+  <div style="text-align:center;margin:24px 0;">
+    <a href="https://app.lumaplataforma.com.br/portal_ferias_colaborador.html" style="display:inline-block;background:#7c3aed;color:#fff;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:700;text-decoration:none;">🌐 Acessar o Portal</a>
+  </div>
+  <p style="font-size:13px;color:#6b7280;line-height:1.6;">Em caso de dúvidas, entre em contato com o RH.<br><br>Seja bem-vindo(a) à equipe! 🚀</p>
+</td></tr>
+<tr><td style="background:#f9fafb;padding:14px 32px;border-top:1px solid #e5e7eb;">
+  <span style="font-size:11px;color:#9ca3af;">LUMA RH · Mensagem automática de boas-vindas</span>
+</td></tr>
+</table></td></tr></table>
+</body></html>`;
+
+    if (window._sbFnsPortal?.sendEmail) {
+      await window._sbFnsPortal.sendEmail(email, `🎉 Bem-vindo(a) ao LUMA RH, ${nome}!`, emailHtml);
+    }
+
+    status.style.background = 'rgba(16,185,129,.08)';
+    status.style.border = '1px solid rgba(16,185,129,.3)';
+    status.textContent = '✅ Acesso criado e e-mail de boas-vindas enviado!';
+    btn.textContent = 'Concluído';
+    toast('Onboarding concluído para ' + nome, 'success');
+    setTimeout(() => closeModal('mOnboarding'), 2500);
+  } catch (e) {
+    status.style.background = 'rgba(239,68,68,.08)';
+    status.style.border = '1px solid rgba(239,68,68,.2)';
+    status.textContent = '❌ ' + e.message;
+    btn.disabled = false;
+    btn.textContent = '↻ Tentar novamente';
+  }
+}
+
+// ══════════════════════════════
+// COMPLIANCE DASHBOARD
+// ══════════════════════════════
+function renderCompliance(){
+  const ativos=(D.CADASTRO_COLABORADORES||[]).filter(r=>String(r.STATUS||'').trim().toUpperCase()==='ATIVO');
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const d30=new Date(hoje);d30.setDate(d30.getDate()+30);
+  const filtro=$('complFiltro')?.value||'';
+
+  function checkExame(colab){
+    const ex=(D.EXAMES_OCUPACIONAIS||[]).find(e=>e.COLABORADOR_ID===colab.id||e.ID_COLABORADOR===colab.ID_COLABORADOR||e.NOME===colab.NOME);
+    if(!ex)return{icon:'❌',cls:'cd',label:'Sem registro'};
+    const prox=ex.PROXIMO_EXAME?new Date(ex.PROXIMO_EXAME+'T12:00:00'):null;
+    if(!prox)return{icon:'⚠️',cls:'cw',label:'Sem data'};
+    if(prox<hoje)return{icon:'❌',cls:'cd',label:'Vencido'};
+    if(prox<=d30)return{icon:'⚠️',cls:'cw',label:'Vence em breve'};
+    return{icon:'✅',cls:'cs',label:'Em dia'};
+  }
+
+  function checkFerias(colab){
+    const vinc=String(colab.TIPO_VINCULO||'').toUpperCase();
+    if(!['CLT','ASSOCIADO'].includes(vinc))return{icon:'—',cls:'',label:'N/A'};
+    const fer=(D.FERIAS_CLT||[]).find(f=>f.ID_COLABORADOR===colab.ID_COLABORADOR||f.NOME===colab.NOME);
+    if(!fer)return{icon:'⚠️',cls:'cw',label:'Sem registro'};
+    const conc=fer.FIM_PERIODO_CONCESSIVO?new Date(fer.FIM_PERIODO_CONCESSIVO+'T12:00:00'):null;
+    if(!conc)return{icon:'⚠️',cls:'cw',label:'Sem prazo'};
+    if(conc<hoje)return{icon:'❌',cls:'cd',label:'Concessivo vencido'};
+    if(conc<=d30)return{icon:'⚠️',cls:'cw',label:'Prazo próximo'};
+    const status=String(fer.STATUS_FERIAS||'').toUpperCase();
+    if(status==='NAO_PROGRAMADA'||status==='')return{icon:'⚠️',cls:'cw',label:'Não programada'};
+    return{icon:'✅',cls:'cs',label:'Programada'};
+  }
+
+  function checkContrato(colab){
+    const vinc=String(colab.TIPO_VINCULO||'').toUpperCase();
+    if(vinc==='CLT'){
+      const ind=String(colab.CONTRATO_INDETERMINADO||'').toUpperCase();
+      if(ind==='TRUE'||ind==='SIM'||ind==='1')return{icon:'✅',cls:'cs',label:'Indeterminado'};
+      const exp=colab.DATA_FIM_CONTRATO?new Date(colab.DATA_FIM_CONTRATO+'T12:00:00'):null;
+      if(!exp)return{icon:'⚠️',cls:'cw',label:'Sem data fim'};
+      if(exp<hoje)return{icon:'❌',cls:'cd',label:'Expirado'};
+      if(exp<=d30)return{icon:'⚠️',cls:'cw',label:'Vence em breve'};
+      return{icon:'✅',cls:'cs',label:'Vigente'};
+    }
+    if(['PJ','MEI'].includes(vinc)){
+      const exp=colab.DATA_FIM_CONTRATO?new Date(colab.DATA_FIM_CONTRATO+'T12:00:00'):null;
+      if(!exp)return{icon:'⚠️',cls:'cw',label:'Sem data fim'};
+      if(exp<hoje)return{icon:'❌',cls:'cd',label:'Expirado'};
+      if(exp<=d30)return{icon:'⚠️',cls:'cw',label:'Vence em breve'};
+      return{icon:'✅',cls:'cs',label:'Vigente'};
+    }
+    return{icon:'—',cls:'',label:'N/A'};
+  }
+
+  function checkCadastro(colab){
+    const campos=['NOME','EMAIL_CORPORATIVO','CARGO','AREA','DATA_ADMISSAO'];
+    const faltando=campos.filter(c=>!colab[c]);
+    if(faltando.length===0)return{icon:'✅',cls:'cs',label:'Completo'};
+    if(faltando.length<=2)return{icon:'⚠️',cls:'cw',label:faltando.length+' campos'};
+    return{icon:'❌',cls:'cd',label:faltando.length+' campos'};
+  }
+
+  function score(checks){
+    const aplicaveis=checks.filter(c=>c.icon!=='—');
+    if(!aplicaveis.length)return 100;
+    const ok=aplicaveis.filter(c=>c.icon==='✅').length;
+    return Math.round((ok/aplicaveis.length)*100);
+  }
+
+  function scoreColor(s){return s>=80?'#16a34a':s>=50?'#d97706':'#dc2626';}
+  function scoreClass(checks){
+    const crits=checks.filter(c=>c.icon==='❌').length;
+    const warns=checks.filter(c=>c.icon==='⚠️').length;
+    if(crits>=2)return'critico';
+    if(crits>=1||warns>=2)return'atencao';
+    return'ok';
+  }
+
+  let rows=ativos.map(r=>{
+    const ex=checkExame(r);
+    const fer=checkFerias(r);
+    const cont=checkContrato(r);
+    const cad=checkCadastro(r);
+    const checks=[ex,fer,cont,cad];
+    const sc=score(checks);
+    const cls=scoreClass(checks);
+    return{r,ex,fer,cont,cad,sc,cls};
+  });
+
+  if(filtro)rows=rows.filter(x=>x.cls===filtro);
+
+  const tot=ativos.length;
+  const ok=rows.filter(x=>x.cls==='ok').length;
+  const warn=rows.filter(x=>x.cls==='atencao').length;
+  const crit=rows.filter(x=>x.cls==='critico').length;
+  const avgScore=rows.length?Math.round(rows.reduce((a,x)=>a+x.sc,0)/rows.length):0;
+
+  if($('ckOk'))$('ckOk').textContent=filtro?ok:ativos.filter((_,i)=>{
+    const ex=checkExame(ativos[i]);const fer=checkFerias(ativos[i]);const cont=checkContrato(ativos[i]);const cad=checkCadastro(ativos[i]);
+    return scoreClass([ex,fer,cont,cad])==='ok';
+  }).length;
+  if($('ckWarn'))$('ckWarn').textContent=ativos.filter((_,i)=>{
+    const ex=checkExame(ativos[i]);const fer=checkFerias(ativos[i]);const cont=checkContrato(ativos[i]);const cad=checkCadastro(ativos[i]);
+    return scoreClass([ex,fer,cont,cad])==='atencao';
+  }).length;
+  if($('ckCrit'))$('ckCrit').textContent=ativos.filter((_,i)=>{
+    const ex=checkExame(ativos[i]);const fer=checkFerias(ativos[i]);const cont=checkContrato(ativos[i]);const cad=checkCadastro(ativos[i]);
+    return scoreClass([ex,fer,cont,cad])==='critico';
+  }).length;
+  if($('ckScore'))$('ckScore').textContent=avgScore+'%';
+
+  $('complBody').innerHTML=rows.length?rows.sort((a,b)=>a.sc-b.sc).map(({r,ex,fer,cont,cad,sc})=>`<tr>
+    <td><strong>${esc(r.NOME||'—')}</strong></td>
+    <td><span class="chip ${chipV(r.TIPO_VINCULO)}">${lblV(r.TIPO_VINCULO)}</span></td>
+    <td style="text-align:center;" title="${ex.label}"><span class="chip ${ex.cls}" style="font-size:14px;padding:2px 6px;">${ex.icon}</span><br><span style="font-size:10px;color:var(--muted);">${ex.label}</span></td>
+    <td style="text-align:center;" title="${fer.label}"><span class="chip ${fer.cls}" style="font-size:14px;padding:2px 6px;">${fer.icon}</span><br><span style="font-size:10px;color:var(--muted);">${fer.label}</span></td>
+    <td style="text-align:center;" title="${cont.label}"><span class="chip ${cont.cls}" style="font-size:14px;padding:2px 6px;">${cont.icon}</span><br><span style="font-size:10px;color:var(--muted);">${cont.label}</span></td>
+    <td style="text-align:center;" title="${cad.label}"><span class="chip ${cad.cls}" style="font-size:14px;padding:2px 6px;">${cad.icon}</span><br><span style="font-size:10px;color:var(--muted);">${cad.label}</span></td>
+    <td style="text-align:center;"><span style="font-size:15px;font-weight:700;color:${scoreColor(sc)};">${sc}%</span></td>
+  </tr>`).join(''):'<tr><td colspan="7" class="empty">Nenhum colaborador encontrado.</td></tr>';
+}
+
+// ══════════════════════════════
+// RESCISÃO CLT
+// ══════════════════════════════
+function openRescisao(colabId){
+  // Popula select de colaboradores
+  const ativos=(D.CADASTRO_COLABORADORES||[]).filter(r=>String(r.STATUS||'').trim().toUpperCase()==='ATIVO'&&String(r.TIPO_VINCULO||'').toUpperCase()==='CLT');
+  const sel=$('rColabSel');
+  sel.innerHTML='<option value="">Selecione um colaborador CLT...</option>'+
+    ativos.map(r=>`<option value="${esc(r.ID_COLABORADOR||'')}">${esc(r.NOME||'')}</option>`).join('');
+  if(colabId){sel.value=colabId;preencherRescisao();}
+  $('rDesligamento').value=new Date().toISOString().slice(0,10);
+  $('rResultado').style.display='none';
+  openModal('mRescisao');
+}
+
+function preencherRescisao(){
+  const id=$('rColabSel').value;
+  const r=(D.CADASTRO_COLABORADORES||[]).find(x=>x.ID_COLABORADOR===id);
+  if(!r)return;
+  if(r.DATA_ADMISSAO){
+    const iso=pfToISO(r.DATA_ADMISSAO);
+    if(iso)$('rAdmissao').value=iso;
+  }
+  if(r.SALARIO_HONORARIO)$('rSalario').value=parseFloat(r.SALARIO_HONORARIO)||'';
+  calcRescisao();
+}
+
+function calcRescisao(){
+  const admStr=$('rAdmissao').value;
+  const deslStr=$('rDesligamento').value;
+  const salario=parseFloat($('rSalario').value)||0;
+  const tipo=$('rTipo').value;
+  const aviso=$('rAviso').value;
+  const feriasGoz=parseInt($('rFeriasGoz').value)||0;
+
+  if(!admStr||!deslStr||!salario){$('rResultado').style.display='none';return;}
+
+  const adm=new Date(admStr+'T12:00:00');
+  const desl=new Date(deslStr+'T12:00:00');
+  if(desl<=adm){$('rResultado').style.display='none';return;}
+
+  // Tempo de serviço
+  const msTotal=desl-adm;
+  const diasTotal=Math.floor(msTotal/86400000);
+  const anosComp=Math.floor(diasTotal/365);
+  const mesesComp=Math.floor((diasTotal%365)/30);
+  const diasComp=diasTotal%30;
+
+  // Aviso prévio (Lei 12.506/2011): 30 dias + 3 dias/ano completo (max 90)
+  const diasAviso=Math.min(90,30+anosComp*3);
+
+  // Saldo de salário (dias trabalhados no mês do desligamento)
+  const diasMes=desl.getDate();
+  const saldoSalario=(salario/30)*diasMes;
+
+  // 13° salário proporcional
+  const meses13=desl.getMonth()+1; // meses trabalhados no ano
+  const dec13=(salario/12)*meses13;
+
+  // Férias: proporcionais + 1/3
+  const mesesFer=Math.floor(diasTotal/30)%12;
+  const ferProp=(salario/12)*Math.max(0,mesesFer-(feriasGoz>0?feriasGoz/2.5:0));
+  const tercoFer=ferProp/3;
+
+  // FGTS (8% * salário * meses)
+  const mesesTotal=Math.floor(diasTotal/30);
+  const fgtsDepositos=(salario*0.08)*mesesTotal;
+
+  // Multa FGTS
+  let multaFGTS=0;
+  let avisoPagar=0;
+  let verbas=[];
+  let obs='';
+
+  const fmt2=v=>'R$ '+v.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+
+  // Saldo de salário — sempre
+  verbas.push({v:'Saldo de salário ('+diasMes+' dias)',dir:'✅',val:saldoSalario});
+
+  if(tipo==='SEM_JUSTA_CAUSA'){
+    verbas.push({v:'13° salário proporcional ('+meses13+'/12)',dir:'✅',val:dec13});
+    verbas.push({v:'Férias proporcionais ('+mesesFer+' meses) + 1/3',dir:'✅',val:ferProp+tercoFer});
+    if(aviso==='INDENIZADO'){
+      avisoPagar=salario+(salario/30)*diasAviso-salario;
+      verbas.push({v:'Aviso prévio indenizado ('+diasAviso+' dias)',dir:'✅',val:(salario/30)*diasAviso});
+    }
+    multaFGTS=fgtsDepositos*0.40;
+    verbas.push({v:'Multa FGTS (40% sobre '+fmt2(fgtsDepositos)+')',dir:'✅',val:multaFGTS});
+    verbas.push({v:'FGTS a sacar (saldo estimado)',dir:'ℹ️',val:fgtsDepositos});
+    obs='⚠️ Aviso prévio de '+diasAviso+' dias ('+anosComp+' anos completos). Multa FGTS de 40% calculada sobre o saldo estimado. Empresa deve fornecer TRCT e homologar no sindicato se >1 ano.';
+  } else if(tipo==='PEDIDO_DEMISSAO'){
+    verbas.push({v:'13° salário proporcional ('+meses13+'/12)',dir:'✅',val:dec13});
+    verbas.push({v:'Férias proporcionais ('+mesesFer+' meses) + 1/3',dir:'✅',val:ferProp+tercoFer});
+    if(aviso==='DISPENSADO'){
+      verbas.push({v:'Aviso prévio (dispensado pelo empregado)',dir:'—',val:0});
+    } else {
+      verbas.push({v:'Aviso prévio trabalhado ('+diasAviso+' dias)',dir:'⚠️',val:0,note:'Trabalha o período'});
+    }
+    verbas.push({v:'Multa FGTS',dir:'❌',val:0,note:'Não devida'});
+    verbas.push({v:'FGTS (não pode sacar — exceto doença grave)',dir:'🔒',val:fgtsDepositos,lock:true});
+    obs='ℹ️ No pedido de demissão: sem multa de 40% sobre o FGTS. Colaborador deve cumprir aviso prévio de '+diasAviso+' dias ou ter o valor descontado da rescisão.';
+  } else if(tipo==='JUSTA_CAUSA'){
+    verbas.push({v:'13° salário proporcional',dir:'❌',val:0,note:'Não devida'});
+    verbas.push({v:'Férias proporcionais + 1/3',dir:'❌',val:0,note:'Somente vencidas'});
+    verbas.push({v:'Aviso prévio',dir:'❌',val:0,note:'Não devido'});
+    verbas.push({v:'Multa FGTS',dir:'❌',val:0,note:'Não devida'});
+    verbas.push({v:'FGTS (bloqueado)',dir:'🔒',val:fgtsDepositos,lock:true});
+    obs='⚠️ Justa causa: apenas saldo de salário e férias vencidas (se houver). Documentar amplamente a motivação.';
+  } else if(tipo==='ACORDO'){
+    verbas.push({v:'13° salário proporcional ('+meses13+'/12)',dir:'✅',val:dec13});
+    verbas.push({v:'Férias proporcionais ('+mesesFer+' meses) + 1/3',dir:'✅',val:ferProp+tercoFer});
+    verbas.push({v:'Aviso prévio (50% indenizado)',dir:'✅',val:(salario/30)*diasAviso*0.5});
+    multaFGTS=fgtsDepositos*0.20;
+    verbas.push({v:'Multa FGTS (20% — acordo mútuo)',dir:'✅',val:multaFGTS});
+    verbas.push({v:'FGTS a sacar (80% do saldo)',dir:'ℹ️',val:fgtsDepositos*0.8});
+    obs='ℹ️ Acordo mútuo (Art. 484-A): aviso prévio 50% indenizado, multa FGTS 20%, colaborador saca 80% do FGTS. Seguro-desemprego não disponível.';
+  } else {
+    verbas.push({v:'13° salário proporcional ('+meses13+'/12)',dir:'✅',val:dec13});
+    verbas.push({v:'Férias proporcionais + 1/3',dir:'✅',val:ferProp+tercoFer});
+    verbas.push({v:'Multa FGTS / Indenização',dir:'—',val:0,note:'Conforme contrato'});
+    obs='ℹ️ Término de contrato a prazo: verifique cláusula de indenização prevista no instrumento contratual.';
+  }
+
+  const total=verbas.filter(x=>!x.lock).reduce((a,x)=>a+x.val,0);
+
+  $('rInfo').innerHTML=`<strong>${anosComp}a ${mesesComp}m ${diasComp}d</strong> de empresa &nbsp;·&nbsp; Salário: <strong>R$ ${salario.toFixed(2).replace('.',',')}</strong> &nbsp;·&nbsp; Aviso prévio: <strong>${diasAviso} dias</strong>`;
+
+  $('rVerbas').innerHTML=verbas.map(x=>`<tr style="border-bottom:1px solid var(--border);">
+    <td style="padding:8px 4px;">${x.v}${x.note?`<span style="font-size:11px;color:var(--muted);margin-left:6px;">${x.note}</span>`:''}</td>
+    <td style="text-align:center;padding:8px 4px;">${x.dir}</td>
+    <td style="text-align:right;padding:8px 4px;font-family:var(--mono);font-weight:${x.val>0?'600':'400'};color:${x.lock?'var(--muted)':x.val>0?'var(--text)':'var(--muted)'};">${x.val>0?fmt2(x.val):'—'}</td>
+  </tr>`).join('');
+
+  $('rTotal').textContent='R$ '+total.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  $('rObs').innerHTML=obs;
+  $('rResultado').style.display='block';
+  window._rVerbas=verbas;window._rTotal=total;
+}
+
+function exportRescisaoCSV(){
+  if(!window._rVerbas)return;
+  const nome=$('rColabSel').options[$('rColabSel').selectedIndex]?.text||'colaborador';
+  const rows=[['Verba','Direito','Valor'],
+    ...window._rVerbas.map(x=>[x.v,x.dir,x.val>0?x.val.toFixed(2):'0']),
+    ['TOTAL','',''+window._rTotal.toFixed(2)]];
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='rescisao_'+nome.split(' ')[0]+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
+}
+
+// ══════════════════════════════
 // AÇÕES DE TRATATIVA
 // ══════════════════════════════
 const ACOES_KEY='luma_acoes_v1';
@@ -4542,7 +5407,7 @@ function renderAcoes(){
   }).join('');
 }
 
-function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.menu-link').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');if(el)el.classList.add('active');else{document.querySelectorAll('.menu-link').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'"))t.classList.add('active');});}if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();if(id==='admin')renderAdmin();if(id==='pf')pfInit();}
+function showTab(id,el){document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.menu-link').forEach(t=>t.classList.remove('active'));$(id).classList.add('active');if(el)el.classList.add('active');else{document.querySelectorAll('.menu-link').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'"))t.classList.add('active');});}if(id==='desl')renderDesligados();if(id==='acoes')renderAcoes();if(id==='admin')renderAdmin();if(id==='pf')pfInit();if(id==='complian') renderCompliance();if(id==='vg') setTimeout(renderCharts, 50);}
 
 // ── CONTROLE DE ACESSO ──
 function loadCoords(){

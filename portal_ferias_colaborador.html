@@ -521,9 +521,14 @@ function renderPortal(){
     $('step-cal').insertBefore(avisoDiv,$('step-cal').firstChild);
   }
 
-  if(!isCLT&&!isPJ){
-    $('step-cal').innerHTML=`<div class="empty">Solicitação não disponível para vínculo <strong>${esc(UCOLAB.vinculo)}</strong>.</div>`;
-  }else{renderCal();}
+  // Aviso vínculo não padrão — calendário sempre visível ("deve ser sempre a mostra")
+  if(!isCLT&&!isPJ&&UCOLAB.vinculo&&UCOLAB.vinculo!=='N/A'){
+    const avisoOutro=document.createElement('div');
+    avisoOutro.style.cssText='background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:9px;padding:12px;margin-bottom:14px;font-size:13px;line-height:1.7;';
+    avisoOutro.innerHTML=`<strong style="color:#f59e0b;">⚠ Vínculo: ${esc(UCOLAB.vinculo)}</strong><br>Solicitação sujeita à aprovação do gestor conforme política interna.`;
+    $('step-cal').insertBefore(avisoOutro,$('step-cal').firstChild);
+  }
+  renderCal();
   renderHist();setStep(0);
 }
 
