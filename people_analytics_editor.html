@@ -1544,7 +1544,7 @@ nav.legacy{display:none!important;}
       </div>
 
       <!-- Seção médica: CID + Anexo — visível apenas para ATESTADO, AFASTAMENTO, LICENÇA -->
-      <div id="ausCidSection" style="margin-top:6px;">
+      <div id="ausCidSection" style="margin-top:6px;display:none;">
         <div class="fsec" style="grid-column:1/-1;margin-bottom:10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);border-bottom:1px solid rgba(155,102,244,.2);padding-bottom:6px;">🩺 Dados Médicos</div>
 
         <!-- CID -->
@@ -4284,8 +4284,8 @@ function openModalAus(){
   // Resetar botão para "Registrar"
   const btnReg=document.querySelector('#mNewAus .btn-g[onclick="saveNewAus()"]');
   if(btnReg) btnReg.textContent='Registrar';
-  ausTipoChange();   // garante seção médica visível (ATESTADO é padrão)
   openModal('mNewAus');
+  requestAnimationFrame(()=>ausTipoChange()); // garante seção médica visível após modal renderizar
 }
 
 window.editarAus=function(id){
@@ -4304,11 +4304,11 @@ window.editarAus=function(id){
   $('ausCid').value=r.CID||r.DETALHE||'';
   buscarCid();
   $('ausObs').value=r.OBSERVACAO||'';
-  ausTipoChange();
   // Mudar botão para "Salvar alteração"
   const btnReg=document.querySelector('#mNewAus .btn-g[onclick="saveNewAus()"]');
   if(btnReg) btnReg.textContent='Salvar alteração';
   openModal('mNewAus');
+  requestAnimationFrame(()=>ausTipoChange()); // garante seção médica visível após modal renderizar
 }
 
 function ausTipoChange(){
