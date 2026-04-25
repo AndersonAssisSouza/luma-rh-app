@@ -473,9 +473,17 @@ nav.legacy{display:none!important;}
     <div class="kpi"><div class="kl">Maior senioridade</div><div class="kv" style="color:var(--accent2)" id="pSen">—</div><div class="ks" id="pSenN">—</div><div class="kbar" style="background:var(--accent2)"></div></div>
   </div>
   <div class="card">
-    <div class="ct">Colaboradores ativos <span id="qCount">—</span>
+    <div class="ct" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      Colaboradores ativos <span id="qCount">—</span>
       <input id="buscarColab" placeholder="🔍 Buscar por nome..." oninput="filtrarColab(this.value)"
-        style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--font);font-size:13px;width:220px;outline:none;margin-left:8px;">
+        style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--font);font-size:13px;width:200px;outline:none;margin-left:4px;">
+      <select id="filtroVinculo" onchange="filtrarColab($('buscarColab').value)"
+        style="padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;">
+        <option value="">Todos vínculos</option>
+        <option>CLT</option><option>PJ</option><option>MEI</option>
+        <option>SOCIO</option><option>ASSOCIADO</option><option>ESTAGIARIO</option>
+      </select>
+      <button class="btn-nav" onclick="exportTableCSV('qBody','colaboradores_ativos_')" style="margin-left:auto;">⬇ CSV</button>
     </div>
     <div class="sy"><table class="tbl"><thead><tr><th onclick="sortTable('qBody',0,this)">Nome</th><th onclick="sortTable('qBody',1,this)">Vínculo</th><th onclick="sortTable('qBody',2,this)">Cargo</th><th onclick="sortTable('qBody',3,this)">Área</th><th onclick="sortTable('qBody',4,this)">Empresa</th><th onclick="sortTable('qBody',5,this)">Admissão</th><th onclick="sortTable('qBody',6,this)">Tempo</th><th></th></tr></thead><tbody id="qBody"></tbody></table></div>
   </div>
@@ -520,7 +528,8 @@ nav.legacy{display:none!important;}
     <div class="ct" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
       Controle de férias <span id="fCount">—</span>
       <input type="text" id="ferSearch" placeholder="Buscar por nome ou status..." oninput="filterTable('fBody',this.value)"
-        style="flex:1;min-width:220px;max-width:340px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:13px;color:var(--text);outline:none;margin-left:auto;">
+        style="flex:1;min-width:180px;max-width:300px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:13px;color:var(--text);outline:none;margin-left:auto;">
+      <button class="btn-nav" onclick="exportTableCSV('fBody','ferias_clt_')">⬇ CSV</button>
     </div>
     <div class="sy"><table class="tbl"><thead><tr><th onclick="sortTable('fBody',0,this)">Colaborador</th><th onclick="sortTable('fBody',1,this)">Admissão</th><th onclick="sortTable('fBody',2,this)">Status</th><th>Período aquisitivo</th><th>Limite concessão</th><th>Limite p/ agendar</th><th>Programadas</th><th>Gozadas</th><th>Dias restantes</th><th></th></tr></thead><tbody id="fBody"></tbody></table></div>
   </div>
@@ -539,7 +548,8 @@ nav.legacy{display:none!important;}
     <div class="ct" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
       Controle de exames <span id="exCount">—</span>
       <input type="text" id="exSearch" placeholder="Buscar por nome ou situação..." oninput="filterTable('exBody',this.value)"
-        style="flex:1;min-width:220px;max-width:340px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:13px;color:var(--text);outline:none;margin-left:auto;">
+        style="flex:1;min-width:180px;max-width:300px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:13px;color:var(--text);outline:none;margin-left:auto;">
+      <button class="btn-nav" onclick="exportTableCSV('exBody','exames_ocupacionais_')">⬇ CSV</button>
     </div>
     <div class="sy"><table class="tbl"><thead><tr><th onclick="sortTable('exBody',0,this)">Colaborador</th><th onclick="sortTable('exBody',1,this)">Tipo</th><th onclick="sortTable('exBody',2,this)">Último exame</th><th onclick="sortTable('exBody',3,this)">Próximo exame</th><th onclick="sortTable('exBody',4,this)">Agendado para</th><th onclick="sortTable('exBody',5,this)">Situação</th><th></th></tr></thead><tbody id="exBody"></tbody></table></div>
   </div>
@@ -552,7 +562,18 @@ nav.legacy{display:none!important;}
     <button class="btn btn-g" onclick="openModalAus()">+ Registrar ausência</button>
   </div>
   <div class="card">
-    <div class="ct">Registros <span id="ausCount">—</span></div>
+    <div class="ct" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      Registros <span id="ausCount">—</span>
+      <input id="ausSearch" placeholder="🔍 Buscar..." oninput="filtrarAus(this.value,$('ausTipo').value)"
+        style="padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--font);font-size:13px;width:180px;outline:none;margin-left:4px;">
+      <select id="ausTipo" onchange="filtrarAus($('ausSearch').value,this.value)"
+        style="padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;">
+        <option value="">Todos os tipos</option>
+        <option>Atestado</option><option>Falta</option><option>Licença</option>
+        <option>Afastamento INSS</option><option>Atraso</option><option>Saída antecipada</option>
+      </select>
+      <button class="btn-nav" onclick="exportTableCSV('ausBody','ausencias_')" style="margin-left:auto;">⬇ CSV</button>
+    </div>
     <div class="sy"><table class="tbl"><thead><tr><th>Tipo</th><th>Colaborador</th><th>Data</th><th>CID</th><th>Descrição CID</th><th>Observação</th><th></th></tr></thead><tbody id="ausBody"></tbody></table></div>
   </div>
 </div>
@@ -590,9 +611,17 @@ nav.legacy{display:none!important;}
     <div class="kpi"><div class="kl">Média tempo empresa</div><div class="kv" style="color:var(--muted)" id="dMedia">—</div><div class="ks">anos (desligados)</div><div class="kbar" style="background:var(--muted)"></div></div>
   </div>
   <div class="card">
-    <div class="ct">Lista de desligados <span id="dCount">—</span>
-      <input id="buscarDesl" placeholder="🔍 Buscar..." oninput="filtrarDesl(this.value)"
-        style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--font);font-size:13px;width:200px;outline:none;margin-left:8px;">
+    <div class="ct" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      Lista de desligados <span id="dCount">—</span>
+      <input id="buscarDesl" placeholder="🔍 Buscar por nome..." oninput="filtrarDesl(this.value)"
+        style="padding:6px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--font);font-size:13px;width:180px;outline:none;margin-left:4px;">
+      <select id="filtroVinculoDesl" onchange="filtrarDesl($('buscarDesl').value)"
+        style="padding:5px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;">
+        <option value="">Todos vínculos</option>
+        <option>CLT</option><option>PJ</option><option>MEI</option>
+        <option>SOCIO</option><option>ASSOCIADO</option><option>ESTAGIARIO</option>
+      </select>
+      <button class="btn-nav" onclick="exportTableCSV('dBody','desligados_')" style="margin-left:auto;">⬇ CSV</button>
     </div>
     <div class="sy"><table class="tbl"><thead><tr>
       <th onclick="sortTable('dBody',0,this)">Nome</th>
@@ -4229,15 +4258,61 @@ function renderDeslTable(desl){
 }
 
 function filtrarDesl(q){
+  const vFiltro=$('filtroVinculoDesl')?.value||'';
   const desl=(D.CADASTRO_COLABORADORES||[]).filter(r=>String(r.STATUS||'').trim().toUpperCase()==='DESLIGADO');
-  const filtrado=q?desl.filter(r=>(r.NOME||'').toLowerCase().includes(q.toLowerCase())):desl;
+  const filtrado=desl.filter(r=>{
+    const nomeOk=!q||(r.NOME||'').toLowerCase().includes(q.toLowerCase());
+    const vincOk=!vFiltro||String(r.TIPO_VINCULO||'').trim().toUpperCase()===vFiltro.toUpperCase();
+    return nomeOk&&vincOk;
+  });
   renderDeslTable(filtrado);
   $('dCount').textContent=filtrado.length+' registros';
 }
 
+function filtrarAus(q,tipo){
+  const rows=[...(document.getElementById('ausBody')?.querySelectorAll('tr')||[])];
+  const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const qn=norm(q||'');const tipoF=(tipo||'').toLowerCase();
+  rows.forEach(tr=>{
+    const cells=[...tr.querySelectorAll('td')];
+    const text=cells.map(td=>td.textContent).join(' ');
+    const tipoCell=norm(cells[0]?.textContent?.trim()||'');
+    const matchQ=!qn||norm(text).includes(qn);
+    const matchT=!tipoF||tipoCell.includes(tipoF);
+    tr.style.display=(matchQ&&matchT)?'':'none';
+  });
+  const vis=rows.filter(r=>r.style.display!=='none').length;
+  $('ausCount').textContent=vis+' registros';
+}
+
+function exportTableCSV(tbodyId,filename){
+  const tbody=document.getElementById(tbodyId);if(!tbody)return;
+  const thead=tbody.closest('table').querySelector('thead tr');
+  const headers=thead?[...thead.querySelectorAll('th')].map(th=>th.textContent.trim().replace(/\s*[↑↓]\s*$/,'')).filter(h=>h):[];
+  const rows=[...tbody.querySelectorAll('tr')].filter(r=>r.style.display!=='none');
+  const csv=[headers.join(','),...rows.map(tr=>{
+    const cells=[...tr.querySelectorAll('td')].slice(0,headers.length);
+    return cells.map(td=>{
+      const chip=td.querySelector('.chip');
+      const v=(chip?chip.textContent:td.textContent).trim().replace(/"/g,'""');
+      return `"${v}"`;
+    }).join(',');
+  })].join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=filename+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(a.href);
+  toast('CSV exportado — '+rows.length+' registros','success');
+}
+
 function filtrarColab(q){
+  const vFiltro=$('filtroVinculo')?.value||'';
   const ativos=(D.CADASTRO_COLABORADORES||[]).filter(r=>String(r.STATUS||'').trim().toUpperCase()==='ATIVO');
-  const filtrado=q?ativos.filter(r=>(r.NOME||'').toLowerCase().includes(q.toLowerCase())):ativos;
+  const filtrado=ativos.filter(r=>{
+    const nomeOk=!q||(r.NOME||'').toLowerCase().includes(q.toLowerCase());
+    const vincOk=!vFiltro||String(r.TIPO_VINCULO||'').trim().toUpperCase()===vFiltro.toUpperCase();
+    return nomeOk&&vincOk;
+  });
   $('qCount').textContent=filtrado.length+' registros';
   $('qBody').innerHTML=filtrado.map(r=>`<tr>
     <td>${esc(r.NOME||'—')}</td><td><span class="chip ${chipV(r.TIPO_VINCULO)}">${lblV(r.TIPO_VINCULO)}</span></td>
