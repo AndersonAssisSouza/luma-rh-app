@@ -66,24 +66,27 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
 .portal-col-left{display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;}
 .portal-col-right{display:flex;flex-direction:column;gap:10px;overflow-y:auto;min-height:0;}
 .portal-col-right .card{flex:1;overflow-y:auto;min-height:0;}
-/* ── Calendário compacto ── */
+/* ── Calendário duplo ── */
+.cal-outer{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:640px){.cal-outer{grid-template-columns:1fr;}}
 .cal-wrap{background:var(--bg3);border-radius:10px;padding:10px;}
 .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.cal-month{font-size:14px;font-weight:500;}
-.cal-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;}
+.cal-month{font-size:13px;font-weight:600;text-align:center;flex:1;}
+.cal-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;line-height:1;}
 .cal-btn:hover{background:var(--bg2);}
+.cal-btn.ghost{visibility:hidden;pointer-events:none;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
-.cal-dname{text-align:center;font-size:10px;color:var(--muted);padding:2px 0;font-weight:500;}
-.cal-day{text-align:center;padding:5px 2px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}
+.cal-dname{text-align:center;font-size:9px;color:var(--muted);padding:2px 0;font-weight:600;}
+.cal-day{text-align:center;padding:5px 1px;border-radius:5px;font-size:12px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}
 .cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}
-.cal-day.tod{border-color:var(--accent);color:var(--accent);}
-.cal-day.rs,.cal-day.re{background:var(--accent);color:#fff;}
-.cal-day.ri{background:rgba(155,102,244,.2);}
+.cal-day.tod{border-color:var(--accent);color:var(--accent);font-weight:700;}
+.cal-day.rs,.cal-day.re{background:var(--accent);color:#fff;font-weight:700;}
+.cal-day.ri{background:rgba(155,102,244,.18);}
 .cal-day.dis{opacity:.2;cursor:not-allowed;}
-.cal-day.oth{opacity:.15;cursor:default;}
+.cal-day.oth{opacity:0;cursor:default;pointer-events:none;}
 .cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}
 .cal-day.fds{color:var(--muted);}
-.cal-legend{display:flex;gap:10px;margin-top:6px;}
+.cal-legend{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;}
 .cal-leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);}
 .cal-dot{width:7px;height:7px;border-radius:3px;}
 .chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500;}
@@ -173,19 +176,36 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
     </div>
 
     <div id="step-cal">
-      <div class="cal-wrap">
-        <div class="cal-nav">
-          <button class="cal-btn" id="btn-prev">&#8249;</button>
-          <div class="cal-month" id="cal-month">—</div>
-          <button class="cal-btn" id="btn-next">&#8250;</button>
+      <!-- Calendário duplo: mês atual + próximo -->
+      <div class="cal-outer">
+        <!-- Mês 1 -->
+        <div class="cal-wrap">
+          <div class="cal-nav">
+            <button class="cal-btn" id="btn-prev">&#8249;</button>
+            <div class="cal-month" id="cal-month">—</div>
+            <button class="cal-btn ghost" aria-hidden="true">&#8250;</button>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
         </div>
-        <div class="cal-grid" id="cal-grid"></div>
-        <div class="cal-legend">
-          <div class="cal-leg"><div class="cal-dot" style="background:var(--accent)"></div>Selecionado</div>
-          <div class="cal-leg"><div class="cal-dot" style="background:rgba(155,102,244,.25)"></div>Período</div>
-          <div class="cal-leg"><div class="cal-dot" style="background:rgba(248,113,113,.2)"></div>Feriado</div>
+        <!-- Mês 2 -->
+        <div class="cal-wrap">
+          <div class="cal-nav">
+            <button class="cal-btn ghost" aria-hidden="true">&#8249;</button>
+            <div class="cal-month" id="cal-month2">—</div>
+            <button class="cal-btn" id="btn-next">&#8250;</button>
+          </div>
+          <div class="cal-grid" id="cal-grid2"></div>
         </div>
       </div>
+
+      <!-- Legenda -->
+      <div class="cal-legend">
+        <div class="cal-leg"><div class="cal-dot" style="background:var(--accent)"></div>Início / Fim</div>
+        <div class="cal-leg"><div class="cal-dot" style="background:rgba(155,102,244,.25)"></div>Período selecionado</div>
+        <div class="cal-leg"><div class="cal-dot" style="background:rgba(248,113,113,.2)"></div>Feriado</div>
+        <div class="cal-leg"><div class="cal-dot" style="background:var(--bg2);border:1px solid var(--accent)"></div>Hoje</div>
+      </div>
+
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
         <div id="sel-msg" style="font-size:13px;color:var(--muted);margin-bottom:12px;">Clique em uma data para iniciar a seleção do período.</div>
         <button class="btn btn-gold" id="btn-continuar" disabled>Continuar →</button>
@@ -556,16 +576,18 @@ function blocoKPIs(ini,fim,dc,du){
   </div>`;
 }
 
-// ── CALENDÁRIO ──
-function renderCal(){
-  $('cal-month').textContent=`${MESES[calM]} ${calY}`;
-  const g=$('cal-grid');g.innerHTML='';
-  DS.forEach(d=>{const el=document.createElement('div');el.className='cal-dname';el.textContent=d;g.appendChild(el);});
-  const first=new Date(calY,calM,1),last=new Date(calY,calM+1,0);
+// ── CALENDÁRIO DUPLO ──────────────────────────────────────────────────
+function _renderMes(ano,mes,gridId,monthId){
+  const g=$(gridId);if(!g)return;
+  g.innerHTML='';
+  $(monthId).textContent=`${MESES[mes]} ${ano}`;
   const today=new Date().toISOString().split('T')[0];
+  DS.forEach(d=>{const el=document.createElement('div');el.className='cal-dname';el.textContent=d;g.appendChild(el);});
+  const first=new Date(ano,mes,1),last=new Date(ano,mes+1,0);
+  // Células vazias antes do 1° dia (domingo=0)
   for(let i=0;i<first.getDay();i++){const el=document.createElement('div');el.className='cal-day oth';g.appendChild(el);}
   for(let d=1;d<=last.getDate();d++){
-    const iso=`${calY}-${String(calM+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const iso=`${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     let cls='cal-day';
     if(iso<today)cls+=' dis';
     else if(isFer(iso))cls+=' fer';
@@ -577,6 +599,15 @@ function renderCal(){
     if(!cls.includes('dis')&&!cls.includes('oth')){const _i=iso;el.onclick=()=>clickD(_i);}
     g.appendChild(el);
   }
+}
+
+function renderCal(){
+  // Mês 1: calM/calY
+  _renderMes(calY,calM,'cal-grid','cal-month');
+  // Mês 2: mês seguinte
+  let m2=calM+1,y2=calY;
+  if(m2>11){m2=0;y2++;}
+  _renderMes(y2,m2,'cal-grid2','cal-month2');
 }
 function clickD(iso){if(!rS||rE){rS=iso;rE=null;picking=true;}else if(picking&&iso>rS){rE=iso;picking=false;}else{rS=iso;rE=null;picking=true;}updMsg();renderCal();}
 function updMsg(){
@@ -590,9 +621,9 @@ function updMsg(){
 
 function setStep(i){
   ['s0','s1','s2'].forEach((id,j)=>{const el=$(id);el.classList.remove('active','done');if(j<i)el.classList.add('done');else if(j===i)el.classList.add('active');});
-  $('step-cal').style.display=i===0?'':'none';
-  $('step-confirm').style.display=i===1?'':'none';
-  $('step-done').style.display=i===2?'':'none';
+  $('step-cal').style.display    = i===0 ? 'block' : 'none';
+  $('step-confirm').style.display= i===1 ? 'block' : 'none';
+  $('step-done').style.display   = i===2 ? 'block' : 'none';
 }
 
 function goStep2(){
@@ -1087,6 +1118,9 @@ async function alterarSenha(){
 
 // ── EVENT LISTENERS ──
 document.addEventListener('DOMContentLoaded',function(){
+  // Renderiza calendário imediatamente — garante que os meses apareçam
+  renderCal();
+
   $('btn-prev').addEventListener('click',()=>{if(calM===0){calM=11;calY--;}else calM--;renderCal();});
   $('btn-next').addEventListener('click',()=>{if(calM===11){calM=0;calY++;}else calM++;renderCal();});
   $('btn-continuar').addEventListener('click',goStep2);
