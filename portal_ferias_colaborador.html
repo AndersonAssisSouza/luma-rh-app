@@ -198,9 +198,24 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:14px 3
         <label class="flbl">Observação para o gestor (opcional)</label>
         <textarea class="fi" id="obs" rows="3" placeholder="Ex: prefiro retornar na segunda-feira..."></textarea>
       </div>
+
+      <!-- ASSINATURA DIGITAL -->
+      <div style="margin-bottom:16px;">
+        <label class="flbl" style="margin-bottom:6px;">✍️ Assinatura digital <span style="color:var(--danger);">*</span></label>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Assine abaixo para confirmar ciência e concordância com o período selecionado.</div>
+        <div style="position:relative;background:var(--bg3);border:1.5px solid var(--border2);border-radius:10px;overflow:hidden;">
+          <canvas id="sig-canvas" width="520" height="140" style="display:block;width:100%;height:140px;cursor:crosshair;touch-action:none;"></canvas>
+          <div id="sig-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;color:var(--muted);font-size:13px;opacity:.5;">Assine aqui</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+          <button class="btn btn-outline" onclick="sigLimpar()" style="font-size:12px;padding:5px 12px;">🗑 Limpar</button>
+        </div>
+        <div id="sig-erro" style="display:none;color:var(--danger);font-size:12px;margin-top:4px;">⚠ É necessário assinar antes de enviar.</div>
+      </div>
+
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-outline" id="btn-voltar">← Voltar</button>
-        <button class="btn btn-accent" id="btn-enviar">✓ Enviar solicitação para aprovação</button>
+        <button class="btn btn-accent" id="btn-enviar">✍ Assinar &amp; Enviar solicitação</button>
       </div>
     </div>
 
@@ -606,6 +621,7 @@ function goStep2(){
   // ── Regra 5: Período mínimo de 5 dias ──
   if(dc<5){toast('O período mínimo é de 5 dias corridos.','error');return;}
   setStep(1);
+  if(window.sigInit)window.sigInit();
   $('confirm-body').innerHTML=blocoKPIs(fD(rS),fD(rE),diasCorr(rS,rE),diasUteis(rS,rE))+
     `<div style="font-size:13px;color:var(--muted);margin-top:12px;">Ao confirmar, <strong style="color:var(--text);">${esc(UCOLAB.cad?.GESTOR||'seu gestor')}</strong> receberá e-mail para aprovar ou rejeitar.</div>
     <div style="margin-top:10px;background:rgba(155,102,244,.08);border:1px solid rgba(155,102,244,.2);border-radius:8px;padding:10px;font-size:12px;color:var(--muted);line-height:1.7;">
@@ -615,7 +631,66 @@ function goStep2(){
     </div>`;
 }
 
+// ── ASSINATURA DIGITAL ───────────────────────────────────────────────
+(function(){
+  let _canvas,_ctx,_drawing=false,_hasStroke=false;
+
+  function _setup(){
+    _canvas=$('sig-canvas');if(!_canvas)return;
+    _ctx=_canvas.getContext('2d');
+    _ctx.strokeStyle='#7c3aed';_ctx.lineWidth=2.5;_ctx.lineCap='round';_ctx.lineJoin='round';
+
+    function _pt(e){
+      const r=_canvas.getBoundingClientRect();
+      const src=e.touches?e.touches[0]:e;
+      return{x:(src.clientX-r.left)*(_canvas.width/r.width),
+             y:(src.clientY-r.top)*(_canvas.height/r.height)};
+    }
+    function _start(e){e.preventDefault();_drawing=true;const p=_pt(e);_ctx.beginPath();_ctx.moveTo(p.x,p.y);}
+    function _move(e){e.preventDefault();if(!_drawing)return;const p=_pt(e);_ctx.lineTo(p.x,p.y);_ctx.stroke();_hasStroke=true;$('sig-placeholder').style.display='none';}
+    function _stop(){_drawing=false;}
+
+    _canvas.addEventListener('mousedown',_start);
+    _canvas.addEventListener('mousemove',_move);
+    _canvas.addEventListener('mouseup',_stop);
+    _canvas.addEventListener('mouseleave',_stop);
+    _canvas.addEventListener('touchstart',_start,{passive:false});
+    _canvas.addEventListener('touchmove',_move,{passive:false});
+    _canvas.addEventListener('touchend',_stop);
+  }
+
+  window.sigLimpar=function(){
+    if(!_canvas){_canvas=$('sig-canvas');_ctx=_canvas?.getContext('2d');}
+    if(_ctx)_ctx.clearRect(0,0,_canvas.width,_canvas.height);
+    _hasStroke=false;
+    const ph=$('sig-placeholder');if(ph)ph.style.display='';
+    const err=$('sig-erro');if(err)err.style.display='none';
+  };
+
+  window.sigGetBase64=function(){return _hasStroke?_canvas?.toDataURL('image/png'):null;};
+  window.sigHasStroke=function(){return!!_hasStroke;};
+
+  // Re-inicializar cada vez que step-confirm ficar visível
+  window.sigInit=function(){
+    _hasStroke=false;
+    _canvas=$('sig-canvas');
+    if(!_canvas)return;
+    _ctx=_canvas.getContext('2d');
+    _ctx.clearRect(0,0,_canvas.width,_canvas.height);
+    _ctx.strokeStyle='#7c3aed';_ctx.lineWidth=2.5;_ctx.lineCap='round';_ctx.lineJoin='round';
+    const ph=$('sig-placeholder');if(ph)ph.style.display='';
+    const err=$('sig-erro');if(err)err.style.display='none';
+    _setup();
+  };
+})();
+
 async function enviarSolicitar(){
+  // Validar assinatura
+  if(!window.sigHasStroke||(window.sigHasStroke&&!window.sigHasStroke())){
+    const err=$('sig-erro');if(err)err.style.display='';
+    toast('Assine o documento antes de enviar','error');return;
+  }
+  const sigB64=window.sigGetBase64?window.sigGetBase64():null;
   const dc=diasCorr(rS,rE),du=diasUteis(rS,rE);
   const obs=$('obs').value.trim();
   const prot='SOL-'+Date.now();
@@ -633,7 +708,8 @@ async function enviarSolicitar(){
         protocolo:prot,
         data_inicio:rS,data_fim:rE,
         dias_corridos:dc,dias_uteis:du,
-        observacao:obs||null
+        observacao:obs||null,
+        assinatura_base64:sigB64||null
       });
       sol._sbId=sbSol?.id;
     }catch(e){console.warn('criarSolicitacaoFerias:',e);}
@@ -887,6 +963,7 @@ function renderRhList(){
           <div style="font-size:14px;margin-top:8px;"><strong>${fD(s.data_inicio)}</strong> → <strong>${fD(s.data_fim)}</strong> · <span style="color:var(--ok)">${s.dias_corridos} dias corridos</span> · ${s.dias_uteis||0} úteis</div>
           ${s.observacao?`<div style="font-size:12px;color:var(--muted);margin-top:4px;">Obs: ${esc(s.observacao)}</div>`:''}
           <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono);">${esc(s.protocolo)} · ${new Date(s.solicitado_em).toLocaleDateString('pt-BR')}</div>
+          ${s.assinatura_base64?`<div style="margin-top:10px;"><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">✍️ Assinatura digital do colaborador:</div><div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:6px;display:inline-block;"><img src="${s.assinatura_base64}" style="max-width:260px;height:70px;object-fit:contain;display:block;" alt="assinatura"/></div></div>`:'<div style="margin-top:8px;font-size:11px;color:var(--muted);opacity:.6;">✍️ Sem assinatura digital</div>'}
           ${acoes}
         </div>
         <span class="chip ${statusCls}" style="flex-shrink:0;">${esc(s.status)}</span>
@@ -1013,7 +1090,7 @@ document.addEventListener('DOMContentLoaded',function(){
   $('btn-prev').addEventListener('click',()=>{if(calM===0){calM=11;calY--;}else calM--;renderCal();});
   $('btn-next').addEventListener('click',()=>{if(calM===11){calM=0;calY++;}else calM++;renderCal();});
   $('btn-continuar').addEventListener('click',goStep2);
-  $('btn-voltar').addEventListener('click',()=>setStep(0));
+  $('btn-voltar').addEventListener('click',()=>{if(window.sigLimpar)sigLimpar();setStep(0);});
   $('btn-enviar').addEventListener('click',enviarSolicitar);
   $('btn-nova').addEventListener('click',novaSol);
 });
