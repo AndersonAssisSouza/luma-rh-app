@@ -6266,7 +6266,7 @@ function filterDataForCoord(nome,email){
 }
 
 function openAdminModal(){showTab('adminSec');}
-function openMinhaEmpresa(el){showTab('cfg',el);setTimeout(()=>cfgShowTab('empresa'),150);}
+function openMinhaEmpresa(el){window._cfgPendingTab='empresa';showTab('cfg',el);}
 function renderAdmin(){
   const coords=loadCoords();
   const masters=coords.filter(c=>c.role==='master');
@@ -7578,7 +7578,8 @@ let _cfgInited=false;
 const CFG_EMP_OPTS=[{value:'luisa',label:'Luisa Moraes Advogados'},{value:'luma',label:'Luma Plataforma'}];
 const CFG_TIPO_OPTS=[{value:'funcionario',label:'🎂 Aniversário de Funcionário'},{value:'empresa',label:'🏆 Aniversário de Empresa'}];
 async function cfgInitOnce(){
-  if(_cfgInited)return;_cfgInited=true;
+  if(_cfgInited){if(window._cfgPendingTab){cfgShowTab(window._cfgPendingTab);window._cfgPendingTab=null;}return;}
+  _cfgInited=true;
   try{
     const tenant=await window._sbFns?.getTenantConfig?.();
     const cfg=(tenant?.config)||{};
@@ -7590,6 +7591,7 @@ async function cfgInitOnce(){
     if(typeof window._applyTheme==='function')window._applyTheme(cfg);
   }catch(e){toast('Erro ao carregar configurações: '+e.message,'error');cfgRenderModelos();}
   cfgInitEmpresaForm();
+  if(window._cfgPendingTab){cfgShowTab(window._cfgPendingTab);window._cfgPendingTab=null;}
 }
 function cfgShowTab(name){
   ['visual','empresa'].forEach(t=>{
