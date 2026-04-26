@@ -393,12 +393,12 @@ nav.legacy{display:none!important;}
     <div class="sidebar-sep"></div>
     <li class="menu-item"><button class="menu-link" onclick="showTab('msg',this)"><span class="menu-icon">🎉</span>Mensagens</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('cfg',this)"><span class="menu-icon">🎨</span>Aparência / Card Posts</button></li>
-    <li class="menu-item" id="nav-minha-empresa" style="display:none;"><button class="menu-link" onclick="showTab('cfg',this)"><span class="menu-icon">🏢</span>Minha Empresa</button></li>
+    <li class="menu-item" id="nav-minha-empresa" style="display:none;"><button class="menu-link" onclick="openMinhaEmpresa(this)"><span class="menu-icon">🏢</span>Minha Empresa</button></li>
     <li class="menu-item" id="nav-admin-console"><a href="./admin.html" style="text-decoration:none;display:block;"><button class="menu-link"><span class="menu-icon">⚙️</span>Admin Manager</button></a></li>
   </ul>
 
   <div class="sidebar-footer">
-    <button id="btn-admin" class="menu-link" onclick="openAdminModal()" style="display:none;width:100%;margin-bottom:6px;"><span class="menu-icon">🛠️</span>Administração</button>
+    <button id="btn-admin" class="menu-link" onclick="showTab('adminSec',this)" style="display:none;width:100%;margin-bottom:6px;"><span class="menu-icon">🛠️</span>Administração</button>
     <button class="menu-link" style="width:100%;margin-bottom:6px;" onclick="loadAll()"><span class="menu-icon">🔄</span>Atualizar dados</button>
     <button class="menu-link" style="width:100%;" onclick="window._sbLogout&&_sbLogout()"><span class="menu-icon">🚪</span>Sair</button>
   </div>
@@ -1263,63 +1263,57 @@ nav.legacy{display:none!important;}
   </div>
 </div>
 
-<!-- MODAL ADMINISTRAÇÃO -->
-<div class="ov" id="mAdmin">
-  <div class="modal" style="max-width:680px;max-height:90vh;overflow-y:auto;">
-    <div class="mh" style="position:sticky;top:0;background:var(--bg2);z-index:1;">
-      <div>
-        <div class="mt">⚙ Administração</div>
-        <div class="ms">Gerenciar perfis de acesso ao People Analytics</div>
+<!-- SEÇÃO ADMINISTRAÇÃO -->
+<div class="sec" id="adminSec">
+  <div class="sttl">
+    <div class="sttl-l"><span>🛠️</span> Administração</div>
+    <span style="font-size:12px;font-weight:400;color:var(--muted);">Gerenciar perfis de acesso ao People Analytics</span>
+  </div>
+  <div class="card" style="max-width:700px;">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7;">
+      <strong style="color:var(--accent);">Master</strong> — acesso completo a todos os colaboradores (todas as abas).<br>
+      <strong style="color:var(--accent2);">Gestor</strong> — acesso restrito: visualiza apenas colaboradores cujo campo <strong style="color:var(--text);">GESTOR</strong> corresponda ao nome cadastrado.
+    </p>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end;">
+      <div style="flex:1;min-width:220px;">
+        <div class="flbl">E-mail Microsoft *</div>
+        <input class="fi" id="coord-email" placeholder="nome@lumaplataforma.com.br" style="font-size:13px;">
       </div>
-      <button class="mc" onclick="closeModal('mAdmin')">×</button>
+      <div style="flex:1;min-width:180px;">
+        <div class="flbl">Nome (se não estiver no cadastro)</div>
+        <input class="fi" id="coord-nome" placeholder="Ex: Matheus Rocha" style="font-size:13px;">
+      </div>
+      <div style="min-width:140px;">
+        <div class="flbl">Perfil *</div>
+        <select class="fsel" id="coord-role" style="font-size:13px;">
+          <option value="master">Master</option>
+          <option value="gestor">Gestor</option>
+          <option value="rh">RH</option>
+        </select>
+      </div>
+      <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#fff;flex-shrink:0;" onclick="addCoord()">+ Adicionar</button>
     </div>
-    <div class="mb">
-      <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7;">
-        <strong style="color:var(--accent);">Master</strong> — acesso completo a todos os colaboradores (todas as abas).<br>
-        <strong style="color:var(--accent2);">Gestor</strong> — acesso restrito: visualiza apenas colaboradores cujo campo <strong style="color:var(--text);">GESTOR</strong> corresponda ao nome cadastrado.
-      </p>
-      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end;">
-        <div style="flex:1;min-width:220px;">
-          <div class="flbl">E-mail Microsoft *</div>
-          <input class="fi" id="coord-email" placeholder="nome@lumaplataforma.com.br" style="font-size:13px;">
-        </div>
-        <div style="flex:1;min-width:180px;">
-          <div class="flbl">Nome (se não estiver no cadastro)</div>
-          <input class="fi" id="coord-nome" placeholder="Ex: Matheus Rocha" style="font-size:13px;">
-        </div>
-        <div style="min-width:140px;">
-          <div class="flbl">Perfil *</div>
-          <select class="fsel" id="coord-role" style="font-size:13px;">
-            <option value="master">Master</option>
-            <option value="gestor">Gestor</option>
-            <option value="rh">RH</option>
-          </select>
-        </div>
-        <button class="btn" style="background:var(--accent);border-color:var(--accent);color:#fff;flex-shrink:0;" onclick="addCoord()">+ Adicionar</button>
+    <!-- Masters -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
+        ⭐ Masters — Acesso completo
       </div>
-      <!-- Masters -->
-      <div style="margin-bottom:14px;">
-        <div style="font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
-          ⭐ Masters — Acesso completo
-        </div>
-        <div id="admin-list-master"></div>
-      </div>
-      <!-- Gestores -->
-      <div style="margin-bottom:14px;">
-        <div style="font-size:12px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
-          👥 Gestores — Acesso restrito (subordinados)
-        </div>
-        <div id="admin-list-gestor"></div>
-      </div>
-      <!-- RH -->
-      <div>
-        <div style="font-size:12px;font-weight:600;color:#2563eb;text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
-          🏥 RH — Acesso completo + cópias de e-mails
-        </div>
-        <div id="admin-list-rh"></div>
-      </div>
+      <div id="admin-list-master"></div>
     </div>
-    <div class="mf"><button class="btn btn-g" onclick="closeModal('mAdmin')">Fechar</button></div>
+    <!-- Gestores -->
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
+        👥 Gestores — Acesso restrito (subordinados)
+      </div>
+      <div id="admin-list-gestor"></div>
+    </div>
+    <!-- RH -->
+    <div>
+      <div style="font-size:12px;font-weight:600;color:#2563eb;text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
+        🏥 RH — Acesso completo + cópias de e-mails
+      </div>
+      <div id="admin-list-rh"></div>
+    </div>
   </div>
 </div>
 
@@ -6130,6 +6124,7 @@ function showTab(id,el){
   if(id==='msg'){msgInitOnce();}
   if(id==='cfg'){cfgInitOnce();}
   if(id==='resc'){initRescisao();}
+  if(id==='adminSec'){renderAdmin();}
 }
 
 function showSection(id){
@@ -6270,7 +6265,8 @@ function filterDataForCoord(nome,email){
   window._logSub=(D.CONTROLE_COMUNICACAO_RH||[]).filter(r=>ids.has(r.ID_COLABORADOR));
 }
 
-function openAdminModal(){renderAdmin();openModal('mAdmin');}
+function openAdminModal(){showTab('adminSec');}
+function openMinhaEmpresa(el){showTab('cfg',el);setTimeout(()=>cfgShowTab('empresa'),150);}
 function renderAdmin(){
   const coords=loadCoords();
   const masters=coords.filter(c=>c.role==='master');
