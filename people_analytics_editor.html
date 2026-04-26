@@ -385,7 +385,7 @@ nav.legacy{display:none!important;}
     <li class="menu-item"><button class="menu-link" onclick="showTab('alert',this)"><span class="menu-icon">🔔</span>Alertas</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('complian')"><span class="menu-icon">✅</span>Compliance</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('desl',this)"><span class="menu-icon">🚪</span>Desligados</button></li>
-    <li class="menu-item"><button class="menu-link" onclick="openRescisao()"><span class="menu-icon">🧮</span>Rescisão CLT</button></li>
+    <li class="menu-item"><button class="menu-link" onclick="showTab('resc',this)"><span class="menu-icon">🧮</span>Rescisão CLT</button></li>
       <li class="menu-item"><button class="menu-link" onclick="showTab('depend',this)"><span class="menu-icon">👨‍👩‍👧</span>Dependentes</button></li>
       <li class="menu-item"><button class="menu-link" onclick="showTab('decimo',this)"><span class="menu-icon">🎄</span>13° Salário</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('acoes',this)"><span class="menu-icon">⚡</span>Ações</button></li>
@@ -1999,16 +1999,18 @@ nav.legacy{display:none!important;}
   </div>
 </div>
 
-<!-- MODAL RESCISÃO CLT -->
-<div class="ov" id="mRescisao">
-<div class="modal" style="max-width:600px;">
-  <div class="mh"><div><div class="mt">🧮 Rescisão CLT</div><div class="ms" style="font-size:13px;color:var(--muted);">Cálculo orientativo — consulte o DP para valores exatos</div></div><button class="mc" onclick="closeRescisao()">✕</button></div>
-  <div class="mb">
+<!-- SEÇÃO RESCISÃO CLT -->
+<div class="sec" id="resc">
+  <div class="sttl">
+    <div class="sttl-l"><span>🧮</span> Rescisão CLT</div>
+    <span style="font-size:12px;font-weight:400;color:var(--muted);">Cálculo orientativo — consulte o DP para valores exatos</span>
+  </div>
+  <div class="card" style="max-width:700px;">
     <div class="fg" style="margin-bottom:16px;">
       <div class="fgrp">
         <label class="flbl">Colaborador</label>
         <select class="fsel" id="rColabSel" onchange="preencherRescisao()">
-          <option value="">Selecione...</option>
+          <option value="">Selecione um colaborador CLT...</option>
         </select>
       </div>
       <div class="fgrp">
@@ -2069,12 +2071,11 @@ nav.legacy{display:none!important;}
       </table>
       <div style="margin-top:10px;padding:10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.7;" id="rObs"></div>
     </div>
+
+    <div style="margin-top:20px;display:flex;gap:10px;">
+      <button class="btn" onclick="exportRescisaoCSV()">⬇ Exportar CSV</button>
+    </div>
   </div>
-  <div class="mf">
-    <button class="btn" onclick="exportRescisaoCSV()">⬇ Exportar</button>
-    <button class="btn btn-a" onclick="closeRescisao()">Fechar</button>
-  </div>
-</div>
 </div>
 
 <!-- Modal Dependente -->
@@ -5740,24 +5741,23 @@ function renderCompliance(){
 // ══════════════════════════════
 // RESCISÃO CLT
 // ══════════════════════════════
-function openRescisao(colabId){
-  // Salva aba atual para restaurar ao fechar o modal
-  window._rescisaoFromTab = document.querySelector('.sec.active')?.id || 'vg';
-  // Popula select de colaboradores
+function initRescisao(colabId){
+  // Popula select de colaboradores CLT ativos
   const ativos=(D.CADASTRO_COLABORADORES||[]).filter(r=>String(r.STATUS||'').trim().toUpperCase()==='ATIVO'&&String(r.TIPO_VINCULO||'').toUpperCase()==='CLT');
   const sel=$('rColabSel');
   sel.innerHTML='<option value="">Selecione um colaborador CLT...</option>'+
     ativos.map(r=>`<option value="${esc(r.ID_COLABORADOR||'')}">${esc(r.NOME||'')}</option>`).join('');
   if(colabId){sel.value=colabId;preencherRescisao();}
-  $('rDesligamento').value=new Date().toISOString().slice(0,10);
-  $('rResultado').style.display='none';
-  openModal('mRescisao');
+  if(!$('rDesligamento').value)$('rDesligamento').value=new Date().toISOString().slice(0,10);
+}
+// Mantido por compatibilidade (chamado de outros contextos com colabId)
+function openRescisao(colabId){
+  showTab('resc');
+  setTimeout(()=>initRescisao(colabId),50);
 }
 function closeRescisao(){
-  closeModal('mRescisao');
-  const tab=window._rescisaoFromTab||'vg';
+  showTab(window._rescisaoFromTab||'vg');
   window._rescisaoFromTab=null;
-  showTab(tab);
 }
 
 function preencherRescisao(){
@@ -6130,6 +6130,7 @@ function showTab(id,el){
   if(id==='decimo'){initDeciAno();loadDecimo();}
   if(id==='msg'){msgInitOnce();}
   if(id==='cfg'){cfgInitOnce();}
+  if(id==='resc'){initRescisao();}
 }
 
 function showSection(id){
