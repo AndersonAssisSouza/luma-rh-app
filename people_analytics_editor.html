@@ -1184,7 +1184,7 @@ nav.legacy{display:none!important;}
     <div class="sttl-l"><span>🧮</span> Rescisão CLT</div>
     <span style="font-size:12px;font-weight:400;color:var(--muted);">Cálculo orientativo — consulte o DP para valores exatos</span>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;max-width:1100px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
     <div class="card">
       <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px;">📋 Dados do Desligamento</div>
     <div class="fg" style="margin-bottom:0;">
@@ -7682,41 +7682,54 @@ function cfgCompress(file,maxW,q){
 }
 // Minha Empresa dentro de cfg
 let _cfgEmpresaData={};
-function cfgInitEmpresaForm(){
-  // Lê dados do tenant já carregados no perfil
-  const t=window._sbProfile?.tenants||window._sbProfile;
-  _cfgEmpresaData={
-    nome_empresa:t?.nome_empresa||t?.nome||'',
-    cnpj:t?.cnpj||'',endereco:t?.endereco||'',telefone:t?.telefone||'',
-    email_contato:t?.email_contato||'',site:t?.site||'',responsavel:t?.responsavel||''
-  };
+async function cfgInitEmpresaForm(){
   const frm=$('cfg-empresa-form');if(!frm)return;
+  frm.innerHTML='<div style="color:var(--muted);font-size:14px;padding:16px 0;">⏳ Carregando...</div>';
+  try{
+    // Sempre busca do banco para garantir dados atuais
+    const t=await window._sbFns?.getTenantConfig?.()
+             ||window._sbProfile?.tenants
+             ||window._sbProfile||{};
+    _cfgEmpresaData={
+      nome:       t?.nome||'',
+      cnpj:       t?.cnpj||'',
+      telefone:   t?.telefone||'',
+      endereco:   t?.endereco||'',
+      email_fin:  t?.email_financeiro||'',
+      email_rh:   t?.email_rh||'',
+      site:       t?.site||'',
+      responsavel:t?.responsavel||''
+    };
+  }catch(e){_cfgEmpresaData={nome:'',cnpj:'',telefone:'',endereco:'',email_fin:'',email_rh:'',site:'',responsavel:''};}
   frm.innerHTML=`
     <div class="fg">
-      <div class="fgrp s2"><div class="flbl" style="font-size:13px;">Razão Social / Nome</div><input class="fi" style="font-size:14px;" id="cemp-nome" value="${esc(_cfgEmpresaData.nome_empresa)}" placeholder="Nome da empresa"></div>
+      <div class="fgrp s2"><div class="flbl" style="font-size:13px;">Razão Social / Nome</div><input class="fi" style="font-size:14px;" id="cemp-nome" value="${esc(_cfgEmpresaData.nome)}" placeholder="Nome da empresa"></div>
       <div class="fgrp"><div class="flbl" style="font-size:13px;">CNPJ</div><input class="fi" style="font-size:14px;" id="cemp-cnpj" value="${esc(_cfgEmpresaData.cnpj)}" placeholder="00.000.000/0001-00"></div>
       <div class="fgrp"><div class="flbl" style="font-size:13px;">Telefone</div><input class="fi" style="font-size:14px;" id="cemp-tel" value="${esc(_cfgEmpresaData.telefone)}" placeholder="(00) 00000-0000"></div>
       <div class="fgrp s2"><div class="flbl" style="font-size:13px;">Endereço</div><input class="fi" style="font-size:14px;" id="cemp-end" value="${esc(_cfgEmpresaData.endereco)}" placeholder="Rua, número, cidade — UF"></div>
-      <div class="fgrp"><div class="flbl" style="font-size:13px;">E-mail de contato</div><input class="fi" style="font-size:14px;" id="cemp-email" value="${esc(_cfgEmpresaData.email_contato)}" placeholder="contato@empresa.com.br"></div>
+      <div class="fgrp"><div class="flbl" style="font-size:13px;">E-mail Financeiro</div><input class="fi" style="font-size:14px;" id="cemp-emailfin" value="${esc(_cfgEmpresaData.email_fin)}" placeholder="financeiro@empresa.com.br"></div>
+      <div class="fgrp"><div class="flbl" style="font-size:13px;">E-mail RH</div><input class="fi" style="font-size:14px;" id="cemp-emailrh" value="${esc(_cfgEmpresaData.email_rh)}" placeholder="rh@empresa.com.br"></div>
       <div class="fgrp"><div class="flbl" style="font-size:13px;">Site</div><input class="fi" style="font-size:14px;" id="cemp-site" value="${esc(_cfgEmpresaData.site)}" placeholder="https://empresa.com.br"></div>
       <div class="fgrp"><div class="flbl" style="font-size:13px;">Responsável RH</div><input class="fi" style="font-size:14px;" id="cemp-resp" value="${esc(_cfgEmpresaData.responsavel)}" placeholder="Nome do responsável"></div>
     </div>`;
 }
 async function cfgSalvarEmpresa(){
-  const tid=window._sbProfile?.tenant_id;if(!tid)return;
+  const tid=window._sbProfile?.tenant_id;if(!tid){toast('Tenant não identificado','error');return;}
   const patch={
-    nome_empresa:$('cemp-nome')?.value?.trim(),
-    cnpj:$('cemp-cnpj')?.value?.trim(),
-    endereco:$('cemp-end')?.value?.trim(),
-    telefone:$('cemp-tel')?.value?.trim(),
-    email_contato:$('cemp-email')?.value?.trim(),
-    site:$('cemp-site')?.value?.trim(),
-    responsavel:$('cemp-resp')?.value?.trim()
+    nome:             $('cemp-nome')?.value?.trim()||null,
+    cnpj:             $('cemp-cnpj')?.value?.trim()||null,
+    telefone:         $('cemp-tel')?.value?.trim()||null,
+    endereco:         $('cemp-end')?.value?.trim()||null,
+    email_financeiro: $('cemp-emailfin')?.value?.trim()||null,
+    email_rh:         $('cemp-emailrh')?.value?.trim()||null,
+    site:             $('cemp-site')?.value?.trim()||null,
+    responsavel:      $('cemp-resp')?.value?.trim()||null
   };
   try{
-    await window._sb.from('tenants').update(patch).eq('id',tid);
+    const {error}=await window._sb.from('tenants').update(patch).eq('id',tid);
+    if(error)throw error;
     toast('Dados da empresa salvos!','success');
-  }catch(e){toast('Erro: '+e.message,'error');}
+  }catch(e){toast('Erro ao salvar: '+e.message,'error');}
 }
 </script>
 </body>
