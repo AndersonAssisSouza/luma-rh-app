@@ -4732,20 +4732,10 @@ async function saveNewAus(){
 // ══════════════════════════════
 window._minhaEmpresaData = null;
 
-window.openMinhaEmpresa = async function(){
-  try{
-    const d = await window._sbFns.getTenantConfig();
-    window._minhaEmpresaData = d;
-    const t = window._minhaEmpresaData || {};
-    $('meNome').value       = t.nome || '';
-    $('meEmailAdmin').value = t.email_admin || '';
-    $('meCnpj').value       = t.cnpj || '';
-    $('meTelefone').value   = t.telefone || '';
-    $('meEndereco').value   = t.endereco || '';
-    $('meEmailFin').value   = t.email_financeiro || '';
-    $('meEmailRH').value    = t.email_rh || '';
-    openModal('mMinhaEmpresa');
-  } catch(e){ toast('Erro ao carregar dados da empresa: '+e.message,'error'); }
+window.openMinhaEmpresa = function(el){
+  // Abre seção Configurações direto na sub-aba Minha Empresa
+  window._cfgPendingTab = 'empresa';
+  showTab('cfg', el || document.querySelector('[onclick*="openMinhaEmpresa"]'));
 }
 
 window.salvarMinhaEmpresa = async function(){
@@ -6266,7 +6256,6 @@ function filterDataForCoord(nome,email){
 }
 
 function openAdminModal(){showTab('adminSec');}
-function openMinhaEmpresa(el){window._cfgPendingTab='empresa';showTab('cfg',el);}
 function renderAdmin(){
   const coords=loadCoords();
   const masters=coords.filter(c=>c.role==='master');
