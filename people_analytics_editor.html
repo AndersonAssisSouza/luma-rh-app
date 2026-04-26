@@ -1094,14 +1094,7 @@ nav.legacy{display:none!important;}
     <div class="sttl-l"><span>🎨</span> Aparência &amp; Configurações</div>
   </div>
 
-  <!-- Sub-tabs -->
-  <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;">
-    <button class="sec-tab active" id="cfgt-visual" onclick="cfgShowTab('visual')">🎨 Identidade Visual</button>
-    <button class="sec-tab" id="cfgt-empresa" onclick="cfgShowTab('empresa')">🏢 Minha Empresa</button>
-  </div>
-
-  <!-- TAB: Identidade Visual -->
-  <div id="cfg-tab-visual">
+  <!-- Identidade Visual (único conteúdo desta seção) -->
     <div class="cfg-grid">
       <!-- Coluna esquerda: Logo + Cores -->
       <div class="card">
@@ -1167,21 +1160,20 @@ nav.legacy{display:none!important;}
     <div class="cfg-save-bar">
       <button class="btn btn-g" id="cfg-btn-save" onclick="cfgSalvar()">💾 Salvar Configurações</button>
     </div>
-  </div>
+</div>
 
-  <!-- TAB: Minha Empresa -->
-  <div id="cfg-tab-empresa" style="display:none;">
-    <div style="max-width:640px;">
-      <div class="card">
-        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">🏢 Minha Empresa</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Dados cadastrais e contatos da empresa</div>
-        <div id="cfg-empresa-form">
-          <!-- preenchido pelo JS -->
-        </div>
-        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-          <button class="btn btn-g" onclick="cfgSalvarEmpresa()">💾 Salvar dados da empresa</button>
-        </div>
-      </div>
+<!-- SEÇÃO MINHA EMPRESA -->
+<div class="sec" id="empresa">
+  <div class="sttl">
+    <div class="sttl-l"><span>🏢</span> Minha Empresa</div>
+    <span style="font-size:12px;font-weight:400;color:var(--muted);">Dados cadastrais e contatos da empresa</span>
+  </div>
+  <div class="card" style="max-width:900px;">
+    <div id="cfg-empresa-form">
+      <div style="color:var(--muted);font-size:14px;padding:20px 0;">Carregando...</div>
+    </div>
+    <div style="margin-top:20px;display:flex;gap:10px;">
+      <button class="btn btn-g" onclick="cfgSalvarEmpresa()">💾 Salvar dados da empresa</button>
     </div>
   </div>
 </div>
@@ -1192,8 +1184,10 @@ nav.legacy{display:none!important;}
     <div class="sttl-l"><span>🧮</span> Rescisão CLT</div>
     <span style="font-size:12px;font-weight:400;color:var(--muted);">Cálculo orientativo — consulte o DP para valores exatos</span>
   </div>
-  <div class="card" style="max-width:700px;">
-    <div class="fg" style="margin-bottom:16px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;max-width:1100px;">
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px;">📋 Dados do Desligamento</div>
+    <div class="fg" style="margin-bottom:0;">
       <div class="fgrp">
         <label class="flbl">Colaborador</label>
         <select class="fsel" id="rColabSel" onchange="preencherRescisao()">
@@ -1239,9 +1233,10 @@ nav.legacy{display:none!important;}
         <input class="fi" type="number" id="rFGTSmes" min="0" max="100" value="0" step="0.01" placeholder="0" oninput="calcRescisao()">
       </div>
     </div>
-    <div id="rResultado" style="display:none;">
-      <div style="height:1px;background:var(--border);margin:4px 0 16px;"></div>
-      <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Resultado do Cálculo</div>
+    </div><!-- /fg -->
+    </div><!-- /card esquerdo -->
+    <div class="card" id="rResultado" style="display:none;">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:16px;">💰 Resultado do Cálculo</div>
       <div id="rInfo" style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;color:var(--muted);line-height:1.8;"></div>
       <table style="width:100%;border-collapse:collapse;font-size:13px;" id="rTabela">
         <thead><tr style="border-bottom:2px solid var(--border);">
@@ -1255,13 +1250,13 @@ nav.legacy{display:none!important;}
           <td style="text-align:right;padding:10px 4px;font-weight:700;font-size:16px;color:var(--accent);" id="rTotal">R$ 0,00</td>
         </tr></tfoot>
       </table>
-      <div style="margin-top:10px;padding:10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.7;" id="rObs"></div>
-    </div>
-    <div style="margin-top:20px;display:flex;gap:10px;">
-      <button class="btn" onclick="exportRescisaoCSV()">⬇ Exportar CSV</button>
-    </div>
-  </div>
-</div>
+      <div style="margin-top:10px;padding:10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:13px;color:var(--muted);line-height:1.7;" id="rObs"></div>
+      <div style="margin-top:16px;">
+        <button class="btn" onclick="exportRescisaoCSV()">⬇ Exportar CSV</button>
+      </div>
+    </div><!-- /card resultado -->
+  </div><!-- /grid -->
+</div><!-- /sec#resc -->
 
 <!-- SEÇÃO ADMINISTRAÇÃO -->
 <div class="sec" id="adminSec">
@@ -1269,8 +1264,8 @@ nav.legacy{display:none!important;}
     <div class="sttl-l"><span>🛠️</span> Administração</div>
     <span style="font-size:12px;font-weight:400;color:var(--muted);">Gerenciar perfis de acesso ao People Analytics</span>
   </div>
-  <div class="card" style="max-width:700px;">
-    <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.7;">
+  <div class="card" style="max-width:1000px;">
+    <p style="font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.7;">
       <strong style="color:var(--accent);">Master</strong> — acesso completo a todos os colaboradores (todas as abas).<br>
       <strong style="color:var(--accent2);">Gestor</strong> — acesso restrito: visualiza apenas colaboradores cujo campo <strong style="color:var(--text);">GESTOR</strong> corresponda ao nome cadastrado.
     </p>
@@ -1295,21 +1290,21 @@ nav.legacy{display:none!important;}
     </div>
     <!-- Masters -->
     <div style="margin-bottom:14px;">
-      <div style="font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
+      <div style="font-size:13px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
         ⭐ Masters — Acesso completo
       </div>
       <div id="admin-list-master"></div>
     </div>
     <!-- Gestores -->
     <div style="margin-bottom:14px;">
-      <div style="font-size:12px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
+      <div style="font-size:13px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
         👥 Gestores — Acesso restrito (subordinados)
       </div>
       <div id="admin-list-gestor"></div>
     </div>
     <!-- RH -->
     <div>
-      <div style="font-size:12px;font-weight:600;color:#2563eb;text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
+      <div style="font-size:13px;font-weight:600;color:#2563eb;text-transform:uppercase;letter-spacing:.06em;padding:6px 0 8px;border-bottom:1px solid var(--border);">
         🏥 RH — Acesso completo + cópias de e-mails
       </div>
       <div id="admin-list-rh"></div>
@@ -4733,9 +4728,7 @@ async function saveNewAus(){
 window._minhaEmpresaData = null;
 
 window.openMinhaEmpresa = function(el){
-  // Abre seção Configurações direto na sub-aba Minha Empresa
-  window._cfgPendingTab = 'empresa';
-  showTab('cfg', el || document.querySelector('[onclick*="openMinhaEmpresa"]'));
+  showTab('empresa', el || document.querySelector('[onclick*="openMinhaEmpresa"]'));
 }
 
 window.salvarMinhaEmpresa = async function(){
@@ -6115,6 +6108,7 @@ function showTab(id,el){
   if(id==='cfg'){cfgInitOnce();}
   if(id==='resc'){initRescisao();}
   if(id==='adminSec'){renderAdmin();}
+  if(id==='empresa'){cfgInitEmpresaForm();}
 }
 
 function showSection(id){
@@ -7699,13 +7693,13 @@ function cfgInitEmpresaForm(){
   const frm=$('cfg-empresa-form');if(!frm)return;
   frm.innerHTML=`
     <div class="fg">
-      <div class="fgrp"><div class="flbl">Razão Social / Nome</div><input class="fi" id="cemp-nome" value="${esc(_cfgEmpresaData.nome_empresa)}" placeholder="Nome da empresa"></div>
-      <div class="fgrp"><div class="flbl">CNPJ</div><input class="fi" id="cemp-cnpj" value="${esc(_cfgEmpresaData.cnpj)}" placeholder="00.000.000/0001-00"></div>
-      <div class="fgrp s2"><div class="flbl">Endereço</div><input class="fi" id="cemp-end" value="${esc(_cfgEmpresaData.endereco)}" placeholder="Rua, número, cidade — UF"></div>
-      <div class="fgrp"><div class="flbl">Telefone</div><input class="fi" id="cemp-tel" value="${esc(_cfgEmpresaData.telefone)}" placeholder="(00) 00000-0000"></div>
-      <div class="fgrp"><div class="flbl">E-mail de contato</div><input class="fi" id="cemp-email" value="${esc(_cfgEmpresaData.email_contato)}" placeholder="contato@empresa.com.br"></div>
-      <div class="fgrp"><div class="flbl">Site</div><input class="fi" id="cemp-site" value="${esc(_cfgEmpresaData.site)}" placeholder="https://empresa.com.br"></div>
-      <div class="fgrp"><div class="flbl">Responsável RH</div><input class="fi" id="cemp-resp" value="${esc(_cfgEmpresaData.responsavel)}" placeholder="Nome do responsável"></div>
+      <div class="fgrp s2"><div class="flbl" style="font-size:13px;">Razão Social / Nome</div><input class="fi" style="font-size:14px;" id="cemp-nome" value="${esc(_cfgEmpresaData.nome_empresa)}" placeholder="Nome da empresa"></div>
+      <div class="fgrp"><div class="flbl" style="font-size:13px;">CNPJ</div><input class="fi" style="font-size:14px;" id="cemp-cnpj" value="${esc(_cfgEmpresaData.cnpj)}" placeholder="00.000.000/0001-00"></div>
+      <div class="fgrp"><div class="flbl" style="font-size:13px;">Telefone</div><input class="fi" style="font-size:14px;" id="cemp-tel" value="${esc(_cfgEmpresaData.telefone)}" placeholder="(00) 00000-0000"></div>
+      <div class="fgrp s2"><div class="flbl" style="font-size:13px;">Endereço</div><input class="fi" style="font-size:14px;" id="cemp-end" value="${esc(_cfgEmpresaData.endereco)}" placeholder="Rua, número, cidade — UF"></div>
+      <div class="fgrp"><div class="flbl" style="font-size:13px;">E-mail de contato</div><input class="fi" style="font-size:14px;" id="cemp-email" value="${esc(_cfgEmpresaData.email_contato)}" placeholder="contato@empresa.com.br"></div>
+      <div class="fgrp"><div class="flbl" style="font-size:13px;">Site</div><input class="fi" style="font-size:14px;" id="cemp-site" value="${esc(_cfgEmpresaData.site)}" placeholder="https://empresa.com.br"></div>
+      <div class="fgrp"><div class="flbl" style="font-size:13px;">Responsável RH</div><input class="fi" style="font-size:14px;" id="cemp-resp" value="${esc(_cfgEmpresaData.responsavel)}" placeholder="Nome do responsável"></div>
     </div>`;
 }
 async function cfgSalvarEmpresa(){
