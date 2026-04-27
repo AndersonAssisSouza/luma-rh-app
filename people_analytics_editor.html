@@ -2819,8 +2819,15 @@ function render(){
     <td>${statusChip}</td>
     <td><div class="acts">${btnConfirm}<button class="ab" onclick='openEditEx(${JSON.stringify(r)})'>Editar</button></div></td></tr>`;}).join('')||'<tr><td colspan="7" class="empty">Nenhum</td></tr>';
 
-  // Ausências (gestor: apenas subordinados; demais: todos)
-  const ausR=(ausSub||[]).filter(r=>{const n=String(r.NOME||'').trim();const d=String(r.DATA||'').trim();return n&&n!=='Colaborador (a)'&&n!=='Colaborador'&&d&&d!=='Data';});
+  // Ausências (gestor: apenas subordinados; demais: todos — apenas colaboradores ativos)
+  const _ativosIdSet=new Set([...ativos.map(a=>a.ID_COLABORADOR).filter(Boolean),...ativos.map(a=>a._id).filter(Boolean)]);
+  const _ativosNomeSet=new Set(ativos.map(a=>String(a.NOME||'').trim().toLowerCase()).filter(Boolean));
+  const ausR=(ausSub||[]).filter(r=>{
+    const n=String(r.NOME||'').trim();const d=String(r.DATA||'').trim();
+    if(!n||n==='Colaborador (a)'||n==='Colaborador'||!d||d==='Data') return false;
+    if(r.ID_COLABORADOR) return _ativosIdSet.has(r.ID_COLABORADOR);
+    return _ativosNomeSet.has(n.toLowerCase());
+  });
   $('ausCount').textContent=ausR.length+' registros';
   $('ausBody').innerHTML=ausR.map(r=>{
     const cidDisp=r.CID||r.DETALHE||'—';
@@ -6291,6 +6298,7 @@ function showTab(id,el){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.menu-link').forEach(t=>t.classList.remove('active'));
   $(id).classList.add('active');
+  window.scrollTo(0,0);const mc=document.querySelector('.main');if(mc)mc.scrollTop=0;
   if(el)el.classList.add('active');
   else{document.querySelectorAll('.menu-link').forEach(t=>{if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'"+id+"'"))t.classList.add('active');});}
   if(id==='desl')renderDesligados();
