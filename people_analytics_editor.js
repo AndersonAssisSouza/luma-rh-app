@@ -5,7 +5,7 @@ import {
   getColaboradorByEmail, getFeriasSaldo, getSolicitacaoPorProtocolo,
   getDesligamentosAgendados, agendarDesligamento, marcarLembreteEnviado,
   updateColaborador, upsertColaborador, gerarIdColaborador,
-  updateFeriasSaldo, updateExame, inserirAusencia, updateAusencia,
+  updateFeriasSaldo, updateExame, inserirAusencia, updateAusencia, inserirAusenciasLote,
   getProfiles, updateProfile, updateProfileRoleByEmail, logEvento,
   getMensagensAniversario, upsertMensagemAniversario, deleteMensagemAniversario, seedMensagensDefault,
   getTenantConfig, saveTenantConfig, updateTenant, applyTenantTheme, sendEmail, extractDocument
@@ -40,7 +40,7 @@ window._sbClient = sb   // alias para Storage (verAtestado, upload atestado)
     getColaboradorByEmail, getFeriasSaldo, getSolicitacaoPorProtocolo,
     getDesligamentosAgendados, agendarDesligamento, marcarLembreteEnviado,
     updateColaborador, upsertColaborador, gerarIdColaborador,
-    updateFeriasSaldo, updateExame, inserirAusencia, updateAusencia,
+    updateFeriasSaldo, updateExame, inserirAusencia, updateAusencia, inserirAusenciasLote,
     getProfiles, updateProfile, updateProfileRoleByEmail, logEvento,
     getMensagensAniversario, upsertMensagemAniversario, deleteMensagemAniversario,
     seedMensagensDefault, sendEmail, extractDocument,

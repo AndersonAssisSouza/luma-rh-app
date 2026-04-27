@@ -673,6 +673,7 @@ nav.legacy{display:none!important;}
 <div class="sec" id="aus">
   <div class="sttl">
     <div class="sttl-l"><div class="sdot" style="background:var(--coral)"></div>Ausências &amp; Ocorrências</div>
+    <button class="btn" onclick="openModalLote()" style="margin-right:6px;">⊞ Em lote</button>
     <button class="btn btn-g" onclick="openModalAus()">+ Registrar ausência</button>
   </div>
   <div class="card">
@@ -1909,6 +1910,77 @@ nav.legacy{display:none!important;}
 
       <!-- Campo legado (hidden - backward compat) -->
       <input type="hidden" id="ausDetail">
+    </div>
+  </div>
+</div>
+
+<!-- Lançamento em lote -->
+<div class="ov" id="mLoteAus">
+  <div class="modal" style="max-width:680px;">
+    <div class="mh">
+      <div><div class="mt">Lançamento em lote</div><div class="ms">Registre ausências para múltiplos colaboradores</div></div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+        <button class="btn" onclick="closeModal('mLoteAus')">Cancelar</button>
+        <button class="btn btn-g" id="btnSaveLote" onclick="saveLoteAus()">Registrar</button>
+        <button class="mc" onclick="closeModal('mLoteAus')">×</button>
+      </div>
+    </div>
+    <div class="mb">
+      <!-- Tipo + Período -->
+      <div class="fg" style="grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div class="fgrp" style="margin:0;">
+          <div class="flbl">Tipo <span class="rq">*</span></div>
+          <select class="fsel" id="loteTipo">
+            <option value="LIBERACAO">Liberação da empresa</option>
+            <option value="FALTA">Falta</option>
+            <option value="DAYOFF">Day Off</option>
+            <option value="COMPENSACAO">Compensação de horas</option>
+            <option value="ATESTADO">Atestado médico</option>
+            <option value="AFASTAMENTO">Afastamento INSS</option>
+            <option value="LICENCA">Licença</option>
+            <option value="LIC_MATERNIDADE">Licença maternidade</option>
+            <option value="LIC_PATERNIDADE">Licença paternidade</option>
+            <option value="LIC_GALA">Licença gala</option>
+            <option value="LIC_LUTO">Licença luto</option>
+            <option value="LIC_DOACAO">Licença doação de sangue</option>
+            <option value="LIC_MILITAR">Licença serviço militar</option>
+            <option value="LIC_VESTIBULAR">Licença vestibular</option>
+          </select>
+        </div>
+        <div class="fgrp" style="margin:0;">
+          <div class="flbl">Data inicial <span class="rq">*</span></div>
+          <input class="fi" id="loteDataIni" type="date" oninput="loteCount()">
+        </div>
+        <div class="fgrp" style="margin:0;">
+          <div class="flbl">Data final <span style="font-weight:400;color:var(--muted);text-transform:none;">(opcional)</span></div>
+          <input class="fi" id="loteDataFim" type="date" oninput="loteCount()">
+        </div>
+      </div>
+      <div class="fgrp" style="margin-top:10px;margin-bottom:0;">
+        <div class="flbl">Observação</div>
+        <input class="fi" id="loteObs" placeholder="Ex: Emenda de feriado autorizada pela empresa">
+      </div>
+
+      <!-- Colaboradores -->
+      <div style="margin-top:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);border-bottom:1px solid rgba(155,102,244,.2);padding-bottom:6px;margin-bottom:10px;">
+          <span>👥 Colaboradores</span>
+          <span id="loteContador" style="font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;font-size:12px;">0 selecionado(s)</span>
+        </div>
+        <!-- Filtros rápidos por vínculo -->
+        <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center;">
+          <button class="btn btn-sm lote-filtro" data-vinculo="" onclick="loteFiltro(this,'')">Todos</button>
+          <button class="btn btn-sm lote-filtro" data-vinculo="CLT" onclick="loteFiltro(this,'CLT')">CLT</button>
+          <button class="btn btn-sm lote-filtro" data-vinculo="PJ" onclick="loteFiltro(this,'PJ')">PJ</button>
+          <button class="btn btn-sm lote-filtro" data-vinculo="SOCIO" onclick="loteFiltro(this,'SOCIO')">Sócio</button>
+          <div style="margin-left:auto;display:flex;gap:6px;">
+            <button class="btn btn-sm" onclick="loteToggleTodos(true)">Marcar todos</button>
+            <button class="btn btn-sm" onclick="loteToggleTodos(false)">Desmarcar</button>
+          </div>
+        </div>
+        <!-- Lista scrollável -->
+        <div id="loteColabList" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:4px 0;background:var(--s2);"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -4719,6 +4791,131 @@ async function saveNewAus(){
     }
     window._ausEditId=null;
     await loadAll();
+  }catch(e){toast('Erro: '+e.message,'error');}
+}
+
+// ══════════════════════════════
+// AUSÊNCIAS EM LOTE
+// ══════════════════════════════
+
+function _getLoteColabs(){
+  const opts=Array.from($('ausColab').options);
+  return opts.map(opt=>{
+    const found=(D.CADASTRO_COLABORADORES||[]).find(c=>(c._id||c.ID_COLABORADOR)===opt.value);
+    return{id:opt.value,nome:opt.text,vinculo:found?(found.TIPO_VINCULO||''):''};
+  });
+}
+
+function _renderLoteColabs(filtro){
+  const colabs=_getLoteColabs();
+  const lista=filtro?colabs.filter(c=>c.vinculo.toUpperCase()===filtro.toUpperCase()):colabs;
+  $('loteColabList').innerHTML=lista.map(c=>`
+    <label style="display:flex;align-items:center;gap:10px;padding:8px 14px;cursor:pointer;border-radius:6px;transition:background .15s;"
+           onmouseenter="this.style.background='rgba(155,102,244,.07)'"
+           onmouseleave="this.style.background='transparent'">
+      <input type="checkbox" class="lote-cb" data-id="${esc(c.id)}" data-nome="${esc(c.nome)}"
+             onchange="loteCount()" style="width:15px;height:15px;accent-color:var(--accent);flex-shrink:0;">
+      <span style="flex:1;font-size:14px;">${esc(c.nome)}</span>
+      <span style="font-size:10px;padding:2px 8px;border-radius:99px;background:rgba(155,102,244,.12);color:var(--accent);font-weight:600;">${esc(c.vinculo||'—')}</span>
+    </label>
+  `).join('')||'<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px;">Nenhum colaborador</div>';
+  loteCount();
+}
+
+function openModalLote(){
+  $('loteTipo').value='LIBERACAO';
+  $('loteDataIni').value=new Date().toISOString().split('T')[0];
+  $('loteDataFim').value='';
+  $('loteObs').value='';
+  // Ativa filtro "Todos"
+  document.querySelectorAll('.lote-filtro').forEach(b=>{
+    b.style.background='';b.style.color='';b.style.border='';
+  });
+  const btnTodos=document.querySelector('.lote-filtro[data-vinculo=""]');
+  if(btnTodos){btnTodos.style.background='var(--accent)';btnTodos.style.color='#fff';}
+  _renderLoteColabs('');
+  openModal('mLoteAus');
+}
+
+function loteFiltro(el,vinculo){
+  document.querySelectorAll('.lote-filtro').forEach(b=>{
+    b.style.background='';b.style.color='';
+  });
+  el.style.background='var(--accent)';el.style.color='#fff';
+  _renderLoteColabs(vinculo);
+}
+
+function loteToggleTodos(marcar){
+  document.querySelectorAll('.lote-cb').forEach(cb=>{cb.checked=marcar;});
+  loteCount();
+}
+
+function _loteDias(ini,fim){
+  const dias=[];
+  const cur=new Date(ini+'T12:00:00');
+  const end=new Date((fim||ini)+'T12:00:00');
+  while(cur<=end){dias.push(cur.toISOString().split('T')[0]);cur.setDate(cur.getDate()+1);}
+  return dias;
+}
+
+function loteCount(){
+  const n=document.querySelectorAll('.lote-cb:checked').length;
+  const ini=$('loteDataIni').value;
+  const fim=$('loteDataFim').value||ini;
+  const dias=ini?_loteDias(ini,fim).length:1;
+  const total=n*dias;
+  $('loteContador').textContent=`${n} colaborador(es) · ${total} registro(s)`;
+  const btn=$('btnSaveLote');
+  if(btn)btn.textContent=total>0?`Registrar ${total} ausência${total>1?'s':''}`:'Registrar';
+}
+
+async function saveLoteAus(){
+  const tipo=$('loteTipo').value;
+  const ini=$('loteDataIni').value;
+  const fim=$('loteDataFim').value||ini;
+  const obs=$('loteObs').value.trim()||null;
+  const selected=Array.from(document.querySelectorAll('.lote-cb:checked'));
+
+  if(!ini){toast('Data inicial obrigatória','error');return;}
+  if(!selected.length){toast('Selecione ao menos um colaborador','error');return;}
+
+  const dias=_loteDias(ini,fim);
+  if(dias.length>31){toast('Período máximo de 31 dias por lote','error');return;}
+
+  closeModal('mLoteAus');
+  const total=selected.length*dias.length;
+  toast(`Registrando ${total} ausência${total>1?'s':''}...`,'info');
+
+  if(DEMO){
+    dias.forEach(dia=>{
+      selected.forEach(cb=>{
+        D.AUSENCIAS_OCORRENCIAS.push({
+          _row:Date.now()+Math.random(),TIPO:tipo,NOME:cb.dataset.nome,
+          DATA:dia,DETALHE:'',CID:'',OBSERVACAO:obs||'',ANEXO_URL:''
+        });
+      });
+    });
+    render();
+    toast(`${total} ausência${total>1?'s registradas':' registrada'} em lote`,'success');
+    return;
+  }
+
+  try{
+    const registros=[];
+    dias.forEach(dia=>{
+      selected.forEach(cb=>{
+        registros.push({
+          tenant_id:window._sbTenantId,
+          colaborador_id:cb.dataset.id,
+          tipo,data:dia,
+          detalhe:null,cid:null,
+          observacao:obs,anexo_url:null
+        });
+      });
+    });
+    await window._sbFns.inserirAusenciasLote(registros);
+    await loadAll();
+    toast(`${total} ausência${total>1?'s registradas':' registrada'} em lote`,'success');
   }catch(e){toast('Erro: '+e.message,'error');}
 }
 

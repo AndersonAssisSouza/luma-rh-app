@@ -284,6 +284,15 @@ export async function updateAusencia(id, campos) {
   return data
 }
 
+export async function inserirAusenciasLote(registros) {
+  const { data, error } = await sb
+    .from('ausencias_ocorrencias')
+    .insert(registros)
+    .select()
+  if (error) throw error
+  return data
+}
+
 // ============================================================
 // DESLIGAMENTOS AGENDADOS
 // ============================================================
