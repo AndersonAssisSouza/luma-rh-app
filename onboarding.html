@@ -256,6 +256,52 @@ const STEPS = [
   { n:8, ico:'✅', lbl:'Revisão e Envio'         },
 ];
 
+// ── URL PARAMS — pré-configura fluxo quando link vem do painel RH ─────────
+(function initFromURL(){
+  const p = new URLSearchParams(location.search);
+  const flow    = p.get('flow');
+  const email   = p.get('email');
+  const nome    = p.get('nome');
+  const vinculo = p.get('vinculo');
+
+  if (flow === 'atualizar' || flow === 'novo') {
+    setTimeout(() => {
+      setFlow(flow);
+
+      if (flow === 'atualizar' && email) {
+        // Oculta tela de boas-vindas e mostra loading enquanto busca o cadastro
+        document.getElementById('welcome').style.display = 'none';
+        const inp = document.getElementById('lu-email');
+        if (inp) { inp.value = email; doLookup(true); }
+      }
+
+      if (flow === 'novo') {
+        // Pré-preenche campos do step 1 se RH informou
+        if (nome)    { const el = document.getElementById('ob-nome');    if(el) el.value = nome; }
+        if (email)   { const el = document.getElementById('ob-email-c'); if(el) el.value = email; }
+        if (vinculo) {
+          // Bloqueia a seleção de vínculo — já definido pelo RH
+          setTimeout(() => {
+            const sel = document.querySelector('[data-vinculo-sel]') || document.getElementById('ob-vinculo');
+            if (sel) {
+              sel.value = vinculo;
+              sel.dispatchEvent(new Event('change'));
+              sel.setAttribute('disabled', 'disabled');
+              sel.title = 'Tipo de vínculo definido pelo RH';
+            }
+            // Alternativa: botões radio/card de vínculo
+            document.querySelectorAll('.ob-vinculo-opt').forEach(el => {
+              el.classList.toggle('sel', el.dataset.v === vinculo);
+              el.style.pointerEvents = 'none';
+            });
+            VINCULO = vinculo;
+          }, 150);
+        }
+      }
+    }, 50);
+  }
+})();
+
 // ── WELCOME FLOW ──────────────────────────────────────────────────────────
 function setFlow(f){
   FLOW=f;
@@ -266,7 +312,7 @@ function setFlow(f){
   else{lu.classList.remove('on');sw.style.display='block';}
 }
 
-async function doLookup(){
+async function doLookup(autoStart=false){
   const email=document.getElementById('lu-email').value.trim().toLowerCase();
   const err=document.getElementById('lu-err');
   err.classList.remove('on');
@@ -276,18 +322,32 @@ async function doLookup(){
     if(!sb)throw new Error('offline');
     const{data,error}=await sb.from('colaboradores').select('*').ilike('email_corporativo',email).maybeSingle();
     unload();
-    if(error||!data){err.textContent='Cadastro não encontrado. Verifique o e-mail ou inicie um novo cadastro.';err.classList.add('on');return;}
+    if(error||!data){
+      // Link direto mas cadastro não encontrado — volta para tela de escolha
+      if(autoStart){ document.getElementById('welcome').style.display='flex'; }
+      err.textContent='Cadastro não encontrado. Verifique o e-mail ou inicie um novo cadastro.';
+      err.classList.add('on');
+      return;
+    }
     EXIST_ID=data.id;
     prefill(data);
-    const sw=document.getElementById('start-wrap');
-    sw.style.display='block';
-    document.getElementById('start-btn').textContent='✏️ Atualizar meu cadastro →';
+    if(autoStart){
+      // Pula a tela de boas-vindas e vai direto para o formulário
+      startForm();
+    } else {
+      const sw=document.getElementById('start-wrap');
+      sw.style.display='block';
+      document.getElementById('start-btn').textContent='✏️ Atualizar meu cadastro →';
+    }
   }catch(e){
     unload();
-    // Offline – allow to proceed anyway
     EXIST_ID=null;
-    document.getElementById('start-wrap').style.display='block';
-    err.classList.remove('on');
+    if(autoStart){
+      startForm(); // permite prosseguir offline
+    } else {
+      document.getElementById('start-wrap').style.display='block';
+      err.classList.remove('on');
+    }
   }
 }
 

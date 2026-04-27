@@ -578,6 +578,7 @@ nav.legacy{display:none!important;}
     <div class="sttl-l"><div class="sdot" style="background:var(--accent)"></div>Gestão de Pessoal</div>
     <div style="display:flex;gap:8px;">
       <button class="btn-nav" onclick="openModal('mImportCSV')">⬆ Importar CSV</button>
+      <button class="btn-nav" onclick="enviarLinkNovo()" style="background:rgba(155,102,244,.12);border-color:rgba(155,102,244,.3);color:var(--accent);">📤 Enviar portal</button>
       <button class="btn btn-g" onclick="openModal('mNewColab')">+ Novo colaborador</button>
     </div>
   </div>
@@ -2207,6 +2208,71 @@ nav.legacy{display:none!important;}
   </div>
 </div>
 
+<!-- MODAL CONVITE NOVO COLABORADOR -->
+<div class="ov" id="mConviteNovo">
+  <div class="modal" style="max-width:500px;">
+    <div class="mh">
+      <div><div class="mt">📤 Convidar novo colaborador</div><div class="ms" style="font-size:13px;color:var(--muted);">RH define os dados e gera o link de cadastro</div></div>
+      <button class="mc" onclick="closeModal('mConviteNovo')">✕</button>
+    </div>
+    <div class="mb" style="display:flex;flex-direction:column;gap:14px;padding-top:4px;">
+      <div class="fgrp">
+        <div class="flbl">Nome completo *</div>
+        <input class="fi" id="oc-novo-nome" placeholder="Ex: João da Silva">
+      </div>
+      <div class="fgrp">
+        <div class="flbl">E-mail corporativo *</div>
+        <input class="fi" type="email" id="oc-novo-email" placeholder="joao.silva@empresa.com.br">
+      </div>
+      <div class="fgrp">
+        <div class="flbl">Tipo de vínculo *</div>
+        <select class="fi" id="oc-novo-vinculo">
+          <option value="">Selecione...</option>
+          <option value="CLT">CLT</option>
+          <option value="ESTAGIARIO">Estagiário</option>
+          <option value="PJ">PJ</option>
+          <option value="MEI">MEI</option>
+          <option value="SOCIO">Sócio</option>
+          <option value="ASSOCIADO">Associado</option>
+        </select>
+      </div>
+      <button class="btn btn-a" onclick="gerarLinkNovo()">🔗 Gerar link de cadastro</button>
+      <div id="oc-novo-link-row" style="display:none;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:8px;">
+          <input id="oc-novo-link" readonly style="flex:1;padding:8px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;font-size:12px;font-family:var(--mono);color:var(--text);outline:none;">
+          <button class="btn btn-a" onclick="copiarLinkNovo()" style="white-space:nowrap;">📋 Copiar</button>
+        </div>
+        <button id="btn-enviar-novo" class="btn btn-a" onclick="enviarEmailNovo()" style="width:100%;justify-content:center;">✉️ Enviar para o colaborador</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ENVIAR LINK CADASTRO -->
+<div class="ov" id="mOnboardingLink">
+  <div class="modal" style="max-width:500px;">
+    <div class="mh">
+      <div><div class="mt">📤 Portal de Cadastro</div><div class="ms" style="font-size:13px;color:var(--muted);">Envie este link ao colaborador</div></div>
+      <button class="mc" onclick="closeModal('mOnboardingLink')">✕</button>
+    </div>
+    <div class="mb" style="display:flex;flex-direction:column;gap:16px;padding-top:4px;">
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.8;">
+        <span style="color:var(--muted);">Colaborador:</span> <strong id="oc-nome">—</strong><br>
+        <span style="color:var(--muted);">E-mail:</span> <span id="oc-email" style="color:var(--accent);">—</span>
+        <span id="oc-empresa" style="display:none;"></span>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">Link do portal</div>
+        <div style="display:flex;gap:8px;">
+          <input id="oc-link" readonly style="flex:1;padding:8px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;font-size:12px;font-family:var(--mono);color:var(--text);outline:none;overflow:hidden;text-overflow:ellipsis;">
+          <button class="btn btn-a" onclick="copiarLinkCadastro()" style="white-space:nowrap;">📋 Copiar</button>
+        </div>
+      </div>
+      <button id="btn-enviar-cadastro" class="btn btn-a" onclick="enviarEmailCadastro()" style="width:100%;justify-content:center;">✉️ Enviar para o colaborador</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL ONBOARDING -->
 <div class="ov" id="mOnboarding">
 <div class="modal" style="max-width:440px;">
@@ -2727,6 +2793,7 @@ function render(){
     <td><div class="acts">
       <button class="ab" onclick="openEditColabById('${esc(r.ID_COLABORADOR||'')}','${esc(r._row||'')}')">Editar</button>
       <button class="ab d" onclick="confirmDeslById('${esc(r.ID_COLABORADOR||'')}','${esc(r._row||'')}')">Desligar</button>
+      <button class="ab" onclick="enviarLinkCadastro('${esc(r.NOME||'')}','${esc(r.EMAIL_CORPORATIVO||'')}','${esc(r.EMPRESA||'')}')" title="Enviar portal de cadastro" style="background:rgba(155,102,244,.12);color:var(--accent);border-color:rgba(155,102,244,.25);">📤</button>
     </div></td></tr>`).join('');
 
   // Aniversários (gestor: apenas subordinados; demais: todos)
@@ -5204,6 +5271,113 @@ function exportTableCSV(tbodyId,filename){
   toast('CSV exportado — '+rows.length+' registros','success');
 }
 
+// ══════════════════════════════
+// PORTAL DE CADASTRO — ENVIO DE LINK
+// ══════════════════════════════
+const _OB_URL = 'https://luma-rh-app.pages.dev/onboarding.html';
+
+function enviarLinkCadastro(nome, email, empresa) {
+  // Colaborador já cadastrado → link de atualização
+  const link = email
+    ? `${_OB_URL}?flow=atualizar&email=${encodeURIComponent(email)}`
+    : _OB_URL;
+  document.getElementById('oc-nome').textContent = nome || '—';
+  document.getElementById('oc-email').textContent = email || '—';
+  document.getElementById('oc-empresa').textContent = empresa || '';
+  document.getElementById('oc-link').value = link;
+  const btn = document.getElementById('btn-enviar-cadastro');
+  if (btn) { btn.disabled = false; btn.textContent = '✉️ Enviar para o colaborador'; }
+  openModal('mOnboardingLink');
+}
+
+function enviarLinkNovo() {
+  // Abre modal de convite para novo colaborador (RH preenche dados)
+  document.getElementById('oc-novo-nome').value = '';
+  document.getElementById('oc-novo-email').value = '';
+  document.getElementById('oc-novo-vinculo').value = '';
+  document.getElementById('oc-novo-link-row').style.display = 'none';
+  openModal('mConviteNovo');
+}
+
+function gerarLinkNovo() {
+  const nome   = document.getElementById('oc-novo-nome').value.trim();
+  const email  = document.getElementById('oc-novo-email').value.trim();
+  const vinculo= document.getElementById('oc-novo-vinculo').value;
+  if (!nome || !email || !vinculo) { toast('Preencha nome, e-mail e tipo de vínculo.', 'error'); return; }
+  const link = `${_OB_URL}?flow=novo&nome=${encodeURIComponent(nome)}&email=${encodeURIComponent(email)}&vinculo=${encodeURIComponent(vinculo)}`;
+  const inp = document.getElementById('oc-novo-link');
+  inp.value = link;
+  document.getElementById('oc-novo-link-row').style.display = 'flex';
+}
+
+function copiarLinkNovo() {
+  const inp = document.getElementById('oc-novo-link');
+  navigator.clipboard.writeText(inp.value).then(() => toast('Link copiado!', 'success'));
+}
+
+async function enviarEmailNovo() {
+  const nome    = document.getElementById('oc-novo-nome').value.trim();
+  const email   = document.getElementById('oc-novo-email').value.trim();
+  const link    = document.getElementById('oc-novo-link').value;
+  if (!link)  { toast('Gere o link primeiro.', 'error'); return; }
+  if (!email) { toast('E-mail não preenchido.', 'error'); return; }
+  // empresa = primeiro ativo que tiver empresa, senão ''
+  const empresa = (D.CADASTRO_COLABORADORES||[]).find(r=>r.EMPRESA)?.EMPRESA || '';
+  const btn = document.getElementById('btn-enviar-novo');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
+  try {
+    const r = await fetch('https://ttclcdppifmmdjztfunl.supabase.co/functions/v1/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: email, nome, empresa, link, flow: 'novo' })
+    });
+    const j = await r.json().catch(()=>({}));
+    if (r.ok) {
+      toast('E-mail enviado com sucesso! ✅', 'success');
+      closeModal('mConviteNovo');
+    } else {
+      toast('Erro ao enviar: ' + (j.error || r.status), 'error');
+    }
+  } catch(e) {
+    toast('Falha na conexão: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✉️ Enviar para o colaborador'; }
+  }
+}
+
+function copiarLinkCadastro() {
+  const inp = document.getElementById('oc-link');
+  navigator.clipboard.writeText(inp.value).then(() => toast('Link copiado!', 'success'));
+}
+
+async function enviarEmailCadastro() {
+  const nome    = document.getElementById('oc-nome').textContent;
+  const email   = document.getElementById('oc-email').textContent;
+  const empresa = document.getElementById('oc-empresa').textContent;
+  const link    = document.getElementById('oc-link').value;
+  if (!email || email === '—') { toast('E-mail não encontrado.', 'error'); return; }
+  const btn = document.getElementById('btn-enviar-cadastro');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
+  try {
+    const r = await fetch('https://ttclcdppifmmdjztfunl.supabase.co/functions/v1/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: email, nome, empresa, link, flow: 'atualizar' })
+    });
+    const j = await r.json().catch(()=>({}));
+    if (r.ok) {
+      toast('E-mail enviado com sucesso! ✅', 'success');
+      closeModal('mOnboardingLink');
+    } else {
+      toast('Erro ao enviar: ' + (j.error || r.status), 'error');
+    }
+  } catch(e) {
+    toast('Falha na conexão: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '✉️ Enviar para o colaborador'; }
+  }
+}
+
 function filtrarColab(q){
   const vFiltro=$('filtroVinculo')?.value||'';
   const ativos=(D.CADASTRO_COLABORADORES||[]).filter(r=>String(r.STATUS||'').trim().toUpperCase()==='ATIVO');
@@ -5221,6 +5395,7 @@ function filtrarColab(q){
     <td><div class="acts">
       <button class="ab" onclick="openEditColabById('${esc(r.ID_COLABORADOR||'')}','${esc(r._row||'')}')">Editar</button>
       <button class="ab d" onclick="confirmDeslById('${esc(r.ID_COLABORADOR||'')}','${esc(r._row||'')}')">Desligar</button>
+      <button class="ab" onclick="enviarLinkCadastro('${esc(r.NOME||'')}','${esc(r.EMAIL_CORPORATIVO||'')}','${esc(r.EMPRESA||'')}')" title="Enviar portal de cadastro" style="background:rgba(155,102,244,.12);color:var(--accent);border-color:rgba(155,102,244,.25);">📤</button>
     </div></td></tr>`).join('')||'<tr><td colspan="8" class="empty">Nenhum resultado.</td></tr>';
 }
 

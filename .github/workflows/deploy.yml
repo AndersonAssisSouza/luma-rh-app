@@ -55,6 +55,9 @@ jobs:
           # Manuais
           [ -d manuais ] && cp -r manuais dist/
 
+          # Templates de e-mail
+          [ -d templates ] && cp -r templates dist/
+
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:

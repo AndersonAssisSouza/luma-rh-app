@@ -36,7 +36,7 @@ const files = [
   '_headers',
 ]
 
-const dirs = ['assets', 'manuais']
+const dirs = ['assets', 'manuais', 'templates']
 
 let n = 0
 for (const f of files) {
