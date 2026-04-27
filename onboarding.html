@@ -243,8 +243,7 @@ try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e){}
 // ── STATE ─────────────────────────────────────────────────────────────────
 let FLOW           = '';      // 'novo' | 'atualizar'
 let VINCULO        = '';      // tipo de vínculo selecionado
-let VINCULO_LOCKED = false;   // RH definiu o vínculo — colaborador só visualiza
-let URL_EMAIL      = '';      // e-mail do convite (flow=novo) — guardado mas oculto no form
+let VINCULO_LOCKED = false;   // RH definiu o vínculo — colaborador só visualiza o próprio chip
 let STEP           = 0;
 let EXIST_ID       = null;    // id do colaborador ao atualizar
 const FILES        = {};      // { docKey: File }
@@ -280,16 +279,16 @@ const STEPS = [
       }
 
       if (flow === 'novo') {
-        // Guarda e-mail do convite (não será preenchido pelo colaborador)
-        if (email) URL_EMAIL = email;
-        // Pré-preenche nome se RH informou
-        if (nome) { const el = document.getElementById('f-nome'); if(el) el.value = nome; }
-        // Vínculo definido pelo RH — colaborador só visualiza o próprio
-        if (vinculo) { VINCULO = vinculo; VINCULO_LOCKED = true; }
-        // Pula boas-vindas e abre o form diretamente
+        // Pula boas-vindas e abre o form diretamente (idêntico ao de atualização)
         FLOW = 'novo';
+        if (vinculo) { VINCULO = vinculo; VINCULO_LOCKED = true; }
         document.getElementById('welcome').style.display = 'none';
         startForm();
+        // Pré-preenche campos editáveis após o DOM do form estar pronto
+        setTimeout(() => {
+          if (nome)  { const el = document.getElementById('f-nome');  if(el) el.value = nome; }
+          if (email) { const el = document.getElementById('f-email'); if(el) el.value = email; }
+        }, 80);
       }
     }, 50);
   }
@@ -698,16 +697,6 @@ function buildSteps(){
   if(VINCULO)setVinculo(VINCULO,null);
   // Vínculo definido pelo RH — oculta os demais chips
   if(VINCULO_LOCKED && VINCULO) lockVinculo(VINCULO);
-  // flow=novo: campo e-mail corporativo oculto (será gerado pelo RH pós-cadastro)
-  if(FLOW==='novo'){
-    const ef=document.getElementById('f-email');
-    if(ef){
-      const row=ef.closest('.fg');
-      if(row)row.style.display='none';
-    }
-    // Garante que nome do URL está preenchido (chamado antes do DOM existir na initFromURL)
-    if(URL_EMAIL){ /* só guardado */ }
-  }
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────
@@ -884,9 +873,7 @@ async function submit(){
   };
   const ctps=[gv('f-ctps'),gv('f-ctps-s')].filter(Boolean).join('/');
   const payload={
-    nome:gv('f-nome'),
-    // flow=novo: e-mail do convite (guardado do URL); flow=atualizar: campo preenchido pelo colaborador
-    email_corporativo: FLOW==='novo' ? (URL_EMAIL || null) : gv('f-email'),
+    nome:gv('f-nome'), email_corporativo:gv('f-email'),
     tipo_vinculo:VINCULO,
     status:FLOW==='novo'?'AGUARDANDO_APROVACAO':'ATIVO',
     data_nascimento:gv('f-nasc')||null,
@@ -949,8 +936,7 @@ function validate(s){
   const isOAB=['SOCIO','ASSOCIADO'].includes(VINCULO);
   if(s===1){
     chk('f-nome','e-nome',empty);
-    // E-mail oculto para novo colaborador (será gerado pelo RH após o cadastro)
-    if(FLOW!=='novo') chk('f-email','e-email',v=>!v.trim()||!v.includes('@'));
+    chk('f-email','e-email',v=>!v.trim()||!v.includes('@'));
     if(!VINCULO){document.getElementById('e-vinc').classList.add('on');ok=false;}
     else document.getElementById('e-vinc').classList.remove('on');
   }
