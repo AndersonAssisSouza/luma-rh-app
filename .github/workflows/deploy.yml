@@ -50,17 +50,18 @@ jobs:
           [ -f _headers ] && cp _headers dist/
 
           # Assets compartilhados (logo, etc.)
-          [ -d assets ] && cp -r assets dist/
+          [ -d assets ] && cp -r assets dist/ || true
 
           # Manuais
-          [ -d manuais ] && cp -r manuais dist/
+          [ -d manuais ] && cp -r manuais dist/ || true
 
           # Templates de e-mail
-          [ -d templates ] && cp -r templates dist/
+          [ -d templates ] && cp -r templates dist/ || true
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '3.99.0'
           command: pages deploy dist --project-name=luma-rh-app --branch=main

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--
+  TEMPLATE: Feliz Aniversário
+  ─────────────────────────────────────────────────────────
+  Variáveis de substituição:
+    {{NOME}}    → Primeiro nome do colaborador  (ex: Julimaira)
+    {{EMPRESA}} → Nome da empresa do colaborador (ex: Luisa Moraes Advogados)
+  ─────────────────────────────────────────────────────────
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Feliz Aniversário, {{NOME}}!</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f7;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" border="0"
+             style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+        <!-- CABEÇALHO -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#9b66f4 0%,#7c3aed 100%);padding:40px 40px 32px;text-align:center;">
+            <p style="margin:0 0 4px;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.01em;">{{EMPRESA}}</p>
+            <p style="margin:0;font-size:12px;color:#e0d0ff;letter-spacing:0.12em;text-transform:uppercase;">Recursos Humanos</p>
+          </td>
+        </tr>
+
+        <!-- BANNER -->
+        <tr>
+          <td style="background:#ffd000;padding:18px 40px;text-align:center;">
+            <span style="font-size:26px;">&#127874;</span>
+            <span style="font-size:19px;font-weight:700;color:#3d1f00;vertical-align:middle;margin:0 10px;">Feliz Aniversário!</span>
+            <span style="font-size:26px;">&#127881;</span>
+          </td>
+        </tr>
+
+        <!-- CORPO -->
+        <tr>
+          <td style="padding:48px 40px 36px;">
+            <p style="margin:0 0 22px;font-size:23px;font-weight:700;color:#1a1a2e;">Olá, {{NOME}}! &#127880;</p>
+            <p style="margin:0 0 18px;font-size:16px;color:#444;line-height:1.75;">
+              Em nome de toda a equipe da <strong style="color:#7c3aed;">{{EMPRESA}}</strong>,
+              gostaríamos de te desejar um <strong>Feliz Aniversário!</strong> &#129395;
+            </p>
+            <p style="margin:0 0 18px;font-size:16px;color:#444;line-height:1.75;">
+              Que este novo ano de vida seja repleto de conquistas, saúde, alegria e muitas
+              realizações. Sua dedicação é parte fundamental do nosso time e hoje é o dia
+              de celebrar <strong>você!</strong> &#11088;
+            </p>
+            <p style="margin:0 0 36px;font-size:16px;color:#444;line-height:1.75;">
+              Que os seus sonhos continuem sendo grandes e que cada dia traga novas
+              oportunidades. Conte sempre com a gente! &#128156;
+            </p>
+
+            <!-- ASSINATURA -->
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="border-top:2px solid #f0e8ff;padding-top:28px;text-align:center;">
+                  <p style="margin:0;font-size:15px;color:#777;line-height:1.8;">
+                    Com carinho,<br>
+                    <strong style="color:#7c3aed;font-size:17px;">Equipe de Recursos Humanos</strong><br>
+                    <span style="font-size:14px;color:#555;">{{EMPRESA}}</span>
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- RODAPÉ -->
+        <tr>
+          <td style="background:#f9f5ff;padding:20px 40px;text-align:center;border-top:1px solid #ede8fa;">
+            <p style="margin:0;font-size:12px;color:#bbb;line-height:1.6;">
+              {{EMPRESA}}<br>
+              Este é um e-mail automático — por favor, não responda diretamente.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
