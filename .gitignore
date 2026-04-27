@@ -14,3 +14,5 @@ push-github*.ps1
 deploy-*.ps1
 resetar-senha.ps1
 criar-pages-cloudflare.ps1
+.cloudflare-token
+.cloudflare-account
