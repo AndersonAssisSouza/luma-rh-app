@@ -153,6 +153,13 @@ a{color:var(--p)}
 .ob-suc-ttl{font-size:24px;font-weight:800;color:var(--success);margin-bottom:12px}
 .ob-suc-msg{font-size:15px;color:var(--muted);line-height:1.75}
 .ob-suc-proto{font-size:22px;font-weight:800;color:var(--p);letter-spacing:.05em;margin-top:6px}
+.dep-card{background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:12px}
+.dep-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.dep-card-ttl{font-size:13px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.06em}
+.dep-rm{background:none;border:none;cursor:pointer;color:#aaa;font-size:18px;padding:2px 6px;line-height:1;border-radius:4px}
+.dep-rm:hover{color:var(--danger)}
+.chk-label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text);padding:12px 14px;background:var(--bg3);border:1.5px solid var(--border);border-radius:9px}
+.chk-label input[type=checkbox]{width:17px;height:17px;accent-color:var(--p);flex-shrink:0}
 </style>
 </head>
 <body>
@@ -247,6 +254,7 @@ let VINCULO_LOCKED = false;   // RH definiu o vínculo — colaborador só visua
 let STEP           = 0;
 let EXIST_ID       = null;    // id do colaborador ao atualizar
 const FILES        = {};      // { docKey: File }
+let DEPENDENTES    = [];      // [{nome, nasc, cpf}] — filhos do colaborador CLT
 
 const STEPS = [
   { n:1, ico:'👤', lbl:'Identificação'          },
@@ -287,7 +295,9 @@ const STEPS = [
         // Pré-preenche campos editáveis após o DOM do form estar pronto
         setTimeout(() => {
           if (nome)  { const el = document.getElementById('f-nome');  if(el) el.value = nome; }
-          if (email) { const el = document.getElementById('f-email'); if(el) el.value = email; }
+          // flow=novo: e-mail corporativo ainda não existe — ocultar o campo
+          const fgEmail = document.getElementById('fg-email');
+          if (fgEmail) fgEmail.style.display = 'none';
         }, 80);
       }
     }, 50);
@@ -404,7 +414,7 @@ function buildSteps(){
         <input class="fi" id="f-nome" placeholder="Conforme documento oficial">
         <span class="fe" id="e-nome">Campo obrigatório</span>
       </div>
-      <div class="fg full">
+      <div class="fg full" id="fg-email">
         <label class="lbl">E-mail corporativo <span class="r">*</span></label>
         <input class="fi" type="email" id="f-email" placeholder="nome@empresa.com.br">
         <span class="fe" id="e-email">E-mail inválido</span>
@@ -470,6 +480,21 @@ function buildSteps(){
       <div class="fg"><label class="lbl">RG</label>
         <input class="fi" id="f-rg" placeholder="00.000.000-X" maxlength="16"></div>
     </div>
+    <!-- DEPENDENTES — visível apenas para CLT / Estagiário -->
+    <div id="sep-dep" class="sep" style="display:none"></div>
+    <div id="sec-dependentes" style="display:none">
+      <div class="sec-lbl">Dependentes (filhos)</div>
+      <div class="al info">ℹ️ <strong>CLT/Estagiário:</strong> Informe os filhos para salário-família e dedução no IR. Para cada filho será solicitada a certidão de nascimento no passo de documentos.</div>
+      <label class="chk-label" style="margin-bottom:12px">
+        <input type="checkbox" id="chk-tem-filho" onchange="toggleFilhos(this.checked)">
+        Possuo filhos / dependentes
+      </label>
+      <div id="dep-lista" style="display:none">
+        <div id="dep-items"></div>
+        <button type="button" class="btn btn-s" onclick="addDependente()" style="font-size:13px;margin-top:4px">+ Adicionar filho</button>
+      </div>
+    </div>
+
     <div class="ob-nav">
       <button class="btn btn-s" onclick="goTo(1)">← Anterior</button>
       <button class="btn btn-p" onclick="next(2)">Próximo →</button>
@@ -730,6 +755,8 @@ function setVinculo(v,el){
   // OAB: obrigatório só para Associado; opcional para Sócio
   const ro=document.getElementById('r-oab'), rou=document.getElementById('r-oab-uf');
   if(ro)ro.textContent=isAssoc?'*':''; if(rou)rou.textContent=isAssoc?'*':'';
+  // Dependentes: visível apenas para CLT/Estagiário
+  showHideDep();
 }
 
 // Oculta todos os chips de vínculo exceto o definido pelo RH
@@ -745,6 +772,66 @@ function lockVinculo(v){
       btn.title='Tipo de vínculo definido pelo RH';
     }
   });
+}
+
+// ── DEPENDENTES ───────────────────────────────────────────────────────────
+function showHideDep(){
+  const isCLT=['CLT','ESTAGIARIO'].includes(VINCULO);
+  const sd=document.getElementById('sec-dependentes'),sp=document.getElementById('sep-dep');
+  if(sd)sd.style.display=isCLT?'block':'none';
+  if(sp)sp.style.display=isCLT?'block':'none';
+  if(!isCLT){ DEPENDENTES=[]; document.getElementById('chk-tem-filho')&&(document.getElementById('chk-tem-filho').checked=false); show2('dep-lista',false); }
+}
+function show2(id,s){const e=document.getElementById(id);if(e)e.style.display=s?'block':'none';}
+function toggleFilhos(on){
+  show2('dep-lista',on);
+  if(on&&DEPENDENTES.length===0)addDependente();
+}
+function addDependente(){
+  DEPENDENTES.push({nome:'',nasc:'',cpf:''});
+  renderDependentes();
+}
+function removeDependente(idx){
+  DEPENDENTES.splice(idx,1);
+  // Remove arquivo associado e reajusta chaves
+  const newFiles={};
+  Object.keys(FILES).forEach(k=>{
+    if(!k.startsWith('dep_'))newFiles[k]=FILES[k];
+  });
+  // Reindexar arquivos restantes
+  Object.assign(FILES,newFiles);
+  Object.keys(FILES).filter(k=>k.startsWith('dep_')).forEach(k=>delete FILES[k]);
+  renderDependentes();
+}
+function renderDependentes(){
+  const cont=document.getElementById('dep-items');
+  if(!cont)return;
+  cont.innerHTML=DEPENDENTES.map((d,i)=>`
+    <div class="dep-card">
+      <div class="dep-card-header">
+        <span class="dep-card-ttl">👶 Filho ${i+1}</span>
+        <button type="button" class="dep-rm" onclick="removeDependente(${i})" title="Remover">✕</button>
+      </div>
+      <div class="g2">
+        <div class="fg full">
+          <label class="lbl">Nome completo <span class="r">*</span></label>
+          <input class="fi" id="dep-${i}-nome" placeholder="Nome completo do filho" value="${d.nome||''}"
+                 oninput="DEPENDENTES[${i}].nome=this.value">
+        </div>
+        <div class="fg">
+          <label class="lbl">Data de nascimento <span class="r">*</span></label>
+          <input class="fi" type="date" id="dep-${i}-nasc" value="${d.nasc||''}"
+                 max="${new Date().toISOString().split('T')[0]}"
+                 oninput="DEPENDENTES[${i}].nasc=this.value">
+        </div>
+        <div class="fg">
+          <label class="lbl">CPF (se possuir)</label>
+          <input class="fi" id="dep-${i}-cpf" placeholder="000.000.000-00" maxlength="14" value="${d.cpf||''}"
+                 oninput="mCPF(this);DEPENDENTES[${i}].cpf=this.value">
+        </div>
+      </div>
+      <div class="al info" style="margin-top:12px;margin-bottom:0">📎 A certidão de nascimento será solicitada na etapa de <strong>Upload de Documentos</strong>.</div>
+    </div>`).join('');
 }
 
 // ── UPLOADS ───────────────────────────────────────────────────────────────
@@ -782,7 +869,13 @@ const UP_DEFS={
 };
 
 function buildUploads(){
-  const defs=UP_DEFS[VINCULO]||UP_DEFS['PJ'];
+  // Base + certidões de filhos (CLT)
+  const base=UP_DEFS[VINCULO]||UP_DEFS['PJ'];
+  const temFilhos=document.getElementById('chk-tem-filho')?.checked && DEPENDENTES.length>0;
+  const certidoes=temFilhos
+    ? DEPENDENTES.map((d,i)=>({k:`dep_${i}_certidao`, lbl:`Certidão de nascimento — ${d.nome||'Filho '+(i+1)}`, req:true}))
+    : [];
+  const defs=[...base,...certidoes];
   const isUpd=FLOW==='atualizar';
   const uwarn=document.getElementById('up-atualizar-warn');
   if(uwarn)uwarn.style.display=isUpd?'block':'none';
@@ -830,7 +923,7 @@ function buildReview(){
   const gen={M:'Masculino',F:'Feminino',NB:'Não-binário',O:'Outro',PI:'Prefiro não informar'};
   const tc={CC:'Conta Corrente',CP:'Conta Poupança'};
   const secs=[
-    {ttl:'👤 Identificação', items:[['Nome',gv('f-nome')],['E-mail corporativo',gv('f-email')],['Tipo de vínculo',v||'—']]},
+    {ttl:'👤 Identificação', items:[['Nome',gv('f-nome')],...(FLOW!=='novo'?[['E-mail corporativo',gv('f-email')]]:[] ),['Tipo de vínculo',v||'—']]},
     {ttl:'📋 Dados Pessoais', items:[['Nascimento',gv('f-nasc')],['Gênero',gen[gv('f-genero')]||gv('f-genero')],['Nacionalidade',gv('f-nac')],['Naturalidade',gv('f-nat')],['Pai',gv('f-pai')||'—'],['Mãe',gv('f-mae')||'—'],['CPF',gv('f-cpf')],['RG',gv('f-rg')||'—']]},
     ...(isCLT?[{ttl:'📄 CLT',items:[['CTPS',gv('f-ctps')+(gv('f-ctps-s')?'/'+gv('f-ctps-s'):'')],['PIS/PASEP',gv('f-pis')],['Título eleitor',gv('f-tit')||'—']]}]:[]),
     ...(isPJ?[{ttl:'📄 PJ/MEI',items:[['CNPJ',gv('f-cnpj')],['Razão social',gv('f-razao')||'—']]}]:[]),
@@ -838,6 +931,7 @@ function buildReview(){
     {ttl:'🏠 Endereço',items:[['CEP',gv('f-cep')],['Endereço',gv('f-end')+', '+gv('f-num')+(gv('f-comp')?' — '+gv('f-comp'):'')],['Bairro',gv('f-bairro')],['Cidade/UF',gv('f-cidade')+'/'+gv('f-uf')]]},
     {ttl:'📞 Contatos',items:[['Celular',gv('f-tel')],['E-mail pessoal',gv('f-email-p')||'—'],['Emergência',gv('f-emrg-n')+' ('+gv('f-emrg-p')+') '+gv('f-emrg-t')]]},
     {ttl:'🏦 Banco',items:[['Banco',gv('f-banco')],['Agência',gv('f-ag')],['Conta',gv('f-conta')+' – '+(tc[gv('f-tc')]||gv('f-tc'))],['PIX',gv('f-pix')||'—']]},
+    ...(DEPENDENTES.length&&document.getElementById('chk-tem-filho')?.checked?[{ttl:'👶 Dependentes (filhos)',items:DEPENDENTES.map((d,i)=>[`Filho ${i+1}`,`${d.nome||'—'} · Nasc: ${d.nasc||'—'}${d.cpf?' · CPF: '+d.cpf:''}`])}]:[]),
     ...(Object.keys(FILES).length?[{ttl:'📎 Documentos enviados',items:Object.entries(FILES).map(([k,f])=>[k.replace(/_/g,' '),f.name])}]:[]),
   ];
   document.getElementById('review-body').innerHTML=secs.map(s=>`
@@ -870,10 +964,13 @@ async function submit(){
     oab_numero:gv('f-oab'), oab_uf:gv('f-oab-uf'),
     pix:gv('f-pix'),
     onboarding_flow:FLOW, obs:gv('f-obs'),
+    dependentes:document.getElementById('chk-tem-filho')?.checked&&DEPENDENTES.length>0
+      ? DEPENDENTES.map(d=>({nome:d.nome,data_nascimento:d.nasc||null,cpf:d.cpf||null}))
+      : [],
   };
   const ctps=[gv('f-ctps'),gv('f-ctps-s')].filter(Boolean).join('/');
   const payload={
-    nome:gv('f-nome'), email_corporativo:gv('f-email'),
+    nome:gv('f-nome'), email_corporativo:FLOW==='novo'?null:gv('f-email'),
     tipo_vinculo:VINCULO,
     status:FLOW==='novo'?'AGUARDANDO_APROVACAO':'ATIVO',
     data_nascimento:gv('f-nasc')||null,
@@ -898,7 +995,8 @@ async function submit(){
       const urls={};
       for(const[k,f] of Object.entries(FILES)){
         const ext=f.name.split('.').pop();
-        const path=gv('f-email').replace(/[@.]/g,'_')+'/'+k+'.'+ext;
+        const pathBase=(gv('f-email')||gv('f-nome')||'novo').replace(/[@. ]/g,'_');
+        const path=pathBase+'/'+k+'.'+ext;
         const{error:ue}=await sb.storage.from('onboarding-docs').upload(path,f,{upsert:true});
         if(!ue){const{data:{publicUrl}}=sb.storage.from('onboarding-docs').getPublicUrl(path);urls[k]=publicUrl;}
       }
@@ -936,7 +1034,7 @@ function validate(s){
   const isOAB=['SOCIO','ASSOCIADO'].includes(VINCULO);
   if(s===1){
     chk('f-nome','e-nome',empty);
-    chk('f-email','e-email',v=>!v.trim()||!v.includes('@'));
+    if(FLOW!=='novo') chk('f-email','e-email',v=>!v.trim()||!v.includes('@'));
     if(!VINCULO){document.getElementById('e-vinc').classList.add('on');ok=false;}
     else document.getElementById('e-vinc').classList.remove('on');
   }
@@ -944,6 +1042,15 @@ function validate(s){
     chk('f-nasc','e-nasc',empty); chk('f-genero','e-genero',empty);
     chk('f-cpf','e-cpf',v=>v.replace(/\D/g,'').length<11);
     if(isCLT)chk('f-mae','e-mae',empty);
+    // Validar dependentes: se marcou "tem filhos", cada filho precisa ter nome e data
+    if(isCLT&&document.getElementById('chk-tem-filho')?.checked){
+      DEPENDENTES.forEach((d,i)=>{
+        const ne=document.getElementById('dep-'+i+'-nome');
+        const de=document.getElementById('dep-'+i+'-nasc');
+        if(ne&&!ne.value.trim()){ne.classList.add('err');ok=false;}
+        if(de&&!de.value){de.classList.add('err');ok=false;}
+      });
+    }
   }
   if(s===3){
     if(isCLT){chk('f-ctps','e-ctps',empty);chk('f-pis','e-pis',v=>v.replace(/\D/g,'').length<11);}
