@@ -58,50 +58,52 @@ a{color:var(--p)}
 .ob-start-wrap{display:none}
 
 /* ── FORM LAYOUT ── */
-.ob-fw{display:none;max-width:960px;margin:0 auto;padding:28px 20px 80px}
-.ob-fw.on{display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:start}
+.ob-fw{display:none;max-width:1400px;margin:0 auto;padding:32px 40px 100px}
+.ob-fw.on{display:grid;grid-template-columns:260px 1fr;gap:28px;align-items:start}
+@media(max-width:900px){.ob-fw{padding:24px 16px 80px}}
 @media(max-width:720px){.ob-fw.on{grid-template-columns:1fr}}
 
 /* ── SIDEBAR ── */
-.ob-sidebar{background:var(--bg2);border-radius:14px;padding:18px;box-shadow:var(--sh);position:sticky;top:80px}
+.ob-sidebar{background:var(--bg2);border-radius:14px;padding:22px;box-shadow:var(--sh);position:sticky;top:80px}
 @media(max-width:720px){.ob-sidebar{display:none}}
-.ob-sidebar-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:14px}
-.ob-si{display:flex;align-items:flex-start;gap:9px;padding:7px 0;position:relative;cursor:pointer}
-.ob-si:not(:last-child)::after{content:'';position:absolute;left:13px;top:30px;width:2px;height:calc(100% - 4px);background:var(--border)}
+.ob-sidebar-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:16px}
+.ob-si{display:flex;align-items:flex-start;gap:11px;padding:9px 0;position:relative;cursor:pointer}
+.ob-si:not(:last-child)::after{content:'';position:absolute;left:15px;top:34px;width:2px;height:calc(100% - 4px);background:var(--border)}
 .ob-si.done::after{background:var(--success)}
-.ob-si .n{width:26px;height:26px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0;z-index:1;transition:all .2s;border:2px solid var(--border)}
+.ob-si .n{width:30px;height:30px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--muted);flex-shrink:0;z-index:1;transition:all .2s;border:2px solid var(--border)}
 .ob-si.active .n{background:var(--p);border-color:var(--p);color:#fff}
-.ob-si.done .n{background:var(--success);border-color:var(--success);color:#fff;font-size:12px}
-.ob-si .lbl{font-size:12px;color:var(--muted);padding-top:3px;line-height:1.35;font-weight:500}
+.ob-si.done .n{background:var(--success);border-color:var(--success);color:#fff;font-size:13px}
+.ob-si .lbl{font-size:14px;color:var(--muted);padding-top:4px;line-height:1.35;font-weight:500}
 .ob-si.active .lbl{color:var(--p);font-weight:700}
 .ob-si.done .lbl{color:var(--success)}
 
 /* ── CARD ── */
-.ob-card{background:var(--bg2);border-radius:14px;padding:30px;box-shadow:var(--sh)}
-.ob-card-ttl{font-size:19px;font-weight:800;color:var(--p);margin-bottom:5px;letter-spacing:-.01em}
-.ob-card-sub{font-size:13px;color:var(--muted);margin-bottom:26px;line-height:1.6}
+.ob-card{background:var(--bg2);border-radius:14px;padding:40px 48px;box-shadow:var(--sh)}
+@media(max-width:720px){.ob-card{padding:24px 20px}}
+.ob-card-ttl{font-size:26px;font-weight:800;color:var(--p);margin-bottom:6px;letter-spacing:-.01em}
+.ob-card-sub{font-size:15px;color:var(--muted);margin-bottom:30px;line-height:1.6}
 
 /* ── FORM ELEMENTS ── */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
 .full{grid-column:1/-1}
 @media(max-width:560px){.g2,.g3{grid-template-columns:1fr}}
-.fg{display:flex;flex-direction:column;gap:4px}
-.lbl{font-size:12px;font-weight:600;color:var(--text);letter-spacing:.01em}
-.lbl .r{color:var(--p);font-size:9px;vertical-align:super}
-.fi,.fs,.ta{width:100%;padding:9px 12px;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);font-family:var(--font);outline:none;transition:border .15s,background .15s}
+.fg{display:flex;flex-direction:column;gap:6px}
+.lbl{font-size:14px;font-weight:600;color:var(--text);letter-spacing:.01em}
+.lbl .r{color:var(--p);font-size:10px;vertical-align:super}
+.fi,.fs,.ta{width:100%;padding:12px 16px;background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;font-size:16px;color:var(--text);font-family:var(--font);outline:none;transition:border .15s,background .15s}
 .fi:focus,.fs:focus,.ta:focus{border-color:var(--p);background:#fff}
 .fi.err,.fs.err{border-color:var(--danger);background:var(--danger-bg)}
-.hint{font-size:11px;color:var(--muted);line-height:1.4}
-.fe{font-size:11px;color:var(--danger);display:none}
+.hint{font-size:13px;color:var(--muted);line-height:1.4}
+.fe{font-size:13px;color:var(--danger);display:none}
 .fe.on{display:block}
-.ta{resize:vertical;min-height:76px}
-.sep{height:1px;background:var(--border);margin:22px 0}
-.sec-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--p);margin-bottom:14px}
+.ta{resize:vertical;min-height:90px}
+.sep{height:1px;background:var(--border);margin:26px 0}
+.sec-lbl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--p);margin-bottom:16px}
 
 /* ── RADIO CHIPS ── */
-.chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip-btn{display:flex;align-items:center;gap:7px;padding:8px 14px;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;transition:all .18s;user-select:none;font-family:var(--font)}
+.chips{display:flex;gap:10px;flex-wrap:wrap}
+.chip-btn{display:flex;align-items:center;gap:9px;padding:12px 20px;background:var(--bg3);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:15px;font-weight:500;transition:all .18s;user-select:none;font-family:var(--font)}
 .chip-btn:hover{border-color:var(--p)}
 .chip-btn.sel{border-color:var(--p);background:var(--p3);color:var(--p)}
 .chip-btn input{display:none}
@@ -133,13 +135,13 @@ a{color:var(--p)}
 .al.danger{background:var(--danger-bg);color:var(--danger);border:1px solid #fca5a5}
 
 /* ── NAV ── */
-.ob-nav{display:flex;justify-content:space-between;align-items:center;margin-top:28px;padding-top:18px;border-top:1px solid var(--border)}
-.btn{padding:10px 22px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .18s;border:none;font-family:var(--font);line-height:1}
+.ob-nav{display:flex;justify-content:space-between;align-items:center;margin-top:36px;padding-top:22px;border-top:1px solid var(--border)}
+.btn{padding:13px 28px;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:all .18s;border:none;font-family:var(--font);line-height:1}
 .btn-p{background:var(--p);color:#fff}
 .btn-p:hover{background:#6d28d9}
 .btn-s{background:var(--bg3);color:var(--text);border:1.5px solid var(--border2)}
 .btn-s:hover{border-color:var(--p);color:var(--p)}
-.btn-g{background:#dcfce7;color:var(--success);border:1.5px solid #bbf7d0;padding:11px 28px}
+.btn-g{background:#dcfce7;color:var(--success);border:1.5px solid #bbf7d0;padding:13px 32px}
 .btn-g:hover{background:#bbf7d0}
 .btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
 
@@ -239,11 +241,12 @@ let sb;
 try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e){}
 
 // ── STATE ─────────────────────────────────────────────────────────────────
-let FLOW      = '';      // 'novo' | 'atualizar'
-let VINCULO   = '';      // tipo de vínculo selecionado
-let STEP      = 0;
-let EXIST_ID  = null;    // id do colaborador ao atualizar
-const FILES   = {};      // { docKey: File }
+let FLOW           = '';      // 'novo' | 'atualizar'
+let VINCULO        = '';      // tipo de vínculo selecionado
+let VINCULO_LOCKED = false;   // RH definiu o vínculo — colaborador só visualiza
+let STEP           = 0;
+let EXIST_ID       = null;    // id do colaborador ao atualizar
+const FILES        = {};      // { docKey: File }
 
 const STEPS = [
   { n:1, ico:'👤', lbl:'Identificação'          },
@@ -277,25 +280,12 @@ const STEPS = [
 
       if (flow === 'novo') {
         // Pré-preenche campos do step 1 se RH informou
-        if (nome)    { const el = document.getElementById('ob-nome');    if(el) el.value = nome; }
-        if (email)   { const el = document.getElementById('ob-email-c'); if(el) el.value = email; }
+        if (nome)    { const el = document.getElementById('f-nome');    if(el) el.value = nome; }
+        if (email)   { const el = document.getElementById('f-email');   if(el) el.value = email; }
         if (vinculo) {
-          // Bloqueia a seleção de vínculo — já definido pelo RH
-          setTimeout(() => {
-            const sel = document.querySelector('[data-vinculo-sel]') || document.getElementById('ob-vinculo');
-            if (sel) {
-              sel.value = vinculo;
-              sel.dispatchEvent(new Event('change'));
-              sel.setAttribute('disabled', 'disabled');
-              sel.title = 'Tipo de vínculo definido pelo RH';
-            }
-            // Alternativa: botões radio/card de vínculo
-            document.querySelectorAll('.ob-vinculo-opt').forEach(el => {
-              el.classList.toggle('sel', el.dataset.v === vinculo);
-              el.style.pointerEvents = 'none';
-            });
-            VINCULO = vinculo;
-          }, 150);
+          // Vínculo definido pelo RH — colaborador só visualiza o próprio
+          VINCULO = vinculo;
+          VINCULO_LOCKED = true;
         }
       }
     }, 50);
@@ -331,6 +321,7 @@ async function doLookup(autoStart=false){
     }
     EXIST_ID=data.id;
     prefill(data);
+    if(data.tipo_vinculo){ VINCULO=data.tipo_vinculo; VINCULO_LOCKED=true; }
     if(autoStart){
       // Pula a tela de boas-vindas e vai direto para o formulário
       startForm();
@@ -517,13 +508,13 @@ function buildSteps(){
     </div>
 
     <div id="doc-oab" style="display:none">
-      <div class="al info">⚖️ Para sócios e associados (advogados), a inscrição na OAB é <strong>obrigatória</strong>.</div>
+      <div class="al info" id="oab-info">⚖️ Para <strong>Associados</strong>, a inscrição na OAB é <strong>obrigatória</strong>. Para <strong>Sócios</strong>, é opcional.</div>
       <div class="sec-lbl">Inscrição OAB</div>
       <div class="g2">
-        <div class="fg"><label class="lbl">Número OAB <span class="r">*</span></label>
+        <div class="fg"><label class="lbl" id="lbl-oab">Número OAB <span class="r" id="r-oab"></span></label>
           <input class="fi" id="f-oab" placeholder="000.000" maxlength="12">
-          <span class="fe" id="e-oab">Número OAB obrigatório</span></div>
-        <div class="fg"><label class="lbl">UF da OAB <span class="r">*</span></label>
+          <span class="fe" id="e-oab">Número OAB obrigatório para Associado</span></div>
+        <div class="fg"><label class="lbl" id="lbl-oab-uf">UF da OAB <span class="r" id="r-oab-uf"></span></label>
           <select class="fs" id="f-oab-uf">
             <option value="">UF...</option>
             <option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option>
@@ -702,6 +693,8 @@ function buildSteps(){
   const ne=document.getElementById('f-nasc'); if(ne)ne.max=md.toISOString().split('T')[0];
   // Restore vinculo if already set
   if(VINCULO)setVinculo(VINCULO,null);
+  // Vínculo definido pelo RH — oculta os demais chips
+  if(VINCULO_LOCKED && VINCULO) lockVinculo(VINCULO);
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────
@@ -725,12 +718,31 @@ function setVinculo(v,el){
   const isCLT=['CLT','ESTAGIARIO'].includes(v);
   const isPJ=['PJ','MEI'].includes(v);
   const isOAB=['SOCIO','ASSOCIADO'].includes(v);
+  const isAssoc = v==='ASSOCIADO'; // OAB obrigatório apenas para Associado
   const show=(id,s)=>{const e=document.getElementById(id);if(e)e.style.display=s?'block':'none';};
   show('doc-clt',isCLT); show('doc-pj',isPJ); show('doc-oab',isOAB);
   const fa=document.getElementById('fil-aviso'); if(fa)fa.style.display=isCLT?'flex':'none';
   const rm=document.getElementById('r-mae'),rp=document.getElementById('r-pai');
   if(rm)rm.textContent=isCLT?'*':''; if(rp)rp.textContent=isCLT?'*':'';
   show('up-clt-warn',isCLT);
+  // OAB: obrigatório só para Associado; opcional para Sócio
+  const ro=document.getElementById('r-oab'), rou=document.getElementById('r-oab-uf');
+  if(ro)ro.textContent=isAssoc?'*':''; if(rou)rou.textContent=isAssoc?'*':'';
+}
+
+// Oculta todos os chips de vínculo exceto o definido pelo RH
+function lockVinculo(v){
+  document.querySelectorAll('#vinc-group .chip-btn').forEach(btn=>{
+    const val=(btn.querySelector('input[type=radio]')||{}).value||
+               (btn.getAttribute('onclick')||'').match(/'([A-Z]+)'/)?.[1]||'';
+    if(val && val!==v){
+      btn.style.display='none';
+    } else if(val===v){
+      btn.classList.add('sel');
+      btn.style.pointerEvents='none';
+      btn.title='Tipo de vínculo definido pelo RH';
+    }
+  });
 }
 
 // ── UPLOADS ───────────────────────────────────────────────────────────────
@@ -758,7 +770,7 @@ const UP_DEFS={
   ],
   SOCIO:[
     {k:'comp_banc',   lbl:'Comprovante bancário', req:true},
-    {k:'oab_doc',     lbl:'Carteira / Inscrição OAB', req:true},
+    {k:'oab_doc',     lbl:'Carteira / Inscrição OAB (opcional)', req:false},
   ],
   ASSOCIADO:[
     {k:'rg_frente',   lbl:'Documento de identidade', req:true},
@@ -934,7 +946,8 @@ function validate(s){
   if(s===3){
     if(isCLT){chk('f-ctps','e-ctps',empty);chk('f-pis','e-pis',v=>v.replace(/\D/g,'').length<11);}
     if(isPJ)chk('f-cnpj','e-cnpj',v=>v.replace(/\D/g,'').length<14);
-    if(isOAB){chk('f-oab','e-oab',empty);chk('f-oab-uf','e-oab-uf',empty);}
+    if(VINCULO==='ASSOCIADO'){chk('f-oab','e-oab',empty);chk('f-oab-uf','e-oab-uf',empty);}
+    // Sócio: OAB opcional — sem validação obrigatória
   }
   if(s===4){
     chk('f-cep','e-cep',v=>v.replace(/\D/g,'').length<8);
