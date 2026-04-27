@@ -2212,20 +2212,21 @@ nav.legacy{display:none!important;}
 <div class="ov" id="mConviteNovo">
   <div class="modal" style="max-width:500px;">
     <div class="mh">
-      <div><div class="mt">📤 Convidar novo colaborador</div><div class="ms" style="font-size:13px;color:var(--muted);">RH define os dados e gera o link de cadastro</div></div>
+      <div><div class="mt">📤 Convidar novo colaborador</div><div class="ms" style="font-size:13px;color:var(--muted);">Preencha os dados e envie o link de cadastro por e-mail</div></div>
       <button class="mc" onclick="closeModal('mConviteNovo')">✕</button>
     </div>
-    <div class="mb" style="display:flex;flex-direction:column;gap:14px;padding-top:4px;">
+    <div class="mb" style="display:flex;flex-direction:column;gap:16px;padding-top:4px;">
       <div class="fgrp">
-        <div class="flbl">Nome completo *</div>
+        <div class="flbl">Nome completo <span style="color:var(--accent)">*</span></div>
         <input class="fi" id="oc-novo-nome" placeholder="Ex: João da Silva">
       </div>
       <div class="fgrp">
-        <div class="flbl">E-mail corporativo *</div>
-        <input class="fi" type="email" id="oc-novo-email" placeholder="joao.silva@empresa.com.br">
+        <div class="flbl">E-mail do colaborador <span style="color:var(--accent)">*</span></div>
+        <input class="fi" type="email" id="oc-novo-email" placeholder="email@exemplo.com.br">
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">O link de cadastro será enviado para este e-mail</div>
       </div>
       <div class="fgrp">
-        <div class="flbl">Tipo de vínculo *</div>
+        <div class="flbl">Tipo de vínculo <span style="color:var(--accent)">*</span></div>
         <select class="fi" id="oc-novo-vinculo">
           <option value="">Selecione...</option>
           <option value="CLT">CLT</option>
@@ -2236,14 +2237,7 @@ nav.legacy{display:none!important;}
           <option value="ASSOCIADO">Associado</option>
         </select>
       </div>
-      <button class="btn btn-a" onclick="gerarLinkNovo()">🔗 Gerar link de cadastro</button>
-      <div id="oc-novo-link-row" style="display:none;flex-direction:column;gap:8px;">
-        <div style="display:flex;gap:8px;">
-          <input id="oc-novo-link" readonly style="flex:1;padding:8px 12px;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;font-size:12px;font-family:var(--mono);color:var(--text);outline:none;">
-          <button class="btn btn-a" onclick="copiarLinkNovo()" style="white-space:nowrap;">📋 Copiar</button>
-        </div>
-        <button id="btn-enviar-novo" class="btn btn-a" onclick="enviarEmailNovo()" style="width:100%;justify-content:center;">✉️ Enviar para o colaborador</button>
-      </div>
+      <button id="btn-enviar-novo" class="btn btn-a" onclick="enviarEmailNovo()" style="width:100%;justify-content:center;margin-top:6px;padding:12px;">✉️ Enviar convite de cadastro</button>
     </div>
   </div>
 </div>
@@ -5291,11 +5285,10 @@ function enviarLinkCadastro(nome, email, empresa) {
 }
 
 function enviarLinkNovo() {
-  // Abre modal de convite para novo colaborador (RH preenche dados)
+  // Abre modal de convite para novo colaborador (RH preenche dados e envia direto)
   document.getElementById('oc-novo-nome').value = '';
   document.getElementById('oc-novo-email').value = '';
   document.getElementById('oc-novo-vinculo').value = '';
-  document.getElementById('oc-novo-link-row').style.display = 'none';
   openModal('mConviteNovo');
 }
 
@@ -5318,10 +5311,13 @@ function copiarLinkNovo() {
 async function enviarEmailNovo() {
   const nome    = document.getElementById('oc-novo-nome').value.trim();
   const email   = document.getElementById('oc-novo-email').value.trim();
-  const link    = document.getElementById('oc-novo-link').value;
-  if (!link)  { toast('Gere o link primeiro.', 'error'); return; }
-  if (!email) { toast('E-mail não preenchido.', 'error'); return; }
-  // empresa = primeiro ativo que tiver empresa, senão ''
+  const vinculo = document.getElementById('oc-novo-vinculo').value;
+  if (!nome)    { toast('Informe o nome do colaborador.', 'error'); return; }
+  if (!email || !email.includes('@')) { toast('Informe um e-mail válido.', 'error'); return; }
+  if (!vinculo) { toast('Selecione o tipo de vínculo.', 'error'); return; }
+  // Monta o link de cadastro com os dados do convite
+  const link = `${_OB_URL}?flow=novo&nome=${encodeURIComponent(nome)}&email=${encodeURIComponent(email)}&vinculo=${encodeURIComponent(vinculo)}`;
+  // Empresa = primeiro colaborador ativo que tiver empresa cadastrada
   const empresa = (D.CADASTRO_COLABORADORES||[]).find(r=>r.EMPRESA)?.EMPRESA || '';
   const btn = document.getElementById('btn-enviar-novo');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
@@ -5333,15 +5329,19 @@ async function enviarEmailNovo() {
     });
     const j = await r.json().catch(()=>({}));
     if (r.ok) {
-      toast('E-mail enviado com sucesso! ✅', 'success');
+      toast(`Convite enviado para ${email} ✅`, 'success');
       closeModal('mConviteNovo');
+      // Limpa os campos para o próximo uso
+      document.getElementById('oc-novo-nome').value = '';
+      document.getElementById('oc-novo-email').value = '';
+      document.getElementById('oc-novo-vinculo').value = '';
     } else {
       toast('Erro ao enviar: ' + (j.error || r.status), 'error');
     }
   } catch(e) {
     toast('Falha na conexão: ' + e.message, 'error');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '✉️ Enviar para o colaborador'; }
+    if (btn) { btn.disabled = false; btn.textContent = '✉️ Enviar convite de cadastro'; }
   }
 }
 
