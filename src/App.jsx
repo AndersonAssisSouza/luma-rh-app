@@ -15,6 +15,7 @@ import AprovarFeriasPage   from '@/pages/AprovarFerias'
 import ExamesPage          from '@/pages/Exames'
 import ContratosPJPage     from '@/pages/ContratosPJ'
 import PeoplePage          from '@/pages/PeopleAnalytics'
+import DREPage             from '@/pages/DRE'
 import UsuariosPage        from '@/pages/Usuarios'
 import OnboardingPage      from '@/pages/Onboarding'
 import ConfigPage          from '@/pages/Configuracoes'
@@ -79,6 +80,7 @@ export default function App() {
         <Route path="exames"                element={<ExamesPage />} />
         <Route path="contratos"             element={<ContratosPJPage />} />
         <Route path="analytics"             element={<PeoplePage />} />
+        <Route path="dre"                   element={<DREPage />} />
         <Route path="usuarios"              element={<UsuariosPage />} />
         <Route path="onboarding"            element={<OnboardingPage />} />
         <Route path="configuracoes"         element={<ConfigPage />} />

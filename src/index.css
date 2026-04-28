@@ -94,6 +94,21 @@
   .luma-table tr:last-child td { @apply border-0; }
 }
 
+/* Print styles */
+@media print {
+  aside,
+  .no-print {
+    display: none !important;
+  }
+  main {
+    overflow: visible !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
 /* Noise texture overlay */
 body::before {
   content: '';
