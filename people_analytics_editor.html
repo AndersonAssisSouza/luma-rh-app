@@ -6521,10 +6521,10 @@ function saveCoords(arr){
 async function syncCoordsFromSb(){
   try{
     const profiles=await window._sbFns.getProfiles();
-    const adminRoles=['master','gestor','rh'];
+    const adminRoles=['master','gestor','rh','manager_global'];
     window._sbCoords=(profiles||[])
       .filter(p=>adminRoles.includes(p.role))
-      .map(p=>({email:p.email,nome:p.nome||p.email,role:p.role}));
+      .map(p=>({email:p.email,nome:p.nome||p.email,role:p.role==='manager_global'?'master':p.role,_original_role:p.role}));
     // Sincroniza localStorage como backup
     localStorage.setItem(CK_COORD,JSON.stringify(window._sbCoords));
   }catch(e){console.warn('syncCoordsFromSb erro:',e);}
@@ -6696,11 +6696,16 @@ function addCoord(){
 }
 
 function removeCoord(email){
+  // Protege manager_global contra rebaixamento acidental
+  const profiles=window._sbCoords||[];
+  const isGlobal=(profiles.find(p=>p.email===email)||{})._original_role==='manager_global'
+    || (email===(window._sbProfile?.email||'') && window._sbProfile?.role==='manager_global');
+  if(isGlobal){toast('Usuário manager_global não pode ser removido aqui.','error');return;}
   const coords=loadCoords().filter(c=>c.email!==email);
   saveCoords(coords);
   renderAdmin();
   window._sbFns.updateProfileRoleByEmail(email,'colaborador').catch(e=>toast('Erro ao remover acesso: '+e.message,'error'));
-  toast('Gestor removido','info');
+  toast('Acesso removido','info');
 }
 // --- Formatação de moeda (R$) ---
 function _parseBRL(s){if(!s&&s!==0)return null;const n=parseFloat(String(s).replace(/[R$\s.]/g,'').replace(',','.'));return isNaN(n)?null:n;}
@@ -8109,8 +8114,7 @@ async function cfgSalvarEmpresa(){
     responsavel:      $('cemp-resp')?.value?.trim()||null
   };
   try{
-    const {error}=await window._sb.from('tenants').update(patch).eq('id',tid);
-    if(error)throw error;
+    await window._sbFns.updateTenant(tid, patch);
     toast('Dados da empresa salvos!','success');
   }catch(e){toast('Erro ao salvar: '+e.message,'error');}
 }
