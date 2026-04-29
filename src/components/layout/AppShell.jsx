@@ -28,6 +28,7 @@ const NAV_RH = [
   { to: '/exames',         icon: '◫', label: 'Exames ASO' },
   { to: '/contratos',      icon: '◧', label: 'Contratos' },
   { to: '/analytics',      icon: '◈', label: 'People Analytics' },
+  { to: '/dre',            icon: '▦', label: 'DRE' },
   { to: '/usuarios',       icon: '◎', label: 'Usuários' },
 ]
 
