@@ -361,7 +361,7 @@ function prefill(d){
   sv('f-nasc',d.data_nascimento||''); sv('f-genero',d.genero||'');
   sv('f-raca-etnia',d.raca_etnia||''); sv('f-nivel-cargo',d.nivel_cargo||'');
   const _cbv=(id,v)=>{const e=document.getElementById(id);if(e)e.checked=!!v;};
-  _cbv('f-lgbtqia',d.is_lgbtqia||false); _cbv('f-lideranca',d.is_lideranca||false);
+  _cbv('f-lgbtqia',d.is_lgbtqia||false);
   sv('f-nac',dc.nacionalidade||'Brasileira'); sv('f-nat',(dc.nasc_local||'')+(dc.nasc_uf?'/'+dc.nasc_uf:''));
   sv('f-pai',dc.filiacao_pai||''); sv('f-mae',dc.filiacao_mae||'');
   sv('f-cpf',d.cpf||''); sv('f-rg',d.rg||'');
@@ -583,11 +583,6 @@ function buildSteps(){
           <option value="GERENCIA">Gerência</option><option value="DIRETORIA">Diretoria</option>
           <option value="SOCIO">Sócio</option>
         </select></div>
-      <div class="fg" style="padding:10px 14px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.25);border-radius:8px;">
-        <label style="display:flex;align-items:center;gap:12px;cursor:pointer;">
-          <input type="checkbox" id="f-lideranca" style="width:16px;height:16px;accent-color:#9b66f4;cursor:pointer;flex-shrink:0;">
-          <div><div style="font-size:13px;font-weight:500;">Pessoa de Liderança</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Coordenadores, gestores e diretores</div></div>
-        </label></div>
     </div>
 
     <div class="fg">
@@ -957,14 +952,13 @@ function buildReview(){
   const niv={JUNIOR:'Júnior',PLENO:'Pleno',SENIOR:'Sênior',COORDENACAO:'Coordenação',GERENCIA:'Gerência',DIRETORIA:'Diretoria',SOCIO:'Sócio'};
   const tc={CC:'Conta Corrente',CP:'Conta Poupança'};
   const _lgbtqia=document.getElementById('f-lgbtqia')?.checked;
-  const _lideranca=document.getElementById('f-lideranca')?.checked;
   const secs=[
     {ttl:'👤 Identificação', items:[['Nome',gv('f-nome')],...(FLOW!=='novo'?[['E-mail corporativo',gv('f-email')]]:[] ),['Tipo de vínculo',v||'—']]},
     {ttl:'📋 Dados Pessoais', items:[['Nascimento',gv('f-nasc')],['Gênero',gen[gv('f-genero')]||gv('f-genero')],['Raça/Etnia',rae[gv('f-raca-etnia')]||'Prefiro não informar'],['LGBTQIA+',_lgbtqia?'Sim':'—'],['Nacionalidade',gv('f-nac')],['Naturalidade',gv('f-nat')],['Pai',gv('f-pai')||'—'],['Mãe',gv('f-mae')||'—'],['CPF',gv('f-cpf')],['RG',gv('f-rg')||'—']]},
     ...(isCLT?[{ttl:'📄 CLT',items:[['CTPS',gv('f-ctps')+(gv('f-ctps-s')?'/'+gv('f-ctps-s'):'')],['PIS/PASEP',gv('f-pis')],['Título eleitor',gv('f-tit')||'—']]}]:[]),
     ...(isPJ?[{ttl:'📄 PJ/MEI',items:[['CNPJ',gv('f-cnpj')],['Razão social',gv('f-razao')||'—']]}]:[]),
     ...(isOAB?[{ttl:'⚖️ OAB',items:[['OAB nº',gv('f-oab')],['UF OAB',gv('f-oab-uf')],['CNPJ/PJ',gv('f-oab-cnpj')||'—']]}]:[]),
-    ...((gv('f-nivel-cargo')||_lideranca)?[{ttl:'💼 Carreira',items:[['Nível',niv[gv('f-nivel-cargo')]||'—'],['Liderança',_lideranca?'Sim':'Não']]}]:[]),
+    ...(gv('f-nivel-cargo')?[{ttl:'💼 Carreira',items:[['Nível',niv[gv('f-nivel-cargo')]||'—']]}]:[]),
     {ttl:'🏠 Endereço',items:[['CEP',gv('f-cep')],['Endereço',gv('f-end')+', '+gv('f-num')+(gv('f-comp')?' — '+gv('f-comp'):'')],['Bairro',gv('f-bairro')],['Cidade/UF',gv('f-cidade')+'/'+gv('f-uf')]]},
     {ttl:'📞 Contatos',items:[['Celular',gv('f-tel')],['E-mail pessoal',gv('f-email-p')||'—'],['Emergência',gv('f-emrg-n')+' ('+gv('f-emrg-p')+') '+gv('f-emrg-t')]]},
     {ttl:'🏦 Banco',items:[['Banco',gv('f-banco')],['Agência',gv('f-ag')],['Conta',gv('f-conta')+' – '+(tc[gv('f-tc')]||gv('f-tc'))],['PIX',gv('f-pix')||'—']]},
@@ -1015,7 +1009,6 @@ async function submit(){
     raca_etnia:gv('f-raca-etnia')||null,
     is_lgbtqia:document.getElementById('f-lgbtqia')?.checked||false,
     nivel_cargo:gv('f-nivel-cargo')||null,
-    is_lideranca:document.getElementById('f-lideranca')?.checked||false,
     cpf:gv('f-cpf')||null, rg:gv('f-rg')||null,
     ctps:ctps||null, pis_pasep:gv('f-pis')||null, titulo_eleitor:gv('f-tit')||null,
     email_pessoal:gv('f-email-p')||null, telefone:gv('f-tel'),
