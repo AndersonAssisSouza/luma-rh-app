@@ -1579,6 +1579,10 @@ nav.legacy{display:none!important;}
         <div class="fgrp"><div class="flbl">Gênero</div>
           <select class="fsel" id="eGenero"><option value="">Não informado</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="NB">Não-binário</option><option value="O">Outro</option><option value="PI">Prefiro não informar</option></select>
         </div>
+        <div class="fgrp"><div class="flbl">Raça / Etnia</div>
+          <select class="fsel" id="eRacaEtnia"><option value="">Prefiro não informar</option><option value="BRANCA">Branca</option><option value="PARDA">Parda</option><option value="PRETA">Preta</option><option value="AMARELA">Amarela</option><option value="INDIGENA">Indígena</option></select>
+        </div>
+        <div class="fgrp s2"><label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 14px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.25);border-radius:8px;"><input type="checkbox" id="eLgbtqia" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;"><div><div style="font-size:13px;font-weight:500;color:var(--text);">Pessoa LGBTQIA+</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Informação opcional e sigilosa</div></div></label></div>
         <div class="fgrp"><div class="flbl">Nacionalidade</div><input class="fi" id="eNacionalidade" placeholder="Ex: Brasileira"></div>
         <div class="fdiv"></div><div class="fsec">Documentos</div>
         <div class="fgrp"><div class="flbl">CPF</div><input class="fi" id="eCpf" placeholder="000.000.000-00"></div>
@@ -1628,6 +1632,10 @@ nav.legacy{display:none!important;}
         </div>
         <div class="fgrp"><div class="flbl">Data de admissão</div><input class="fi" id="eAdmissao" type="date"></div>
         <div class="fgrp"><div class="flbl">Cargo</div><input class="fi" id="eCargo"></div>
+        <div class="fgrp"><div class="flbl">Nível do cargo</div>
+          <select class="fsel" id="eNivelCargo"><option value="">Não informado</option><option value="JUNIOR">Júnior</option><option value="PLENO">Pleno</option><option value="SENIOR">Sênior</option><option value="COORDENACAO">Coordenação</option><option value="GERENCIA">Gerência</option><option value="DIRETORIA">Diretoria</option><option value="SOCIO">Sócio</option></select>
+        </div>
+        <div class="fgrp s2"><label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 14px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.25);border-radius:8px;"><input type="checkbox" id="eLideranca" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;"><div><div style="font-size:13px;font-weight:500;color:var(--text);">Pessoa de Liderança</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Coordenadores, gestores e diretores</div></div></label></div>
         <div class="fgrp"><div class="flbl">Área</div>
           <select class="fsel" id="eArea"><option>Jurídico</option><option>Tecnologia</option><option>Operacional</option><option>Controladoria</option><option>Administrativo</option><option>Atendimento</option><option>Vendas</option><option>Financeiro</option><option>Marketing</option><option>Recursos Humanos</option><option>Sucesso do Cliente</option><option>Contas a Pagar</option><option>Contas a Receber</option><option>Diretor</option></select>
         </div>
@@ -1729,6 +1737,10 @@ nav.legacy{display:none!important;}
         <div class="fgrp"><div class="flbl">Gênero</div>
           <select class="fsel" id="nGenero"><option value="">Não informado</option><option value="M">Masculino</option><option value="F">Feminino</option><option value="NB">Não-binário</option><option value="O">Outro</option><option value="PI">Prefiro não informar</option></select>
         </div>
+        <div class="fgrp"><div class="flbl">Raça / Etnia</div>
+          <select class="fsel" id="nRacaEtnia"><option value="">Prefiro não informar</option><option value="BRANCA">Branca</option><option value="PARDA">Parda</option><option value="PRETA">Preta</option><option value="AMARELA">Amarela</option><option value="INDIGENA">Indígena</option></select>
+        </div>
+        <div class="fgrp s2"><label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 14px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.25);border-radius:8px;"><input type="checkbox" id="nLgbtqia" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;"><div><div style="font-size:13px;font-weight:500;color:var(--text);">Pessoa LGBTQIA+</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Informação opcional e sigilosa</div></div></label></div>
         <div class="fgrp"><div class="flbl">Nacionalidade</div><input class="fi" id="nNacionalidade" placeholder="Ex: Brasileira"></div>
         <div class="fdiv"></div><div class="fsec">Documentos</div>
         <div class="fgrp"><div class="flbl">CPF</div><input class="fi" id="nCpf" placeholder="000.000.000-00"></div>
@@ -1778,6 +1790,10 @@ nav.legacy{display:none!important;}
         </div>
         <div class="fgrp"><div class="flbl">Admissão <span class="rq">*</span></div><input class="fi" id="nAdm" type="date"></div>
         <div class="fgrp"><div class="flbl">Cargo</div><input class="fi" id="nCargo" placeholder="Ex: Analista Jurídico"></div>
+        <div class="fgrp"><div class="flbl">Nível do cargo</div>
+          <select class="fsel" id="nNivelCargo"><option value="">Não informado</option><option value="JUNIOR">Júnior</option><option value="PLENO">Pleno</option><option value="SENIOR">Sênior</option><option value="COORDENACAO">Coordenação</option><option value="GERENCIA">Gerência</option><option value="DIRETORIA">Diretoria</option><option value="SOCIO">Sócio</option></select>
+        </div>
+        <div class="fgrp s2"><label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 14px;background:rgba(155,102,244,.07);border:1px solid rgba(155,102,244,.25);border-radius:8px;"><input type="checkbox" id="nLideranca" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;"><div><div style="font-size:13px;font-weight:500;color:var(--text);">Pessoa de Liderança</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Coordenadores, gestores e diretores</div></div></label></div>
         <div class="fgrp"><div class="flbl">Área</div>
           <select class="fsel" id="nArea"><option>Jurídico</option><option>Tecnologia</option><option>Operacional</option><option>Controladoria</option><option>Administrativo</option><option>Atendimento</option><option>Vendas</option><option>Financeiro</option><option>Marketing</option><option>Recursos Humanos</option><option>Sucesso do Cliente</option><option>Contas a Pagar</option><option>Contas a Receber</option><option>Diretor</option></select>
         </div>
@@ -2652,6 +2668,9 @@ function _excelToSb(r){
     descricao_funcao:r.DESCRICAO_FUNCAO||null,
     banco:r.BANCO||null, agencia:r.AGENCIA||null, conta_bancaria:r.CONTA_BANCARIA||null,
     tipo_conta:r.TIPO_CONTA||null, seguro_vida:r.SEGURO_VIDA||null,
+    // Diversidade & carreira
+    raca_etnia:r.RACA_ETNIA||null, nivel_cargo:r.NIVEL_CARGO||null,
+    is_lideranca:!!r.IS_LIDERANCA, is_lgbtqia:!!r.IS_LGBTQIA,
     dados_complementares:r.DADOS_COMPLEMENTARES||{},
   };
 }
@@ -3131,6 +3150,8 @@ function openEditColab(r){
   $('eNome').value=r.NOME||'';
   $('eNasc').value=iso(r.DATA_NASCIMENTO)||'';
   setS('eGenero',r.GENERO||'');
+  setS('eRacaEtnia',r.RACA_ETNIA||'');
+  $('eLgbtqia').checked=!!r.IS_LGBTQIA;
   $('eNacionalidade').value=r.NACIONALIDADE||'';
   $('eCpf').value=r.CPF||''; $('eRg').value=r.RG||'';
   $('ePis').value=r.PIS_PASEP||''; $('eCtps').value=r.CTPS||'';
@@ -3151,7 +3172,7 @@ function openEditColab(r){
   setS('eArea',r.AREA);setS('eGestor',r.GESTOR);setS('eEmpresa',r.EMPRESA);setS('eStatus',r.STATUS||'ATIVO');
   $('eAdmissao').value=iso(r.DATA_ADMISSAO)||'';
   $('eDesl').value=iso(r.DATA_DESLIGAMENTO)||'';
-  $('eCargo').value=r.CARGO||''; $('eSetor').value=r.SETOR||'';
+  $('eCargo').value=r.CARGO||''; setS('eNivelCargo',r.NIVEL_CARGO||''); $('eLideranca').checked=!!r.IS_LIDERANCA; $('eSetor').value=r.SETOR||'';
   $('eJornada').value=r.JORNADA_TRABALHO||'';
   $('eDescFuncao').value=r.DESCRICAO_FUNCAO||'';
   $('eExperiencia').value=r.TEMPO_EXPERIENCIA||'';
@@ -3217,7 +3238,10 @@ async function saveEditColab(){
     VALE_REFEICAO:_parseBRL($('eVR').value), VALE_TRANSPORTE:_parseBRL($('eVT').value),
     PLANO_SAUDE:$('ePlanoSaude').value||null, OUTROS_BENEFICIOS:$('eBeneficios').value||null,
     // v2
-    GENERO:$('eGenero').value||null, CPF:$('eCpf').value||null, RG:$('eRg').value||null,
+    GENERO:$('eGenero').value||null,
+    RACA_ETNIA:$('eRacaEtnia').value||null, IS_LGBTQIA:$('eLgbtqia').checked,
+    NIVEL_CARGO:$('eNivelCargo').value||null, IS_LIDERANCA:$('eLideranca').checked,
+    CPF:$('eCpf').value||null, RG:$('eRg').value||null,
     PIS_PASEP:$('ePis').value||null, CTPS:$('eCtps').value||null,
     TITULO_ELEITOR:$('eTitulo').value||null,
     EMAIL_PESSOAL:$('eEmailPes').value||null, TELEFONE:$('eTelefone').value||null,
@@ -3646,7 +3670,12 @@ async function saveNewColab(){
       plano_saude:$('nPlanoSaude').value||null,
       outros_beneficios:$('nBeneficios').value||null,
       // v2
-      genero:$('nGenero').value||null, cpf:$('nCpf').value||null, rg:$('nRg').value||null,
+      genero:$('nGenero').value||null,
+      raca_etnia:$('nRacaEtnia').value||null,
+      nivel_cargo:$('nNivelCargo').value||null,
+      is_lideranca:$('nLideranca').checked,
+      is_lgbtqia:$('nLgbtqia').checked,
+      cpf:$('nCpf').value||null, rg:$('nRg').value||null,
       pis_pasep:$('nPis').value||null, ctps:$('nCtps').value||null,
       titulo_eleitor:$('nTitulo').value||null,
       email_pessoal:$('nEmailPes').value||null, telefone:$('nTelefone').value||null,
