@@ -128,10 +128,10 @@ nav.legacy{display:none!important;}
 .card{background:white;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;height:100%;box-shadow:0 2px 8px rgba(0,0,0,.06);}
 .ct{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
 .ct span{font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);}
-.br{display:flex;align-items:center;gap:7px;margin-bottom:10px;}
-.bl{width:110px;font-size:12px;color:var(--muted);text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.bt{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;}
-.bf{height:100%;border-radius:3px;}
+.br{display:flex;align-items:center;gap:6px;margin-bottom:11px;}
+.bl{width:68px;font-size:12px;color:var(--muted);text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bt{flex:1;height:9px;background:var(--bg);border-radius:5px;overflow:hidden;}
+.bf{height:100%;border-radius:5px;transition:width .5s ease;}
 .bc{width:22px;font-size:12px;color:var(--text);font-family:var(--mono);text-align:right;flex-shrink:0;}
 .dw{display:flex;align-items:center;gap:13px;}
 .li{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
@@ -2692,7 +2692,7 @@ function render(){
   const areaMap={};ativos.forEach(r=>{const a=r.AREA||'N/D';areaMap[a]=(areaMap[a]||0)+1;});
   const areaE=Object.entries(areaMap).sort((a,b)=>b[1]-a[1]);const mxArea=Math.max(...areaE.map(e=>e[1]),1);
   const aC=['#7c3aed','#0ea5e9','#8b5cf6','#10b981','#f97316','#ef4444','#34d399','#60a5fa','#c084fc','#fb7185','#6366f1'];
-  $('areaChart').innerHTML=areaE.map((e,i)=>`<div class="br"><div class="bl" title="${esc(e[0])}" style="font-size:17px;">${esc(e[0]).length>13?esc(e[0]).slice(0,13)+'…':esc(e[0])}</div><div class="bt" style="height:6px;"><div class="bf" style="width:${(e[1]/mxArea)*100}%;background:${aC[i%aC.length]}"></div></div><div class="bc" style="font-size:17px;">${e[1]}</div></div>`).join('');
+  $('areaChart').innerHTML=areaE.map((e,i)=>`<div class="br"><div class="bl" title="${esc(e[0])}" style="font-size:17px;">${esc(e[0]).length>13?esc(e[0]).slice(0,13)+'…':esc(e[0])}</div><div class="bt"><div class="bf" style="width:${(e[1]/mxArea)*100}%;background:${aC[i%aC.length]}"></div></div><div class="bc" style="font-size:17px;">${e[1]}</div></div>`).join('');
 
   // ── GESTOR CHART ──
   const gestMap={};ativos.forEach(r=>{const g=r.GESTOR||'N/D';gestMap[g]=(gestMap[g]||0)+1;});
