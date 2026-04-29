@@ -7046,9 +7046,31 @@ async function _enviarEmailDesl(a,tipo){
   if(ok)toast(`E-mail de ${tipo==='lembrete'?'lembrete':'confirmação'} enviado ao gestor`,'success');
 }
 
+// --- Limpa ações SISTEMA cujo alerta de origem não existe mais ---
+function _limparAcoesObsoletas(){
+  const ferSet =new Set(_alertasFer.map(r=>r.NOME||'—'));
+  const exSet  =new Set(_alertasEx .map(r=>r.NOME||'—'));
+  const contSet=new Set(_alertasCont.map(r=>r.NOME||'—'));
+  const aberto =s=>s==='EM_ANDAMENTO'||s==='ATRASADO';
+  const antes=_acoes.length;
+  _acoes=_acoes.filter(a=>{
+    if(a.origem!=='SISTEMA')return true;       // ações manuais: intocadas
+    if(!aberto(a.status))return true;          // encerradas: mantém histórico
+    if((a.alerta||'').startsWith('Férias não programadas — '))
+      return ferSet.has((a.alerta||'').replace('Férias não programadas — ',''));
+    if((a.alerta||'').startsWith('Exame ocupacional vencido — '))
+      return exSet.has((a.alerta||'').replace('Exame ocupacional vencido — ',''));
+    if((a.alerta||'').startsWith('Contrato sem data fim — '))
+      return contSet.has((a.alerta||'').replace('Contrato sem data fim — ',''));
+    return true;
+  });
+  if(_acoes.length<antes){saveAcoes();renderAcoes();console.log(`[LUMA] ${antes-_acoes.length} ação(ões) obsoleta(s) removida(s).`);}
+}
+
 // --- Auto-gerar ações sugeridas silenciosamente ---
 function _gerarAcoesAuto(){
   try{
+    _limparAcoesObsoletas(); // remove ações SISTEMA que não têm mais alerta ativo por trás
     const hoje=new Date().toISOString().split('T')[0];
     const jaExiste=al=>_acoes.some(a=>a.alerta===al&&a.status!=='CANCELADO'&&a.status!=='CONCLUIDO');
     let novos=0;
