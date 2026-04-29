@@ -90,7 +90,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .tb-btn:hover{background:var(--bg);border-color:var(--accent);color:var(--accent);}
 
 /* ── PAGE CONTENT ── */
-.main{padding:24px 28px;flex:1;overflow-y:auto;}
+.main{padding:16px 28px 24px;flex:1;overflow-y:auto;}
 
 /* ── LEGACY nav/tab (ocultos) ── */
 nav.legacy{display:none!important;}
@@ -1265,9 +1265,9 @@ nav.legacy{display:none!important;}
 
 <!-- SEÇÃO ADMINISTRAÇÃO -->
 <div class="sec" id="adminSec">
-  <div class="sttl">
+  <div class="sttl" style="flex-direction:column;align-items:flex-start;gap:3px;">
     <div class="sttl-l"><span>🛠️</span> Administração</div>
-    <span style="font-size:12px;font-weight:400;color:var(--muted);">Gerenciar perfis de acesso ao People Analytics</span>
+    <div style="font-size:12px;font-weight:400;color:var(--muted);margin-left:2px;">Gerenciar perfis de acesso ao People Analytics</div>
   </div>
   <div class="card" style="max-width:1000px;">
     <p style="font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.7;">
