@@ -125,14 +125,16 @@ nav.legacy{display:none!important;}
 .ki-green{background:rgba(34,197,94,.1);}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;align-items:stretch;}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;align-items:stretch;}
-.card{background:white;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;height:100%;box-shadow:0 2px 8px rgba(0,0,0,.06);}
-.ct{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.card{background:white;border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;height:100%;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;flex-direction:column;}
+.ct{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .ct span{font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);}
-.br{display:flex;align-items:center;gap:6px;margin-bottom:11px;}
+/* Containers de barras: crescem para preencher o card e distribuem as linhas verticalmente */
+#empB,#etarB,#tempoB,#areaChart{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;}
+.br{display:flex;align-items:center;gap:6px;margin-bottom:0;width:100%;}
 .bl{width:68px;font-size:12px;color:var(--muted);text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.bt{flex:1;height:9px;background:var(--bg);border-radius:5px;overflow:hidden;}
-.bf{height:100%;border-radius:5px;transition:width .5s ease;}
-.bc{width:22px;font-size:12px;color:var(--text);font-family:var(--mono);text-align:right;flex-shrink:0;}
+.bt{flex:1;min-width:0;height:9px;background:var(--bg);border-radius:5px;overflow:hidden;}
+.bf{height:100%;border-radius:5px;transition:width .6s ease;}
+.bc{width:24px;font-size:12px;color:var(--text);font-family:var(--mono);text-align:right;flex-shrink:0;}
 .dw{display:flex;align-items:center;gap:13px;}
 .li{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
 .ld{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
@@ -512,7 +514,7 @@ nav.legacy{display:none!important;}
     <div class="card" style="margin-bottom:0;">
       <div class="ct">Tempo de empresa</div>
       <div id="tempoB"></div>
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;"><span style="font-size:17px;color:var(--muted)">Média</span><span style="font-size:17px;font-family:var(--mono);color:var(--accent)" id="tMedia">—</span></div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;flex-shrink:0;"><span style="font-size:17px;color:var(--muted)">Média</span><span style="font-size:17px;font-family:var(--mono);color:var(--accent)" id="tMedia">—</span></div>
     </div>
   </div>
 
