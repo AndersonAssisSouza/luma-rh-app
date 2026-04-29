@@ -2804,7 +2804,15 @@ function render(){
   // cSem: PJ/MEI/Associado sem flag CONTRATO_INDETERMINADO='SIM'
   const cSem=ativos.filter(r=>{const v=String(r.TIPO_VINCULO||'').toUpperCase();return['PJ','MEI','ASSOCIADO'].includes(v)&&String(r.CONTRATO_INDETERMINADO||'').toUpperCase()!=='SIM';});
   const exV=exames.filter(r=>String(r.STATUS_EXAME||'').toUpperCase()==='VENCIDO'&&(normStatus(r)==='ATIVO'||!r.STATUS)&&!socioIds.has(r.ID_COLABORADOR));
-  const fNP=ferias.filter(r=>String(r.STATUS_FERIAS||'').trim()==='NAO_PROGRAMADA');
+  // fNP: alerta de férias não programadas — apenas quem JÁ completou o período aquisitivo (≥12 meses de empresa)
+  // CLT art. 130: direito adquirido após 12 meses; antes disso não há obrigação de programar
+  const _hoje12=new Date();_hoje12.setFullYear(_hoje12.getFullYear()-1);
+  const fNP=ferias.filter(r=>{
+    if(String(r.STATUS_FERIAS||'').trim()!=='NAO_PROGRAMADA')return false;
+    if(!r.DATA_ADMISSAO)return false;
+    const adm=new Date(String(r.DATA_ADMISSAO)+'T12:00:00');
+    return !isNaN(adm)&&adm<=_hoje12; // admissão ≥ 12 meses atrás = período aquisitivo concluído
+  });
   // Alerta experiência CLT: período vencendo em ≤15 dias ou já vencido, sem flag indeterminado
   const hojeMs=new Date().getTime();
   const expAlerts=ativos.filter(r=>{
