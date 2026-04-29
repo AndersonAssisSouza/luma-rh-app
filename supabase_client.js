@@ -597,6 +597,115 @@ export async function saveTenantConfig(configPatch) {
   return merged
 }
 
+// ============================================================
+// eNPS — Pesquisas de Engajamento
+// ============================================================
+
+export async function getEnpsPesquisas() {
+  const tenantId = await _resolveTenantId()
+  if (!tenantId) return []
+  const { data, error } = await sb
+    .from('enps_pesquisas')
+    .select('*, enps_drivers(*)')
+    .eq('tenant_id', tenantId)
+    .order('criado_em', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+export async function upsertEnpsPesquisa(pesquisa) {
+  const tenantId = await _resolveTenantId()
+  const { drivers, ...rest } = pesquisa
+  const payload = { ...rest, tenant_id: tenantId, atualizado_em: new Date().toISOString() }
+  const { data, error } = await sb
+    .from('enps_pesquisas')
+    .upsert(payload, { onConflict: 'id' })
+    .select()
+    .single()
+  if (error) throw error
+  if (Array.isArray(drivers) && drivers.length) {
+    await sb.from('enps_drivers').delete().eq('pesquisa_id', data.id)
+    const dRows = drivers.map((d, i) => ({ ...d, pesquisa_id: data.id, tenant_id: tenantId, ordem: i }))
+    const { error: de } = await sb.from('enps_drivers').insert(dRows)
+    if (de) throw de
+  }
+  return data
+}
+
+export async function deleteEnpsPesquisa(id) {
+  const { error } = await sb.from('enps_pesquisas').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ============================================================
+// PERFORMANCE / 9-BOX
+// ============================================================
+
+export async function getPerformanceCiclos() {
+  const tenantId = await _resolveTenantId()
+  if (!tenantId) return []
+  const { data, error } = await sb
+    .from('performance_ciclos')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .order('criado_em', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+export async function getPerformanceAvaliacoes(cicloId) {
+  const { data, error } = await sb
+    .from('performance_avaliacoes')
+    .select('*, colaboradores(nome, area, cargo, data_admissao, genero)')
+    .eq('ciclo_id', cicloId)
+  if (error) throw error
+  return data || []
+}
+
+export async function upsertPerformanceCiclo(ciclo) {
+  const tenantId = await _resolveTenantId()
+  const { data, error } = await sb
+    .from('performance_ciclos')
+    .upsert({ ...ciclo, tenant_id: tenantId, atualizado_em: new Date().toISOString() }, { onConflict: 'id' })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function upsertPerformanceAvaliacao(aval) {
+  const tenantId = await _resolveTenantId()
+  const { data, error } = await sb
+    .from('performance_avaliacoes')
+    .upsert({ ...aval, tenant_id: tenantId, atualizado_em: new Date().toISOString() }, { onConflict: 'ciclo_id,colaborador_id' })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deletePerformanceCiclo(id) {
+  const { error } = await sb.from('performance_ciclos').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ============================================================
+// ATIVIDADE RECENTE
+// ============================================================
+
+export async function getAtividadeRecente(limit = 12) {
+  const tenantId = await _resolveTenantId()
+  if (!tenantId) return []
+  const { data, error } = await sb
+    .from('log_eventos')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .order('criado_em', { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return data || []
+}
+
 export function applyTenantTheme(config) {
   if (!config) return
   const root = document.documentElement

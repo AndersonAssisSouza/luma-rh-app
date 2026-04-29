@@ -557,6 +557,114 @@ nav.legacy{display:none!important;}
     </div>
   </div>
 
+<!-- ═══════ LINHA 7: eNPS + Equidade Salarial (KPI mini) ═══════ -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+  <!-- eNPS -->
+  <div class="card" style="margin-bottom:0;position:relative;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Engajamento (eNPS)</div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px;">
+          <div id="enpsScore" style="font-size:42px;font-weight:800;color:var(--text);line-height:1;">—</div>
+          <div style="font-size:14px;color:var(--muted);font-weight:400;">/100</div>
+        </div>
+        <div id="enpsVar" style="margin-top:4px;font-size:12px;color:var(--muted);">—</div>
+        <div id="enpsPeriodo" style="font-size:11px;color:var(--muted);margin-top:2px;">—</div>
+      </div>
+      <button onclick="openEnpsModal()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--muted);cursor:pointer;" title="Gerenciar pesquisas eNPS">+ Pesquisa</button>
+    </div>
+    <div id="enpsMiniChart" style="margin-top:12px;height:50px;display:flex;align-items:flex-end;gap:4px;"></div>
+  </div>
+
+  <!-- Equidade Salarial -->
+  <div class="card" style="margin-bottom:0;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Equidade Salarial</div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px;">
+          <div id="eqSalScore" style="font-size:42px;font-weight:800;color:var(--text);line-height:1;">—</div>
+        </div>
+        <div id="eqSalSub" style="font-size:11px;color:var(--muted);margin-top:2px;">Mulheres / homens, mesmo nível</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:11px;color:var(--muted);">1,00 ideal</div>
+      </div>
+    </div>
+    <div id="eqSalBar" style="margin-top:12px;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;position:relative;">
+      <div id="eqSalFill" style="height:100%;background:var(--accent);border-radius:4px;transition:width .6s;"></div>
+      <div style="position:absolute;right:0;top:-2px;bottom:-2px;width:2px;background:var(--muted);"></div>
+    </div>
+    <div id="eqSalLegenda" style="margin-top:8px;font-size:11px;color:var(--muted);"></div>
+  </div>
+</div>
+
+<!-- ═══════ LINHA 8: Equidade por Nível + Drivers ═══════ -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+  <div class="card" style="margin-bottom:0;">
+    <div class="ct">Equidade salarial por nível <span>Gap médio: mulheres × homens</span></div>
+    <div id="eqNivelChart" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+  <div class="card" style="margin-bottom:0;">
+    <div class="ct">Drivers de engajamento <span id="driversEnpsRef" style="background:#ede9fe;color:#5b21b6;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600;"></span></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Score por tema — última pesquisa. Linha cinza = meta interna (7,0).</div>
+    <div id="driversChart" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+</div>
+
+<!-- ═══════ LINHA 9: Diversidade & Inclusão + 9-Box ═══════ -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+  <div class="card" style="margin-bottom:0;">
+    <div class="ct">Diversidade &amp; Inclusão <span>Representatividade no quadro</span></div>
+    <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Gênero</div>
+    <div id="divGeneroBar" style="height:14px;border-radius:4px;overflow:hidden;display:flex;margin-bottom:4px;"></div>
+    <div id="divGeneroLeg" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;font-size:11px;color:var(--muted);"></div>
+    <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Raça / Etnia</div>
+    <div id="divRacaBar" style="height:14px;border-radius:4px;overflow:hidden;display:flex;margin-bottom:4px;"></div>
+    <div id="divRacaLeg" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;font-size:11px;color:var(--muted);"></div>
+    <div id="divKpis" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px;"></div>
+  </div>
+  <div class="card" style="margin-bottom:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="ct" style="margin-bottom:0;">9-Box · Performance × Potencial</div>
+      <button onclick="openNineBoxModal()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--muted);cursor:pointer;">+ Ciclo</button>
+    </div>
+    <div id="nineBoxCicloInfo" style="font-size:11px;color:var(--muted);margin-bottom:10px;">—</div>
+    <div id="nineBoxGrid" style="display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:4px;aspect-ratio:1;max-height:280px;">
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--muted);">
+      <span>← Baixo · Desempenho → Alto</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ LINHA 10: Pessoas em Destaque + Atividade Recente ═══════ -->
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-top:14px;margin-bottom:14px;">
+  <div class="card" style="margin-bottom:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div class="ct" style="margin-bottom:0;">Pessoas em destaque</div>
+      <div id="pessoasDestaqueKpis" style="display:flex;gap:12px;font-size:11px;"></div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="tbl" style="font-size:12px;">
+        <thead><tr>
+          <th>Colaborador</th><th>Departamento</th><th>Tempo</th><th>Performance</th><th>Engaj.</th><th>Motivo</th>
+        </tr></thead>
+        <tbody id="pessoasDestaqueBody"></tbody>
+      </table>
+    </div>
+    <div id="pessoasDestaqueFoot" style="font-size:11px;color:var(--muted);margin-top:8px;"></div>
+  </div>
+  <div class="card" style="margin-bottom:0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="ct" style="margin-bottom:0;">Atividade recente</div>
+    </div>
+    <div id="atividadeRecente" style="display:flex;flex-direction:column;gap:8px;"></div>
+    <div style="margin-top:12px;text-align:center;">
+      <button onclick="showTab('vg',null);$('atividadeRecente').scrollIntoView()" style="background:none;border:none;font-size:11px;color:var(--accent);cursor:pointer;">Ver todas as atividades →</button>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <!-- PESSOAL -->
@@ -2348,6 +2456,74 @@ nav.legacy{display:none!important;}
 </div>
 </div>
 
+<!-- ── Modal eNPS ──────────────────────────────────────── -->
+<div class="ov" id="mEnps">
+  <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto;">
+    <div class="mh" style="position:sticky;top:0;background:var(--bg2);z-index:1;">
+      <div><div class="mt">Pesquisas eNPS</div><div class="ms">Engajamento e drivers por período</div></div>
+      <button class="mc" onclick="closeModal('mEnps')">×</button>
+    </div>
+    <div class="mb">
+      <div style="background:var(--bg3);border-radius:8px;padding:14px;margin-bottom:16px;">
+        <div class="fsec" style="margin-bottom:10px;">Nova pesquisa</div>
+        <div class="fg" style="grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="fgrp" style="margin:0;"><div class="flbl">Período <span class="rq">*</span></div><input class="fi" id="enpsNPeriodo" placeholder="Ex: Q1/26"></div>
+          <div class="fgrp" style="margin:0;"><div class="flbl">Score eNPS (0–100) <span class="rq">*</span></div><input class="fi" id="enpsNScore" type="number" min="-100" max="100" placeholder="78"></div>
+          <div class="fgrp" style="margin:0;"><div class="flbl">Respondentes</div><input class="fi" id="enpsNResp" type="number" min="0" placeholder="0"></div>
+          <div class="fgrp" style="margin:0;"><div class="flbl">Período anterior</div><input class="fi" id="enpsNPeriodoAnt" placeholder="Ex: Q4/25"></div>
+          <div class="fgrp" style="margin:0;"><div class="flbl">Score anterior</div><input class="fi" id="enpsNScoreAnt" type="number" placeholder="72"></div>
+        </div>
+        <div class="fsec" style="margin:14px 0 10px;">Drivers (opcional)</div>
+        <div id="enpsDriversList" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <button onclick="enpsAddDriver()" style="margin-top:8px;background:none;border:1px dashed var(--border);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--accent);cursor:pointer;width:100%;">+ Adicionar driver</button>
+        <div style="margin-top:12px;text-align:right;">
+          <button class="btn btn-g" onclick="enpsNovaPesquisa()">Salvar pesquisa</button>
+        </div>
+      </div>
+      <div class="fsec" style="margin-bottom:8px;">Histórico</div>
+      <div id="enpsHistorico" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal 9-Box ─────────────────────────────────────── -->
+<div class="ov" id="mNineBox">
+  <div class="modal" style="max-width:900px;max-height:90vh;overflow-y:auto;">
+    <div class="mh" style="position:sticky;top:0;background:var(--bg2);z-index:1;">
+      <div><div class="mt">9-Box · Performance × Potencial</div><div class="ms" id="mNineBoxSub">Gestão de ciclos</div></div>
+      <button class="mc" onclick="closeModal('mNineBox')">×</button>
+    </div>
+    <div class="mb">
+      <!-- Criar ciclo -->
+      <div style="background:var(--bg3);border-radius:8px;padding:14px;margin-bottom:16px;">
+        <div class="fsec" style="margin-bottom:10px;">Novo ciclo</div>
+        <div class="fg" style="grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div class="fgrp s2" style="margin:0;"><div class="flbl">Nome do ciclo <span class="rq">*</span></div><input class="fi" id="nbNome" placeholder="Ex: 2025.2"></div>
+          <div class="fgrp" style="margin:0;"><div class="flbl">Status</div>
+            <select class="fsel" id="nbStatus">
+              <option value="PLANEJADO">Planejado</option>
+              <option value="EM_ANDAMENTO" selected>Em andamento</option>
+              <option value="CONCLUIDO">Concluído</option>
+            </select>
+          </div>
+          <div class="fgrp" style="margin:0;"><div class="flbl">Início</div><input class="fi" id="nbInicio" type="date"></div>
+          <div class="fgrp" style="margin:0;"><div class="flbl">Fim</div><input class="fi" id="nbFim" type="date"></div>
+        </div>
+        <div style="margin-top:10px;text-align:right;">
+          <button class="btn btn-g" onclick="nbCriarCiclo()">Criar ciclo</button>
+        </div>
+      </div>
+      <!-- Lista de ciclos -->
+      <div id="nbCiclosList"></div>
+      <!-- Avaliações do ciclo selecionado -->
+      <div id="nbAvalSection" style="display:none;margin-top:16px;">
+        <div class="fsec" style="margin-bottom:10px;" id="nbAvalTitle">Avaliações</div>
+        <div id="nbAvalGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="tc" id="tc"></div>
 
 <script>
@@ -2406,6 +2582,9 @@ function _sbToExcel(r){
     MATRICULA:r.matricula, JORNADA_TRABALHO:r.jornada_trabalho, DESCRICAO_FUNCAO:r.descricao_funcao,
     BANCO:r.banco, AGENCIA:r.agencia, CONTA_BANCARIA:r.conta_bancaria, TIPO_CONTA:r.tipo_conta, SEGURO_VIDA:r.seguro_vida,
     DADOS_COMPLEMENTARES:dc,
+    // Campos Diversidade & Performance
+    RACA_ETNIA:r.raca_etnia, NIVEL_CARGO:r.nivel_cargo,
+    IS_LIDERANCA:r.is_lideranca||false, IS_LGBTQIA:r.is_lgbtqia||false,
   };
 }
 function _sbFerToExcel(f){
@@ -2513,6 +2692,16 @@ async function loadAll(){
     detectRole();
     render();
     renderCharts();
+    // Advanced Analytics — carrega em paralelo após dados principais
+    renderEquidadeSalarial();
+    renderEquidadePorNivel();
+    renderDiversidade();
+    Promise.all([
+      loadEnps().catch(()=>{}),
+      loadNineBox().catch(()=>{}),
+      loadPessoasDestaque().catch(()=>{}),
+      loadAtividadeRecente().catch(()=>{})
+    ]);
     $('sLoad').classList.add('hidden');$('app').style.display='block';
     const dot=$('ndot');dot.classList.add('live');dot.title='Ao vivo · '+new Date().toLocaleTimeString('pt-BR');
     if(erros.length>0)toast(`Aviso: ${erros.join(', ')} não carregado(s)`,'info');
@@ -7483,6 +7672,625 @@ async function pfSendReturnEmail(sol,aprovado,motivo){
 </table></td></tr></table></body></html>`;
     await window._sbFns.sendEmail(sol.email,`${icon} [Férias ${aprovado?'Aprovadas':'Rejeitadas'}] ${sol.prot} · ${pfFD(sol.ini)} a ${pfFD(sol.fim)}`,emailBody);
   }catch(e){console.warn('pfSendReturnEmail:',e.message);}
+}
+
+// ═══════════════════════════════════════════════════════
+// ADVANCED ANALYTICS — eNPS, Equidade, Diversidade, 9-Box
+// ═══════════════════════════════════════════════════════
+
+let _enpsData = []
+let _perfCiclos = []
+let _perfAvals = {}
+let _nbCicloAtivo = null
+
+// ── eNPS ──────────────────────────────────────────────
+
+async function loadEnps() {
+  try {
+    _enpsData = (await window._sbFns.getEnpsPesquisas()) || []
+  } catch(_) { _enpsData = [] }
+  renderEnpsKpi()
+  renderDriversEngajamento()
+}
+
+function renderEnpsKpi() {
+  const latest = _enpsData[0]
+  if (!latest) {
+    $('enpsScore').textContent = '—'
+    $('enpsVar').textContent = 'Sem pesquisa registrada'
+    $('enpsPeriodo').textContent = ''
+    $('enpsMiniChart').innerHTML = ''
+    return
+  }
+  const s = latest.score
+  const color = s >= 75 ? 'var(--ok)' : s >= 50 ? 'var(--accent)' : s >= 0 ? 'var(--warn)' : 'var(--danger)'
+  $('enpsScore').textContent = s
+  $('enpsScore').style.color = color
+
+  if (latest.score_ant != null) {
+    const diff = (s - latest.score_ant).toFixed(1)
+    const pos = diff >= 0
+    $('enpsVar').innerHTML = `<span style="background:${pos?'#dcfce7':'#fee2e2'};color:${pos?'#16a34a':'#dc2626'};border-radius:99px;padding:1px 7px;font-weight:700;">${pos?'+':''}${diff}</span> vs ${latest.periodo_ant||'período ant.'}`
+  } else {
+    $('enpsVar').textContent = ''
+  }
+  $('enpsPeriodo').textContent = `Última pesquisa · ${latest.periodo}`
+
+  // Mini sparkline
+  const pts = [..._enpsData].reverse().slice(-6)
+  if (pts.length > 1) {
+    const max = Math.max(...pts.map(p => p.score))
+    const min = Math.min(...pts.map(p => p.score))
+    const range = max - min || 1
+    const h = 50
+    $('enpsMiniChart').innerHTML = pts.map((p, i) => {
+      const pct = ((p.score - min) / range) * 80 + 10
+      const barH = Math.round((pct / 100) * h)
+      const c = p.score >= 75 ? '#16a34a' : p.score >= 50 ? '#7c3aed' : '#f59e0b'
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;">
+        <div style="font-size:9px;color:var(--muted);">${p.score}</div>
+        <div style="width:100%;height:${barH}px;background:${c};border-radius:2px 2px 0 0;opacity:${i===pts.length-1?1:.6}"></div>
+        <div style="font-size:8px;color:var(--muted);white-space:nowrap;">${p.periodo}</div>
+      </div>`
+    }).join('')
+  }
+}
+
+function renderDriversEngajamento() {
+  const latest = _enpsData[0]
+  const drivers = latest?.enps_drivers || []
+  const ref = $('driversEnpsRef')
+  if (ref) ref.textContent = latest ? `${latest.score}/100 eNPS` : ''
+  const el = $('driversChart')
+  if (!el) return
+  if (!drivers.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0;">Sem drivers registrados. Adicione uma pesquisa eNPS com drivers.</div>'
+    return
+  }
+  const sorted = [...drivers].sort((a, b) => b.score - a.score)
+  const meta = 7.0
+  el.innerHTML = sorted.map(d => {
+    const pct = Math.min((d.score / 10) * 100, 100)
+    const metaPct = Math.min((meta / 10) * 100, 100)
+    const above = d.score >= meta
+    const color = above ? '#16a34a' : d.score >= 6 ? '#f59e0b' : '#ef4444'
+    const varStr = d.variacao != null ? `<span style="color:${d.variacao>=0?'#16a34a':'#ef4444'};font-size:11px;font-weight:700;margin-left:6px;">${d.variacao>=0?'+':''}${d.variacao}</span>` : ''
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+        <span style="font-size:12px;color:var(--text);">${esc(d.driver)}</span>
+        <span style="font-size:13px;font-family:var(--mono);font-weight:700;color:var(--text);">${Number(d.score).toFixed(1)}${varStr}</span>
+      </div>
+      <div style="position:relative;height:8px;background:var(--bg);border-radius:4px;overflow:visible;">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:4px;transition:width .6s;"></div>
+        <div style="position:absolute;left:${metaPct}%;top:-2px;bottom:-2px;width:2px;background:#d1d5db;" title="Meta: ${meta}"></div>
+      </div>
+    </div>`
+  }).join('')
+}
+
+// ── Equidade Salarial ──────────────────────────────────
+
+function renderEquidadeSalarial() {
+  const ativos = (D.CADASTRO_COLABORADORES||[]).filter(r => r.STATUS === 'ATIVO' && r.SALARIO_HONORARIO > 0)
+  const mulheres = ativos.filter(r => String(r.GENERO||'').toUpperCase().includes('MULHER') || String(r.GENERO||'').toUpperCase().includes('FEMININO') || String(r.GENERO||'').toLowerCase() === 'f')
+  const homens = ativos.filter(r => String(r.GENERO||'').toUpperCase().includes('HOMEM') || String(r.GENERO||'').toUpperCase().includes('MASCULINO') || String(r.GENERO||'').toLowerCase() === 'm')
+
+  const avgF = mulheres.length ? mulheres.reduce((a, b) => a + (b.SALARIO_HONORARIO||0), 0) / mulheres.length : 0
+  const avgM = homens.length ? homens.reduce((a, b) => a + (b.SALARIO_HONORARIO||0), 0) / homens.length : 0
+
+  if (!avgF || !avgM) {
+    $('eqSalScore').textContent = '—'
+    $('eqSalLegenda').textContent = 'Dados insuficientes (salário ou gênero não informados)'
+    $('eqSalFill').style.width = '0%'
+    return
+  }
+
+  const ratio = (avgF / avgM)
+  const pct = Math.min(ratio * 100, 100)
+  const color = ratio >= 0.95 ? 'var(--ok)' : ratio >= 0.85 ? 'var(--warn)' : 'var(--danger)'
+  $('eqSalScore').textContent = ratio.toFixed(2)
+  $('eqSalScore').style.color = color
+  $('eqSalFill').style.width = `${pct}%`
+  $('eqSalFill').style.background = color
+  $('eqSalLegenda').textContent = `Média F: R$ ${fmtN(avgF)} · Média M: R$ ${fmtN(avgM)} · ${mulheres.length}F / ${homens.length}M com salário`
+}
+
+function renderEquidadePorNivel() {
+  const el = $('eqNivelChart')
+  if (!el) return
+  const ativos = (D.CADASTRO_COLABORADORES||[]).filter(r => r.STATUS === 'ATIVO' && r.SALARIO_HONORARIO > 0 && r.NIVEL_CARGO)
+  if (!ativos.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0;">Preencha o campo "Nível do cargo" nos colaboradores para ver a análise.</div>'
+    return
+  }
+  const nivelOrder = ['JUNIOR','PLENO','SENIOR','COORDENACAO','GERENCIA','DIRETORIA']
+  const map = {}
+  ativos.forEach(r => {
+    const n = String(r.NIVEL_CARGO||'').toUpperCase()
+    if (!map[n]) map[n] = { F: [], M: [] }
+    const g = String(r.GENERO||'').toUpperCase()
+    if (g.includes('MULHER') || g.includes('FEMININO') || g === 'F') map[n].F.push(r.SALARIO_HONORARIO)
+    else if (g.includes('HOMEM') || g.includes('MASCULINO') || g === 'M') map[n].M.push(r.SALARIO_HONORARIO)
+  })
+
+  const niveis = nivelOrder.filter(n => map[n] && (map[n].F.length || map[n].M.length))
+  if (!niveis.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;">Dados insuficientes.</div>'
+    return
+  }
+
+  const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0
+  const allSals = ativos.map(r => r.SALARIO_HONORARIO)
+  const maxSal = Math.max(...allSals)
+
+  el.innerHTML = niveis.map(n => {
+    const d = map[n]
+    const avgF = avg(d.F), avgM = avg(d.M)
+    const gap = avgM > 0 ? ((avgM - avgF) / avgM * 100) : 0
+    const pctF = maxSal > 0 ? (avgF / maxSal * 100) : 0
+    const pctM = maxSal > 0 ? (avgM / maxSal * 100) : 0
+    const gapColor = Math.abs(gap) > 10 ? 'var(--danger)' : Math.abs(gap) > 5 ? 'var(--warn)' : 'var(--ok)'
+    const label = n.charAt(0) + n.slice(1).toLowerCase()
+    return `<div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+        <span style="font-size:13px;font-weight:600;">${label}</span>
+        <span style="font-size:12px;font-weight:700;color:${gapColor};">+${Math.abs(gap).toFixed(1)}% gap</span>
+      </div>
+      ${avgF > 0 ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;"><div style="width:50px;font-size:10px;color:var(--muted);">Mulheres</div><div style="flex:1;height:7px;background:var(--bg);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${pctF}%;background:#8b5cf6;"></div></div><div style="width:72px;font-size:10px;font-family:var(--mono);text-align:right;">R$ ${fmtN(avgF)}</div></div>` : ''}
+      ${avgM > 0 ? `<div style="display:flex;align-items:center;gap:6px;"><div style="width:50px;font-size:10px;color:var(--muted);">Homens</div><div style="flex:1;height:7px;background:var(--bg);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${pctM}%;background:var(--text);"></div></div><div style="width:72px;font-size:10px;font-family:var(--mono);text-align:right;">R$ ${fmtN(avgM)}</div></div>` : ''}
+    </div>`
+  }).join('')
+}
+
+function fmtN(n) {
+  if (!n) return '—'
+  return Number(n).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
+}
+
+// ── Diversidade & Inclusão ─────────────────────────────
+
+function renderDiversidade() {
+  const ativos = (D.CADASTRO_COLABORADORES||[]).filter(r => r.STATUS === 'ATIVO')
+  if (!ativos.length) return
+
+  // Gênero
+  const genMap = {}
+  ativos.forEach(r => {
+    const g = String(r.GENERO||'Não informado').trim() || 'Não informado'
+    genMap[g] = (genMap[g] || 0) + 1
+  })
+  const GEN_COLORS = { 'Feminino':'#8b5cf6','Mulher':'#8b5cf6','F':'#8b5cf6','Masculino':'#1f2937','Homem':'#1f2937','M':'#1f2937','Não-binárie':'#f59e0b','Não informado':'#d1d5db' }
+  const genTotal = ativos.length
+
+  const genBar = $('divGeneroBar')
+  const genLeg = $('divGeneroLeg')
+  if (genBar) genBar.innerHTML = Object.entries(genMap).map(([g, v]) => {
+    const c = GEN_COLORS[g] || '#94a3b8'
+    return `<div style="width:${(v/genTotal*100).toFixed(1)}%;background:${c};" title="${g}: ${v}"></div>`
+  }).join('')
+  if (genLeg) genLeg.innerHTML = Object.entries(genMap).map(([g, v]) => {
+    const c = GEN_COLORS[g] || '#94a3b8'
+    return `<span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:${c};display:inline-block;"></span>${g} <strong>${v}</strong></span>`
+  }).join('')
+
+  // Raça/Etnia
+  const racaMap = {}
+  ativos.forEach(r => {
+    const ra = String(r.RACA_ETNIA||'Não informado').trim() || 'Não informado'
+    racaMap[ra] = (racaMap[ra] || 0) + 1
+  })
+  const RACA_COLORS = ['#1f2937','#8b5cf6','#f59e0b','#f97316','#0ea5e9','#10b981','#d1d5db']
+  const racaKeys = Object.keys(racaMap)
+  const racaBar = $('divRacaBar')
+  const racaLeg = $('divRacaLeg')
+  if (racaBar) racaBar.innerHTML = racaKeys.map((r, i) => {
+    const c = RACA_COLORS[i % RACA_COLORS.length]
+    return `<div style="width:${(racaMap[r]/genTotal*100).toFixed(1)}%;background:${c};" title="${r}: ${racaMap[r]}"></div>`
+  }).join('')
+  if (racaLeg) racaLeg.innerHTML = racaKeys.map((r, i) => {
+    const c = RACA_COLORS[i % RACA_COLORS.length]
+    return `<span style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:50%;background:${c};display:inline-block;"></span>${r} <strong>${racaMap[r]}</strong></span>`
+  }).join('')
+
+  // KPIs: liderança
+  const lideres = ativos.filter(r => r.IS_LIDERANCA)
+  const lideresF = lideres.filter(r => {const g=String(r.GENERO||'').toUpperCase();return g.includes('MULHER')||g.includes('FEMININO')||g==='F'})
+  const lideresNeg = lideres.filter(r => {const ra=String(r.RACA_ETNIA||'').toUpperCase();return ra.includes('PRET')||ra.includes('PARD')})
+  const lideresLGBT = ativos.filter(r => r.IS_LGBTQIA && r.IS_LIDERANCA)
+  const pctF = lideres.length ? Math.round(lideresF.length / lideres.length * 100) : 0
+  const pctNeg = lideres.length ? Math.round(lideresNeg.length / lideres.length * 100) : 0
+  const pctLGBT = lideres.length ? Math.round(lideresLGBT.length / lideres.length * 100) : 0
+
+  const kpis = $('divKpis')
+  if (kpis) kpis.innerHTML = [
+    { v: `${pctF}%`, l: 'Mulheres em liderança', c: '#8b5cf6' },
+    { v: `${pctNeg}%`, l: 'Pessoas negras em lid.', c: '#1f2937' },
+    { v: `${pctLGBT}%`, l: 'LGBTQIA+ em lid.', c: '#f59e0b' },
+  ].map(k => `<div style="text-align:center;padding:10px;background:var(--bg3);border-radius:8px;">
+    <div style="font-size:26px;font-weight:800;color:${k.c};">${k.v}</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:2px;line-height:1.3;">${k.l}</div>
+  </div>`).join('')
+}
+
+// ── 9-Box ──────────────────────────────────────────────
+
+async function loadNineBox() {
+  try {
+    _perfCiclos = (await window._sbFns.getPerformanceCiclos()) || []
+  } catch(_) { _perfCiclos = [] }
+  // carrega avaliações do ciclo mais recente
+  const cicloAtivo = _perfCiclos.find(c => c.status === 'EM_ANDAMENTO') || _perfCiclos[0]
+  if (cicloAtivo) {
+    try {
+      _perfAvals[cicloAtivo.id] = (await window._sbFns.getPerformanceAvaliacoes(cicloAtivo.id)) || []
+    } catch(_) {}
+    _nbCicloAtivo = cicloAtivo.id
+  }
+  renderNineBoxKpi()
+}
+
+function renderNineBoxKpi() {
+  const ciclo = _perfCiclos.find(c => c.id === _nbCicloAtivo) || _perfCiclos[0]
+  const avs = _nbCicloAtivo ? (_perfAvals[_nbCicloAtivo] || []) : []
+  const el = $('nineBoxGrid')
+  const info = $('nineBoxCicloInfo')
+  if (!el) return
+
+  if (!ciclo) {
+    if (info) info.textContent = 'Nenhum ciclo cadastrado. Clique em "+ Ciclo" para criar.'
+    el.innerHTML = Array(9).fill(0).map((_, i) => `<div style="background:var(--bg3);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);">—</div>`).join('')
+    return
+  }
+
+  const total = avs.length
+  const concl = avs.filter(a => a.performance && a.potencial).length
+  const pct = total ? Math.round(concl / total * 100) : 0
+  if (info) info.textContent = `Ciclo ${ciclo.nome} · ${pct}% concluído`
+
+  const CELL_COLORS = {
+    'ALTO_ALTO':'#bbf7d0','ALTO_MEDIO':'#d1fae5','ALTO_BAIXO':'#fef9c3',
+    'MEDIO_ALTO':'#ddd6fe','MEDIO_MEDIO':'#ede9fe','MEDIO_BAIXO':'#fef9c3',
+    'BAIXO_ALTO':'#fee2e2','BAIXO_MEDIO':'#fee2e2','BAIXO_BAIXO':'#f1f5f9'
+  }
+
+  const perfGroup = a => {
+    if (a.performance === 'SUPERA') return 'ALTO'
+    if (a.performance === 'ATENDE') return 'MEDIO'
+    return 'BAIXO'
+  }
+
+  const cells = {}
+  avs.forEach(a => {
+    if (!a.performance || !a.potencial) return
+    const key = `${a.potencial}_${perfGroup(a)}`
+    cells[key] = (cells[key] || 0) + 1
+  })
+
+  const pots = ['ALTO','MEDIO','BAIXO']
+  const desemps = ['BAIXO','MEDIO','ALTO']
+  el.innerHTML = pots.flatMap(pot => desemps.map(des => {
+    const key = `${pot}_${des}`
+    const cnt = cells[key] || 0
+    const pctCell = total > 0 ? Math.round(cnt / total * 100) : 0
+    const bg = CELL_COLORS[key] || '#f1f5f9'
+    return `<div style="background:${bg};border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px;">
+      <div style="font-size:22px;font-weight:800;color:var(--text);">${cnt}</div>
+      <div style="font-size:10px;color:var(--muted);">${pctCell}%</div>
+    </div>`
+  })).join('')
+}
+
+// ── Pessoas em Destaque ────────────────────────────────
+
+async function loadPessoasDestaque() {
+  try {
+    const { data: alertas } = await window._sb.from('alertas_agente')
+      .select('*, colaboradores(nome, area, cargo, data_admissao)')
+      .eq('tenant_id', window._sbTenantId)
+      .eq('status', 'ABERTO')
+      .order('criado_em', { ascending: false })
+      .limit(20)
+    renderPessoasDestaque(alertas || [])
+  } catch(_) {
+    renderPessoasDestaque([])
+  }
+}
+
+function renderPessoasDestaque(alertas) {
+  const emRisco = alertas.filter(a => a.prioridade === 'CRITICO' || a.prioridade === 'ALTA')
+  const kpis = $('pessoasDestaqueKpis')
+  if (kpis) kpis.innerHTML = [
+    { label: 'Em risco', v: emRisco.length, c: 'var(--danger)' },
+  ].map(k => `<span style="color:${k.c};font-weight:700;">${k.v} <span style="color:var(--muted);font-weight:400;">${k.label}</span></span>`).join('·&nbsp;')
+
+  const tbody = $('pessoasDestaqueBody')
+  if (!tbody) return
+
+  const PERF_LABEL = { 'SUPERA':'Supera','ATENDE':'Atende','PARCIALMENTE':'Parcialmente','NAO_ATENDE':'Não atende' }
+  const PERF_COLOR = { 'SUPERA':'#16a34a','ATENDE':'#0ea5e9','PARCIALMENTE':'#f59e0b','NAO_ATENDE':'#ef4444' }
+
+  if (!alertas.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px;font-size:12px;">Nenhum alerta aberto</td></tr>`
+    const foot = $('pessoasDestaqueFoot')
+    if (foot) foot.textContent = ''
+    return
+  }
+
+  tbody.innerHTML = emRisco.slice(0, 5).map(a => {
+    const c = a.colaboradores || {}
+    const anos = c.data_admissao ? ((new Date() - new Date(c.data_admissao + 'T12:00:00')) / (1000*60*60*24*365)).toFixed(1) : '—'
+    const av = _nbCicloAtivo ? (_perfAvals[_nbCicloAtivo]||[]).find(av => av.colaborador_id === (a.colaborador_id)) : null
+    const perf = av?.performance || ''
+    const eng = av?.engajamento || '—'
+    return `<tr>
+      <td><div style="font-weight:600;font-size:12px;">${esc(c.nome||'—')}</div><div style="font-size:10px;color:var(--muted);">${esc(c.cargo||'')}</div></td>
+      <td style="font-size:12px;">${esc(c.area||'—')}</td>
+      <td style="font-size:12px;">${anos} anos</td>
+      <td>${perf ? `<span style="background:${PERF_COLOR[perf]}20;color:${PERF_COLOR[perf]};border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;">${PERF_LABEL[perf]||perf}</span>` : '<span style="color:var(--muted);font-size:11px;">—</span>'}</td>
+      <td style="font-size:12px;font-family:var(--mono);">${eng}</td>
+      <td style="font-size:11px;color:var(--muted);max-width:160px;">${esc(a.descricao||a.titulo||'—')}</td>
+    </tr>`
+  }).join('')
+
+  const foot = $('pessoasDestaqueFoot')
+  if (foot) foot.textContent = `Mostrando ${Math.min(emRisco.length,5)} de ${emRisco.length} em risco`
+}
+
+// ── Atividade Recente ──────────────────────────────────
+
+async function loadAtividadeRecente() {
+  try {
+    const logs = (await window._sbFns.getAtividadeRecente(10)) || []
+    renderAtividadeRecente(logs)
+  } catch(_) {
+    renderAtividadeRecente([])
+  }
+}
+
+function renderAtividadeRecente(logs) {
+  const el = $('atividadeRecente')
+  if (!el) return
+  if (!logs.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px;">Sem atividades registradas.</div>'
+    return
+  }
+
+  const TIPO_ICON = {
+    'CADASTRO': '👤', 'ADMISSAO': '🎉', 'DESLIGAMENTO': '🚪', 'FERIAS': '🏖️',
+    'EXAME': '🩺', 'AUSENCIA': '📋', 'AVALIACAO': '⭐', 'ALERTA': '⚠️',
+    'LOGIN': '🔑', 'CONFIG': '⚙️'
+  }
+
+  function timeAgo(dateStr) {
+    if (!dateStr) return ''
+    const diff = (new Date() - new Date(dateStr)) / 1000
+    if (diff < 60) return 'agora'
+    if (diff < 3600) return `há ${Math.floor(diff/60)} min`
+    if (diff < 86400) return `há ${Math.floor(diff/3600)}h`
+    if (diff < 604800) return `há ${Math.floor(diff/86400)}d`
+    return new Date(dateStr).toLocaleDateString('pt-BR')
+  }
+
+  el.innerHTML = logs.map(l => {
+    const icon = TIPO_ICON[l.tipo] || '·'
+    const cor = l.tipo === 'ALERTA' ? 'var(--danger)' : l.tipo === 'DESLIGAMENTO' ? 'var(--muted)' : 'var(--ok)'
+    return `<div style="display:flex;gap:10px;align-items:flex-start;">
+      <div style="width:26px;height:26px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">${icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;line-height:1.4;color:var(--text);">${esc(l.descricao || l.tipo)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px;">${timeAgo(l.criado_em)}</div>
+      </div>
+    </div>`
+  }).join('')
+}
+
+// ── eNPS Modal ─────────────────────────────────────────
+
+const ENPS_DRIVERS_DEFAULT = [
+  'Propósito e significado', 'Relação com gestão direta', 'Reconhecimento',
+  'Desenvolvimento de carreira', 'Remuneração e benefícios', 'Equilíbrio vida-trabalho'
+]
+let _enpsDriversTemp = []
+
+function openEnpsModal() {
+  $('enpsNPeriodo').value = ''
+  $('enpsNScore').value = ''
+  $('enpsNResp').value = ''
+  $('enpsNPeriodoAnt').value = ''
+  $('enpsNScoreAnt').value = ''
+  _enpsDriversTemp = ENPS_DRIVERS_DEFAULT.map(d => ({ driver: d, score: '', meta: 7.0, variacao: '' }))
+  renderEnpsDriversList()
+  renderEnpsHistorico()
+  openModal('mEnps')
+}
+
+function enpsAddDriver() {
+  _enpsDriversTemp.push({ driver: '', score: '', meta: 7.0, variacao: '' })
+  renderEnpsDriversList()
+}
+
+function renderEnpsDriversList() {
+  const el = $('enpsDriversList')
+  if (!el) return
+  el.innerHTML = _enpsDriversTemp.map((d, i) => `
+    <div style="display:grid;grid-template-columns:1fr 70px 60px 60px 28px;gap:6px;align-items:center;">
+      <input class="fi" value="${esc(d.driver)}" placeholder="Ex: Reconhecimento" oninput="_enpsDriversTemp[${i}].driver=this.value" style="font-size:12px;padding:5px 8px;">
+      <input class="fi" type="number" value="${d.score}" placeholder="Score" step="0.1" min="0" max="10" oninput="_enpsDriversTemp[${i}].score=this.value" style="font-size:12px;padding:5px 8px;">
+      <input class="fi" type="number" value="${d.meta||7}" placeholder="Meta" step="0.1" oninput="_enpsDriversTemp[${i}].meta=this.value" style="font-size:12px;padding:5px 8px;">
+      <input class="fi" type="number" value="${d.variacao}" placeholder="Var" step="0.1" oninput="_enpsDriversTemp[${i}].variacao=this.value" style="font-size:12px;padding:5px 8px;">
+      <button onclick="_enpsDriversTemp.splice(${i},1);renderEnpsDriversList()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;">×</button>
+    </div>`).join('')
+}
+
+async function enpsNovaPesquisa() {
+  const periodo = $('enpsNPeriodo').value.trim()
+  const score = parseFloat($('enpsNScore').value)
+  if (!periodo || isNaN(score)) { toast('Período e Score são obrigatórios', 'error'); return }
+  const pesquisa = {
+    periodo, score,
+    respondentes: parseInt($('enpsNResp').value) || 0,
+    periodo_ant: $('enpsNPeriodoAnt').value.trim() || null,
+    score_ant: parseFloat($('enpsNScoreAnt').value) || null,
+    drivers: _enpsDriversTemp.filter(d => d.driver && d.score !== '').map(d => ({
+      driver: d.driver, score: parseFloat(d.score), meta: parseFloat(d.meta)||7.0,
+      variacao: d.variacao !== '' ? parseFloat(d.variacao) : null
+    }))
+  }
+  try {
+    toast('Salvando pesquisa...','info')
+    await window._sbFns.upsertEnpsPesquisa(pesquisa)
+    toast('Pesquisa salva!','success')
+    await loadEnps()
+    $('enpsNPeriodo').value = ''
+    $('enpsNScore').value = ''
+    renderEnpsHistorico()
+  } catch(e) { toast('Erro: '+e.message,'error') }
+}
+
+function renderEnpsHistorico() {
+  const el = $('enpsHistorico')
+  if (!el) return
+  if (!_enpsData.length) { el.innerHTML = '<div style="color:var(--muted);font-size:12px;">Nenhuma pesquisa registrada.</div>'; return }
+  el.innerHTML = _enpsData.map(p => {
+    const drvs = (p.enps_drivers||[]).length
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg3);border-radius:6px;">
+      <div>
+        <span style="font-weight:600;font-size:13px;">${esc(p.periodo)}</span>
+        <span style="font-size:12px;color:var(--muted);margin-left:8px;">Score: <strong>${p.score}</strong></span>
+        <span style="font-size:11px;color:var(--muted);margin-left:8px;">${p.respondentes||0} respondentes · ${drvs} drivers</span>
+      </div>
+      <button onclick="enpsDelete('${p.id}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px;" title="Excluir">🗑</button>
+    </div>`
+  }).join('')
+}
+
+async function enpsDelete(id) {
+  if (!confirm('Excluir esta pesquisa e todos os seus drivers?')) return
+  try {
+    await window._sbFns.deleteEnpsPesquisa(id)
+    toast('Pesquisa excluída','success')
+    await loadEnps()
+    renderEnpsHistorico()
+  } catch(e) { toast('Erro: '+e.message,'error') }
+}
+
+// ── 9-Box Modal ────────────────────────────────────────
+
+function openNineBoxModal() {
+  $('nbNome').value = ''
+  $('nbStatus').value = 'EM_ANDAMENTO'
+  $('nbInicio').value = ''
+  $('nbFim').value = ''
+  renderNbCiclosList()
+  openModal('mNineBox')
+}
+
+async function nbCriarCiclo() {
+  const nome = $('nbNome').value.trim()
+  if (!nome) { toast('Informe o nome do ciclo', 'error'); return }
+  try {
+    toast('Criando ciclo...','info')
+    await window._sbFns.upsertPerformanceCiclo({
+      nome, status: $('nbStatus').value,
+      data_inicio: $('nbInicio').value || null,
+      data_fim: $('nbFim').value || null
+    })
+    toast('Ciclo criado!','success')
+    await loadNineBox()
+    $('nbNome').value = ''
+    renderNbCiclosList()
+  } catch(e) { toast('Erro: '+e.message,'error') }
+}
+
+function renderNbCiclosList() {
+  const el = $('nbCiclosList')
+  if (!el) return
+  if (!_perfCiclos.length) { el.innerHTML = '<div style="color:var(--muted);font-size:12px;">Nenhum ciclo cadastrado.</div>'; return }
+  const STATUS_LABEL = { PLANEJADO:'Planejado', EM_ANDAMENTO:'Em andamento', CONCLUIDO:'Concluído' }
+  const STATUS_COLOR = { PLANEJADO:'#94a3b8', EM_ANDAMENTO:'#7c3aed', CONCLUIDO:'#16a34a' }
+  el.innerHTML = _perfCiclos.map(c => {
+    const avs = _perfAvals[c.id] || []
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--bg3);border-radius:6px;margin-bottom:4px;">
+      <div>
+        <span style="font-weight:600;font-size:13px;">${esc(c.nome)}</span>
+        <span style="font-size:11px;background:${STATUS_COLOR[c.status]}20;color:${STATUS_COLOR[c.status]};border-radius:99px;padding:1px 8px;margin-left:8px;font-weight:600;">${STATUS_LABEL[c.status]||c.status}</span>
+        <span style="font-size:11px;color:var(--muted);margin-left:8px;">${avs.length} avaliações</span>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="nbLoadAvals('${c.id}')" style="background:var(--accent);color:#fff;border:none;border-radius:5px;padding:3px 10px;font-size:11px;cursor:pointer;">Avaliações</button>
+        <button onclick="nbDeleteCiclo('${c.id}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:13px;">🗑</button>
+      </div>
+    </div>`
+  }).join('')
+}
+
+async function nbLoadAvals(cicloId) {
+  _nbCicloAtivo = cicloId
+  try {
+    _perfAvals[cicloId] = (await window._sbFns.getPerformanceAvaliacoes(cicloId)) || []
+  } catch(_) { _perfAvals[cicloId] = [] }
+  const ciclo = _perfCiclos.find(c => c.id === cicloId)
+  $('mNineBoxSub').textContent = `Ciclo: ${ciclo?.nome||''}`
+  $('nbAvalTitle').textContent = `Avaliações — ${ciclo?.nome||''} (${_perfAvals[cicloId].length})`
+  renderNbAvals(cicloId)
+  $('nbAvalSection').style.display = ''
+  renderNineBoxKpi()
+}
+
+function renderNbAvals(cicloId) {
+  const avs = _perfAvals[cicloId] || []
+  const ativos = (D.CADASTRO_COLABORADORES||[]).filter(r => r.STATUS === 'ATIVO')
+  const avalMap = {}
+  avs.forEach(a => { avalMap[a.colaborador_id] = a })
+  const grid = $('nbAvalGrid')
+  if (!grid) return
+  const PERF_OPTS = [['', '—'], ['NAO_ATENDE','Não atende'],['PARCIALMENTE','Parcialmente'],['ATENDE','Atende'],['SUPERA','Supera']]
+  const POT_OPTS  = [['', '—'], ['BAIXO','Baixo'],['MEDIO','Médio'],['ALTO','Alto']]
+  grid.innerHTML = ativos.map(r => {
+    const a = avalMap[r._id || r.ID_COLABORADOR] || {}
+    return `<div style="background:var(--bg3);border-radius:8px;padding:10px;">
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px;">${esc(r.NOME)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">${esc(r.AREA||'')}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">
+        <select onchange="nbSaveAval('${cicloId}','${r._id||r.ID_COLABORADOR}','performance',this.value)" style="font-size:11px;padding:3px 4px;border:1px solid var(--border);border-radius:4px;">
+          ${PERF_OPTS.map(([v,l]) => `<option value="${v}"${a.performance===v?' selected':''}>${l}</option>`).join('')}
+        </select>
+        <select onchange="nbSaveAval('${cicloId}','${r._id||r.ID_COLABORADOR}','potencial',this.value)" style="font-size:11px;padding:3px 4px;border:1px solid var(--border);border-radius:4px;">
+          ${POT_OPTS.map(([v,l]) => `<option value="${v}"${a.potencial===v?' selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <input type="number" placeholder="Engajamento 0-100" value="${a.engajamento||''}" min="0" max="100"
+        onchange="nbSaveAval('${cicloId}','${r._id||r.ID_COLABORADOR}','engajamento',this.value)"
+        style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;">
+    </div>`
+  }).join('')
+}
+
+async function nbSaveAval(cicloId, colaboradorId, field, value) {
+  try {
+    const existing = (_perfAvals[cicloId]||[]).find(a => a.colaborador_id === colaboradorId)
+    const payload = {
+      ciclo_id: cicloId, colaborador_id: colaboradorId,
+      ...(existing ? { id: existing.id } : {}),
+      [field]: field === 'engajamento' ? (parseInt(value)||null) : (value || null)
+    }
+    const saved = await window._sbFns.upsertPerformanceAvaliacao(payload)
+    // atualiza cache local
+    const idx = (_perfAvals[cicloId]||[]).findIndex(a => a.colaborador_id === colaboradorId)
+    if (idx >= 0) _perfAvals[cicloId][idx] = { ..._perfAvals[cicloId][idx], ...saved }
+    else { if (!_perfAvals[cicloId]) _perfAvals[cicloId] = []; _perfAvals[cicloId].push(saved) }
+    renderNineBoxKpi()
+  } catch(e) { toast('Erro ao salvar: '+e.message,'error') }
+}
+
+async function nbDeleteCiclo(id) {
+  if (!confirm('Excluir este ciclo e todas as avaliações?')) return
+  try {
+    await window._sbFns.deletePerformanceCiclo(id)
+    toast('Ciclo excluído','success')
+    await loadNineBox()
+    renderNbCiclosList()
+  } catch(e) { toast('Erro: '+e.message,'error') }
 }
 </script>
 

@@ -8,7 +8,10 @@ import {
   updateFeriasSaldo, updateExame, inserirAusencia, updateAusencia, inserirAusenciasLote,
   getProfiles, updateProfile, updateProfileRoleByEmail, logEvento,
   getMensagensAniversario, upsertMensagemAniversario, deleteMensagemAniversario, seedMensagensDefault,
-  getTenantConfig, saveTenantConfig, updateTenant, applyTenantTheme, sendEmail, extractDocument
+  getTenantConfig, saveTenantConfig, updateTenant, applyTenantTheme, sendEmail, extractDocument,
+  getEnpsPesquisas, upsertEnpsPesquisa, deleteEnpsPesquisa,
+  getPerformanceCiclos, getPerformanceAvaliacoes, upsertPerformanceCiclo, upsertPerformanceAvaliacao, deletePerformanceCiclo,
+  getAtividadeRecente
 } from './supabase_client.js'
 
 window._sbLogout = () => logout()
@@ -44,7 +47,10 @@ window._sbClient = sb   // alias para Storage (verAtestado, upload atestado)
     getProfiles, updateProfile, updateProfileRoleByEmail, logEvento,
     getMensagensAniversario, upsertMensagemAniversario, deleteMensagemAniversario,
     seedMensagensDefault, sendEmail, extractDocument,
-    updateTenant, getTenantConfig, saveTenantConfig
+    updateTenant, getTenantConfig, saveTenantConfig,
+    getEnpsPesquisas, upsertEnpsPesquisa, deleteEnpsPesquisa,
+    getPerformanceCiclos, getPerformanceAvaliacoes, upsertPerformanceCiclo, upsertPerformanceAvaliacao, deletePerformanceCiclo,
+    getAtividadeRecente
   }
 
   // Aplica tema do tenant (cores + logo + modelos)
