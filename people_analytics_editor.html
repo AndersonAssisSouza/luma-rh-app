@@ -1782,13 +1782,19 @@ nav.legacy{display:none!important;}
         <div class="fgrp"><div class="flbl">Próximo exame</div><input class="fi" id="exProx" type="date"></div>
         <div class="fgrp"><div class="flbl">Data do agendamento</div><input class="fi" id="exAgend" type="date" title="Data em que o exame está agendado para ser realizado"></div>
         <div class="fgrp"><div class="flbl">Situação</div>
-          <select class="fsel" id="exSt">
+          <select class="fsel" id="exSt" onchange="exSitChange()">
             <option value="EM_DIA">Em dia</option>
             <option value="AGENDADO">Agendado</option>
             <option value="AGUARDANDO_CONFIRMACAO">Aguardando confirmação</option>
             <option value="VENCIDO">Vencido</option>
             <option value="INATIVO">Inativo</option>
+            <option value="REALIZADO">Realizado</option>
           </select>
+        </div>
+        <div class="fgrp s2" id="fgExDataReal" style="display:none;">
+          <div class="flbl">Data de realização <span class="rq">*</span></div>
+          <input class="fi" id="exDataRealizacao" type="date">
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;">Ao salvar, o sistema inicia novo ciclo: Último exame ← data informada · Próximo exame ← calculado automaticamente · Agendamento ← limpo.</div>
         </div>
         <div class="fgrp"><div class="flbl">Tipo de exame</div>
           <select class="fsel" id="exTipoExame">
@@ -4417,32 +4423,68 @@ function _buildAvisoFeriasHTML(colab,fer){
 }
 
 // EDITAR EXAME
+function exSitChange(){
+  const v=$('exSt').value;
+  const fg=$('fgExDataReal');
+  if(!fg)return;
+  if(v==='REALIZADO'){
+    fg.style.display='';
+    if(!$('exDataRealizacao').value) $('exDataRealizacao').value=new Date().toISOString().slice(0,10);
+  } else {
+    fg.style.display='none';
+  }
+}
+
 function openEditEx(r){
   $('eExId').value=r.ID_COLABORADOR||'';$('eExRow').value=r._row||'';
   $('mEditExSub').textContent=(r.NOME||'—')+' · '+(r.ID_COLABORADOR||'—');
   $('exUlt').value=iso(r.ULTIMO_EXAME)||'';$('exProx').value=iso(r.PROXIMO_EXAME)||'';
   $('exAgend').value=iso(r.DATA_AGENDAMENTO)||'';
   setS('exSt',r.STATUS_EXAME||'EM_DIA');
+  $('exDataRealizacao').value='';
+  exSitChange();
   setS('exTipoExame',r.TIPO_EXAME||r.tipo_exame||r.FONTE_BASE_ANTIGA||'');
   $('exObs').value=r.OBSERVACAO||'';
   openModal('mEditEx');
 }
+
 async function saveEditEx(){
-  const exId=$('eExRow').value;  // UUID do exame
+  const exId=$('eExRow').value;
   if(!exId){toast('Registro não identificado','error');return;}
-  const campos={
-    ultimo_exame:$('exUlt').value||null,
-    proximo_exame:$('exProx').value||null,
-    data_agendamento:$('exAgend').value||null,
-    status_exame:$('exSt').value,
-    tipo_exame:$('exTipoExame').value||null,
-    observacao:$('exObs').value||null
-  };
-  closeModal('mEditEx');toast('Salvando exame...','info');
+
+  const sit=$('exSt').value;
+  let campos;
+
+  if(sit==='REALIZADO'){
+    const dataReal=$('exDataRealizacao').value;
+    if(!dataReal){toast('Informe a data de realização','error');return;}
+    const proxCalc=_calcProxExame(dataReal,$('exTipoExame').value);
+    campos={
+      ultimo_exame:dataReal,
+      proximo_exame:proxCalc||null,
+      data_agendamento:null,
+      status_exame:'EM_DIA',
+      tipo_exame:$('exTipoExame').value||null,
+      observacao:$('exObs').value||null
+    };
+  } else {
+    campos={
+      ultimo_exame:$('exUlt').value||null,
+      proximo_exame:$('exProx').value||null,
+      data_agendamento:$('exAgend').value||null,
+      status_exame:sit,
+      tipo_exame:$('exTipoExame').value||null,
+      observacao:$('exObs').value||null
+    };
+  }
+
+  closeModal('mEditEx');
+  toast(sit==='REALIZADO'?'Confirmando realização e reiniciando ciclo...':'Salvando exame...','info');
   try{
     if(DEMO){fakeS('EXAMES_OCUPACIONAIS',exId,campos);return;}
     await window._sbFns.updateExame(exId,campos);
-    toast('Exame atualizado','success');await loadAll();
+    toast(sit==='REALIZADO'?'Exame confirmado! Novo ciclo iniciado.':'Exame atualizado','success');
+    await loadAll();
   }catch(e){toast('Erro: '+e.message,'error');}
 }
 
