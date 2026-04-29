@@ -131,7 +131,7 @@ nav.legacy{display:none!important;}
 /* Containers de barras: crescem para preencher o card e distribuem as linhas verticalmente */
 #empB,#etarB,#tempoB,#areaChart{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;}
 .br{display:flex;align-items:center;gap:6px;margin-bottom:0;width:100%;}
-.bl{width:68px;font-size:12px;color:var(--muted);text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bl{min-width:80px;max-width:130px;font-size:11px;color:var(--muted);text-align:right;flex-shrink:0;word-break:break-word;line-height:1.4;}
 .bt{flex:1;min-width:0;height:9px;background:var(--bg);border-radius:5px;overflow:hidden;}
 .bf{height:100%;border-radius:5px;transition:width .6s ease;}
 .bc{width:24px;font-size:12px;color:var(--text);font-family:var(--mono);text-align:right;flex-shrink:0;}
@@ -498,7 +498,7 @@ nav.legacy{display:none!important;}
   </div>
 
   <!-- LINHA 4: Distribuição por área + Por empresa + Faixa etária + Tempo empresa -->
-  <div style="display:grid;grid-template-columns:1.4fr 0.8fr 0.8fr 0.8fr;gap:14px;margin-bottom:14px;">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;">
     <div class="card" style="margin-bottom:0;">
       <div class="ct">Distribuição por área</div>
       <div id="areaChart"></div>
@@ -543,13 +543,7 @@ nav.legacy{display:none!important;}
   </div>
 
   <!-- Charts row -->
-  <div class="g2" style="margin-top:16px;">
-    <div class="card">
-      <div class="ct">Distribuição por Vínculo</div>
-      <div style="position:relative;height:220px;display:flex;align-items:center;justify-content:center;">
-        <canvas id="chartVinculo"></canvas>
-      </div>
-    </div>
+  <div style="margin-top:16px;">
     <div class="card">
       <div class="ct">Distribuição por Área</div>
       <div style="position:relative;height:220px;">
@@ -2694,7 +2688,7 @@ function render(){
   const areaMap={};ativos.forEach(r=>{const a=r.AREA||'N/D';areaMap[a]=(areaMap[a]||0)+1;});
   const areaE=Object.entries(areaMap).sort((a,b)=>b[1]-a[1]);const mxArea=Math.max(...areaE.map(e=>e[1]),1);
   const aC=['#7c3aed','#0ea5e9','#8b5cf6','#10b981','#f97316','#ef4444','#34d399','#60a5fa','#c084fc','#fb7185','#6366f1'];
-  $('areaChart').innerHTML=areaE.map((e,i)=>`<div class="br"><div class="bl" title="${esc(e[0])}" style="font-size:17px;">${esc(e[0]).length>13?esc(e[0]).slice(0,13)+'…':esc(e[0])}</div><div class="bt"><div class="bf" style="width:${(e[1]/mxArea)*100}%;background:${aC[i%aC.length]}"></div></div><div class="bc" style="font-size:17px;">${e[1]}</div></div>`).join('');
+  $('areaChart').innerHTML=areaE.map((e,i)=>`<div class="br"><div class="bl" title="${esc(e[0])}">${esc(e[0])}</div><div class="bt"><div class="bf" style="width:${(e[1]/mxArea)*100}%;background:${aC[i%aC.length]}"></div></div><div class="bc">${e[1]}</div></div>`).join('');
 
   // ── GESTOR CHART ──
   const gestMap={};ativos.forEach(r=>{const g=r.GESTOR||'N/D';gestMap[g]=(gestMap[g]||0)+1;});
@@ -2765,7 +2759,7 @@ function render(){
 
   // Bars
   const eE=Object.entries(empM).sort((a,b)=>b[1]-a[1]);const mE=Math.max(...eE.map(e=>e[1]),1);const cols=['#7c3aed','#0ea5e9','#8b5cf6','#10b981'];
-  $('empB').innerHTML=eE.map((e,i)=>`<div class="br"><div class="bl" title="${esc(e[0])}">${esc(e[0]).length>13?esc(e[0]).slice(0,13)+'…':esc(e[0])}</div><div class="bt"><div class="bf" style="width:${(e[1]/mE)*100}%;background:${cols[i%4]}"></div></div><div class="bc">${e[1]}</div></div>`).join('');
+  $('empB').innerHTML=eE.map((e,i)=>`<div class="br"><div class="bl" title="${esc(e[0])}">${esc(e[0])}</div><div class="bt"><div class="bf" style="width:${(e[1]/mE)*100}%;background:${cols[i%4]}"></div></div><div class="bc">${e[1]}</div></div>`).join('');
   const tI=[{l:'< 1 ano',v:tFx['<1'],c:'var(--coral)'},{l:'1–3 anos',v:tFx['1-3'],c:'var(--warn)'},{l:'3–5 anos',v:tFx['3-5'],c:'var(--accent2)'},{l:'> 5 anos',v:tFx['>5'],c:'var(--purple)'}];const mT=Math.max(...tI.map(t=>t.v),1);
   $('tempoB').innerHTML=tI.map(t=>`<div class="br"><div class="bl">${t.l}</div><div class="bt"><div class="bf" style="width:${(t.v/mT)*100}%;background:${t.c}"></div></div><div class="bc">${t.v}</div></div>`).join('');$('tMedia').textContent=med+' anos';
   const eI=[{l:'35–44',v:et['35-44'],c:'var(--accent)'},{l:'25–34',v:et['25-34'],c:'var(--accent2)'},{l:'45–54',v:et['45-54'],c:'var(--purple)'},{l:'Até 25',v:et['Até 25'],c:'var(--warn)'},{l:'55+',v:et['55+'],c:'var(--coral)'}];const mEt=Math.max(...eI.map(e=>e.v),1);
