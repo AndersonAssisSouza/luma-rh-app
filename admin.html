@@ -923,9 +923,8 @@ tbody tr.clickable:hover td{background:var(--surface-2)}
               <div class="form-field">
                 <select id="nt-plano" required>
                   <option value="TRIAL">Trial (30 dias gratuito)</option>
-                  <option value="BASICO">Starter — R$ 1.400/mês</option>
-                  <option value="PRO">Growth — R$ 2.950/mês</option>
-                  <option value="ENTERPRISE">Enterprise — sob consulta</option>
+                  <option value="BASICO">Starter — R$ 49,90/mês (até 50 func.)</option>
+                  <option value="PRO">Growth — R$ 300/mês (acima de 50 func.)</option>
                 </select>
               </div>
 
@@ -997,8 +996,9 @@ tbody tr.clickable:hover td{background:var(--surface-2)}
                   <div class="form-row"><label class="form-label">E-mail admin</label><input class="input" type="email" id="td-f-email"></div>
                   <div class="form-row"><label class="form-label">Plano</label>
                     <select class="input" id="td-f-plano">
-                      <option value="TRIAL">Trial</option><option value="BASICO">Básico</option>
-                      <option value="PRO">Pro</option><option value="ENTERPRISE">Enterprise</option>
+                      <option value="TRIAL">Trial</option>
+                      <option value="BASICO">Starter — R$ 49,90/mês (até 50 func.)</option>
+                      <option value="PRO">Growth — R$ 300/mês (acima de 50 func.)</option>
                     </select>
                   </div>
                   <div class="form-row"><label class="form-label">Status</label>
@@ -1407,9 +1407,9 @@ let _profiles   = []
 let _route      = localStorage.getItem('admin-route') || 'dashboard'
 let _tenantFilter = 'all'
 
-const MRR_PLAN  = { TRIAL:0, BASICO:1400, PRO:2950, ENTERPRISE:4200 }
-const PLAN_LABEL= { TRIAL:'Trial', BASICO:'Starter', PRO:'Growth', ENTERPRISE:'Enterprise' }
-const PLAN_CLASS= { TRIAL:'', BASICO:'starter', PRO:'growth', ENTERPRISE:'enterprise' }
+const MRR_PLAN  = { TRIAL:0, BASICO:49.9, PRO:300, ENTERPRISE:300 }
+const PLAN_LABEL= { TRIAL:'Trial', BASICO:'Starter', PRO:'Growth', ENTERPRISE:'Growth' }
+const PLAN_CLASS= { TRIAL:'', BASICO:'starter', PRO:'growth', ENTERPRISE:'growth' }
 
 // ── helpers ───────────────────────────────────────────────────
 const $  = id => document.getElementById(id)
@@ -2004,10 +2004,9 @@ window.billDeletar = async function(id) {
 // ── PLANS ────────────────────────────────────────────────────
 function renderPlans() {
   const plans = [
-    { key:'BASICO', name:'Starter', price:'R$ 1.400', period:'/mês', users:25, features:['Até 25 usuários','Módulo RH completo','Portal do colaborador','Relatórios básicos'] },
-    { key:'PRO',    name:'Growth',  price:'R$ 2.950', period:'/mês', users:100, features:['Até 100 usuários','Todos os módulos','People Analytics','Suporte prioritário'] },
-    { key:'ENTERPRISE', name:'Scale', price:'R$ 4.200', period:'/mês', users:300, features:['Até 300 usuários','Customizações','SLA dedicado','Onboarding guiado'] },
-    { key:'TRIAL',  name:'Enterprise', price:'Sob consulta', period:'', users:null, features:['Usuários ilimitados','Integrações custom','Gerente de conta','Contrato personalizado'] },
+    { key:'BASICO', name:'Starter', price:'R$ 49,90', period:'/mês', users:50, features:['Até 50 funcionários','Módulo RH completo','Portal do colaborador','People Analytics','Implantação R$ 599'] },
+    { key:'PRO',    name:'Growth',  price:'R$ 300',   period:'/mês', users:null, features:['Acima de 50 funcionários','Todos os módulos','People Analytics','Suporte prioritário','Implantação R$ 599'] },
+    { key:'TRIAL',  name:'Trial',   price:'Gratuito', period:'/30 dias', users:null, features:['Acesso completo','Sem compromisso','Migração assistida'] },
   ]
   const activeCounts = {}
   _tenants.forEach(t => { activeCounts[t.plano] = (activeCounts[t.plano]||0) + 1 })
