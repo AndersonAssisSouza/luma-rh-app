@@ -6,6 +6,7 @@ import { copyFileSync, cpSync, existsSync } from 'fs'
 
 const files = [
   // HTML avulsos (index.html já gerado pelo Vite — não listar aqui)
+  'landing.html',
   'onboarding.html',
   'people_analytics_editor.html',
   'portal_ferias_colaborador.html',

@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/((?!.*\\.html$)(?!.*\\.[a-z]{2,4}$).*)", "destination": "/index.html" }
+  ]
+}
