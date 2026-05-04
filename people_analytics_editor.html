@@ -941,6 +941,7 @@ nav.legacy{display:none!important;}
     <div style="display:flex;gap:8px;align-items:center;">
       <input id="cad-busca" class="fi" placeholder="Buscar colaborador..." oninput="renderCadStatus()"
              style="width:220px;padding:6px 12px;font-size:13px;">
+      <button class="btn" onclick="loadAll().then(renderCadStatus)" title="Recarregar dados do servidor">🔄 Atualizar</button>
       <button class="btn btn-g" onclick="exportCadStatusCsv()">⬇ Exportar CSV</button>
     </div>
   </div>
@@ -3866,8 +3867,13 @@ async function readDocumentoIA(prefix,fileOverride){
     _addDocLocal(prefix,{nome:file.name,tipo:_tipoDocLabel(file.name),data:new Date().toLocaleDateString('pt-BR'),campos:filled});
     _renderDocsList(prefix,$(prefix+'ColabRow')?.value||$(prefix+'ColabId')?.value);
   }catch(e){
-    stEl.style.color='var(--danger)';
-    stEl.innerHTML='❌ '+esc(e.message);
+    // OCR falhou — salva o documento como imagem mesmo sem extrair texto
+    stEl.style.color='var(--warn)';
+    stEl.innerHTML='⚠️ OCR não conseguiu ler o texto. Documento salvo como imagem.';
+    try{
+      _addDocLocal(prefix,{nome:file.name,tipo:_tipoDocLabel(file.name),data:new Date().toLocaleDateString('pt-BR'),campos:0,semTexto:true});
+      _renderDocsList(prefix,$(prefix+'ColabRow')?.value||$(prefix+'ColabId')?.value);
+    }catch(_){}
   }
 }
 
