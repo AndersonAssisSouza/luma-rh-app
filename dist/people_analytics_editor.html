@@ -6817,7 +6817,7 @@ function renderCadStatus(){
       :`<span class="chip cw">⏳ Pendente</span>`;
     const acaoHtml=atualizado
       ?`<span style="color:var(--muted);font-size:12px;">—</span>`
-      :`<button class="btn" style="font-size:11px;padding:3px 10px;" onclick="navigator.clipboard.writeText(location.origin+'/onboarding.html?flow=atualizar&colab='+encodeURIComponent('${esc(String(r.ID_COLABORADOR||r._id||''))}'));toast('Link copiado!','success')">📋 Copiar link</button>`;
+      :`<button class="btn" style="font-size:11px;padding:3px 10px;" onclick="navigator.clipboard.writeText(location.origin+'/onboarding.html?flow=atualizar&email='+encodeURIComponent('${esc(String(r.EMAIL_CORPORATIVO||''))}'));toast('Link copiado!','success')">📋 Copiar link</button>`;
     return `<tr>
       <td><strong>${esc(r.NOME||'—')}</strong><br><span style="font-size:11px;color:var(--muted);">${esc(r.EMAIL_CORPORATIVO||'')}</span></td>
       <td><span class="chip ${chipV(r.TIPO_VINCULO)}">${lblV(r.TIPO_VINCULO)}</span></td>
