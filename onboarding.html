@@ -225,7 +225,8 @@ a{color:var(--p)}
       <div id="sso-form">
         <div class="fg" style="margin-bottom:12px">
           <label class="lbl">E-mail corporativo <span class="r">*</span></label>
-          <input class="fi" type="email" id="sso-email" placeholder="nome@empresa.com.br"
+          <input class="fi" type="text" id="sso-email" placeholder="nome@empresa.com.br"
+                 autocomplete="email" inputmode="email"
                  onkeydown="if(event.key==='Enter')sendMagicLink()">
           <span class="fe" id="sso-email-err">Informe um e-mail corporativo válido.</span>
         </div>
@@ -366,21 +367,27 @@ function setFlow(f){
 }
 
 // ── MAGIC LINK ────────────────────────────────────────────────────────────
+const _MAGIC_FN='https://ttclcdppifmmdjztfunl.supabase.co/functions/v1/send-magic-link';
 let _magicSent=false;
 async function sendMagicLink(){
   if(_magicSent)return;
   const email=(document.getElementById('sso-email').value||'').trim().toLowerCase();
   const errEl=document.getElementById('sso-email-err');
   errEl.classList.remove('on');
-  if(!email||!email.includes('@')){errEl.classList.add('on');return;}
+  const emailOk=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if(!email||!emailOk){errEl.classList.add('on');return;}
   load('Enviando link de acesso...');
   try{
-    const{error}=await sb.auth.signInWithOtp({
-      email,
-      options:{emailRedirectTo:(location.hostname==='localhost'||location.hostname==='127.0.0.1'?location.origin:'https://lumarhapp.vercel.app')+'/onboarding.html?flow=atualizar'}
+    const isLocal=location.hostname==='localhost'||location.hostname==='127.0.0.1';
+    const redirectTo=(isLocal?location.origin:'https://lumarhapp.vercel.app')+'/onboarding.html?flow=atualizar';
+    const resp=await fetch(_MAGIC_FN,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SB_KEY},
+      body:JSON.stringify({email,redirectTo})
     });
+    const data=await resp.json();
     unload();
-    if(error)throw error;
+    if(!resp.ok||data.error)throw new Error(data.error||'Erro ao enviar');
     _magicSent=true;
     document.getElementById('sso-magic-ok').classList.add('on');
     document.getElementById('sso-form').style.display='none';
