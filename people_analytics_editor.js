@@ -9,6 +9,7 @@ import {
   getProfiles, updateProfile, updateProfileRoleByEmail, logEvento,
   getMensagensAniversario, upsertMensagemAniversario, deleteMensagemAniversario, seedMensagensDefault,
   getTenantConfig, saveTenantConfig, updateTenant, applyTenantTheme, sendEmail, extractDocument,
+  insertEmailLog, getEmailLogs,
   getEnpsPesquisas, upsertEnpsPesquisa, deleteEnpsPesquisa,
   getPerformanceCiclos, getPerformanceAvaliacoes, upsertPerformanceCiclo, upsertPerformanceAvaliacao, deletePerformanceCiclo,
   getAtividadeRecente
@@ -48,6 +49,7 @@ window._sbClient = sb   // alias para Storage (verAtestado, upload atestado)
     getMensagensAniversario, upsertMensagemAniversario, deleteMensagemAniversario,
     seedMensagensDefault, sendEmail, extractDocument,
     updateTenant, getTenantConfig, saveTenantConfig,
+    insertEmailLog, getEmailLogs,
     getEnpsPesquisas, upsertEnpsPesquisa, deleteEnpsPesquisa,
     getPerformanceCiclos, getPerformanceAvaliacoes, upsertPerformanceCiclo, upsertPerformanceAvaliacao, deletePerformanceCiclo,
     getAtividadeRecente

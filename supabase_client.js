@@ -778,6 +778,49 @@ export async function sendEmail(to, subject, html, cc = [], attachments = []) {
   return data
 }
 
+// ── EMAIL LOGS ─────────────────────────────────────────────────────────────
+
+/**
+ * Insere um registro de e-mail enviado (fire-and-forget — não lança erro).
+ * @param {Object} opts - { para, cc, assunto, tipo, colaborador_nome, resend_id, status, erro_msg, enviado_por }
+ */
+export async function insertEmailLog(opts = {}) {
+  try {
+    const { data: prof } = await sb.auth.getUser()
+    const tenantId = window._sbTenantId || prof?.user?.user_metadata?.tenant_id
+    if (!tenantId) return
+    await sb.from('email_logs').insert({
+      tenant_id:        tenantId,
+      para:             opts.para             || '',
+      cc:               opts.cc               || null,
+      assunto:          opts.assunto          || '',
+      tipo:             opts.tipo             || null,
+      colaborador_nome: opts.colaborador_nome || null,
+      resend_id:        opts.resend_id        || null,
+      status:           opts.status           || 'enviado',
+      erro_msg:         opts.erro_msg         || null,
+      enviado_por:      opts.enviado_por      || window.USER_EMAIL || null,
+    })
+  } catch (_) { /* log silencioso — não interrompe o fluxo */ }
+}
+
+/**
+ * Busca logs de e-mails enviados, do mais recente ao mais antigo.
+ * @param {Object} [filtros] - { tipo, status, limite }
+ * @returns {Array}
+ */
+export async function getEmailLogs({ tipo, status, limite = 200 } = {}) {
+  let q = sb.from('email_logs')
+    .select('*')
+    .order('enviado_em', { ascending: false })
+    .limit(limite)
+  if (tipo)   q = q.eq('tipo',   tipo)
+  if (status) q = q.eq('status', status)
+  const { data, error } = await q
+  if (error) throw error
+  return data || []
+}
+
 /**
  * Extrai dados de um documento (PDF/imagem) via Claude AI (Anthropic).
  * A chave da API fica armazenada nos secrets do Supabase — nunca exposta ao cliente.
