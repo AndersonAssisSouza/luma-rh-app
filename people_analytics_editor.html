@@ -8700,6 +8700,8 @@ function abrirCardAniversario(nomeEnc, tipo, data, dias) {
   const empresa = col?.EMPRESA?.toLowerCase().includes('luma') ? 'luma' : 'luisa';
   document.getElementById('cardEmailDest').value = col?.EMAIL_CORPORATIVO || '';
   document.getElementById('cardEmpresa').value = empresa;
+  // Armazena data de origem para cálculo preciso de anos (independente de dias até o evento)
+  _cardData.dataOrigem = tipo==='empresa' ? (col?.DATA_ADMISSAO||null) : (col?.DATA_NASCIMENTO||null);
   openModal('mCardAniv');
   gerarCardAniversario();
 }
@@ -8709,7 +8711,12 @@ async function gerarCardAniversario() {
   const tipo    = _cardData.tipo;
   const _np=(_cardData.nome||'').split(' ').filter(Boolean);
   const nome    = _np.length>1?_np[0]+' '+_np[_np.length-1]:_cardData.nome;
-  const anos    = _cardData.dias > 0 ? Math.floor(_cardData.dias/365)||1 : 0;
+  // Calcula anos a partir da data de nascimento/admissão real, não dos "dias para o evento"
+  // (quando o aniversário é hoje, dias=0, causando anos=0 — bug corrigido)
+  const _anoAtual = new Date().getFullYear();
+  const anos = _cardData.dataOrigem
+    ? Math.max(1, _anoAtual - parseInt(_cardData.dataOrigem.split('-')[0]))
+    : Math.max(1, _cardData.dias > 0 ? Math.floor(_cardData.dias/365) : 1);
 
   // Mensagem
   let texto = document.getElementById('cardMsgManual').value.trim();
