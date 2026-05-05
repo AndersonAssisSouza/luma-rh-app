@@ -6884,61 +6884,68 @@ function _cadEmailHtml(nome,vinculo,link){
   const v=(vinculo||'').toUpperCase();
   const empresa=(D.CADASTRO_COLABORADORES||[]).find(r=>r.EMPRESA)?.EMPRESA||'';
 
-  // Parágrafos personalizados por vínculo
-  let intro='',detalhes='';
-  if(v==='CLT'||v==='ESTAGIARIO'){
-    intro=v==='CLT'
-      ?'O RH solicita que você atualize seus dados cadastrais.'
-      :'O RH solicita que você atualize seus dados de estágio.';
-    detalhes=v==='CLT'
-      ?'Manter suas informações atualizadas é essencial para o correto processamento da <strong>folha de pagamento, benefícios, INSS e FGTS</strong>, além de garantir que seus documentos trabalhistas (CTPS, PPP) estejam sempre corretos.'
-      :'Manter seus dados atualizados garante o correto processamento da sua <strong>bolsa-auxílio, seguro estágio e benefícios</strong> previstos no seu termo de estágio.';
-  } else if(v==='PJ'||v==='MEI'){
-    intro='O escritório solicita que você atualize seus dados cadastrais.';
-    detalhes='Mantenha seus dados de <strong>CNPJ, razão social, informações bancárias e endereço</strong> sempre atualizados para garantir o correto processamento dos pagamentos e a emissão dos contratos de prestação de serviços.';
+  // Conteúdo personalizado por vínculo
+  let subtitulo='',detalhes='',itens=[];
+  if(v==='CLT'){
+    subtitulo=`O RH solicita que <strong>${esc(nome)}</strong> atualize seus dados cadastrais.`;
+    detalhes='Manter suas informações atualizadas é essencial para o correto processamento da folha de pagamento, benefícios e documentos trabalhistas.';
+    itens=[['Afeta diretamente','Folha de pagamento, INSS e FGTS'],['Documentos','CTPS, PPP e ficha de registro'],['Prazo','Assim que possível']];
+  } else if(v==='ESTAGIARIO'){
+    subtitulo=`O RH solicita que <strong>${esc(nome)}</strong> atualize seus dados de estágio.`;
+    detalhes='Dados atualizados garantem o correto processamento da bolsa-auxílio, seguro de estágio e benefícios previstos no seu termo de estágio.';
+    itens=[['Afeta diretamente','Bolsa-auxílio e seguro estágio'],['Documentos','Termo de estágio e frequência'],['Prazo','Assim que possível']];
+  } else if(v==='PJ'){
+    subtitulo=`O escritório solicita que <strong>${esc(nome)}</strong> atualize seus dados cadastrais.`;
+    detalhes='Dados de CNPJ, razão social, conta bancária e endereço atualizados garantem o correto processamento dos pagamentos e emissão de contratos.';
+    itens=[['Afeta diretamente','Pagamentos e emissão de NF'],['Documentos','Contrato de prestação de serviços'],['Prazo','Assim que possível']];
+  } else if(v==='MEI'){
+    subtitulo=`O escritório solicita que <strong>${esc(nome)}</strong> atualize seus dados cadastrais.`;
+    detalhes='Dados de CNPJ MEI, razão social, conta bancária e endereço atualizados garantem o correto processamento dos pagamentos e emissão de contratos.';
+    itens=[['Afeta diretamente','Pagamentos e emissão de NF MEI'],['Documentos','Contrato de prestação de serviços'],['Prazo','Assim que possível']];
   } else if(v==='ASSOCIADO'){
-    intro='O escritório solicita que você atualize suas informações cadastrais.';
-    detalhes='Mantenha seus dados de <strong>OAB, endereço profissional, contato e informações bancárias</strong> atualizados para que o escritório possa processar corretamente o seu recesso anual e emitir os documentos de associação.';
+    subtitulo=`O escritório solicita que <strong>${esc(nome)}</strong> atualize suas informações cadastrais.`;
+    detalhes='Dados de OAB, endereço profissional e informações bancárias atualizados são necessários para o recesso anual e emissão de documentos de associação.';
+    itens=[['Afeta diretamente','Recesso anual remunerado (Lei 8.906/94)'],['Documentos','Contrato de associação'],['Prazo','Assim que possível']];
   } else if(v==='SOCIO'){
-    intro='O escritório solicita que você atualize seus dados cadastrais.';
-    detalhes='A atualização dos seus dados garante a <strong>regularidade dos registros societários</strong> e o correto processamento dos documentos internos do escritório.';
+    subtitulo=`O escritório solicita que <strong>${esc(nome)}</strong> atualize seus dados cadastrais.`;
+    detalhes='Dados atualizados garantem a regularidade dos registros societários e o correto processamento dos documentos internos do escritório.';
+    itens=[['Afeta diretamente','Registros societários'],['Documentos','Documentos internos do escritório'],['Prazo','Assim que possível']];
   } else {
-    intro='O RH solicita que você atualize seus dados cadastrais.';
+    subtitulo=`O RH solicita que <strong>${esc(nome)}</strong> atualize seus dados cadastrais.`;
     detalhes='Manter seus dados atualizados garante o correto funcionamento de todos os processos internos.';
+    itens=[['Prazo','Assim que possível']];
   }
 
-  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atualização Cadastral</title></head>
-<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 16px;">
-<tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
-  <!-- HEADER -->
-  <tr><td style="background:linear-gradient(135deg,#1e0b3e 0%,#2d1047 100%);padding:28px 32px;text-align:center;">
-    <div style="display:inline-flex;align-items:center;gap:10px;">
-      <div style="width:38px;height:38px;background:linear-gradient(135deg,#7c3aed,#f59e0b);border-radius:9px;display:inline-block;vertical-align:middle;text-align:center;line-height:38px;font-weight:800;color:#fff;font-size:18px;">L</div>
-      <span style="font-size:20px;font-weight:700;color:#ffffff;vertical-align:middle;letter-spacing:-0.3px;">LUMA RH</span>
-    </div>
-  </td></tr>
-  <!-- BODY -->
-  <tr><td style="padding:36px 32px;">
-    <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1f2937;">Atualização Cadastral</p>
-    <p style="margin:0 0 20px;font-size:15px;color:#6b7280;">Olá, <strong style="color:#1f2937;">${esc(nome)}</strong>! ${intro}</p>
-    <p style="margin:0 0 28px;font-size:14px;color:#374151;line-height:1.7;">${detalhes}</p>
-    <p style="margin:0 0 28px;font-size:14px;color:#374151;">O processo é rápido — <strong>leva menos de 5 minutos</strong> e pode ser feito pelo celular ou computador.</p>
-    <!-- CTA -->
-    <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;"><tr><td align="center" style="border-radius:8px;background:linear-gradient(135deg,#7c3aed,#5b21b6);">
-      <a href="${link}" target="_blank" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:-0.2px;">✏️ Atualizar meu cadastro →</a>
-    </td></tr></table>
-    <!-- LINK FALLBACK -->
-    <p style="margin:0 0 8px;font-size:12px;color:#9ca3af;text-align:center;">Se o botão não funcionar, copie e cole este link no seu navegador:</p>
-    <p style="margin:0;font-size:11px;color:#7c3aed;text-align:center;word-break:break-all;">${link}</p>
-  </td></tr>
-  <!-- FOOTER -->
-  <tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 32px;text-align:center;">
-    <p style="margin:0;font-size:12px;color:#9ca3af;">${empresa?esc(empresa)+' · ':''}<strong>LUMA Plataforma</strong> · Este e-mail foi enviado automaticamente pelo RH.</p>
-  </td></tr>
+  const itensHtml=itens.map(([k,val],i)=>`
+    <tr style="${i%2===0?'background:#f8fafc;':''}">
+      <td style="padding:10px 16px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;width:40%;${i>0?'border-top:1px solid #e2e8f0;':''}">${k}</td>
+      <td style="padding:10px 16px;font-size:14px;color:#1e293b;${i>0?'border-top:1px solid #e2e8f0;':''}">${val}</td>
+    </tr>`).join('');
+
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f5f3ff;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff;padding:24px 0;"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;">
+<tr><td style="background:#7c3aed;padding:28px 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td style="width:40px;"><div style="width:40px;height:40px;background:rgba(255,255,255,0.2);text-align:center;line-height:40px;font-size:22px;font-weight:bold;color:#fff;display:inline-block;">L</div></td>
+    <td style="padding-left:12px;vertical-align:middle;"><div style="color:#fff;font-size:18px;font-weight:bold;">Atualizacao Cadastral</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px;">LUMA RH · Sistema de Gestao de Pessoas</div></td>
+  </tr></table>
+</td></tr>
+<tr><td style="padding:28px 32px;">
+  <p style="font-size:15px;color:#334155;margin:0 0 16px 0;">${subtitulo}</p>
+  <p style="font-size:14px;color:#64748b;margin:0 0 20px 0;line-height:1.6;">${detalhes}</p>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;margin-bottom:24px;">${itensHtml}</table>
+  <p style="font-size:14px;color:#334155;margin:0 0 20px 0;">O processo e rapido — <strong>leva menos de 5 minutos</strong> e pode ser feito pelo celular ou computador.</p>
+  <table cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr>
+    <td style="background:#7c3aed;padding:12px 28px;">
+      <a href="${link}" target="_blank" style="color:#fff;font-size:14px;font-weight:bold;text-decoration:none;">Atualizar meu cadastro</a>
+    </td>
+  </tr></table>
+  <p style="font-size:12px;color:#94a3b8;margin:0;">Se o botao nao funcionar, acesse: <a href="${link}" style="color:#7c3aed;">${link}</a></p>
+</td></tr>
+<tr><td style="background:#f1f5f9;padding:16px 32px;text-align:center;border-top:1px solid #e2e8f0;">
+  <p style="font-size:11px;color:#94a3b8;margin:0;">${empresa?esc(empresa)+' · ':''}<strong>LUMA RH</strong> · Este e-mail foi gerado automaticamente pelo sistema.</p>
+</td></tr>
 </table>
 </td></tr></table></body></html>`;
 }
