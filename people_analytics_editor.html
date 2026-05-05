@@ -5618,7 +5618,7 @@ function exportTableCSV(tbodyId,filename){
 // ══════════════════════════════
 // PORTAL DE CADASTRO — ENVIO DE LINK
 // ══════════════════════════════
-const _OB_URL = 'https://luma-rh-app.pages.dev/onboarding.html';
+const _OB_URL = 'https://lumarhapp.vercel.app/onboarding.html';
 
 function enviarLinkCadastro(nome, email, empresa) {
   // Colaborador já cadastrado → link de atualização
@@ -6865,7 +6865,7 @@ function renderCadStatus(){
     const acaoHtml=atualizado
       ?`<span style="color:var(--muted);font-size:12px;">—</span>`
       :`<div style="display:flex;gap:4px;">
-          <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="navigator.clipboard.writeText(location.origin+'/onboarding.html?flow=atualizar&email=${emailEnc}');toast('Link copiado!','success')" title="Copiar link">📋</button>
+          <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="navigator.clipboard.writeText('https://lumarhapp.vercel.app/onboarding.html?flow=atualizar&email=${emailEnc}');toast('Link copiado!','success')" title="Copiar link">📋</button>
           <button class="btn" style="font-size:11px;padding:3px 8px;background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.4);color:var(--warn);" onclick="cadEnviarEmail(this,'${emailEnc}','${nomeEnc}','${vincEnc}')" title="Enviar e-mail de atualização">📧</button>
         </div>`;
     return `<tr>
@@ -6920,7 +6920,7 @@ function exportCadStatusCsv(){
 }
 
 // ── E-mail de atualização cadastral ──────────────────────────────────────────
-const _CAD_EMAIL_URL='https://luma-rh-app.pages.dev/onboarding.html';
+const _CAD_EMAIL_URL='https://lumarhapp.vercel.app/onboarding.html';
 const _SEND_EMAIL_FN='https://ttclcdppifmmdjztfunl.supabase.co/functions/v1/send-email';
 
 function _cadEmailHtml(nome,vinculo,link){

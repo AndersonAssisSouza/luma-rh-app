@@ -377,7 +377,7 @@ async function sendMagicLink(){
   try{
     const{error}=await sb.auth.signInWithOtp({
       email,
-      options:{emailRedirectTo:location.origin+location.pathname+'?flow=atualizar'}
+      options:{emailRedirectTo:(location.hostname==='localhost'||location.hostname==='127.0.0.1'?location.origin:'https://lumarhapp.vercel.app')+'/onboarding.html?flow=atualizar'}
     });
     unload();
     if(error)throw error;
