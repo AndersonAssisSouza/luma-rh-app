@@ -942,6 +942,7 @@ nav.legacy{display:none!important;}
       <input id="cad-busca" class="fi" placeholder="Buscar colaborador..." oninput="renderCadStatus()"
              style="width:220px;padding:6px 12px;font-size:13px;">
       <button class="btn" onclick="loadAll().then(renderCadStatus)" title="Recarregar dados do servidor">🔄 Atualizar</button>
+      <button class="btn" onclick="cadEnviarTodosPendentes(this)" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.4);color:var(--warn);" title="Envia e-mail de atualização para todos os pendentes">📧 Enviar a todos pendentes</button>
       <button class="btn btn-g" onclick="exportCadStatusCsv()">⬇ Exportar CSV</button>
     </div>
   </div>
@@ -6815,9 +6816,15 @@ function renderCadStatus(){
     const statusHtml=atualizado
       ?`<span class="chip cs">✅ Preenchido</span>`
       :`<span class="chip cw">⏳ Pendente</span>`;
+    const emailEnc=encodeURIComponent(r.EMAIL_CORPORATIVO||'');
+    const nomeEnc =encodeURIComponent(r.NOME||'');
+    const vincEnc =encodeURIComponent(r.TIPO_VINCULO||'');
     const acaoHtml=atualizado
       ?`<span style="color:var(--muted);font-size:12px;">—</span>`
-      :`<button class="btn" style="font-size:11px;padding:3px 10px;" onclick="navigator.clipboard.writeText(location.origin+'/onboarding.html?flow=atualizar&email='+encodeURIComponent('${esc(String(r.EMAIL_CORPORATIVO||''))}'));toast('Link copiado!','success')">📋 Copiar link</button>`;
+      :`<div style="display:flex;gap:4px;">
+          <button class="btn" style="font-size:11px;padding:3px 8px;" onclick="navigator.clipboard.writeText(location.origin+'/onboarding.html?flow=atualizar&email=${emailEnc}');toast('Link copiado!','success')" title="Copiar link">📋</button>
+          <button class="btn" style="font-size:11px;padding:3px 8px;background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.4);color:var(--warn);" onclick="cadEnviarEmail(this,'${emailEnc}','${nomeEnc}','${vincEnc}')" title="Enviar e-mail de atualização">📧</button>
+        </div>`;
     return `<tr>
       <td><strong>${esc(r.NOME||'—')}</strong><br><span style="font-size:11px;color:var(--muted);">${esc(r.EMAIL_CORPORATIVO||'')}</span></td>
       <td><span class="chip ${chipV(r.TIPO_VINCULO)}">${lblV(r.TIPO_VINCULO)}</span></td>
@@ -6867,6 +6874,122 @@ function exportCadStatusCsv(){
   a.href=url;a.download='atualizacao_cadastral_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();URL.revokeObjectURL(url);
   toast('CSV exportado','success');
+}
+
+// ── E-mail de atualização cadastral ──────────────────────────────────────────
+const _CAD_EMAIL_URL='https://luma-rh-app.pages.dev/onboarding.html';
+const _SEND_EMAIL_FN='https://ttclcdppifmmdjztfunl.supabase.co/functions/v1/send-email';
+
+function _cadEmailHtml(nome,vinculo,link){
+  const v=(vinculo||'').toUpperCase();
+  const empresa=(D.CADASTRO_COLABORADORES||[]).find(r=>r.EMPRESA)?.EMPRESA||'';
+
+  // Parágrafos personalizados por vínculo
+  let intro='',detalhes='';
+  if(v==='CLT'||v==='ESTAGIARIO'){
+    intro=v==='CLT'
+      ?'O RH solicita que você atualize seus dados cadastrais.'
+      :'O RH solicita que você atualize seus dados de estágio.';
+    detalhes=v==='CLT'
+      ?'Manter suas informações atualizadas é essencial para o correto processamento da <strong>folha de pagamento, benefícios, INSS e FGTS</strong>, além de garantir que seus documentos trabalhistas (CTPS, PPP) estejam sempre corretos.'
+      :'Manter seus dados atualizados garante o correto processamento da sua <strong>bolsa-auxílio, seguro estágio e benefícios</strong> previstos no seu termo de estágio.';
+  } else if(v==='PJ'||v==='MEI'){
+    intro='O escritório solicita que você atualize seus dados cadastrais.';
+    detalhes='Mantenha seus dados de <strong>CNPJ, razão social, informações bancárias e endereço</strong> sempre atualizados para garantir o correto processamento dos pagamentos e a emissão dos contratos de prestação de serviços.';
+  } else if(v==='ASSOCIADO'){
+    intro='O escritório solicita que você atualize suas informações cadastrais.';
+    detalhes='Mantenha seus dados de <strong>OAB, endereço profissional, contato e informações bancárias</strong> atualizados para que o escritório possa processar corretamente o seu recesso anual e emitir os documentos de associação.';
+  } else if(v==='SOCIO'){
+    intro='O escritório solicita que você atualize seus dados cadastrais.';
+    detalhes='A atualização dos seus dados garante a <strong>regularidade dos registros societários</strong> e o correto processamento dos documentos internos do escritório.';
+  } else {
+    intro='O RH solicita que você atualize seus dados cadastrais.';
+    detalhes='Manter seus dados atualizados garante o correto funcionamento de todos os processos internos.';
+  }
+
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atualização Cadastral</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 16px;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+  <!-- HEADER -->
+  <tr><td style="background:linear-gradient(135deg,#1e0b3e 0%,#2d1047 100%);padding:28px 32px;text-align:center;">
+    <div style="display:inline-flex;align-items:center;gap:10px;">
+      <div style="width:38px;height:38px;background:linear-gradient(135deg,#7c3aed,#f59e0b);border-radius:9px;display:inline-block;vertical-align:middle;text-align:center;line-height:38px;font-weight:800;color:#fff;font-size:18px;">L</div>
+      <span style="font-size:20px;font-weight:700;color:#ffffff;vertical-align:middle;letter-spacing:-0.3px;">LUMA RH</span>
+    </div>
+  </td></tr>
+  <!-- BODY -->
+  <tr><td style="padding:36px 32px;">
+    <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#1f2937;">Atualização Cadastral</p>
+    <p style="margin:0 0 20px;font-size:15px;color:#6b7280;">Olá, <strong style="color:#1f2937;">${esc(nome)}</strong>! ${intro}</p>
+    <p style="margin:0 0 28px;font-size:14px;color:#374151;line-height:1.7;">${detalhes}</p>
+    <p style="margin:0 0 28px;font-size:14px;color:#374151;">O processo é rápido — <strong>leva menos de 5 minutos</strong> e pode ser feito pelo celular ou computador.</p>
+    <!-- CTA -->
+    <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;"><tr><td align="center" style="border-radius:8px;background:linear-gradient(135deg,#7c3aed,#5b21b6);">
+      <a href="${link}" target="_blank" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:-0.2px;">✏️ Atualizar meu cadastro →</a>
+    </td></tr></table>
+    <!-- LINK FALLBACK -->
+    <p style="margin:0 0 8px;font-size:12px;color:#9ca3af;text-align:center;">Se o botão não funcionar, copie e cole este link no seu navegador:</p>
+    <p style="margin:0;font-size:11px;color:#7c3aed;text-align:center;word-break:break-all;">${link}</p>
+  </td></tr>
+  <!-- FOOTER -->
+  <tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 32px;text-align:center;">
+    <p style="margin:0;font-size:12px;color:#9ca3af;">${empresa?esc(empresa)+' · ':''}<strong>LUMA Plataforma</strong> · Este e-mail foi enviado automaticamente pelo RH.</p>
+  </td></tr>
+</table>
+</td></tr></table></body></html>`;
+}
+
+async function cadEnviarEmail(btn,emailEnc,nomeEnc,vincEnc){
+  const email=decodeURIComponent(emailEnc);
+  const nome =decodeURIComponent(nomeEnc);
+  const vinc =decodeURIComponent(vincEnc);
+  if(!email){toast('E-mail não cadastrado','error');return;}
+  const link=`${_CAD_EMAIL_URL}?flow=atualizar&email=${emailEnc}`;
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
+  try{
+    const r=await fetch(_SEND_EMAIL_FN,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        to:email,
+        subject:`[LUMA RH] Atualização Cadastral — ${nome}`,
+        html:_cadEmailHtml(nome,vinc,link)
+      })
+    });
+    if(r.ok){toast(`E-mail enviado para ${email} ✅`,'success');}
+    else{const j=await r.json().catch(()=>({}));toast('Erro: '+(j.error||r.status),'error');}
+  }catch(e){toast('Falha na conexão: '+e.message,'error');}
+  finally{if(btn){btn.disabled=false;btn.textContent='📧';}}
+}
+
+async function cadEnviarTodosPendentes(btn){
+  const ativos=(D.CADASTRO_COLABORADORES||[]).filter(r=>String(r.STATUS||'').trim().toUpperCase()==='ATIVO');
+  const pendentes=ativos.filter(r=>!r.CADASTRO_ATUALIZADO_EM&&r.EMAIL_CORPORATIVO);
+  if(!pendentes.length){toast('Nenhum pendente com e-mail cadastrado','warn');return;}
+  if(!confirm(`Enviar e-mail de atualização cadastral para ${pendentes.length} colaborador(es) pendente(s)?`))return;
+  if(btn){btn.disabled=true;btn.textContent='⏳ Enviando...';}
+  let ok=0,err=0;
+  for(const r of pendentes){
+    const link=`${_CAD_EMAIL_URL}?flow=atualizar&email=${encodeURIComponent(r.EMAIL_CORPORATIVO)}`;
+    try{
+      const res=await fetch(_SEND_EMAIL_FN,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          to:r.EMAIL_CORPORATIVO,
+          subject:`[LUMA RH] Atualização Cadastral — ${r.NOME||''}`,
+          html:_cadEmailHtml(r.NOME||'',r.TIPO_VINCULO||'',link)
+        })
+      });
+      if(res.ok)ok++;else err++;
+    }catch{err++;}
+  }
+  if(btn){btn.disabled=false;btn.textContent='📧 Enviar a todos pendentes';}
+  toast(`${ok} e-mail(s) enviado(s)${err?' · '+err+' erro(s)':''}`,ok?'success':'error');
 }
 
 function showTab(id,el){
