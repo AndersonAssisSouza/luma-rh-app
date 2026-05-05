@@ -1122,6 +1122,15 @@ async function submit(){
         const{error}=await sb.from('colaboradores').update(payload).eq('id',EXIST_ID);
         if(error)throw error;
       } else {
+        // Gera id_colaborador sequencial antes do INSERT (campo NOT NULL)
+        try{
+          const{data:idGerado}=await sb.rpc('gen_id_colaborador',{p_tenant_id:payload.tenant_id});
+          if(idGerado) payload.id_colaborador=idGerado;
+        }catch(_){}
+        if(!payload.id_colaborador){
+          // Fallback: timestamp-based se RPC falhar
+          payload.id_colaborador='COL-'+Date.now().toString(36).toUpperCase();
+        }
         const{error}=await sb.from('colaboradores').insert(payload);
         if(error)throw error;
       }
