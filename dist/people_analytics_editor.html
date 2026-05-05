@@ -107,6 +107,7 @@ nav.legacy{display:none!important;}
 .sec{display:none;}.sec.active{display:block;animation:fi .22s ease;}
 @keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .kg{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
 .kpi{background:white;border:1px solid var(--border);border-radius:12px;padding:22px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);transition:box-shadow .2s,transform .2s;}
 .kpi:hover{box-shadow:0 6px 16px rgba(0,0,0,.1);transform:translateY(-2px);}
 .kl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;font-weight:600;}
@@ -277,7 +278,7 @@ nav.legacy{display:none!important;}
   #mEditColab .mtpane.active,#mNewColab .mtpane.active{grid-template-columns:repeat(4,1fr);overflow-y:auto;}
 }
 
-.pf-cal-wrap{background:var(--bg3);border-radius:10px;padding:16px;}.pf-dual-cal{display:flex;gap:20px;}.pf-cal-panel{flex:1;min-width:0;}@media(max-width:620px){.pf-dual-cal{flex-direction:column;}}.pf-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}.pf-cal-month{font-size:15px;font-weight:500;}.pf-cal-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}.pf-cal-btn:hover{background:var(--bg2);}.pf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}.pf-cal-dname{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}.pf-cal-day{text-align:center;padding:7px 2px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}.pf-cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}.pf-cal-day.tod{border-color:var(--accent);color:var(--accent);}.pf-cal-day.rs,.pf-cal-day.re{background:var(--accent);color:#fff;}.pf-cal-day.ri{background:rgba(155,102,244,.2);}.pf-cal-day.dis{opacity:.2;cursor:not-allowed;}.pf-cal-day.oth{opacity:.15;cursor:default;}.pf-cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}.pf-cal-day.fds{color:var(--muted);}.pf-cal-legend{display:flex;gap:12px;margin-top:10px;}.pf-cal-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}.pf-cal-dot{width:8px;height:8px;border-radius:3px;}.pf-steps{display:flex;margin-bottom:22px;}.pf-step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}.pf-step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:1px;background:var(--border2);}.pf-step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--bg);z-index:1;margin-bottom:5px;}.pf-step-item.done .pf-step-circle{background:var(--ok);border-color:var(--ok);color:#0d2a1e;}.pf-step-item.active .pf-step-circle{background:var(--accent);border-color:var(--accent);color:#fff;}.pf-step-label{font-size:10px;color:var(--muted);text-align:center;}.pf-step-item.active .pf-step-label{color:var(--accent);}#pf .hist-row{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}#pf .hist-row:last-child{border-bottom:none;}#pf .hist-info{flex:1;}#pf .hist-period{font-size:14px;font-weight:500;margin-bottom:3px;}#pf .hist-meta{font-size:12px;color:var(--muted);}#pf .hist-motivo{font-size:12px;color:var(--danger);margin-top:4px;}
+.pf-cal-wrap{background:var(--bg3);border-radius:10px;padding:16px;}.pf-dual-cal{display:flex;gap:16px;align-items:stretch;}.pf-cal-panel{flex:1;min-width:0;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:14px 14px 10px;display:flex;flex-direction:column;}@media(max-width:620px){.pf-dual-cal{flex-direction:column;}.pf-cal-panel+.pf-cal-panel{border-top:2px solid var(--accent);border-top-left-radius:10px;border-top-right-radius:10px;}}.pf-cal-sep{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding-top:42px;color:var(--border2);font-size:18px;flex-shrink:0;}@media(max-width:620px){.pf-cal-sep{display:none;}}.pf-cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}.pf-cal-month{font-size:15px;font-weight:600;}.pf-cal-tag{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--bg3);border-radius:4px;padding:2px 7px;margin-bottom:8px;}.pf-cal-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border2);background:none;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}.pf-cal-btn:hover{background:var(--bg2);}.pf-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;align-content:start;min-height:234px;}.pf-cal-dname{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:500;}.pf-cal-day{text-align:center;padding:7px 2px;border-radius:6px;font-size:13px;cursor:pointer;border:1px solid transparent;user-select:none;transition:all .1s;}.pf-cal-day:hover:not(.dis):not(.oth){background:var(--bg2);border-color:var(--border2);}.pf-cal-day.tod{border-color:var(--accent);color:var(--accent);}.pf-cal-day.rs,.pf-cal-day.re{background:var(--accent);color:#fff;}.pf-cal-day.ri{background:rgba(155,102,244,.2);}.pf-cal-day.dis{opacity:.2;cursor:not-allowed;}.pf-cal-day.oth{opacity:.15;cursor:default;}.pf-cal-day.fer{background:rgba(248,113,113,.15);color:var(--danger);}.pf-cal-day.fds{color:var(--muted);}.pf-cal-legend{display:flex;gap:12px;margin-top:10px;}.pf-cal-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}.pf-cal-dot{width:8px;height:8px;border-radius:3px;}.pf-steps{display:flex;margin-bottom:22px;}.pf-step-item{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}.pf-step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;width:100%;height:1px;background:var(--border2);}.pf-step-circle{width:26px;height:26px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;background:var(--bg);z-index:1;margin-bottom:5px;}.pf-step-item.done .pf-step-circle{background:var(--ok);border-color:var(--ok);color:#0d2a1e;}.pf-step-item.active .pf-step-circle{background:var(--accent);border-color:var(--accent);color:#fff;}.pf-step-label{font-size:10px;color:var(--muted);text-align:center;}.pf-step-item.active .pf-step-label{color:var(--accent);}#pf .hist-row{padding:12px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}#pf .hist-row:last-child{border-bottom:none;}#pf .hist-info{flex:1;}#pf .hist-period{font-size:14px;font-weight:500;margin-bottom:3px;}#pf .hist-meta{font-size:12px;color:var(--muted);}#pf .hist-motivo{font-size:12px;color:var(--danger);margin-top:4px;}
 
 /* ── MENSAGENS DE ANIVERSÁRIO ── */
 .msgs-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
@@ -392,6 +393,7 @@ nav.legacy{display:none!important;}
       <li class="menu-item"><button class="menu-link" onclick="showTab('decimo',this)"><span class="menu-icon">🎄</span>13° Salário</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('acoes',this)"><span class="menu-icon">⚡</span>Ações</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('cadstatus',this)"><span class="menu-icon">📋</span>Atualização Cadastral</button></li>
+    <li class="menu-item"><button class="menu-link" onclick="showTab('emaillog',this)"><span class="menu-icon">📧</span>E-mails Enviados</button></li>
     <li class="menu-item"><button class="menu-link" onclick="showTab('pf',this)"><span class="menu-icon">📅</span>Portal Férias</button></li>
     <div class="sidebar-sep"></div>
     <li class="menu-item"><button class="menu-link" onclick="showTab('msg',this)"><span class="menu-icon">🎉</span>Mensagens</button></li>
@@ -979,6 +981,43 @@ nav.legacy{display:none!important;}
   </div>
 </div>
 
+<!-- E-MAILS ENVIADOS -->
+<div class="sec" id="emaillog">
+  <div class="sttl">
+    <div class="sttl-l"><div class="sdot" style="background:#7c3aed"></div>E-mails Enviados</div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <input id="eml-busca" class="fi" placeholder="Buscar assunto ou colaborador..." style="width:220px;" oninput="renderEmailLog()">
+      <select id="eml-tipo" class="fi" style="width:160px;" onchange="renderEmailLog()">
+        <option value="">Todos os tipos</option>
+        <option value="cadastral">Cadastral</option>
+        <option value="desligamento">Desligamento</option>
+        <option value="ferias">Férias (aviso)</option>
+        <option value="alerta_ferias">Alerta Férias</option>
+        <option value="alerta_aso">Alerta ASO</option>
+        <option value="aniversario">Aniversário</option>
+        <option value="card_aniversario">Card Aniversário</option>
+        <option value="onboarding">Onboarding</option>
+      </select>
+      <select id="eml-status" class="fi" style="width:130px;" onchange="renderEmailLog()">
+        <option value="">Todos</option>
+        <option value="enviado">✅ Enviados</option>
+        <option value="erro">❌ Com erro</option>
+      </select>
+      <button class="btn" onclick="loadEmailLog()">🔄 Atualizar</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpis" style="margin-bottom:20px;">
+    <div class="kpi"><div class="kl">Total enviados</div><div class="kv" id="eml-kTotal">—</div><div class="kbar" style="background:#7c3aed"></div></div>
+    <div class="kpi"><div class="kl">Hoje</div><div class="kv" id="eml-kHoje">—</div><div class="kbar" style="background:#0369a1"></div></div>
+    <div class="kpi"><div class="kl">Últimos 7 dias</div><div class="kv" id="eml-k7d">—</div><div class="kbar" style="background:#0891b2"></div></div>
+    <div class="kpi"><div class="kl">Com erro</div><div class="kv" style="color:#dc2626;" id="eml-kErro">—</div><div class="kbar" style="background:#dc2626"></div></div>
+  </div>
+
+  <div id="eml-body"></div>
+</div>
+
 <!-- PORTAL FÉRIAS -->
 <div class="sec" id="pf">
   <div class="sttl">
@@ -1015,6 +1054,7 @@ nav.legacy{display:none!important;}
         <div class="pf-dual-cal">
           <!-- Mês atual -->
           <div class="pf-cal-panel">
+            <div class="pf-cal-tag">Mês atual</div>
             <div class="pf-cal-nav">
               <button class="pf-cal-btn" id="pf-btn-prev">&#8249;</button>
               <div class="pf-cal-month" id="pf-cal-month">—</div>
@@ -1022,8 +1062,11 @@ nav.legacy{display:none!important;}
             </div>
             <div class="pf-cal-grid" id="pf-cal-grid"></div>
           </div>
+          <!-- Divisor visual -->
+          <div class="pf-cal-sep">&#8250;&#8250;</div>
           <!-- Próximo mês -->
           <div class="pf-cal-panel">
+            <div class="pf-cal-tag">Próximo mês</div>
             <div class="pf-cal-nav">
               <div style="width:30px;"></div>
               <div class="pf-cal-month" id="pf-cal-month2">—</div>
@@ -4652,7 +4695,7 @@ async function _enviarAvisoFerias(colabId,fer){
     const ini=fer.ferias_programadas_inicio?fmtD(fer.ferias_programadas_inicio):'—';
     const fim=fer.ferias_programadas_fim?fmtD(fer.ferias_programadas_fim):'—';
     if(destEmail){
-      await _emailLumaRH(`[LUMA RH] 🏖️ Aviso de Férias — ${colab.NOME} (${ini} a ${fim})`,html,destEmail,rhEmails);
+      await _emailLumaRH(`[LUMA RH] 🏖️ Aviso de Férias — ${colab.NOME} (${ini} a ${fim})`,html,destEmail,rhEmails,[],{tipo:'ferias',colaborador_nome:colab.NOME});
       toast('Aviso de férias enviado para '+destEmail,'success');
     }
     // Salva documento localmente para o colaborador
@@ -4678,7 +4721,7 @@ function _buildAvisoFeriasHTML(colab,fer){
 <table width="620" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;">
 <tr><td style="background:#0369a1;padding:28px 32px;border-radius:8px 8px 0 0;">
   <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48cmVjdCB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzEyJyBmaWxsPScjOWI2NmY0Jy8+PHBvbHlnb24gcG9pbnRzPScyMCwxNSA0MiwxNSA1MCw3MiA1OCwxNSA4MCwxNSA2MCw4OCA0MCw4OCcgZmlsbD0nI2ZmZDAwMCcvPjwvc3ZnPg==" width="40" height="40" alt="LUMA" style="display:block;"></td>
+    <td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAB0UlEQVR42u3dMVIDMRBEUe0W4R4TE3AgAsMxySFyAgabwiv1yK9jipL283vGLrtY2hV5fXr/aPLvHI7bculnFiCywCxAZIFZwRiXc896BSMLygpGFpTV48jKyo4sSxgSloUdgZUlgAgggAgg9fNw61/4+Lztdti3l/fpzsWQe6usW/61VMit78sQQ73/fNpzftiyGGKO9LwnQ1SWAAII/HNkr/uVM+SvK2yllVdl3RuQWWtrz3sxRGUJIIDMO0f2vk9JQ65dZautvCoLEIkAMssc6XEPhqgsiQBSvbZ6nb+sIZdW2oorr8oCRKKAVJ0jPc/NEJUlgAAyzxzpfd7Shvz0WqPqaxCVBUit2hpxToYwRAABpP4cGXW+8oZ8XXErr7wqC5AatTXyXAxhiAACSN05Mvo8UxhyWnWrr7wqCxApASRljiScgyEMkRJARtdFSm1OY8gMK6/KAkRKARnV40lv3zCEIQIIIHX6PO3tf4YwRMoB6VUjiZ96YQggAggg+f2e+qlJhgAigACS3fPJXxZiSPP/1IUhhYAcjtviMWTkcNwWhiRWFksy7DBDkoc6S8bb8c0QUMbCOFtZoIyD0Vprvz58Lxr7gbgKCDD9QJzyCS3PpXoGL+cnAAAAAElFTkSuQmCC" width="40" height="40" alt="LUMA" style="display:block;"></td>
     <td style="padding-left:12px;vertical-align:middle;"><div style="color:#fff;font-size:18px;font-weight:bold;">🏖️ Aviso de Férias</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px;">LUMA RH · ${empresa}</div></td>
   </tr></table>
 </td></tr>
@@ -6927,7 +6970,7 @@ function _cadEmailHtml(nome,vinculo,link){
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;">
 <tr><td style="background:#7c3aed;padding:28px 32px;">
   <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td style="width:40px;"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48cmVjdCB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzEyJyBmaWxsPScjOWI2NmY0Jy8+PHBvbHlnb24gcG9pbnRzPScyMCwxNSA0MiwxNSA1MCw3MiA1OCwxNSA4MCwxNSA2MCw4OCA0MCw4OCcgZmlsbD0nI2ZmZDAwMCcvPjwvc3ZnPg==" width="40" height="40" alt="LUMA" style="display:block;"></td>
+    <td style="width:40px;"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAB0UlEQVR42u3dMVIDMRBEUe0W4R4TE3AgAsMxySFyAgabwiv1yK9jipL283vGLrtY2hV5fXr/aPLvHI7bculnFiCywCxAZIFZwRiXc896BSMLygpGFpTV48jKyo4sSxgSloUdgZUlgAgggAgg9fNw61/4+Lztdti3l/fpzsWQe6usW/61VMit78sQQ73/fNpzftiyGGKO9LwnQ1SWAAII/HNkr/uVM+SvK2yllVdl3RuQWWtrz3sxRGUJIIDMO0f2vk9JQ65dZautvCoLEIkAMssc6XEPhqgsiQBSvbZ6nb+sIZdW2oorr8oCRKKAVJ0jPc/NEJUlgAAyzxzpfd7Shvz0WqPqaxCVBUit2hpxToYwRAABpP4cGXW+8oZ8XXErr7wqC5AatTXyXAxhiAACSN05Mvo8UxhyWnWrr7wqCxApASRljiScgyEMkRJARtdFSm1OY8gMK6/KAkRKARnV40lv3zCEIQIIIHX6PO3tf4YwRMoB6VUjiZ96YQggAggg+f2e+qlJhgAigACS3fPJXxZiSPP/1IUhhYAcjtviMWTkcNwWhiRWFksy7DBDkoc6S8bb8c0QUMbCOFtZoIyD0Vprvz58Lxr7gbgKCDD9QJzyCS3PpXoGL+cnAAAAAElFTkSuQmCC" width="40" height="40" alt="LUMA" style="display:block;"></td>
     <td style="padding-left:12px;vertical-align:middle;"><div style="color:#fff;font-size:18px;font-weight:bold;">Atualizacao Cadastral</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px;">LUMA RH · Sistema de Gestao de Pessoas</div></td>
   </tr></table>
 </td></tr>
@@ -6967,9 +7010,18 @@ async function cadEnviarEmail(btn,emailEnc,nomeEnc,vincEnc){
         html:_cadEmailHtml(nome,vinc,link)
       })
     });
-    if(r.ok){toast(`E-mail enviado para ${email} ✅`,'success');}
-    else{const j=await r.json().catch(()=>({}));toast('Erro: '+(j.error||r.status),'error');}
-  }catch(e){toast('Falha na conexão: '+e.message,'error');}
+    const rj=await r.json().catch(()=>({}));
+    if(r.ok){
+      toast(`E-mail enviado para ${email} ✅`,'success');
+      window._sbFns?.insertEmailLog?.({para:email,assunto:`[LUMA RH] Atualização Cadastral — ${nome}`,tipo:'cadastral',colaborador_nome:nome,resend_id:rj.id||null,status:'enviado'});
+    }else{
+      toast('Erro: '+(rj.error||r.status),'error');
+      window._sbFns?.insertEmailLog?.({para:email,assunto:`[LUMA RH] Atualização Cadastral — ${nome}`,tipo:'cadastral',colaborador_nome:nome,status:'erro',erro_msg:rj.error||String(r.status)});
+    }
+  }catch(e){
+    toast('Falha na conexão: '+e.message,'error');
+    window._sbFns?.insertEmailLog?.({para:email,assunto:`[LUMA RH] Atualização Cadastral — ${nome}`,tipo:'cadastral',colaborador_nome:nome,status:'erro',erro_msg:e.message});
+  }
   finally{if(btn){btn.disabled=false;btn.textContent='📧';}}
 }
 
@@ -6999,6 +7051,78 @@ async function cadEnviarTodosPendentes(btn){
   toast(`${ok} e-mail(s) enviado(s)${err?' · '+err+' erro(s)':''}`,ok?'success':'error');
 }
 
+// ── E-MAILS ENVIADOS ────────────────────────────────────────────────────────
+let _emailLogs=[];
+
+const _EML_TIPO_LABEL={
+  cadastral:'Cadastral', desligamento:'Desligamento', ferias:'Férias',
+  alerta_ferias:'Alerta Férias', alerta_aso:'Alerta ASO',
+  aniversario:'Aniversário', card_aniversario:'Card Aniv.', onboarding:'Onboarding'
+};
+
+async function loadEmailLog(){
+  const body=$('eml-body');
+  body.innerHTML='<div class="empty" style="padding:32px;">Carregando…</div>';
+  try{
+    _emailLogs=await window._sbFns.getEmailLogs({limite:500});
+  }catch(e){
+    body.innerHTML=`<div class="empty" style="padding:32px;color:var(--danger);">Erro ao carregar logs: ${esc(e.message)}</div>`;
+    return;
+  }
+  renderEmailLog();
+}
+
+function renderEmailLog(){
+  const busca=($('eml-busca')?.value||'').toLowerCase();
+  const tipo =$('eml-tipo')?.value||'';
+  const status=$('eml-status')?.value||'';
+
+  const hoje=new Date();hoje.setHours(0,0,0,0);
+  const set7=new Date(hoje);set7.setDate(hoje.getDate()-6);
+
+  // KPIs
+  $('eml-kTotal').textContent=_emailLogs.length;
+  $('eml-kHoje').textContent =_emailLogs.filter(r=>new Date(r.enviado_em)>=hoje).length;
+  $('eml-k7d').textContent   =_emailLogs.filter(r=>new Date(r.enviado_em)>=set7).length;
+  $('eml-kErro').textContent =_emailLogs.filter(r=>r.status==='erro').length;
+
+  // Filtros
+  let rows=_emailLogs;
+  if(tipo)  rows=rows.filter(r=>r.tipo===tipo);
+  if(status)rows=rows.filter(r=>r.status===status);
+  if(busca) rows=rows.filter(r=>(r.assunto||'').toLowerCase().includes(busca)||(r.colaborador_nome||'').toLowerCase().includes(busca)||(r.para||'').toLowerCase().includes(busca));
+
+  const body=$('eml-body');
+  if(!rows.length){body.innerHTML='<div class="empty" style="padding:32px;">Nenhum e-mail encontrado.</div>';return;}
+
+  body.innerHTML=`
+  <div style="overflow-x:auto;">
+  <table class="tbl"><thead><tr>
+    <th>Data/Hora</th><th>Colaborador</th><th>Para</th><th>Assunto</th><th>Tipo</th><th>Status</th>
+  </tr></thead><tbody>
+  ${rows.map(r=>{
+    const dt=new Date(r.enviado_em);
+    const dtFmt=dt.toLocaleDateString('pt-BR')+' '+dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const statusChip=r.status==='erro'
+      ?`<span class="chip" style="background:#fee2e2;color:#dc2626;">❌ Erro</span>`
+      :`<span class="chip" style="background:#dcfce7;color:#16a34a;">✅ Enviado</span>`;
+    const tipoLabel=_EML_TIPO_LABEL[r.tipo]||r.tipo||'—';
+    const tipoChip=`<span class="chip" style="background:#f3f0ff;color:#7c3aed;font-size:11px;">${esc(tipoLabel)}</span>`;
+    const errRow=r.erro_msg?`<tr style="background:#fff5f5;"><td colspan="6" style="padding:4px 16px;font-size:11px;color:#dc2626;">↳ ${esc(r.erro_msg)}</td></tr>`:'';
+    return`<tr>
+      <td style="white-space:nowrap;color:var(--muted);font-size:12px;">${dtFmt}</td>
+      <td>${esc(r.colaborador_nome||'—')}</td>
+      <td style="font-size:12px;color:var(--muted);">${esc(r.para||'—')}${r.cc?`<br><span style="font-size:10px;">CC: ${esc(r.cc)}</span>`:''}</td>
+      <td style="font-size:13px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(r.assunto||'')}">${esc(r.assunto||'—')}</td>
+      <td>${tipoChip}</td>
+      <td>${statusChip}</td>
+    </tr>${errRow}`;
+  }).join('')}
+  </tbody></table></div>
+  <div style="padding:8px 0;font-size:12px;color:var(--muted);">${rows.length} registro${rows.length!==1?'s':''} exibido${rows.length!==1?'s':''}</div>`;
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 function showTab(id,el){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.menu-link').forEach(t=>t.classList.remove('active'));
@@ -7009,6 +7133,7 @@ function showTab(id,el){
   if(id==='desl')renderDesligados();
   if(id==='acoes')renderAcoes();
   if(id==='cadstatus')renderCadStatus();
+  if(id==='emaillog')loadEmailLog();
   if(id==='admin')renderAdmin();
   if(id==='pf')pfInit();
   if(id==='complian')renderCompliance();
@@ -7268,14 +7393,18 @@ function _getGestorEmail(gestorNome){
   const g=cad.find(r=>String(r.NOME||'').trim().toLowerCase()===String(gestorNome).trim().toLowerCase());
   return g?g.EMAIL_CORPORATIVO:null;
 }
-async function _emailLumaRH(subject,htmlBody,toEmail,ccEmails,attachments){
+async function _emailLumaRH(subject,htmlBody,toEmail,ccEmails,attachments,opts={}){
+  const cc=(ccEmails||[]).filter(Boolean);
+  const att=(attachments||[]).map(a=>({filename:a.name||'attachment',content:a.contentBytes}));
   try{
-    const cc=(ccEmails||[]).filter(Boolean);
-    // Converte formato Graph (contentBytes) para formato Resend (content)
-    const att=(attachments||[]).map(a=>({filename:a.name||'attachment',content:a.contentBytes}));
-    await window._sbFns.sendEmail(toEmail,subject,htmlBody,cc,att);
+    const resp=await window._sbFns.sendEmail(toEmail,subject,htmlBody,cc,att);
+    window._sbFns.insertEmailLog?.({para:toEmail,cc:cc.join(', ')||null,assunto:subject,status:'enviado',resend_id:resp?.id||null,...opts});
     return true;
-  }catch(e){console.error('_emailLumaRH:',e.message);return false;}
+  }catch(e){
+    console.error('_emailLumaRH:',e.message);
+    window._sbFns.insertEmailLog?.({para:toEmail,cc:cc.join(', ')||null,assunto:subject,status:'erro',erro_msg:e.message,...opts});
+    return false;
+  }
 }
 
 // --- E-mail de desligamento programado ---
@@ -7289,7 +7418,7 @@ function _buildDeslEmailHTML(a,tipo){
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;">
 <tr><td style="background:${corHeader};padding:28px 32px;">
   <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48cmVjdCB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzEyJyBmaWxsPScjOWI2NmY0Jy8+PHBvbHlnb24gcG9pbnRzPScyMCwxNSA0MiwxNSA1MCw3MiA1OCwxNSA4MCwxNSA2MCw4OCA0MCw4OCcgZmlsbD0nI2ZmZDAwMCcvPjwvc3ZnPg==" width="40" height="40" alt="LUMA" style="display:block;"></td>
+    <td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAB0UlEQVR42u3dMVIDMRBEUe0W4R4TE3AgAsMxySFyAgabwiv1yK9jipL283vGLrtY2hV5fXr/aPLvHI7bculnFiCywCxAZIFZwRiXc896BSMLygpGFpTV48jKyo4sSxgSloUdgZUlgAgggAgg9fNw61/4+Lztdti3l/fpzsWQe6usW/61VMit78sQQ73/fNpzftiyGGKO9LwnQ1SWAAII/HNkr/uVM+SvK2yllVdl3RuQWWtrz3sxRGUJIIDMO0f2vk9JQ65dZautvCoLEIkAMssc6XEPhqgsiQBSvbZ6nb+sIZdW2oorr8oCRKKAVJ0jPc/NEJUlgAAyzxzpfd7Shvz0WqPqaxCVBUit2hpxToYwRAABpP4cGXW+8oZ8XXErr7wqC5AatTXyXAxhiAACSN05Mvo8UxhyWnWrr7wqCxApASRljiScgyEMkRJARtdFSm1OY8gMK6/KAkRKARnV40lv3zCEIQIIIHX6PO3tf4YwRMoB6VUjiZ96YQggAggg+f2e+qlJhgAigACS3fPJXxZiSPP/1IUhhYAcjtviMWTkcNwWhiRWFksy7DBDkoc6S8bb8c0QUMbCOFtZoIyD0Vprvz58Lxr7gbgKCDD9QJzyCS3PpXoGL+cnAAAAAElFTkSuQmCC" width="40" height="40" alt="LUMA" style="display:block;"></td>
     <td style="padding-left:12px;vertical-align:middle;"><div style="color:#fff;font-size:18px;font-weight:bold;">${titulo}</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px;">LUMA RH · Sistema de Gestão de Pessoas</div></td>
   </tr></table>
 </td></tr>
@@ -7317,7 +7446,7 @@ async function _enviarEmailDesl(a,tipo){
   const rhEmails=_getRHEmails();
   const subject=tipo==='lembrete'?`[LUMA RH] Lembrete — Desligamento de ${a.nome} AMANHÃ (${fmtD(a.data)})`:`[LUMA RH] Desligamento Programado — ${a.nome} em ${fmtD(a.data)}`;
   const html=_buildDeslEmailHTML(a,tipo);
-  const ok=await _emailLumaRH(subject,html,gestorEmail,rhEmails);
+  const ok=await _emailLumaRH(subject,html,gestorEmail,rhEmails,[],{tipo:'desligamento',colaborador_nome:a.nome});
   if(ok)toast(`E-mail de ${tipo==='lembrete'?'lembrete':'confirmação'} enviado ao gestor`,'success');
 }
 
@@ -7376,7 +7505,7 @@ async function enviarEmailsAlertaASO(){
       if(jaEnviados.includes('aso_'+ckId))continue;
       const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f5f3ff;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f3ff;padding:24px 0;"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #e2e8f0;"><tr><td style="background:#7c3aed;padding:24px 32px;"><div style="color:#fff;font-size:18px;font-weight:bold;">🩺 Alerta de Vencimento de ASO</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:4px;">LUMA RH · Sistema de Gestão de Pessoas</div></td></tr><tr><td style="padding:24px 32px;"><p style="font-size:14px;color:#334155;margin:0 0 16px;">O exame ocupacional (ASO) de <strong>${r.NOME}</strong> vence em <strong>${diasAte} dia${diasAte!==1?'s':''}</strong>.</p><table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e2e8f0;"><tr style="background:#f8fafc;"><td style="padding:8px 14px;font-size:12px;font-weight:600;color:#64748b;width:40%;">Colaborador</td><td style="padding:8px 14px;font-size:13px;color:#1e293b;font-weight:600;">${r.NOME}</td></tr><tr><td style="padding:8px 14px;font-size:12px;font-weight:600;color:#64748b;border-top:1px solid #e2e8f0;">Último exame</td><td style="padding:8px 14px;font-size:13px;color:#1e293b;border-top:1px solid #e2e8f0;">${fmtD(r.ULTIMO_EXAME)||'—'}</td></tr><tr style="background:#fef3c7;"><td style="padding:8px 14px;font-size:12px;font-weight:600;color:#92400e;border-top:1px solid #e2e8f0;">Vencimento</td><td style="padding:8px 14px;font-size:13px;font-weight:700;color:#b45309;border-top:1px solid #e2e8f0;">${fmtD(r.PROXIMO_EXAME)} (em ${diasAte} dia${diasAte!==1?'s':''})</td></tr></table></td></tr><tr><td style="background:#f1f5f9;padding:12px 32px;text-align:center;border-top:1px solid #e2e8f0;"><p style="font-size:11px;color:#94a3b8;margin:0;">Gerado automaticamente pelo sistema LUMA RH. Base legal: NR-7 (PCMSO).</p></td></tr></table></td></tr></table></body></html>`;
       const subj=`[LUMA RH] 🩺 ASO de ${r.NOME} vence em ${diasAte} dia${diasAte!==1?'s':''}`;
-      const ok=await _emailLumaRH(subj,html,rhEmails[0],rhEmails.slice(1));
+      const ok=await _emailLumaRH(subj,html,rhEmails[0],rhEmails.slice(1),[],{tipo:'alerta_aso',colaborador_nome:r.NOME});
       if(ok)jaEnviados.push('aso_'+ckId);
     }
     if(jaEnviados.length)localStorage.setItem(ck,JSON.stringify(jaEnviados));
@@ -7409,7 +7538,7 @@ async function enviarEmailsAlertaFerias(){
       const destEmail=empEmail||rhEmails[0];
       if(!destEmail)continue;
       const cc=empEmail?rhEmails:rhEmails.slice(1);
-      const ok=await _emailLumaRH(subj,html,destEmail,cc);
+      const ok=await _emailLumaRH(subj,html,destEmail,cc,[],{tipo:'alerta_ferias',colaborador_nome:r.NOME});
       if(ok)jaEnviados.push('fer_'+ckId);
     }
     if(jaEnviados.length)localStorage.setItem(ck,JSON.stringify(jaEnviados));
@@ -7421,7 +7550,7 @@ function _buildAlertaFeriasEmail(r,limAgenFmt,limConcFmt,diasAte){
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;">
 <tr><td style="background:#b45309;padding:28px 32px;">
   <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48cmVjdCB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzEyJyBmaWxsPScjOWI2NmY0Jy8+PHBvbHlnb24gcG9pbnRzPScyMCwxNSA0MiwxNSA1MCw3MiA1OCwxNSA4MCwxNSA2MCw4OCA0MCw4OCcgZmlsbD0nI2ZmZDAwMCcvPjwvc3ZnPg==" width="40" height="40" alt="LUMA" style="display:block;"></td>
+    <td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAB0UlEQVR42u3dMVIDMRBEUe0W4R4TE3AgAsMxySFyAgabwiv1yK9jipL283vGLrtY2hV5fXr/aPLvHI7bculnFiCywCxAZIFZwRiXc896BSMLygpGFpTV48jKyo4sSxgSloUdgZUlgAgggAgg9fNw61/4+Lztdti3l/fpzsWQe6usW/61VMit78sQQ73/fNpzftiyGGKO9LwnQ1SWAAII/HNkr/uVM+SvK2yllVdl3RuQWWtrz3sxRGUJIIDMO0f2vk9JQ65dZautvCoLEIkAMssc6XEPhqgsiQBSvbZ6nb+sIZdW2oorr8oCRKKAVJ0jPc/NEJUlgAAyzxzpfd7Shvz0WqPqaxCVBUit2hpxToYwRAABpP4cGXW+8oZ8XXErr7wqC5AatTXyXAxhiAACSN05Mvo8UxhyWnWrr7wqCxApASRljiScgyEMkRJARtdFSm1OY8gMK6/KAkRKARnV40lv3zCEIQIIIHX6PO3tf4YwRMoB6VUjiZ96YQggAggg+f2e+qlJhgAigACS3fPJXxZiSPP/1IUhhYAcjtviMWTkcNwWhiRWFksy7DBDkoc6S8bb8c0QUMbCOFtZoIyD0Vprvz58Lxr7gbgKCDD9QJzyCS3PpXoGL+cnAAAAAElFTkSuQmCC" width="40" height="40" alt="LUMA" style="display:block;"></td>
     <td style="padding-left:12px;vertical-align:middle;"><div style="color:#fff;font-size:18px;font-weight:bold;">⚠️ Alerta de Férias</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px;">LUMA RH · Sistema de Gestão de Pessoas</div></td>
   </tr></table>
 </td></tr>
@@ -7466,7 +7595,7 @@ async function enviarEmailsAniversario(){
           if(gestorEmail){
             const idade=alvo.getFullYear()-parseInt(r.DATA_NASCIMENTO.split('-')[0]);
             const html=_buildAnivEmail(r,'nasc',idade);
-            const ok=await _emailLumaRH(`[LUMA RH] 🎂 Aniversário de ${r.NOME} em 2 dias!`,html,gestorEmail,rhEmails);
+            const ok=await _emailLumaRH(`[LUMA RH] 🎂 Aniversário de ${r.NOME} em 2 dias!`,html,gestorEmail,rhEmails,[],{tipo:'aniversario',colaborador_nome:r.NOME});
             if(ok)jaEnviados.push('nasc_'+ckId);
           }
         }
@@ -7482,7 +7611,7 @@ async function enviarEmailsAniversario(){
             const anos=alvo.getFullYear()-parseInt(r.DATA_ADMISSAO.split('-')[0]);
             if(anos>0){
               const html=_buildAnivEmail(r,'casa',anos);
-              const ok=await _emailLumaRH(`[LUMA RH] 🏆 ${anos} ano${anos>1?'s':''} de casa — ${r.NOME} (em 2 dias)`,html,gestorEmail,rhEmails);
+              const ok=await _emailLumaRH(`[LUMA RH] 🏆 ${anos} ano${anos>1?'s':''} de casa — ${r.NOME} (em 2 dias)`,html,gestorEmail,rhEmails,[],{tipo:'aniversario',colaborador_nome:r.NOME});
               if(ok)jaEnviados.push('casa_'+ckId);
             }
           }
@@ -7502,7 +7631,7 @@ function _buildAnivEmail(r,tipo,numero){
 <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #e2e8f0;">
 <tr><td style="background:${corHeader};padding:28px 32px;">
   <table width="100%" cellpadding="0" cellspacing="0"><tr>
-    <td><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48cmVjdCB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzEyJyBmaWxsPScjOWI2NmY0Jy8+PHBvbHlnb24gcG9pbnRzPScyMCwxNSA0MiwxNSA1MCw3MiA1OCwxNSA4MCwxNSA2MCw4OCA0MCw4OCcgZmlsbD0nI2ZmZDAwMCcvPjwvc3ZnPg==" width="40" height="40" alt="LUMA" style="display:block;"></td>
+    <td><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAB0UlEQVR42u3dMVIDMRBEUe0W4R4TE3AgAsMxySFyAgabwiv1yK9jipL283vGLrtY2hV5fXr/aPLvHI7bculnFiCywCxAZIFZwRiXc896BSMLygpGFpTV48jKyo4sSxgSloUdgZUlgAgggAgg9fNw61/4+Lztdti3l/fpzsWQe6usW/61VMit78sQQ73/fNpzftiyGGKO9LwnQ1SWAAII/HNkr/uVM+SvK2yllVdl3RuQWWtrz3sxRGUJIIDMO0f2vk9JQ65dZautvCoLEIkAMssc6XEPhqgsiQBSvbZ6nb+sIZdW2oorr8oCRKKAVJ0jPc/NEJUlgAAyzxzpfd7Shvz0WqPqaxCVBUit2hpxToYwRAABpP4cGXW+8oZ8XXErr7wqC5AatTXyXAxhiAACSN05Mvo8UxhyWnWrr7wqCxApASRljiScgyEMkRJARtdFSm1OY8gMK6/KAkRKARnV40lv3zCEIQIIIHX6PO3tf4YwRMoB6VUjiZ96YQggAggg+f2e+qlJhgAigACS3fPJXxZiSPP/1IUhhYAcjtviMWTkcNwWhiRWFksy7DBDkoc6S8bb8c0QUMbCOFtZoIyD0Vprvz58Lxr7gbgKCDD9QJzyCS3PpXoGL+cnAAAAAElFTkSuQmCC" width="40" height="40" alt="LUMA" style="display:block;"></td>
     <td style="padding-left:12px;vertical-align:middle;"><div style="color:#fff;font-size:18px;font-weight:bold;">${titulo}</div><div style="color:rgba(255,255,255,0.8);font-size:12px;margin-top:2px;">LUMA RH · Sistema de Gestão de Pessoas</div></td>
   </tr></table>
 </td></tr>
@@ -7859,6 +7988,7 @@ async function pfEnviarSolicitar(){
 </td></tr></table>
 </body></html>`;
       await window._sbFns.sendEmail(gestorEmail,`[Férias] ${pfColab.nome} · ${pfFD(pfRS)} a ${pfFD(pfRE)} · Aguarda aprovação`,emailBody);
+      window._sbFns.insertEmailLog?.({para:gestorEmail,assunto:`[Férias] ${pfColab.nome} · ${pfFD(pfRS)} a ${pfFD(pfRE)} · Aguarda aprovação`,tipo:'ferias',colaborador_nome:pfColab.nome,status:'enviado'});
       toast('Gestor notificado por e-mail!','success');
     } else {
       toast('Solicitação registrada!','success');
@@ -8004,7 +8134,9 @@ async function pfSendReturnEmail(sol,aprovado,motivo){
   <span style="font-size:11px;color:#9ca3af;font-family:Arial,sans-serif;">Portal de Férias &middot; Luma Plataforma &middot; Mensagem automática</span>
 </td></tr>
 </table></td></tr></table></body></html>`;
-    await window._sbFns.sendEmail(sol.email,`${icon} [Férias ${aprovado?'Aprovadas':'Rejeitadas'}] ${sol.prot} · ${pfFD(sol.ini)} a ${pfFD(sol.fim)}`,emailBody);
+    const _subj=`${icon} [Férias ${aprovado?'Aprovadas':'Rejeitadas'}] ${sol.prot} · ${pfFD(sol.ini)} a ${pfFD(sol.fim)}`;
+    await window._sbFns.sendEmail(sol.email,_subj,emailBody);
+    window._sbFns.insertEmailLog?.({para:sol.email,assunto:_subj,tipo:'ferias',colaborador_nome:sol.nome||null,status:'enviado'});
   }catch(e){console.warn('pfSendReturnEmail:',e.message);}
 }
 
@@ -8700,6 +8832,8 @@ function abrirCardAniversario(nomeEnc, tipo, data, dias) {
   const empresa = col?.EMPRESA?.toLowerCase().includes('luma') ? 'luma' : 'luisa';
   document.getElementById('cardEmailDest').value = col?.EMAIL_CORPORATIVO || '';
   document.getElementById('cardEmpresa').value = empresa;
+  // Armazena data de origem para cálculo preciso de anos (independente de dias até o evento)
+  _cardData.dataOrigem = tipo==='empresa' ? (col?.DATA_ADMISSAO||null) : (col?.DATA_NASCIMENTO||null);
   openModal('mCardAniv');
   gerarCardAniversario();
 }
@@ -8709,7 +8843,12 @@ async function gerarCardAniversario() {
   const tipo    = _cardData.tipo;
   const _np=(_cardData.nome||'').split(' ').filter(Boolean);
   const nome    = _np.length>1?_np[0]+' '+_np[_np.length-1]:_cardData.nome;
-  const anos    = _cardData.dias > 0 ? Math.floor(_cardData.dias/365)||1 : 0;
+  // Calcula anos a partir da data de nascimento/admissão real, não dos "dias para o evento"
+  // (quando o aniversário é hoje, dias=0, causando anos=0 — bug corrigido)
+  const _anoAtual = new Date().getFullYear();
+  const anos = _cardData.dataOrigem
+    ? Math.max(1, _anoAtual - parseInt(_cardData.dataOrigem.split('-')[0]))
+    : Math.max(1, _cardData.dias > 0 ? Math.floor(_cardData.dias/365) : 1);
 
   // Mensagem
   let texto = document.getElementById('cardMsgManual').value.trim();
@@ -8936,7 +9075,7 @@ async function enviarEmailAniversarioCard(){
       contentBytes:imgB64
     }];
 
-    const ok=await _emailLumaRH(subject,htmlBody,dest,[],attachments);
+    const ok=await _emailLumaRH(subject,htmlBody,dest,[],attachments,{tipo:'card_aniversario',colaborador_nome:_cardData?.nome||null});
     if(ok){
       toast('E-mail enviado com sucesso!','success');
       document.getElementById('cardEmailDest').value='';

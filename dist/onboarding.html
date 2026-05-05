@@ -160,6 +160,16 @@ a{color:var(--p)}
 .dep-rm:hover{color:var(--danger)}
 .chk-label{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text);padding:12px 14px;background:var(--bg3);border:1.5px solid var(--border);border-radius:9px}
 .chk-label input[type=checkbox]{width:17px;height:17px;accent-color:var(--p);flex-shrink:0}
+
+/* ── AUTH GATE (SSO / Magic Link) ── */
+.ob-auth-gate{background:var(--bg2);border-radius:14px;padding:28px;max-width:480px;margin:0 auto 28px;box-shadow:var(--sh);display:none;text-align:left}
+.ob-auth-gate.on{display:block}
+.btn-ms{background:#fff;color:#1e293b;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px 24px;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:all .18s;font-family:var(--font);line-height:1}
+.btn-ms:hover{border-color:#0078d4;color:#0078d4;background:#f0f7ff}
+.ob-or{display:flex;align-items:center;gap:10px;margin:14px 0;color:var(--muted);font-size:12px}
+.ob-or::before,.ob-or::after{content:'';flex:1;height:1px;background:var(--border)}
+.ob-magic-ok{background:var(--success-bg);border:1px solid #bbf7d0;border-radius:10px;padding:20px;text-align:center;display:none;margin-bottom:0}
+.ob-magic-ok.on{display:block}
 </style>
 </head>
 <body>
@@ -197,15 +207,35 @@ a{color:var(--p)}
       </div>
     </div>
 
-    <!-- Lookup para atualização -->
-    <div class="ob-lookup" id="lookup">
-      <div class="al info">ℹ️ Informe seu e-mail corporativo para localizarmos seu cadastro.</div>
-      <div class="fg" style="margin-bottom:14px">
-        <label class="lbl">E-mail corporativo <span class="r">*</span></label>
-        <input class="fi" type="email" id="lu-email" placeholder="nome@empresa.com.br" onkeydown="if(event.key==='Enter')doLookup()">
-        <span class="fe" id="lu-err">Cadastro não encontrado. Verifique o e-mail.</span>
+    <!-- Auth Gate para atualização — Magic Link + SSO Microsoft -->
+    <div class="ob-auth-gate" id="sso-gate">
+      <div class="al info" style="margin-bottom:16px">🔐 Para atualizar seu cadastro, confirme sua identidade.</div>
+
+      <!-- Erro de lookup (cadastro não encontrado após auth) -->
+      <div id="sso-lookup-err" class="al danger" style="display:none;margin-bottom:14px"></div>
+
+      <!-- Confirmação de magic link enviado -->
+      <div class="ob-magic-ok" id="sso-magic-ok">
+        <div style="font-size:30px;margin-bottom:8px">📬</div>
+        <div style="font-weight:700;color:var(--success);margin-bottom:6px">Link enviado!</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.6">Verifique sua caixa de entrada e clique no link de acesso.<br>Você voltará automaticamente para esta página.</div>
       </div>
-      <button class="btn btn-p" style="width:100%" onclick="doLookup()">Buscar meu cadastro →</button>
+
+      <!-- Formulário de acesso -->
+      <div id="sso-form">
+        <div class="fg" style="margin-bottom:12px">
+          <label class="lbl">E-mail corporativo <span class="r">*</span></label>
+          <input class="fi" type="email" id="sso-email" placeholder="nome@empresa.com.br"
+                 onkeydown="if(event.key==='Enter')sendMagicLink()">
+          <span class="fe" id="sso-email-err">Informe um e-mail corporativo válido.</span>
+        </div>
+        <button class="btn btn-p" style="width:100%" onclick="sendMagicLink()">
+          📩 Enviar link de acesso
+        </button>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">
+          Enviaremos um link seguro para o seu e-mail. Válido por 1 hora.
+        </div>
+      </div>
     </div>
 
     <div class="ob-start-wrap" id="start-wrap">
@@ -267,40 +297,61 @@ const STEPS = [
   { n:8, ico:'✅', lbl:'Revisão e Envio'         },
 ];
 
-// ── URL PARAMS — pré-configura fluxo quando link vem do painel RH ─────────
-(function initFromURL(){
-  const p = new URLSearchParams(location.search);
+// ── AUTH STATE LISTENER — captura redirect do OAuth ───────────────────────
+// Só reage a SIGNED_IN (redirect OAuth); INITIAL_SESSION é tratado por initPage
+try {
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      const flow = new URLSearchParams(location.search).get('flow');
+      if (flow === 'atualizar') {
+        document.getElementById('welcome').style.display = 'none';
+        doLookupSSO(session.user.email);
+      }
+    }
+  });
+} catch(e) {}
+
+// ── INIT — URL params + sessão existente ──────────────────────────────────
+(async function initPage() {
+  const p       = new URLSearchParams(location.search);
   const flow    = p.get('flow');
-  const email   = p.get('email');
+  const email   = p.get('email');   // hint vindo de link do RH (não mais usado para lookup)
   const nome    = p.get('nome');
   const vinculo = p.get('vinculo');
 
-  if (flow === 'atualizar' || flow === 'novo') {
+  if (!flow) return; // tela de boas-vindas normal
+
+  if (flow === 'atualizar') {
+    // Verifica se já existe sessão (ex: retorno do OAuth/magic-link)
+    let session = null;
+    try { const { data } = await sb.auth.getSession(); session = data.session; } catch(e) {}
+
+    if (session) {
+      // Já autenticado — busca cadastro diretamente
+      document.getElementById('welcome').style.display = 'none';
+      doLookupSSO(session.user.email);
+    } else {
+      // Não autenticado — exibe gate de SSO/magic link
+      setFlow('atualizar');
+      if (email) {
+        // Link do RH contém e-mail como dica — pré-preenche campo
+        const inp = document.getElementById('sso-email');
+        if (inp) inp.value = decodeURIComponent(email);
+      }
+    }
+    return;
+  }
+
+  if (flow === 'novo') {
+    FLOW = 'novo';
+    if (vinculo) { VINCULO = vinculo; VINCULO_LOCKED = true; }
+    document.getElementById('welcome').style.display = 'none';
+    startForm();
     setTimeout(() => {
-      setFlow(flow);
-
-      if (flow === 'atualizar' && email) {
-        // Oculta tela de boas-vindas e mostra loading enquanto busca o cadastro
-        document.getElementById('welcome').style.display = 'none';
-        const inp = document.getElementById('lu-email');
-        if (inp) { inp.value = email; doLookup(true); }
-      }
-
-      if (flow === 'novo') {
-        // Pula boas-vindas e abre o form diretamente (idêntico ao de atualização)
-        FLOW = 'novo';
-        if (vinculo) { VINCULO = vinculo; VINCULO_LOCKED = true; }
-        document.getElementById('welcome').style.display = 'none';
-        startForm();
-        // Pré-preenche campos editáveis após o DOM do form estar pronto
-        setTimeout(() => {
-          if (nome)  { const el = document.getElementById('f-nome');  if(el) el.value = nome; }
-          // flow=novo: e-mail corporativo ainda não existe — ocultar o campo
-          const fgEmail = document.getElementById('fg-email');
-          if (fgEmail) fgEmail.style.display = 'none';
-        }, 80);
-      }
-    }, 50);
+      if (nome) { const el = document.getElementById('f-nome'); if(el) el.value = nome; }
+      const fgEmail = document.getElementById('fg-email');
+      if (fgEmail) fgEmail.style.display = 'none';
+    }, 80);
   }
 })();
 
@@ -309,48 +360,89 @@ function setFlow(f){
   FLOW=f;
   document.getElementById('cn').classList.toggle('sel',f==='novo');
   document.getElementById('ca').classList.toggle('sel',f==='atualizar');
-  const lu=document.getElementById('lookup'), sw=document.getElementById('start-wrap');
-  if(f==='atualizar'){lu.classList.add('on');sw.style.display='none';}
-  else{lu.classList.remove('on');sw.style.display='block';}
+  const gate=document.getElementById('sso-gate'), sw=document.getElementById('start-wrap');
+  if(f==='atualizar'){gate.classList.add('on');sw.style.display='none';}
+  else{gate.classList.remove('on');sw.style.display='block';}
 }
 
-async function doLookup(autoStart=false){
-  const email=document.getElementById('lu-email').value.trim().toLowerCase();
-  const err=document.getElementById('lu-err');
-  err.classList.remove('on');
-  if(!email||!email.includes('@')){err.textContent='Informe um e-mail válido.';err.classList.add('on');return;}
-  load('Buscando cadastro...');
+// ── MAGIC LINK ────────────────────────────────────────────────────────────
+let _magicSent=false;
+async function sendMagicLink(){
+  if(_magicSent)return;
+  const email=(document.getElementById('sso-email').value||'').trim().toLowerCase();
+  const errEl=document.getElementById('sso-email-err');
+  errEl.classList.remove('on');
+  if(!email||!email.includes('@')){errEl.classList.add('on');return;}
+  load('Enviando link de acesso...');
   try{
-    if(!sb)throw new Error('offline');
-    const{data,error}=await sb.from('colaboradores').select('*').ilike('email_corporativo',email).maybeSingle();
+    const{error}=await sb.auth.signInWithOtp({
+      email,
+      options:{emailRedirectTo:location.origin+location.pathname+'?flow=atualizar'}
+    });
     unload();
-    if(error||!data){
-      // Link direto mas cadastro não encontrado — volta para tela de escolha
-      if(autoStart){ document.getElementById('welcome').style.display='flex'; }
-      err.textContent='Cadastro não encontrado. Verifique o e-mail ou inicie um novo cadastro.';
-      err.classList.add('on');
-      return;
-    }
-    EXIST_ID=data.id;
-    prefill(data);
-    if(data.tipo_vinculo){ VINCULO=data.tipo_vinculo; VINCULO_LOCKED=true; }
-    if(autoStart){
-      // Pula a tela de boas-vindas e vai direto para o formulário
-      startForm();
-    } else {
-      const sw=document.getElementById('start-wrap');
-      sw.style.display='block';
-      document.getElementById('start-btn').textContent='✏️ Atualizar meu cadastro →';
-    }
+    if(error)throw error;
+    _magicSent=true;
+    document.getElementById('sso-magic-ok').classList.add('on');
+    document.getElementById('sso-form').style.display='none';
   }catch(e){
     unload();
-    EXIST_ID=null;
-    if(autoStart){
-      startForm(); // permite prosseguir offline
-    } else {
-      document.getElementById('start-wrap').style.display='block';
-      err.classList.remove('on');
+    errEl.textContent='Erro ao enviar link: '+(e.message||'Tente novamente.');
+    errEl.classList.add('on');
+  }
+}
+
+// ── MICROSOFT SSO ─────────────────────────────────────────────────────────
+async function loginMicrosoft(){
+  load('Redirecionando para login Microsoft...');
+  try{
+    await sb.auth.signInWithOAuth({
+      provider:'azure',
+      options:{redirectTo:location.origin+location.pathname+'?flow=atualizar'}
+    });
+  }catch(e){
+    unload();
+    alert('Erro ao iniciar SSO Microsoft: '+(e.message||'Verifique a configuração no Supabase Dashboard.'));
+  }
+}
+
+// ── LOOKUP PÓS-AUTENTICAÇÃO (SSO / Magic Link) ────────────────────────────
+let _lookupStarted=false;
+async function doLookupSSO(email){
+  if(_lookupStarted||!email)return;
+  _lookupStarted=true;
+  load('Buscando seu cadastro...');
+  try{
+    const{data,error}=await sb.from('colaboradores')
+      .select('*').ilike('email_corporativo',email).maybeSingle();
+    unload();
+    if(error||!data){
+      // Autenticado mas sem cadastro → mostra erro e faz sign out
+      _lookupStarted=false;
+      try{await sb.auth.signOut();}catch(_){}
+      document.getElementById('welcome').style.display='flex';
+      document.getElementById('sso-gate').classList.add('on');
+      document.getElementById('sso-form').style.display='block';
+      document.getElementById('sso-magic-ok').classList.remove('on');
+      _magicSent=false;
+      const el=document.getElementById('sso-lookup-err');
+      if(el){el.style.display='block';el.innerHTML='⚠️ Nenhum cadastro encontrado para <strong>'+email+'</strong>. Entre em contato com o RH.';}
+      return;
     }
+    FLOW='atualizar';
+    EXIST_ID=data.id;
+    prefill(data);
+    if(data.tipo_vinculo){VINCULO=data.tipo_vinculo;VINCULO_LOCKED=true;}
+    startForm();
+    // Bloqueia campo de e-mail corporativo (identidade não pode ser alterada)
+    setTimeout(()=>{
+      const ef=document.getElementById('f-email');
+      if(ef){ef.readOnly=true;ef.style.cursor='not-allowed';ef.style.opacity='.65';ef.title='E-mail corporativo não pode ser alterado';}
+    },120);
+  }catch(e){
+    _lookupStarted=false;
+    unload();
+    document.getElementById('welcome').style.display='flex';
+    document.getElementById('sso-gate').classList.add('on');
   }
 }
 
