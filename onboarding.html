@@ -437,9 +437,9 @@ async function doLookupSSO(email){
     }
     FLOW='atualizar';
     EXIST_ID=data.id;
-    prefill(data);
     if(data.tipo_vinculo){VINCULO=data.tipo_vinculo;VINCULO_LOCKED=true;}
-    startForm();
+    startForm();   // buildSteps() cria o DOM antes do prefill
+    prefill(data); // preenche após DOM existir
     // Bloqueia campo de e-mail corporativo (identidade não pode ser alterada)
     setTimeout(()=>{
       const ef=document.getElementById('f-email');
