@@ -997,6 +997,7 @@ nav.legacy{display:none!important;}
         <option value="aniversario">Aniversário</option>
         <option value="card_aniversario">Card Aniversário</option>
         <option value="onboarding">Onboarding</option>
+        <option value="magic_link">Magic Link</option>
       </select>
       <select id="eml-status" class="fi" style="width:130px;" onchange="renderEmailLog()">
         <option value="">Todos</option>
@@ -7057,7 +7058,8 @@ let _emailLogs=[];
 const _EML_TIPO_LABEL={
   cadastral:'Cadastral', desligamento:'Desligamento', ferias:'Férias',
   alerta_ferias:'Alerta Férias', alerta_aso:'Alerta ASO',
-  aniversario:'Aniversário', card_aniversario:'Card Aniv.', onboarding:'Onboarding'
+  aniversario:'Aniversário', card_aniversario:'Card Aniv.', onboarding:'Onboarding',
+  magic_link:'Magic Link'
 };
 
 async function loadEmailLog(){
