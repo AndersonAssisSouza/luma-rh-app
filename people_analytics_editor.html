@@ -7008,20 +7008,20 @@ async function cadEnviarEmail(btn,emailEnc,nomeEnc,vincEnc){
       body:JSON.stringify({
         to:email,
         subject:`[LUMA RH] Atualização Cadastral — ${nome}`,
-        html:_cadEmailHtml(nome,vinc,link)
+        html:_cadEmailHtml(nome,vinc,link),
+        tipo:'cadastral',
+        colaborador_nome:nome,
+        enviado_por:window.USER_EMAIL||null
       })
     });
     const rj=await r.json().catch(()=>({}));
     if(r.ok){
       toast(`E-mail enviado para ${email} ✅`,'success');
-      window._sbFns?.insertEmailLog?.({para:email,assunto:`[LUMA RH] Atualização Cadastral — ${nome}`,tipo:'cadastral',colaborador_nome:nome,resend_id:rj.id||null,status:'enviado'});
     }else{
       toast('Erro: '+(rj.error||r.status),'error');
-      window._sbFns?.insertEmailLog?.({para:email,assunto:`[LUMA RH] Atualização Cadastral — ${nome}`,tipo:'cadastral',colaborador_nome:nome,status:'erro',erro_msg:rj.error||String(r.status)});
     }
   }catch(e){
     toast('Falha na conexão: '+e.message,'error');
-    window._sbFns?.insertEmailLog?.({para:email,assunto:`[LUMA RH] Atualização Cadastral — ${nome}`,tipo:'cadastral',colaborador_nome:nome,status:'erro',erro_msg:e.message});
   }
   finally{if(btn){btn.disabled=false;btn.textContent='📧';}}
 }
@@ -7042,7 +7042,10 @@ async function cadEnviarTodosPendentes(btn){
         body:JSON.stringify({
           to:r.EMAIL_CORPORATIVO,
           subject:`[LUMA RH] Atualização Cadastral — ${r.NOME||''}`,
-          html:_cadEmailHtml(r.NOME||'',r.TIPO_VINCULO||'',link)
+          html:_cadEmailHtml(r.NOME||'',r.TIPO_VINCULO||'',link),
+          tipo:'cadastral',
+          colaborador_nome:r.NOME||null,
+          enviado_por:window.USER_EMAIL||null
         })
       });
       if(res.ok)ok++;else err++;
